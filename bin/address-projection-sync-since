@@ -1,0 +1,64 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+/*
+ * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+ * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
+ * Owner: Marketing America Corp
+ */
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use App\Entity\Address\AddressData;
+use App\Service\Address\AddressProjection;
+use PDO;
+
+if ($argc < 2) {
+    fwrite(STDERR, "Usage: address-projection-sync-since <ISO8601-timestamp>\n");
+    exit(2);
+}
+
+$since = (string)$argv[1];
+
+$pg = new PDO((string)getenv('PG_DSN'), (string)getenv('PG_USER'), (string)getenv('PG_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$my = new PDO((string)getenv('MY_DSN'), (string)getenv('MY_USER'), (string)getenv('MY_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$proj = new AddressProjection($my);
+
+$sql = "SELECT * FROM address_entity WHERE (updated_at IS NOT NULL AND updated_at > :since) OR (created_at > :since) ORDER BY updated_at NULLS LAST, created_at";
+$stmt = $pg->prepare($sql);
+$stmt->execute([':since' => $since]);
+
+$cnt = 0;
+while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $a = new AddressData(
+        (string)$r['id'],
+        $r['owner_id'] !== null ? (string)$r['owner_id'] : null,
+        $r['vendor_id'] !== null ? (string)$r['vendor_id'] : null,
+        (string)$r['line1'],
+        $r['line2'] !== null ? (string)$r['line2'] : null,
+        (string)$r['city'],
+        $r['region'] !== null ? (string)$r['region'] : null,
+        $r['postal_code'] !== null ? (string)$r['postal_code'] : null,
+        (string)$r['country_code'],
+        $r['line1_norm'] !== null ? (string)$r['line1_norm'] : null,
+        $r['city_norm'] !== null ? (string)$r['city_norm'] : null,
+        $r['region_norm'] !== null ? (string)$r['region_norm'] : null,
+        $r['postal_code_norm'] !== null ? (string)$r['postal_code_norm'] : null,
+        $r['latitude'] !== null ? (float)$r['latitude'] : null,
+        $r['longitude'] !== null ? (float)$r['longitude'] : null,
+        $r['geohash'] !== null ? (string)$r['geohash'] : null,
+        (string)$r['validation_status'],
+        $r['validation_provider'] !== null ? (string)$r['validation_provider'] : null,
+        $r['validated_at'] !== null ? (string)$r['validated_at'] : null,
+        $r['dedupe_key'] !== null ? (string)$r['dedupe_key'] : null,
+        (string)$r['created_at'],
+        $r['updated_at'] !== null ? (string)$r['updated_at'] : null,
+        $r['deleted_at'] !== null ? (string)$r['deleted_at'] : null,
+    );
+
+    $proj->upsert($a);
+    $cnt++;
+}
+
+echo "Projection synced rows: {$cnt}\n";

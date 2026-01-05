@@ -1,0 +1,9 @@
+parameters:
+  level: 7
+  paths:
+    - src
+  checkGenericClassInNonGenericObjectType: false
+  reportUnmatchedIgnoredErrors: true
+  parallel:
+    processTimeout: 300
+includes: []

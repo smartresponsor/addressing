@@ -1,0 +1,28 @@
+# Composer
+/vendor/
+composer.lock
+
+# Logs and caches
+/var/logs/
+/var/cache/
+/var/sessions/
+/build/
+/coverage/
+/allure-results/
+/allure-report/
+
+# PHPUnit
+.phpunit.result.cache
+
+# IDE and editors
+/.idea/
+/.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker overrides
+/.docker/
+/docker-compose.override.yml

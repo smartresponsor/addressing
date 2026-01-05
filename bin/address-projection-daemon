@@ -1,0 +1,97 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+/*
+ * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+ * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
+ * Owner: Marketing America Corp
+ */
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use App\Entity\Address\AddressData;
+use App\Service\Address\AddressProjection;
+use PDO;
+
+function statePath(): string
+{
+    $p = getenv('ADDRESS_PROJECTION_STATE') ?: '.state/address-projection.watermark';
+    if (!is_dir(dirname($p))) {
+        @mkdir(dirname($p), 0777, true);
+    }
+    return $p;
+}
+
+function readWatermark(): string
+{
+    $p = statePath();
+    if (!file_exists($p)) {
+        return '1970-01-01T00:00:00Z';
+    }
+    $s = trim((string)@file_get_contents($p));
+    return $s !== '' ? $s : '1970-01-01T00:00:00Z';
+}
+
+function writeWatermark(string $v): void
+{
+    $p = statePath();
+    file_put_contents($p, $v);
+}
+
+$interval = (int)(getenv('ADDRESS_PROJECTION_INTERVAL_SEC') ?: 5);
+
+$pg = new PDO((string)getenv('PG_DSN'), (string)getenv('PG_USER'), (string)getenv('PG_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$my = new PDO((string)getenv('MY_DSN'), (string)getenv('MY_USER'), (string)getenv('MY_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+
+$proj = new AddressProjection($my);
+
+$wm = readWatermark();
+while (true) {
+    $sql = "SELECT * FROM address_entity WHERE (updated_at IS NOT NULL AND updated_at > :since) OR (created_at > :since) ORDER BY coalesce(updated_at, created_at) ASC LIMIT 1000";
+    $stmt = $pg->prepare($sql);
+    $stmt->execute([':since' => $wm]);
+
+    $count = 0;
+    $newWm = $wm;
+    while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $a = new AddressData(
+            (string)$r['id'],
+            $r['owner_id'] !== null ? (string)$r['owner_id'] : null,
+            $r['vendor_id'] !== null ? (string)$r['vendor_id'] : null,
+            (string)$r['line1'],
+            $r['line2'] !== null ? (string)$r['line2'] : null,
+            (string)$r['city'],
+            $r['region'] !== null ? (string)$r['region'] : null,
+            $r['postal_code'] !== null ? (string)$r['postal_code'] : null,
+            (string)$r['country_code'],
+            $r['line1_norm'] !== null ? (string)$r['line1_norm'] : null,
+            $r['city_norm'] !== null ? (string)$r['city_norm'] : null,
+            $r['region_norm'] !== null ? (string)$r['region_norm'] : null,
+            $r['postal_code_norm'] !== null ? (string)$r['postal_code_norm'] : null,
+            $r['latitude'] !== null ? (float)$r['latitude'] : null,
+            $r['longitude'] !== null ? (float)$r['longitude'] : null,
+            $r['geohash'] !== null ? (string)$r['geohash'] : null,
+            (string)$r['validation_status'],
+            $r['validation_provider'] !== null ? (string)$r['validation_provider'] : null,
+            $r['validated_at'] !== null ? (string)$r['validated_at'] : null,
+            $r['dedupe_key'] !== null ? (string)$r['dedupe_key'] : null,
+            (string)$r['created_at'],
+            $r['updated_at'] !== null ? (string)$r['updated_at'] : null,
+            $r['deleted_at'] !== null ? (string)$r['deleted_at'] : null,
+        );
+
+        $proj->upsert($a);
+        $ts = $r['updated_at'] ?: $r['created_at'];
+        $newWm = (string)$ts;
+        $count++;
+    }
+
+    if ($count > 0) {
+        writeWatermark($newWm);
+        echo "Projected {$count} rows, watermark {$newWm}\n";
+        continue;
+    }
+
+    sleep($interval);
+}

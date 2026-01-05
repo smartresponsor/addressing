@@ -1,0 +1,15 @@
+FROM openjdk:11-jre-slim
+
+# Устанавливаем Allure CLI
+RUN apt-get update && apt-get install -y wget unzip && \
+    wget https://github.com/allure-framework/allure2/releases/download/2.24.0/allure-2.24.0.zip && \
+    unzip allure-2.24.0.zip -d /opt && \
+    ln -s /opt/allure-2.24.0/bin/allure /usr/bin/allure && \
+    rm allure-2.24.0.zip
+
+WORKDIR /app
+
+EXPOSE 8080
+
+# По умолчанию запускать веб-сервер Allure
+CMD ["allure", "serve", "build/allure-results", "-p", "8080"]

@@ -1,0 +1,13 @@
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+name = "address-agent-trigger"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+GH_OWNER = "taa0662621456"
+GH_REPO = "addressing"
+GH_WORKFLOW = "address-agent-dispatch.yml"
+GH_REF = "master"
+SR_TIME_SKEW_SEC = "300"
+SR_ALLOWED_TASK = "scan,health,doctor,validate,plan,codex"

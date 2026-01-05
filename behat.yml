@@ -1,0 +1,15 @@
+default:
+  suites:
+    default:
+      paths:
+        - %paths.base%/features
+      contexts:
+        - FeatureContext
+  extensions:
+    Behat\Symfony2Extension:
+      kernel:
+        env: test
+        debug: true
+    Yandex\Allure\Behat\AllureFormatterExtension:
+      output_directory: build/allure-results
+      delete_previous_results: true

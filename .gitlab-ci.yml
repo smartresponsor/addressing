@@ -1,0 +1,83 @@
+stages:
+  - test
+
+phpunit:
+  stage: test
+  image: php:8.2
+  services:
+    - name: mysql:8.0
+      alias: db
+  variables:
+    MYSQL_ROOT_PASSWORD: root
+    MYSQL_DATABASE: testdb
+    MYSQL_USER: test
+    MYSQL_PASSWORD: test
+  before_script:
+    - apt-get update && apt-get install -y git unzip libzip-dev libicu-dev libonig-dev
+    - docker-php-ext-install pdo pdo_mysql intl mbstring zip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --no-progress --no-interaction --prefer-dist
+  script:
+    - vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+  artifacts:
+    when: always
+    reports:
+      junit: build/logs/junit.xml
+      cobertura: build/logs/clover.xml
+    paths:
+      - build/coverage-html
+      - build/logs
+  coverage: '/Lines.*: (\d+.\d+%)/'
+
+
+behat:
+  stage: test
+  image: php:8.2
+  services:
+    - name: mysql:8.0
+      alias: db
+  variables:
+    MYSQL_ROOT_PASSWORD: root
+    MYSQL_DATABASE: testdb
+    MYSQL_USER: test
+    MYSQL_PASSWORD: test
+  before_script:
+    - apt-get update && apt-get install -y git unzip libzip-dev libicu-dev libonig-dev
+    - docker-php-ext-install pdo pdo_mysql intl mbstring zip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --no-progress --no-interaction --prefer-dist
+  script:
+    - vendor/bin/behat --format=allure --out=build/allure-results --strict --no-interaction
+
+
+allure_report:
+  stage: test
+  image: alpine:latest
+  script:
+    - echo "Allure results are stored in build/allure-results"
+  artifacts:
+    when: always
+    paths:
+      - build/allure-results
+    expire_in: 1 week
+
+
+sonar:
+  stage: test
+  image: sonarsource/sonar-scanner-cli:latest
+  script:
+    - sonar-scanner -Dsonar.login=$SONAR_TOKEN
+  variables:
+    SONAR_TOKEN: $SONAR_TOKEN
+  only:
+    - main
+
+
+coverage:
+  stage: test
+  image: php:8.2
+  script:
+    - vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+    - bash <(curl -s https://codecov.io/bash) -f build/logs/clover.xml
+  variables:
+    CODECOV_TOKEN: $CODECOV_TOKEN

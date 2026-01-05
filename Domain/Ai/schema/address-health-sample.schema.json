@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Address Health Sample",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "component",
+    "generatedAt",
+    "checks"
+  ],
+  "properties": {
+    "component": {
+      "type": "string"
+    },
+    "generatedAt": {
+      "type": "string"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "name",
+          "ok",
+          "exitCode"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "exitCode": {
+            "type": "integer"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "note": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

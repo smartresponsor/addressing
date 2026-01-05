@@ -1,0 +1,69 @@
+_type: export
+__export_format: 4
+__export_date: 2025-10-04T00:00:00.000Z
+__export_source: insomnia.desktop.app:v2025.1.0
+resources:
+  - _id: wrk_address_api
+    parentId: null
+    modified: 1660000000000
+    created: 1660000000000
+    name: "Address API"
+    description: "Insomnia collection for Address API"
+    scope: collection
+    _type: workspace
+  - _id: req_create_address
+    parentId: wrk_address_api
+    modified: 1660000000000
+    created: 1660000000000
+    url: http://localhost:8000/address
+    name: Create Address
+    method: POST
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "city": "Kyiv",
+          "country": "UA",
+          "street": "Khreshchatyk",
+          "zipcode": "01001"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    _type: request
+  - _id: req_get_address
+    parentId: wrk_address_api
+    url: http://localhost:8000/address/1
+    name: Get Address by ID
+    method: GET
+    _type: request
+  - _id: req_search_address
+    parentId: wrk_address_api
+    url: http://localhost:8000/address/search?city=Kyiv
+    name: Search Address by City
+    method: GET
+    _type: request
+  - _id: req_list_address
+    parentId: wrk_address_api
+    url: http://localhost:8000/address/list?page=1&limit=10
+    name: List Addresses (Paginated)
+    method: GET
+    _type: request
+  - _id: req_advanced_search
+    parentId: wrk_address_api
+    url: http://localhost:8000/address/search-advanced
+    name: Advanced Search
+    method: POST
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "city": "Kyiv",
+          "country": "UA",
+          "page": 1,
+          "limit": 5
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    _type: request

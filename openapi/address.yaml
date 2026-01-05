@@ -1,0 +1,352 @@
+openapi: 3.0.3
+info:
+  title: SmartResponsor AddressData API
+  version: 0.1.0
+  description: |
+    AddressData surface: create, fetch, delete, page, and apply validated fields.
+servers:
+  - url: /
+paths:
+  /api/address:
+    post:
+      summary: Create address record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressResponse'
+        '400':
+          description: Bad request
+    get:
+      summary: Page addresses (alias)
+      parameters:
+        - $ref: '#/components/parameters/q'
+        - $ref: '#/components/parameters/country'
+        - $ref: '#/components/parameters/ownerId'
+        - $ref: '#/components/parameters/vendorId'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/cursor'
+      responses:
+        '200':
+          description: Page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressPageResponse'
+  /api/address/page:
+    get:
+      summary: Page addresses
+      parameters:
+        - $ref: '#/components/parameters/q'
+        - $ref: '#/components/parameters/country'
+        - $ref: '#/components/parameters/ownerId'
+        - $ref: '#/components/parameters/vendorId'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/cursor'
+      responses:
+        '200':
+          description: Page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressPageResponse'
+  /api/address/{id}:
+    get:
+      summary: Fetch address by id
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Address
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressResponse'
+        '404':
+          description: Not found
+    delete:
+      summary: Mark address as deleted
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+  /api/address/{id}/validated:
+    post:
+      summary: Apply validated fields to an existing address
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressValidatedRequest'
+      responses:
+        '200':
+          description: Updated address
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressResponse'
+        '400':
+          description: Bad request
+        '404':
+          description: Not found
+components:
+  parameters:
+    id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+    q:
+      name: q
+      in: query
+      required: false
+      schema:
+        type: string
+    country:
+      name: country
+      in: query
+      required: false
+      schema:
+        type: string
+        minLength: 2
+        maxLength: 2
+    ownerId:
+      name: ownerId
+      in: query
+      required: false
+      schema:
+        type: string
+        minLength: 1
+    vendorId:
+      name: vendorId
+      in: query
+      required: false
+      schema:
+        type: string
+        minLength: 1
+    limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
+    cursor:
+      name: cursor
+      in: query
+      required: false
+      schema:
+        type: string
+        pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+  schemas:
+    AddressCreateRequest:
+      type: object
+      required:
+        - ownerId
+        - line1
+        - city
+        - region
+        - postalCode
+        - country
+      properties:
+        ownerId:
+          type: string
+        vendorId:
+          type: string
+          nullable: true
+        tag:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        company:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        line1:
+          type: string
+        line2:
+          type: string
+          nullable: true
+        city:
+          type: string
+        region:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+          minLength: 2
+          maxLength: 2
+        latitude:
+          type: number
+          format: float
+          nullable: true
+        longitude:
+          type: number
+          format: float
+          nullable: true
+        raw:
+          description: Free-form raw payload (stored as JSON)
+          type: object
+          additionalProperties: true
+          nullable: true
+    AddressValidatedRequest:
+      type: object
+      properties:
+        provider:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        line1Norm:
+          type: string
+          nullable: true
+        cityNorm:
+          type: string
+          nullable: true
+        regionNorm:
+          type: string
+          nullable: true
+        postalCodeNorm:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: float
+          nullable: true
+        longitude:
+          type: number
+          format: float
+          nullable: true
+        geohash:
+          type: string
+          nullable: true
+    AddressResponse:
+      type: object
+      required:
+        - id
+        - ownerId
+        - line1
+        - city
+        - region
+        - postalCode
+        - country
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        ownerId:
+          type: string
+        vendorId:
+          type: string
+          nullable: true
+        tag:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        company:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        line1:
+          type: string
+        line2:
+          type: string
+          nullable: true
+        city:
+          type: string
+        region:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+        line1Norm:
+          type: string
+          nullable: true
+        cityNorm:
+          type: string
+          nullable: true
+        regionNorm:
+          type: string
+          nullable: true
+        postalCodeNorm:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: float
+          nullable: true
+        longitude:
+          type: number
+          format: float
+          nullable: true
+        geohash:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        provider:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        validatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+    AddressPageResponse:
+      type: object
+      required:
+        - items
+      properties:
+        nextCursor:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressResponse'

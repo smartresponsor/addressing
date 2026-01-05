@@ -1,0 +1,20 @@
+Timestamp: 2025-10-28T04:53:48
+Files scanned: 63
+Files changed: 13
+Total replacements: 22
+Composer: {'autoload': {'App\\': 'src/'}}
+
+Top 50 changed files:
+- src/Entity/Address/Address.php  (ns=1, use=0, other=1)
+- src/EntityInterface/Address/AddressInterface.php  (ns=1, use=0, other=0)
+- src/Repository/Address/AddressRepository.php  (ns=1, use=1, other=1)
+- src/Service/Address/AddressOutboxDrainer.php  (ns=1, use=0, other=1)
+- src/Service/Address/AddressProjection.php  (ns=1, use=1, other=1)
+- src/Service/Address/AddressValidatedApplier.php  (ns=1, use=0, other=1)
+- src/Address/AddressRepositoryInterface.php  (ns=1, use=0, other=0)
+- src/Contract/Address/AddressRepositoryInterface.php  (ns=1, use=0, other=0)
+- src/ServiceInterface/Address/AddressOutboxDrainerInterface.php  (ns=1, use=0, other=0)
+- src/ServiceInterface/Address/AddressProjectionInterface.php  (ns=1, use=1, other=0)
+- src/ServiceInterface/Address/AddressValidatedApplierInterface.php  (ns=1, use=0, other=0)
+- src/Util/Address/AddressUlid.php  (ns=1, use=0, other=1)
+- src/UtilInterface/Address/AddressUlidInterface.php  (ns=1, use=0, other=0)

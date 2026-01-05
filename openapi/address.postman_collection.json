@@ -1,0 +1,125 @@
+{
+  "info": {
+    "name": "SmartResponsor Address API",
+    "_postman_id": "a1b2c3d4-e9e9-4a4a-bbbb-ccccdddd0001",
+    "description": "E9 smoke collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Validate",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/address/validate",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "address",
+            "validate"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"line1\": \"123 Main St\", \"city\": \"Houston\", \"region\": \"TX\", \"postal\": \"77002\", \"country\": \"US\"}"
+        }
+      }
+    },
+    {
+      "name": "Parse",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/address/parse",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "address",
+            "parse"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"text\": \"123 Main St, Houston, TX 77002, USA\"}"
+        }
+      }
+    },
+    {
+      "name": "Geocode (NET=1)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/address/geocode",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "address",
+            "geocode"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"line1\": \"10 Downing St\", \"city\": \"London\", \"postal\": \"SW1A 2AA\", \"country\": \"GB\"}"
+        }
+      }
+    },
+    {
+      "name": "Index Search",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/address/index/search?prefix=Hou&country=US",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "address",
+            "index",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "prefix",
+              "value": "Hou"
+            },
+            {
+              "key": "country",
+              "value": "US"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    }
+  ]
+}

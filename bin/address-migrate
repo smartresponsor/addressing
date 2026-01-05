@@ -1,0 +1,16 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+/*
+ * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+ * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
+ * Owner: Marketing America Corp
+ */
+use PDO;
+function env(string $k, ?string $d=null): ?string { $v=getenv($k); return $v===false?$d:$v; }
+$dsn=env('PG_DSN'); $user=env('PG_USER'); $pass=env('PG_PASS');
+if (!$dsn||!$user){ fwrite(STDERR, "PG_DSN/PG_USER are required\n"); exit(2); }
+$pdo=new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
+$sql=file_get_contents(__DIR__.'/../sql/postgres/001_address.sql');
+$pdo->exec($sql);
+echo "Address schema migrated.\n";

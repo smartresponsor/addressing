@@ -1,0 +1,16 @@
+codes:
+  not_found:
+    http: 404
+    message: Route not found
+  rate_limited:
+    http: 429
+    message: Too Many Requests
+  forbidden_ip:
+    http: 403
+    message: IP not allowed
+  bad_request_schema:
+    http: 400
+    message: Schema validation failed
+  network_disabled:
+    http: 503
+    message: Network disabled

@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  allure:
+    build:
+      context: .
+      dockerfile: Dockerfile.allure
+    volumes:
+      - ./build/allure-results:/app/build/allure-results
+    ports:
+      - "8080:8080"

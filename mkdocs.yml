@@ -1,0 +1,9 @@
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+site_name: Addressing
+docs_dir: docs
+site_dir: site
+nav:
+  - Home: index.md
+  - Deploy:
+      - Cloudflare Pages: deploy/cloudflare-pages.md

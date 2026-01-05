@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Allure Report Sample</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #e53238; }
+    .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+    .passed { background: #e0ffe0; }
+    .failed { background: #ffe0e0; }
+  </style>
+</head>
+<body>
+  <h1>Allure Report – Sample</h1>
+  <p>Это пример отчёта, который будет доступен после запуска CI/CD.</p>
+
+  <div class="test passed">
+    <strong>✔ AddressFormatterTest::testFormatUa</strong><br>
+    Duration: 23ms
+  </div>
+
+  <div class="test passed">
+    <strong>✔ AddressValidatorFormatterIntegrationTest::testValidAndFormatAddressUa</strong><br>
+    Duration: 48ms
+  </div>
+
+  <div class="test failed">
+    <strong>✖ AddressControllerE2ETest::testCreateAndRetrieveAddress</strong><br>
+    Expected 200 but got 404<br>
+    Duration: 120ms
+  </div>
+</body>
+</html>

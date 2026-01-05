@@ -1,0 +1,29 @@
+<?php
+/*
+ * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+ */
+declare(strict_types=1);
+use PHPUnit\Framework\TestCase;
+use App\Projection\AddressIndex\{IndexProjector, PdoRepository};
+use App\Service\Normalize\Normalizer;
+use App\Domain\Address\Event\AddressCreated;
+
+final class IndexProjectorTest extends TestCase
+{
+    public function testProjectionIntoRepository(): void
+    {
+        $pdo = new PDO('sqlite::memory:');
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $sql = file_get_contents(__DIR__ . '/../../src/Projection/AddressIndex/schema.sqlite.sql');
+        $pdo->exec($sql);
+        $repo = new PdoRepository($pdo);
+        $projector = new IndexProjector($repo, new Normalizer(), null, false);
+
+        $evt = new AddressCreated('123 Main St', null, 'Houston', 'TX', '77002', 'US');
+        $projector->onAddressCreated($evt);
+
+        $list = $repo->search('Hou', 'US', 10);
+        $this->assertGreaterThanOrEqual(1, count($list));
+        $this->assertSame('US', $list[0]->country);
+    }
+}

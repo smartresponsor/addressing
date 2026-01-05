@@ -1,0 +1,94 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+/*
+ * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+ * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
+ * Owner: Marketing America Corp
+ */
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use App\Service\Address\AddressValidatedApplier;
+use PDO;
+
+function usage(): void
+{
+    fwrite(STDERR, "Usage: address-apply-validated <json-file>|- (NDJSON or single JSON)\n");
+    exit(2);
+}
+
+$arg = $argv[1] ?? null;
+if (!$arg) {
+    usage();
+}
+
+$pdo = new PDO((string)getenv('PG_DSN'), (string)getenv('PG_USER'), (string)getenv('PG_PASS'), [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+]);
+$applier = new AddressValidatedApplier($pdo);
+
+$handle = ($arg === '-') ? STDIN : fopen($arg, 'r');
+if (!$handle) {
+    fwrite(STDERR, "Cannot open input\n");
+    exit(2);
+}
+
+$buf = stream_get_contents($handle);
+$trim = trim((string)$buf);
+if ($trim === '') {
+    fwrite(STDERR, "Empty input\n");
+    exit(2);
+}
+
+$dataSet = [];
+if (str_contains($trim, "\n")) {
+    foreach (explode("\n", $trim) as $line) {
+        $line = trim($line);
+        if ($line === '') {
+            continue;
+        }
+        $obj = json_decode($line, true);
+        if (!is_array($obj)) {
+            continue;
+        }
+        $dataSet[] = $obj;
+    }
+} else {
+    $obj = json_decode($trim, true);
+    if (!is_array($obj)) {
+        fwrite(STDERR, "Invalid JSON\n");
+        exit(2);
+    }
+    if (isset($obj[0]) && is_array($obj[0])) {
+        foreach ($obj as $o) {
+            if (is_array($o)) {
+                $dataSet[] = $o;
+            }
+        }
+    } else {
+        $dataSet[] = $obj;
+    }
+}
+
+$ok = 0;
+$fail = 0;
+foreach ($dataSet as $ev) {
+    try {
+        $id = $ev['id'] ?? null;
+        if (!is_string($id) || $id === '') {
+            $fail++;
+            continue;
+        }
+        $payload = $ev;
+        unset($payload['id']);
+        $applier->apply($id, $payload);
+        $ok++;
+    } catch (Throwable $e) {
+        $fail++;
+        fwrite(STDERR, 'Error: ' . $e->getMessage() . "\n");
+    }
+}
+
+fwrite(STDOUT, "Applied: {$ok}, Failed: {$fail}\n");

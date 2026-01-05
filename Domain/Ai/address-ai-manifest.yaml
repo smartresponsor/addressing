@@ -1,0 +1,14 @@
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+component: address
+plugin: ai
+capability:
+  - apply
+entry:
+  tool:
+    apply: Domain/Tool/ai-apply.ps1
+  output:
+    - report/address-change.patch
+note:
+  - "Apply is disabled by default. Requires SR_ALLOW_APPLY=1."
+  - "This plugin must not store secrets in the repository."
