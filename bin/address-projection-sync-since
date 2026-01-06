@@ -14,6 +14,37 @@ use App\Entity\Address\AddressData;
 use App\Service\Address\AddressProjection;
 use PDO;
 
+function decodeJsonNullable($v): ?array
+{
+    if ($v === null) {
+        return null;
+    }
+    if (!is_string($v) || $v === '') {
+        return null;
+    }
+    $d = json_decode($v, true);
+    return is_array($d) ? $d : null;
+}
+
+function toBoolNullable(array $r, string $k): ?bool
+{
+    if (!array_key_exists($k, $r) || $r[$k] === null) {
+        return null;
+    }
+    $v = $r[$k];
+    if (is_bool($v)) {
+        return $v;
+    }
+    if (is_int($v)) {
+        return $v === 1;
+    }
+    if (is_string($v)) {
+        $s = strtolower(trim($v));
+        return in_array($s, ['1', 't', 'true', 'yes'], true);
+    }
+    return null;
+}
+
 if ($argc < 2) {
     fwrite(STDERR, "Usage: address-projection-sync-since <ISO8601-timestamp>\n");
     exit(2);
@@ -31,6 +62,10 @@ $stmt->execute([':since' => $since]);
 
 $cnt = 0;
 while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $validationRaw = decodeJsonNullable($r['validation_raw'] ?? null);
+    $validationVerdict = decodeJsonNullable($r['validation_verdict'] ?? null);
+    $validationDeliverable = toBoolNullable($r, 'validation_deliverable');
+
     $a = new AddressData(
         (string)$r['id'],
         $r['owner_id'] !== null ? (string)$r['owner_id'] : null,
@@ -55,6 +90,12 @@ while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
         (string)$r['created_at'],
         $r['updated_at'] !== null ? (string)$r['updated_at'] : null,
         $r['deleted_at'] !== null ? (string)$r['deleted_at'] : null,
+        $r['validation_fingerprint'] !== null ? (string)$r['validation_fingerprint'] : null,
+        $validationRaw,
+        $validationVerdict,
+        $validationDeliverable,
+        $r['validation_granularity'] !== null ? (string)$r['validation_granularity'] : null,
+        $r['validation_quality'] !== null ? (int)$r['validation_quality'] : null,
     );
 
     $proj->upsert($a);

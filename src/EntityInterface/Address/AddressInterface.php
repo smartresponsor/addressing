@@ -34,6 +34,14 @@ interface AddressInterface
     public function validationProvider(): ?string;
     public function validatedAt(): ?string;
     public function dedupeKey(): ?string;
+    public function validationFingerprint(): ?string;
+    /** @return array<string, mixed>|null */
+    public function validationRaw(): ?array;
+    /** @return array<string, mixed>|null */
+    public function validationVerdict(): ?array;
+    public function validationDeliverable(): ?bool;
+    public function validationGranularity(): ?string;
+    public function validationQuality(): ?int;
     public function createdAt(): string;
     public function updatedAt(): ?string;
     public function deletedAt(): ?string;

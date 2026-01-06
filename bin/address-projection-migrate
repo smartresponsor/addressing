@@ -1,0 +1,90 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+/*
+ * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+ * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
+ * Owner: Marketing America Corp
+ */
+
+use PDO;
+
+function env(string $k, ?string $d=null): ?string { $v=getenv($k); return $v===false?$d:$v; }
+
+$dsn=env('MYSQL_DSN'); $user=env('MYSQL_USER'); $pass=env('MYSQL_PASS');
+if (!$dsn||!$user){ fwrite(STDERR, "MYSQL_DSN/MYSQL_USER are required\n"); exit(2); }
+
+$pdo=new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES=>false]);
+
+$baseSql=file_get_contents(__DIR__.'/../sql/mysql/001_projection.sql');
+if ($baseSql === false) {
+    fwrite(STDERR, "missing sql/mysql/001_projection.sql\n");
+    exit(2);
+}
+$pdo->exec($baseSql);
+
+function hasColumn(PDO $pdo, string $table, string $column): bool
+{
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(*) AS c FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t AND COLUMN_NAME = :c'
+    );
+    $stmt->execute([':t' => $table, ':c' => $column]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return isset($row['c']) && (int) $row['c'] > 0;
+}
+
+function hasIndex(PDO $pdo, string $table, string $index): bool
+{
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(*) AS c FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t AND INDEX_NAME = :i'
+    );
+    $stmt->execute([':t' => $table, ':i' => $index]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return isset($row['c']) && (int) $row['c'] > 0;
+}
+
+$table = 'address_projection';
+
+$needColumn = [
+    'line1_norm' => "ALTER TABLE {$table} ADD COLUMN line1_norm VARCHAR(256) NULL",
+    'city_norm' => "ALTER TABLE {$table} ADD COLUMN city_norm VARCHAR(128) NULL",
+    'region_norm' => "ALTER TABLE {$table} ADD COLUMN region_norm VARCHAR(128) NULL",
+    'postal_code_norm' => "ALTER TABLE {$table} ADD COLUMN postal_code_norm VARCHAR(32) NULL",
+    'latitude' => "ALTER TABLE {$table} ADD COLUMN latitude DOUBLE NULL",
+    'longitude' => "ALTER TABLE {$table} ADD COLUMN longitude DOUBLE NULL",
+    'geohash' => "ALTER TABLE {$table} ADD COLUMN geohash VARCHAR(32) NULL",
+    'validation_provider' => "ALTER TABLE {$table} ADD COLUMN validation_provider VARCHAR(64) NULL",
+    'validated_at' => "ALTER TABLE {$table} ADD COLUMN validated_at DATETIME NULL",
+    'dedupe_key' => "ALTER TABLE {$table} ADD COLUMN dedupe_key VARCHAR(128) NULL",
+    'validation_fingerprint' => "ALTER TABLE {$table} ADD COLUMN validation_fingerprint CHAR(64) NULL",
+    'validation_deliverable' => "ALTER TABLE {$table} ADD COLUMN validation_deliverable TINYINT(1) NULL",
+    'validation_granularity' => "ALTER TABLE {$table} ADD COLUMN validation_granularity VARCHAR(64) NULL",
+    'validation_quality' => "ALTER TABLE {$table} ADD COLUMN validation_quality INT NULL",
+    'validation_raw' => "ALTER TABLE {$table} ADD COLUMN validation_raw JSON NULL",
+    'validation_verdict' => "ALTER TABLE {$table} ADD COLUMN validation_verdict JSON NULL",
+];
+
+$added = 0;
+foreach ($needColumn as $col => $sql) {
+    if (!hasColumn($pdo, $table, $col)) {
+        $pdo->exec($sql);
+        $added++;
+    }
+}
+
+$needIndex = [
+    'address_projection_country_city_norm_idx' => "CREATE INDEX address_projection_country_city_norm_idx ON {$table} (country_code, city_norm)",
+    'address_projection_geohash_idx' => "CREATE INDEX address_projection_geohash_idx ON {$table} (geohash)",
+    'address_projection_validation_status_idx' => "CREATE INDEX address_projection_validation_status_idx ON {$table} (validation_status)",
+    'address_projection_validation_deliverable_idx' => "CREATE INDEX address_projection_validation_deliverable_idx ON {$table} (validation_deliverable)",
+];
+
+$idxAdded = 0;
+foreach ($needIndex as $name => $sql) {
+    if (!hasIndex($pdo, $table, $name)) {
+        $pdo->exec($sql);
+        $idxAdded++;
+    }
+}
+
+echo "Address projection schema migrated (column_add={$added}, index_add={$idxAdded}).\n";

@@ -35,7 +35,15 @@ final class AddressData implements AddressInterface
         public ?string $dedupeKey,
         public string $createdAt,
         public ?string $updatedAt,
-        public ?string $deletedAt
+        public ?string $deletedAt,
+        public ?string $validationFingerprint = null,
+        /** @var array<string, mixed>|null */
+        public ?array $validationRaw = null,
+        /** @var array<string, mixed>|null */
+        public ?array $validationVerdict = null,
+        public ?bool $validationDeliverable = null,
+        public ?string $validationGranularity = null,
+        public ?int $validationQuality = null
     ) {
     }
 
@@ -59,6 +67,12 @@ final class AddressData implements AddressInterface
     public function validationProvider(): ?string { return $this->validationProvider; }
     public function validatedAt(): ?string { return $this->validatedAt; }
     public function dedupeKey(): ?string { return $this->dedupeKey; }
+    public function validationFingerprint(): ?string { return $this->validationFingerprint; }
+    public function validationRaw(): ?array { return $this->validationRaw; }
+    public function validationVerdict(): ?array { return $this->validationVerdict; }
+    public function validationDeliverable(): ?bool { return $this->validationDeliverable; }
+    public function validationGranularity(): ?string { return $this->validationGranularity; }
+    public function validationQuality(): ?int { return $this->validationQuality; }
     public function createdAt(): string { return $this->createdAt; }
     public function updatedAt(): ?string { return $this->updatedAt; }
     public function deletedAt(): ?string { return $this->deletedAt; }

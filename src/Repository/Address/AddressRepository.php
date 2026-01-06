@@ -10,11 +10,12 @@ namespace App\Repository\Address;
 
 use App\Entity\Address\AddressData;
 use App\EntityInterface\Address\AddressInterface;
+use App\RepositoryInterface\Address\AddressRepositoryInterface;
 use DateTimeImmutable;
 use PDO;
 use PDOStatement;
 
-final class AddressRepository
+final class AddressRepository implements AddressRepositoryInterface
 {
     public function __construct(private PDO $pdo)
     {
@@ -174,6 +175,19 @@ SQL;
 
     private function map(array $r): AddressData
     {
+        $validationRaw = $this->decodeJsonNullable($r['validation_raw'] ?? null);
+        $validationVerdict = $this->decodeJsonNullable($r['validation_verdict'] ?? null);
+        $validationDeliverable = null;
+        if (array_key_exists('validation_deliverable', $r) && $r['validation_deliverable'] !== null) {
+            $validationDeliverable = ((int) $r['validation_deliverable']) === 1;
+        }
+        $validationGranularity = array_key_exists('validation_granularity', $r) && $r['validation_granularity'] !== null
+            ? (string) $r['validation_granularity']
+            : null;
+        $validationQuality = array_key_exists('validation_quality', $r) && $r['validation_quality'] !== null
+            ? (int) $r['validation_quality']
+            : null;
+
         return new AddressData(
             (string) $r['id'],
             $r['owner_id'] !== null ? (string) $r['owner_id'] : null,
@@ -197,8 +211,37 @@ SQL;
             $r['dedupe_key'] !== null ? (string) $r['dedupe_key'] : null,
             (string) $r['created_at'],
             $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
-            $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null
+            $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null,
+            array_key_exists('validation_fingerprint', $r) && $r['validation_fingerprint'] !== null ? (string) $r['validation_fingerprint'] : null,
+            $validationRaw,
+            $validationVerdict,
+            $validationDeliverable,
+            $validationGranularity,
+            $validationQuality
         );
+    }
+
+    /** @return array<string, mixed>|null */
+    private function decodeJsonNullable(mixed $v): ?array
+    {
+        if ($v === null) {
+            return null;
+        }
+        if (is_array($v)) {
+            /** @var array<string, mixed> $v */
+            return $v;
+        }
+        $s = (string) $v;
+        $s = trim($s);
+        if ($s === '') {
+            return null;
+        }
+        $decoded = json_decode($s, true);
+        if (!is_array($decoded)) {
+            return null;
+        }
+        /** @var array<string, mixed> $decoded */
+        return $decoded;
     }
 
     private function appendOutbox(string $name, int $version, array $payload): void

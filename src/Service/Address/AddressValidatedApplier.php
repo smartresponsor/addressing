@@ -1,19 +1,19 @@
 <?php
-declare(strict_types=1);
-
 /*
  * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
  * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
  * Owner: Marketing America Corp
  * English comments only. No placeholders or stubs.
  */
+declare(strict_types=1);
 
 namespace App\Service\Address;
 
+use App\Contract\Address\AddressValidated;
 use App\ServiceInterface\Address\AddressValidatedApplierInterface;
-use DateTimeImmutable;
 use PDO;
-use Throwable;
+use PDOException;
+use RuntimeException;
 
 final class AddressValidatedApplier implements AddressValidatedApplierInterface
 {
@@ -21,96 +21,142 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
     {
     }
 
-    /** @param array<string, mixed> $data */
-    private function fingerprint(array $data): string
+    public function apply(string $id, AddressValidated $validated): void
     {
-        $keys = [
-            'line1Norm',
-            'cityNorm',
-            'regionNorm',
-            'postalCodeNorm',
-            'latitude',
-            'longitude',
-            'geohash',
-            'validationProvider',
-            'validatedAt',
-            'dedupeKey',
-        ];
+        $fingerprint = $validated->fingerprint();
+        $now = new \DateTimeImmutable('now');
+        $validatedAt = $validated->validatedAt ?? $now;
 
-        $arr = [];
-        foreach ($keys as $k) {
-            $arr[$k] = $data[$k] ?? null;
-        }
-
-        $json = json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        if ($json === false) {
-            $json = '{}';
-        }
-
-        return hash('sha256', $json);
-    }
-
-    /** @param array<string, mixed> $data */
-    public function apply(string $id, array $data): void
-    {
-        $fp = $this->fingerprint($data);
-
-        $this->pdo->beginTransaction();
         try {
+            $this->pdo->beginTransaction();
+
             $stmt = $this->pdo->prepare('SELECT validation_fingerprint FROM address_entity WHERE id = :id FOR UPDATE');
             $stmt->execute([':id' => $id]);
-            $prev = $stmt->fetchColumn();
-            if ($prev !== false && $prev !== null && (string)$prev === $fp) {
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
                 $this->pdo->rollBack();
-                return; // idempotent
+                throw new RuntimeException('not_found');
             }
 
-            $validatedAt = $data['validatedAt'] ?? null;
-            if ($validatedAt === null) {
-                $validatedAt = (new DateTimeImmutable())->format(DATE_ATOM);
+            $prev = $row['validation_fingerprint'] ?? null;
+            if (is_string($prev) && $prev !== '' && $prev === $fingerprint) {
+                $this->pdo->commit();
+                return;
             }
 
-            $upd = $this->pdo->prepare(
-                'UPDATE address_entity SET '
-                . 'line1_norm = :l1, city_norm = :city, region_norm = :region, postal_code_norm = :pc, '
-                . 'latitude = :lat, longitude = :lng, geohash = :gh, '
-                . "validation_status = 'validated', validation_provider = :vp, validated_at = :va, "
-                . 'dedupe_key = :dk, validation_fingerprint = :fp, updated_at = now() '
-                . 'WHERE id = :id'
-            );
-
-            $upd->execute([
+            $fields = [];
+            $params = [
                 ':id' => $id,
-                ':l1' => $data['line1Norm'] ?? null,
-                ':city' => $data['cityNorm'] ?? null,
-                ':region' => $data['regionNorm'] ?? null,
-                ':pc' => $data['postalCodeNorm'] ?? null,
-                ':lat' => $data['latitude'] ?? null,
-                ':lng' => $data['longitude'] ?? null,
-                ':gh' => $data['geohash'] ?? null,
-                ':vp' => $data['validationProvider'] ?? null,
-                ':va' => $validatedAt,
-                ':dk' => $data['dedupeKey'] ?? null,
-                ':fp' => $fp,
-            ]);
+                ':updated_at' => $now->format('Y-m-d H:i:sP'),
+                ':validation_provider' => $validated->validationProvider,
+                ':validation_status' => 'validated',
+                ':validated_at' => $validatedAt->format('Y-m-d H:i:sP'),
+                ':dedupe_key' => $validated->dedupeKey,
+                ':validation_fingerprint' => $fingerprint,
+            ];
 
-            $ins = $this->pdo->prepare(
-                'INSERT INTO address_audit '
-                . '(address_id, action, before_hash, after_hash, changed_at, meta) '
-                . 'VALUES (:id, :action, :before, :after, now(), :meta)'
-            );
-            $ins->execute([
-                ':id' => $id,
-                ':action' => 'validated_apply',
-                ':before' => $prev === false ? null : $prev,
-                ':after' => $fp,
-                ':meta' => json_encode(['provider' => $data['validationProvider'] ?? null], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            if ($validated->line1Norm !== null) {
+                $fields[] = 'line1_norm = :line1_norm';
+                $params[':line1_norm'] = $validated->line1Norm;
+            }
+            if ($validated->cityNorm !== null) {
+                $fields[] = 'city_norm = :city_norm';
+                $params[':city_norm'] = $validated->cityNorm;
+            }
+            if ($validated->regionNorm !== null) {
+                $fields[] = 'region_norm = :region_norm';
+                $params[':region_norm'] = $validated->regionNorm;
+            }
+            if ($validated->postalCodeNorm !== null) {
+                $fields[] = 'postal_code_norm = :postal_code_norm';
+                $params[':postal_code_norm'] = $validated->postalCodeNorm;
+            }
+            if ($validated->latitude !== null) {
+                $fields[] = 'latitude = :latitude';
+                $params[':latitude'] = $validated->latitude;
+            }
+            if ($validated->longitude !== null) {
+                $fields[] = 'longitude = :longitude';
+                $params[':longitude'] = $validated->longitude;
+            }
+            if ($validated->geohash !== null) {
+                $fields[] = 'geohash = :geohash';
+                $params[':geohash'] = $validated->geohash;
+            }
+
+            if ($validated->raw !== null) {
+                $fields[] = 'validation_raw = :validation_raw::jsonb';
+                $params[':validation_raw'] = json_encode($validated->raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                $params[':validation_raw_sha256'] = hash('sha256', $params[':validation_raw']);
+            }
+            if ($validated->verdict !== null) {
+                $fields[] = 'validation_verdict = :validation_verdict::jsonb';
+                $params[':validation_verdict'] = json_encode($validated->verdict->jsonSerialize(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+                if ($validated->verdict->deliverable !== null) {
+                    $fields[] = 'validation_deliverable = :validation_deliverable';
+                    $params[':validation_deliverable'] = $validated->verdict->deliverable ? 1 : 0;
+                }
+                if ($validated->verdict->granularity !== null) {
+                    $fields[] = 'validation_granularity = :validation_granularity';
+                    $params[':validation_granularity'] = $validated->verdict->granularity;
+                }
+                if ($validated->verdict->quality !== null) {
+                    $fields[] = 'validation_quality = :validation_quality';
+                    $params[':validation_quality'] = $validated->verdict->quality;
+                }
+            }
+
+            $fields[] = 'validation_provider = :validation_provider';
+            $fields[] = 'validation_status = :validation_status';
+            $fields[] = 'validated_at = :validated_at';
+            $fields[] = 'dedupe_key = :dedupe_key';
+            $fields[] = 'validation_fingerprint = :validation_fingerprint';
+            $fields[] = 'updated_at = :updated_at';
+
+            $sql = 'UPDATE address_entity SET ' . implode(', ', $fields) . ' WHERE id = :id';
+            $stmt = $this->pdo->prepare($sql);
+            $ok = $stmt->execute($params);
+
+            if (!$ok) {
+                $this->pdo->rollBack();
+                throw new RuntimeException('apply_failed');
+            }
+            if ($stmt->rowCount() < 1) {
+                $this->pdo->rollBack();
+                throw new RuntimeException('not_found');
+            }
+
+            $this->appendOutbox('AddressValidatedApplied', 1, [
+                'id' => $id,
+                'fingerprint' => $fingerprint,
+                'provider' => $validated->validationProvider,
+                'validatedAt' => $validatedAt->format(DATE_ATOM),
+                'deliverable' => $validated->verdict?->deliverable,
+                'granularity' => $validated->verdict?->granularity,
+                'quality' => $validated->verdict?->quality,
+                'rawSha256' => $params[':validation_raw_sha256'] ?? null,
             ]);
 
             $this->pdo->commit();
-        } catch (Throwable $e) {
-            $this->pdo->rollBack();
-            throw $e;
+        } catch (PDOException) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw new RuntimeException('apply_failed');
         }
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function appendOutbox(string $name, int $version, array $payload): void
+    {
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO address_outbox(event_name, event_version, payload) VALUES (:name, :ver, :payload::jsonb)'
+        );
+        $stmt->execute([
+            ':name' => $name,
+            ':ver' => $version,
+            ':payload' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        ]);
     }
 }

@@ -221,9 +221,11 @@ components:
         provider:
           type: string
           nullable: true
-        status:
+
+        validationProvider:
           type: string
           nullable: true
+          example: "nominatim"
         line1Norm:
           type: string
           nullable: true
@@ -247,6 +249,30 @@ components:
         geohash:
           type: string
           nullable: true
+        dedupeKey:
+          type: string
+          nullable: true
+        raw:
+          type: object
+          additionalProperties: true
+          nullable: true
+        verdict:
+          type: object
+          nullable: true
+          properties:
+            deliverable:
+              type: boolean
+              nullable: true
+            granularity:
+              type: string
+              nullable: true
+            quality:
+              type: integer
+              nullable: true
+            signal:
+              type: object
+              additionalProperties: true
+              nullable: true
     AddressResponse:
       type: object
       required:

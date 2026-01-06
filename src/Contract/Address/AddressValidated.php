@@ -12,6 +12,7 @@ namespace App\Contract\Address;
 
 use DateTimeImmutable;
 use JsonSerializable;
+use Throwable;
 
 final class AddressValidated implements JsonSerializable
 {
@@ -26,6 +27,9 @@ final class AddressValidated implements JsonSerializable
         public readonly ?string $validationProvider,
         public readonly ?DateTimeImmutable $validatedAt,
         public readonly ?string $dedupeKey,
+        /** @var array<string, mixed>|null */
+        public readonly ?array $raw = null,
+        public readonly ?AddressValidationVerdict $verdict = null,
     ) {
     }
 
@@ -43,6 +47,23 @@ final class AddressValidated implements JsonSerializable
         $validatedAt = self::asNullableDate($data['validatedAt'] ?? null);
         $dedupeKey = self::asNullableString($data['dedupeKey'] ?? null);
 
+        $raw = null;
+        if (array_key_exists('raw', $data) && is_array($data['raw'])) {
+            /** @var array<string, mixed> $raw */
+            $raw = $data['raw'];
+        }
+
+        $verdictArr = null;
+        if (array_key_exists('verdict', $data) && is_array($data['verdict'])) {
+            /** @var array<string, mixed> $verdictArr */
+            $verdictArr = $data['verdict'];
+        } elseif (array_key_exists('validationVerdict', $data) && is_array($data['validationVerdict'])) {
+            /** @var array<string, mixed> $verdictArr */
+            $verdictArr = $data['validationVerdict'];
+        }
+
+        $verdict = AddressValidationVerdict::fromArray($verdictArr);
+
         return new self(
             $line1Norm,
             $cityNorm,
@@ -54,6 +75,8 @@ final class AddressValidated implements JsonSerializable
             $validationProvider,
             $validatedAt,
             $dedupeKey,
+            $raw,
+            $verdict,
         );
     }
 
@@ -66,6 +89,7 @@ final class AddressValidated implements JsonSerializable
     /** @return array<string, mixed> */
     public function toDbArray(): array
     {
+        $verdictArr = $this->verdict?->jsonSerialize();
         return [
             'line1_norm' => $this->line1Norm,
             'city_norm' => $this->cityNorm,
@@ -77,6 +101,11 @@ final class AddressValidated implements JsonSerializable
             'validation_provider' => $this->validationProvider,
             'validated_at' => $this->validatedAt?->format(DATE_ATOM),
             'dedupe_key' => $this->dedupeKey,
+            'validation_raw' => $this->encodeJsonNullable($this->raw),
+            'validation_verdict' => $this->encodeJsonNullable($verdictArr),
+            'validation_deliverable' => $this->verdict?->deliverable,
+            'validation_granularity' => $this->verdict?->granularity,
+            'validation_quality' => $this->verdict?->quality,
         ];
     }
 
@@ -94,7 +123,23 @@ final class AddressValidated implements JsonSerializable
             'validationProvider' => $this->validationProvider,
             'validatedAt' => $this->validatedAt?->format(DATE_ATOM),
             'dedupeKey' => $this->dedupeKey,
+            'raw' => $this->raw,
+            'verdict' => $this->verdict?->jsonSerialize(),
         ];
+    }
+
+    /** @param array<string, mixed>|null $data */
+    private function encodeJsonNullable(?array $data): ?string
+    {
+        if ($data === null) {
+            return null;
+        }
+
+        try {
+            return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     private static function asNullableString(mixed $v): ?string

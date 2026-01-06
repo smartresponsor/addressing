@@ -11,6 +11,26 @@ function env(string $k, ?string $d=null): ?string { $v=getenv($k); return $v===f
 $dsn=env('PG_DSN'); $user=env('PG_USER'); $pass=env('PG_PASS');
 if (!$dsn||!$user){ fwrite(STDERR, "PG_DSN/PG_USER are required\n"); exit(2); }
 $pdo=new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
-$sql=file_get_contents(__DIR__.'/../sql/postgres/001_address.sql');
-$pdo->exec($sql);
+$sqlDir = __DIR__ . '/../sql/postgres';
+if (!is_dir($sqlDir)) {
+    fwrite(STDERR, "missing sql directory\n");
+    exit(2);
+}
+
+$files = glob($sqlDir . '/*.sql');
+if (!is_array($files) || count($files) < 1) {
+    fwrite(STDERR, "no sql files\n");
+    exit(2);
+}
+sort($files, SORT_STRING);
+
+foreach ($files as $file) {
+    $sql = file_get_contents($file);
+    if ($sql === false) {
+        fwrite(STDERR, "failed to read: {$file}\n");
+        exit(2);
+    }
+    $pdo->exec($sql);
+}
+
 echo "Address schema migrated.\n";
