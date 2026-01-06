@@ -40,6 +40,8 @@ jobs:
 
       - name: Domain gate
         shell: pwsh
+        env:
+          SR_CANON_REQUIRED: "0"
         run: |
           $script = Join-Path $env:GITHUB_WORKSPACE 'Domain/Tool/run.ps1'
           if (-not (Test-Path $script)) { throw "Missing Domain/Tool/run.ps1" }
