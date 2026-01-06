@@ -1,2 +1,150 @@
-  on:
-  jobs:
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+name: address-agent-pr
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "plan|codex|pr"
+        required: true
+        default: "pr"
+      message:
+        description: "Short reason (used in PR title/body)"
+        required: false
+        default: "agent update"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  agent:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: composer
+          coverage: none
+
+      - name: Install dependency
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run Domain tools (soft)
+        shell: pwsh
+        env:
+          SR_CANON_REQUIRED: "0"
+        run: |
+          Set-Location '${{ github.workspace }}'
+
+          pwsh -NoProfile -File Domain/Tool/run.ps1 doctor
+          $global:LASTEXITCODE = 0
+
+          pwsh -NoProfile -File Domain/Tool/run.ps1 scan
+          $global:LASTEXITCODE = 0
+
+          pwsh -NoProfile -File Domain/Tool/run.ps1 health
+          $global:LASTEXITCODE = 0
+
+          pwsh -NoProfile -File Domain/Tool/run.ps1 validate -AllowMissing
+          $global:LASTEXITCODE = 0
+
+          if ('${{ inputs.task }}' -eq 'plan') {
+            pwsh -NoProfile -File Domain/Tool/run.ps1 plan
+            $global:LASTEXITCODE = 0
+          }
+
+          if ('${{ inputs.task }}' -eq 'codex' -or '${{ inputs.task }}' -eq 'pr') {
+            pwsh -NoProfile -File Domain/Tool/run.ps1 plan
+            $global:LASTEXITCODE = 0
+            pwsh -NoProfile -File Domain/Tool/run.ps1 codex
+            $global:LASTEXITCODE = 0
+          }
+
+      - name: Prepare PR branch (only for task=pr)
+        if: ${{ inputs.task == 'pr' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ts="$(date -u +%Y%m%dT%H%M%SZ)"
+          br="agent/pr-${ts}"
+          echo "BRANCH=$br" >> "$GITHUB_ENV"
+          git checkout -b "$br"
+
+      - name: Allowlist check + commit (only for task=pr)
+        if: ${{ inputs.task == 'pr' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          bad="$(git status --porcelain | awk '{print $2}' | grep -vE '^(Domain/|\.github/workflows/|docs/)$' || true)"
+          if [ -n "$bad" ]; then
+            echo "Blocked paths detected:"
+            echo "$bad"
+            exit 2
+          fi
+
+          git add Domain/ .github/workflows/ docs/ 2>/dev/null || true
+
+          if git diff --cached --quiet; then
+            echo "No staged changes to commit."
+            exit 0
+          fi
+
+          msg="${{ inputs.message }}"
+          git commit -m "ai: ${msg}"
+
+      - name: Push branch (only for task=pr)
+        if: ${{ inputs.task == 'pr' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push -u origin "$BRANCH"
+
+      - name: Install gh (only for task=pr)
+        if: ${{ inputs.task == 'pr' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if command -v gh >/dev/null 2>&1; then
+            gh --version
+            exit 0
+          fi
+          sudo apt-get update -y
+          sudo apt-get install -y gh
+          gh --version
+
+      - name: Create PR (only for task=pr)
+        if: ${{ inputs.task == 'pr' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title="ai: ${{ inputs.message }}"
+          cat > /tmp/pr_body.txt <<'EOF'
+          Automated agent PR.
+
+          - Task: __TASK__
+          - Run: __RUN__
+          EOF
+          
+          sed -i "s|__TASK__|${{ inputs.task }}|g" /tmp/pr_body.txt
+          sed -i "s|__RUN__|$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID|g" /tmp/pr_body.txt
+          
+          gh pr create --base master --head "$BRANCH" --title "$title" --body-file /tmp/pr_body.txt || true
+
+      - name: Upload agent artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: address-agent-report
+          path: report/
+          if-no-files-found: ignore
