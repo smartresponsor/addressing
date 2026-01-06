@@ -33,10 +33,10 @@ Notes:
 function Resolve-ToolDir {
   $scriptFile = $null
 
-  if ($PSCommandPath -and $PSCommandPath.Trim() -ne "") {
-    $scriptFile = $PSCommandPath
-  } elseif ($MyInvocation -and $MyInvocation.MyCommand -and $MyInvocation.MyCommand.Path -and $MyInvocation.MyCommand.Path.Trim() -ne "") {
+  if ($MyInvocation -and $MyInvocation.MyCommand -and $MyInvocation.MyCommand.Path -and $MyInvocation.MyCommand.Path.Trim() -ne "") {
     $scriptFile = $MyInvocation.MyCommand.Path
+  } elseif ($PSCommandPath -and $PSCommandPath.Trim() -ne "") {
+    $scriptFile = $PSCommandPath
   }
 
   if ($scriptFile -and $scriptFile.Trim() -ne "") {
@@ -44,19 +44,14 @@ function Resolve-ToolDir {
     if ($d -and $d.Trim() -ne "") { return $d }
   }
 
-  # last resort (works if current dir is repo root)
-  $fallback = Join-Path (Get-Location).Path "Domain/Tool/run.ps1"
-  if (Test-Path $fallback) {
-    return Split-Path -Parent (Resolve-Path $fallback).Path
-  }
-
-  throw "Cannot resolve ToolDir (Domain/Tool). Ensure script is executed as a file, not sourced."
+  # Hard fallback (works if CWD is repo root)
+  return (Resolve-Path "Domain/Tool").Path
 }
 
 $ToolDir = Resolve-ToolDir
 if (-not $ToolDir -or $ToolDir.Trim() -eq "") { throw "ToolDir is empty (cannot resolve Domain/Tool)." }
 
-# lock CWD to repo root (Domain/Tool -> repoRoot)
+# lock CWD to repo root: Domain/Tool -> ../..
 $RepoRoot = (Resolve-Path (Join-Path $ToolDir "../..")).Path
 Set-Location $RepoRoot
 

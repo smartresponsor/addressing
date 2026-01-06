@@ -41,12 +41,13 @@ jobs:
       - name: Domain gate
         shell: pwsh
         run: |
-          pwsh -NoProfile -File Domain/Tool/run.ps1 doctor
-          pwsh -NoProfile -File Domain/Tool/run.ps1 scan
-          pwsh -NoProfile -File Domain/Tool/run.ps1 health
-          pwsh -NoProfile -File Domain/Tool/run.ps1 validate
+          $script = Join-Path $env:GITHUB_WORKSPACE 'Domain/Tool/run.ps1'
+          if (-not (Test-Path $script)) { throw "Missing Domain/Tool/run.ps1" }
 
-
+          & $script doctor
+          & $script scan
+          & $script health
+          & $script validate
       - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4
