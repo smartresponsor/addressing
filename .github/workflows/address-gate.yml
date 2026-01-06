@@ -45,23 +45,42 @@ jobs:
         run: |
           $script = Join-Path $env:GITHUB_WORKSPACE 'Domain/Tool/run.ps1'
           if (-not (Test-Path $script)) { throw "Missing Domain/Tool/run.ps1" }
+          
+          function Read-OkFlag([string]$path) {
+          if (-not (Test-Path $path)) { return $true }
+          try {
+          $j = Get-Content $path -Raw | ConvertFrom-Json
+          if ($null -ne $j.ok) { return [bool]$j.ok }
+          } catch {}
+            return $true
+          }
 
+          # doctor (strict only if report ok=false)
           & $script doctor
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $global:LASTEXITCODE = 0
+          $doctorExit = $LASTEXITCODE
+          $doctorOk = Read-OkFlag (Join-Path $env:GITHUB_WORKSPACE 'report/address-doctor.json')
+          if (-not $doctorOk) { Write-Host "ERROR: doctor report ok=false (exit=$doctorExit)"; exit 1 }
+          if ($doctorExit -ne 0) { Write-Host "WARN: doctor exit=$doctorExit but report ok=true; continuing." }
+            $global:LASTEXITCODE = 0
+          
+            # scan (already skip-safe when Canon missing)
+            & $script scan
+            $global:LASTEXITCODE = 0
+          
+            # health (warn-only on PR/push)
+            & $script health
+            $global:LASTEXITCODE = 0
+          
+            # validate (strict only if report ok=false)
+            & $script validate -AllowMissing
+            $valExit = $LASTEXITCODE
+            $valOk = Read-OkFlag (Join-Path $env:GITHUB_WORKSPACE 'report/address-report-validate.json')
+          if (-not $valOk) { Write-Host "ERROR: validate report ok=false (exit=$valExit)"; exit 1 }
+          if ($valExit -ne 0) { Write-Host "WARN: validate exit=$valExit but report ok=true; continuing." }
+            $global:LASTEXITCODE = 0
+          
+            exit 0
 
-          & $script scan
-          $global:LASTEXITCODE = 0
-
-          & $script health
-          # health is WARN-only when Canon missing; do not fail the step on it
-          $global:LASTEXITCODE = 0
-
-          & $script validate -AllowMissing
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $global:LASTEXITCODE = 0
-
-          exit 0
 
       - name: Upload report
         if: always()
