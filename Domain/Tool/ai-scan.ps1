@@ -44,15 +44,23 @@ if (-not$bin)
 {
     if ($env:SR_CANON_SCAN_CMD -and $env:SR_CANON_SCAN_CMD.Trim() -ne "")
     {
-        $cmd = $env:SR_CANON_SCAN_CMD.Replace("{out}", $Out)
+        $cmd = $env:SR_CANON_SCAN_CMD.Replace("{out}", ('"' + $Out + '"'))
         Write-Host "Running: $cmd"
-        cmd /c $cmd | Out-Null
+
+        & ([ScriptBlock]::Create($cmd)) | Out-Null
+        if ($LASTEXITCODE -ne 0)
+        {
+            throw "Canon scan failed (exit=$LASTEXITCODE)."
+        }
+
         if (-not(Test-Path $Out))
         {
             throw "Canon scan finished but output not found: $Out"
         }
+
         Write-Host "OK: $Out"
         exit 0
+
     }
 
     $required = ($env:SR_CANON_REQUIRED -eq "1")
