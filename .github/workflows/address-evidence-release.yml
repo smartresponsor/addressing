@@ -69,6 +69,7 @@ jobs:
           fail_on_unmatched_files: true
 
       - name: Attest build provenance
+        if: ${{ github.event.repository.private != true }}
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: ${{ steps.pack.outputs.evidence_zip }}
