@@ -57,11 +57,14 @@ Set-Location $RepoRoot
 
 function Call-Tool([string]$Name, [string[]]$A) {
   if (-not $ToolDir -or $ToolDir.Trim() -eq "") { throw "ToolDir is empty (cannot resolve Domain/Tool)." }
+
   $p = Join-Path $ToolDir $Name
   if (-not (Test-Path $p)) { throw "Tool not found: Domain/Tool/$Name" }
-  & $p @A
+
+  pwsh -NoProfile -File $p @A
   exit $LASTEXITCODE
 }
+
 
 $act = $Action.ToLowerInvariant()
 
