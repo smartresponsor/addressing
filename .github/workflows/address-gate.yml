@@ -41,11 +41,11 @@ jobs:
       - name: Domain gate
         shell: pwsh
         run: |
-          if (-not (Test-Path "Domain/Tool/run.ps1")) { throw "Missing Domain/Tool/run.ps1 (apply Address-sketch32 Domain overlays first)." }
-          ./Domain/Tool/run.ps1 doctor
-          ./Domain/Tool/run.ps1 scan
-          ./Domain/Tool/run.ps1 health
-          ./Domain/Tool/run.ps1 validate
+          pwsh -NoProfile -File Domain/Tool/run.ps1 doctor
+          pwsh -NoProfile -File Domain/Tool/run.ps1 scan
+          pwsh -NoProfile -File Domain/Tool/run.ps1 health
+          pwsh -NoProfile -File Domain/Tool/run.ps1 validate
+
 
       - name: Upload report
         if: always()

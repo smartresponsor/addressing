@@ -26,31 +26,39 @@ Usage:
 Notes:
 - All commands are repo-local and should not modify application code unless you run "apply".
 - "apply" requires SR_ALLOW_APPLY=1.
-
 "@
   Write-Host $txt
 }
 
-# --- robust ToolDir (CI-safe) ---
-$ToolDir = $null
+function Resolve-ToolDir {
+  $scriptFile = $null
 
-if ($PSCommandPath -and $PSCommandPath.Trim() -ne "") {
-  $ToolDir = Split-Path -Parent $PSCommandPath
-} elseif ($MyInvocation -and $MyInvocation.MyCommand -and $MyInvocation.MyCommand.Path -and $MyInvocation.MyCommand.Path.Trim() -ne "") {
-  $ToolDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-} elseif ($PSScriptRoot -and $PSScriptRoot.Trim() -ne "") {
-  $ToolDir = $PSScriptRoot
+  if ($PSCommandPath -and $PSCommandPath.Trim() -ne "") {
+    $scriptFile = $PSCommandPath
+  } elseif ($MyInvocation -and $MyInvocation.MyCommand -and $MyInvocation.MyCommand.Path -and $MyInvocation.MyCommand.Path.Trim() -ne "") {
+    $scriptFile = $MyInvocation.MyCommand.Path
+  }
+
+  if ($scriptFile -and $scriptFile.Trim() -ne "") {
+    $d = Split-Path -Parent $scriptFile
+    if ($d -and $d.Trim() -ne "") { return $d }
+  }
+
+  # last resort (works if current dir is repo root)
+  $fallback = Join-Path (Get-Location).Path "Domain/Tool/run.ps1"
+  if (Test-Path $fallback) {
+    return Split-Path -Parent (Resolve-Path $fallback).Path
+  }
+
+  throw "Cannot resolve ToolDir (Domain/Tool). Ensure script is executed as a file, not sourced."
 }
 
-# last resort: repo-relative resolve (works in GitHub Actions)
-if (-not $ToolDir -or $ToolDir.Trim() -eq "" -or -not (Test-Path $ToolDir)) {
-  $ToolDir = (Resolve-Path "Domain/Tool").Path
-}
+$ToolDir = Resolve-ToolDir
+if (-not $ToolDir -or $ToolDir.Trim() -eq "") { throw "ToolDir is empty (cannot resolve Domain/Tool)." }
 
-# lock CWD to repo root
+# lock CWD to repo root (Domain/Tool -> repoRoot)
 $RepoRoot = (Resolve-Path (Join-Path $ToolDir "../..")).Path
 Set-Location $RepoRoot
-# --- end robust ToolDir ---
 
 function Call-Tool([string]$Name, [string[]]$A) {
   if (-not $ToolDir -or $ToolDir.Trim() -eq "") { throw "ToolDir is empty (cannot resolve Domain/Tool)." }
