@@ -40,7 +40,7 @@ function Find-CanonBin
 Ensure-Dir (Split-Path -Parent $Out)
 
 $bin = Find-CanonBin
-if (-not$bin)
+if (-not $bin)
 {
     if ($env:SR_CANON_SCAN_CMD -and $env:SR_CANON_SCAN_CMD.Trim() -ne "")
     {
@@ -57,10 +57,8 @@ if (-not$bin)
         {
             throw "Canon scan finished but output not found: $Out"
         }
-
         Write-Host "OK: $Out"
         exit 0
-
     }
 
     $required = ($env:SR_CANON_REQUIRED -eq "1")
@@ -92,7 +90,7 @@ if (-not$bin)
 }
 
 $php = (Get-Command php -ErrorAction SilentlyContinue)
-if (-not$php)
+if (-not $php)
 {
     throw "php not found in PATH"
 }

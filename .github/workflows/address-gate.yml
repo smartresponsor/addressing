@@ -46,63 +46,12 @@ jobs:
         shell: pwsh
         env:
           SR_CANON_REQUIRED: "0"
-          SR_DOCTOR_REQUIRED: "0"
-          SR_VALIDATE_REQUIRED: "0"
         run: |
-          $ErrorActionPreference = "Stop"
-
-          $script = Join-Path $env:GITHUB_WORKSPACE 'Domain/Tool/run.ps1'
-          if (-not (Test-Path $script)) { throw "Missing Domain/Tool/run.ps1" }
-
-          function Read-OkFlag([string]$path) {
-            if (-not (Test-Path $path)) { return $true }
-            try {
-              $j = Get-Content $path -Raw | ConvertFrom-Json
-              if ($null -ne $j.ok) { return [bool]$j.ok }
-            } catch {}
-            return $true
-          }
-
-          function Read-Status([string]$path) {
-            if (-not (Test-Path $path)) { return "" }
-            try {
-              $j = Get-Content $path -Raw | ConvertFrom-Json
-              if ($null -ne $j.status) { return [string]$j.status }
-            } catch {}
-            return ""
-          }
-
-          function Invoke-Action([string]$name, [string]$reportPath, [string]$requiredEnv, [string[]]$args) {
-            & $script $name @args
-            $exitCode = $LASTEXITCODE
-            $ok = Read-OkFlag $reportPath
-            $status = Read-Status $reportPath
-
-            $required = ((Get-Item "Env:$requiredEnv" -ErrorAction SilentlyContinue).Value -eq "1")
-
-            if (-not $ok) {
-              if ($required) {
-                Write-Host "ERROR: $name report ok=false (exit=$exitCode) => required"
-                exit 1
-              }
-              Write-Host "WARN: $name report ok=false (exit=$exitCode). See $reportPath"
-            } elseif ($exitCode -ne 0) {
-              Write-Host "WARN: $name exit=$exitCode but report ok=true; continuing."
-            }
-
-            if ($status -eq "skipped") {
-              Write-Host "WARN: $name status=skipped. See $reportPath"
-            }
-
-            $global:LASTEXITCODE = 0
-          }
-
-          Invoke-Action "doctor"   (Join-Path $env:GITHUB_WORKSPACE 'report/address-doctor.json')           "SR_DOCTOR_REQUIRED"   @()
-          Invoke-Action "scan"     (Join-Path $env:GITHUB_WORKSPACE 'report/address-canon-scan.json')       "SR_CANON_REQUIRED"    @()
-          Invoke-Action "health"   (Join-Path $env:GITHUB_WORKSPACE 'report/address-health-sample.json')    "SR_CANON_REQUIRED"    @()
-          Invoke-Action "validate" (Join-Path $env:GITHUB_WORKSPACE 'report/address-report-validate.json')  "SR_VALIDATE_REQUIRED" @("-AllowMissing")
-
-          exit 0
+          Set-Location '${{ github.workspace }}'
+          pwsh -NoProfile -File Domain/Tool/run.ps1 doctor
+          pwsh -NoProfile -File Domain/Tool/run.ps1 scan
+          pwsh -NoProfile -File Domain/Tool/run.ps1 health
+          pwsh -NoProfile -File Domain/Tool/run.ps1 validate -AllowMissing
 
       - name: Upload report
         if: always()
