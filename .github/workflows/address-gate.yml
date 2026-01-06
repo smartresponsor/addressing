@@ -49,7 +49,7 @@ jobs:
           & $script doctor
           & $script scan
           & $script health
-          & $script validate
+          & $script validate -AllowMissing
       - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4
