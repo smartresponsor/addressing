@@ -47,9 +47,22 @@ jobs:
           if (-not (Test-Path $script)) { throw "Missing Domain/Tool/run.ps1" }
 
           & $script doctor
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $global:LASTEXITCODE = 0
+
           & $script scan
+          $global:LASTEXITCODE = 0
+
           & $script health
+          # health is WARN-only when Canon missing; do not fail the step on it
+          $global:LASTEXITCODE = 0
+
           & $script validate -AllowMissing
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $global:LASTEXITCODE = 0
+
+          exit 0
+
       - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4

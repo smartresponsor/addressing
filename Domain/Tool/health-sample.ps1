@@ -65,9 +65,20 @@ $json = ($sample | ConvertTo-Json -Depth 8)
 Set-Content -Path $Out -Value $json -Encoding UTF8
 
 Write-Host "OK: $Out"
+
 if (-not$canonOk)
 {
     Write-Host "WARN: canon-check failed (exit=$canonExit)."
-    $global:LASTEXITCODE = 0
-    exit 0
+    if ($env:SR_CANON_REQUIRED -ne "1")
+    {
+        $global:LASTEXITCODE = 0
+        $canonExit = 0
+        $canonOk = $false
+    }
+    else
+    {
+        throw "canon-check failed (exit=$canonExit) and SR_CANON_REQUIRED=1"
+    }
 }
+exit 0
+
