@@ -6,51 +6,93 @@ on:
   workflow_dispatch:
     inputs:
       task:
-        description: "Task to run via Domain/Tool/run.ps1"
+        description: Agent task
         required: true
+        default: plan
         type: choice
         options:
-          - scan
-          - health
-          - doctor
-          - validate
           - plan
           - codex
-      note:
-        description: "Optional note for traceability"
-        required: false
-        type: string
+          - pr
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
-  dispatch:
+  agent:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          php-version: "8.2"
           tools: composer
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.composer/cache/files
+            vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
 
       - name: Install dependency
         run: composer install --no-interaction --no-progress --prefer-dist
 
-      - name: Run task
+      - name: Prepare report
         shell: pwsh
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          SR_ALLOW_APPLY: "0"
+          SR_CANON_REQUIRED: "0"
+          SR_DOCTOR_REQUIRED: "0"
+          SR_VALIDATE_REQUIRED: "0"
         run: |
-          ./Domain/Tool/run.ps1 ${{ inputs.task }}
+          Set-Location '${{ github.workspace }}'
+          pwsh -NoProfile -File Domain/Tool/run.ps1 doctor
+          pwsh -NoProfile -File Domain/Tool/run.ps1 scan
+          pwsh -NoProfile -File Domain/Tool/run.ps1 health
+          pwsh -NoProfile -File Domain/Tool/run.ps1 validate -AllowMissing
+
+      - name: Plan
+        if: ${{ inputs.task == 'plan' || inputs.task == 'codex' || inputs.task == 'pr' }}
+        shell: pwsh
+        env:
+          SR_CANON_REQUIRED: "0"
+        run: |
+          Set-Location '${{ github.workspace }}'
+          pwsh -NoProfile -File Domain/Tool/run.ps1 plan
+
+      - name: Codex prompt
+        if: ${{ inputs.task == 'codex' || inputs.task == 'pr' }}
+        shell: pwsh
+        env:
+          SR_CANON_REQUIRED: "0"
+        run: |
+          Set-Location '${{ github.workspace }}'
+          pwsh -NoProfile -File Domain/Tool/run.ps1 codex
+
+      - name: Create PR task
+        if: ${{ inputs.task == 'pr' }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SR_CANON_REQUIRED: "0"
+        run: |
+          Set-Location '${{ github.workspace }}'
+          pwsh -NoProfile -File Domain/Tool/run.ps1 pr
 
       - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: address-report
+          name: address-agent-report
           path: report/
+          if-no-files-found: ignore

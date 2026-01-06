@@ -21,6 +21,7 @@ Usage:
   .\Domain\Tool\run.ps1 validate [-Repo .] [-Out report/address-report-validate.json] [-AllowMissing]
   .\Domain\Tool\run.ps1 plan     [-Scan report/address-canon-scan.json] [-Out report/address-ai-plan.md]
   .\Domain\Tool\run.ps1 codex    [-Plan report/address-ai-plan.md] [-Out report/address-codex-prompt.txt]
+  .\Domain\Tool\run.ps1 pr       [-Base master]
   .\Domain\Tool\run.ps1 apply    -Patch <file.patch> [-Repo .] [-TestCmd "<cmd>"] [-NoCanonCheck]
 
 Notes:
@@ -44,27 +45,23 @@ function Resolve-ToolDir {
     if ($d -and $d.Trim() -ne "") { return $d }
   }
 
-  # Hard fallback (works if CWD is repo root)
   return (Resolve-Path "Domain/Tool").Path
 }
 
 $ToolDir = Resolve-ToolDir
 if (-not $ToolDir -or $ToolDir.Trim() -eq "") { throw "ToolDir is empty (cannot resolve Domain/Tool)." }
 
-# lock CWD to repo root: Domain/Tool -> ../..
 $RepoRoot = (Resolve-Path (Join-Path $ToolDir "../..")).Path
 Set-Location $RepoRoot
 
 function Call-Tool([string]$Name, [string[]]$A) {
   if (-not $ToolDir -or $ToolDir.Trim() -eq "") { throw "ToolDir is empty (cannot resolve Domain/Tool)." }
-
   $p = Join-Path $ToolDir $Name
   if (-not (Test-Path $p)) { throw "Tool not found: Domain/Tool/$Name" }
 
   pwsh -NoProfile -File $p @A
   exit $LASTEXITCODE
 }
-
 
 $act = $Action.ToLowerInvariant()
 
@@ -76,6 +73,7 @@ switch ($act) {
   "validate" { Call-Tool "report-validate.ps1" $Arg }
   "plan" { Call-Tool "ai-plan.ps1" $Arg }
   "codex" { Call-Tool "ai-codex-review.ps1" $Arg }
+  "pr" { Call-Tool "agent-pr.ps1" $Arg }
   "apply" { Call-Tool "ai-apply.ps1" $Arg }
   default {
     Write-Host "Unknown action: $Action"
