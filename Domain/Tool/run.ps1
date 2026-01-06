@@ -31,8 +31,19 @@ Notes:
   Write-Host $txt
 }
 
+$ToolDir = $PSScriptRoot
+if (-not $ToolDir -or $ToolDir -eq "") {
+  if ($PSCommandPath) {
+    $ToolDir = Split-Path -Parent $PSCommandPath
+  } elseif ($MyInvocation -and $MyInvocation.MyCommand -and $MyInvocation.MyCommand.Path) {
+    $ToolDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+  } else {
+    $ToolDir = Join-Path (Get-Location) "Domain/Tool"
+  }
+}
+
 function Call-Tool([string]$Name, [string[]]$A) {
-  $p = Join-Path $PSScriptRoot $Name
+  $p = Join-Path $ToolDir $Name
   if (-not (Test-Path $p)) { throw "Tool not found: Domain/Tool/$Name" }
   & $p @A
   exit $LASTEXITCODE
