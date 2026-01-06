@@ -6,7 +6,7 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use App\Projection\AddressIndex\{IndexProjector, PdoRepository};
 use App\Service\Normalize\Normalizer;
-use App\Domain\Address\Event\AddressCreated;
+use App\Service\Address\Event\AddressCreatedEvent;
 
 final class IndexProjectorTest extends TestCase
 {
