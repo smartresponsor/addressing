@@ -6,7 +6,8 @@ param(
   [string]$Ref = "master",
   [string]$Kind = "fix",
   [string]$Message = "agent update",
-  [string]$Note = ""
+  [string]$Note = "",
+  [string]$Kid = "K1"
 )
 
 $ErrorActionPreference = "Stop"
@@ -22,8 +23,16 @@ function Hmac-Sha256-Hex([string]$Secret, [string]$Data) {
   } finally { $h.Dispose() }
 }
 
-$secret = $env:SR_TRIGGER_SECRET
-if (-not $secret) { throw "SR_TRIGGER_SECRET env var is required" }
+$kidUp = $Kid.Trim().ToUpper()
+if ($kidUp -notmatch '^K\d+$') { throw "Bad Kid: $Kid (expected K1, K2, ...)" }
+
+$envName = "SR_TRIGGER_SECRET_$kidUp"
+$secret = (Get-Item "Env:$envName" -ErrorAction SilentlyContinue).Value
+
+# backward compat (если вдруг надо)
+if (-not $secret) { $secret = $env:SR_TRIGGER_SECRET }
+
+if (-not $secret) { throw "$envName (or SR_TRIGGER_SECRET legacy) is not set in environment" }
 
 $ts = [int][DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
 
@@ -43,9 +52,10 @@ $sig = Hmac-Sha256-Hex $secret "$ts.$body"
 $headers = @{
   "X-SR-Timestamp" = "$ts"
   "X-SR-Signature" = $sig
+  "X-SR-Kid" = $kidUp
   "Content-Type" = "application/json"
 }
 
-Write-Host "POST $Url task=$Task ref=$Ref"
+Write-Host "POST $Url task=$Task ref=$Ref kid=$kidUp"
 $res = Invoke-RestMethod -Method Post -Uri $Url -Headers $headers -Body $body
 $res | ConvertTo-Json -Depth 6
