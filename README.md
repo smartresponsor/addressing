@@ -56,10 +56,10 @@ The applier updates normalized/geo fields, sets `validation_status=validated`, t
 
 
 ## GA — Hardening
-- Audit retention tool with TTL in days.
-- Projection daemon with durable watermark.
-- Index policy CLI to enable/disable trigram and composite index set.
-- Install script for on‑prem bootstrap (Postgres + MySQL).
+- Audit retention tool with TTL in days: `bin/address-audit-retention`.
+- Projection daemon with durable watermark: `bin/address-projection-daemon`.
+- Index policy CLI to enable/disable trigram and composite index set: `bin/address-index-policy`.
+- Install script for on‑prem bootstrap (Postgres + MySQL): `bin/address-migrate` + `bin/address-projection-migrate`.
 
 
 ## Mirror interfaces per Symfony layer
@@ -70,3 +70,8 @@ The applier updates normalized/geo fields, sets `validation_status=validated`, t
 - `src/ServiceInterface/Address/AddressOutboxDrainerInterface.php`
 - `src/UtilInterface/Address/AddressUlidInterface.php`
 Classes implement their mirrors accordingly.
+
+## Operations
+- Migration runbook: `docs/ops/migration.md`
+- Rollback runbook: `docs/ops/rollback.md`
+- Recovery runbook: `docs/ops/recovery.md`

@@ -14,6 +14,42 @@ permissions:
 jobs:
   gate:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: smartresponsor
+          MYSQL_USER: smartresponsor
+          MYSQL_PASSWORD: smartresponsor
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: smartresponsor
+          POSTGRES_USER: smartresponsor
+          POSTGRES_PASSWORD: smartresponsor
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U smartresponsor"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      MIN_COVERAGE: "80"
+      PG_DSN: pgsql:host=127.0.0.1;port=5432;dbname=smartresponsor
+      PG_USER: smartresponsor
+      PG_PASS: smartresponsor
+      MY_DSN: mysql:host=127.0.0.1;port=3306;dbname=smartresponsor
+      MY_USER: smartresponsor
+      MY_PASS: smartresponsor
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,6 +60,10 @@ jobs:
           php-version: "8.2"
           tools: composer
           coverage: none
+          extensions: pdo_mysql, pdo_pgsql, intl, mbstring, zip
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y bc
 
       - name: Cache Composer
         uses: actions/cache@v4
@@ -38,14 +78,32 @@ jobs:
       - name: Install dependency
         run: composer install --no-interaction --no-progress --prefer-dist
 
-      - name: Domain gate (soft)
+      - name: Domain gate (strict)
         shell: pwsh
         env:
           SR_DOMAIN: "__DOMAIN__"
-          SR_CANON_REQUIRED: "0"
-          SR_GATE_STRICT: "0"
+          SR_CANON_REQUIRED: "1"
+          SR_GATE_STRICT: "1"
         run: |
           pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "__DOMAIN__"
+
+      - name: Quality checks
+        run: |
+          composer phpstan
+          composer psalm
+          composer rector:dry
+
+      - name: Unit tests with coverage threshold
+        run: |
+          vendor/bin/phpunit --coverage-clover build/logs/clover.xml --coverage-text | tee build/logs/coverage.txt
+          COVERAGE=$(grep -Eo 'Lines:\s+[0-9]+(\.[0-9]+)?%' build/logs/coverage.txt | awk '{print $2}' | tr -d '%')
+          echo "Coverage: ${COVERAGE}%"
+          if [ -n "$COVERAGE" ] && [ "$(echo "$COVERAGE < $MIN_COVERAGE" | bc -l)" -eq 1 ]; then echo "Coverage below ${MIN_COVERAGE}%"; exit 1; fi
+
+      - name: Migration smoke check
+        run: |
+          php bin/address-migrate
+          php bin/address-projection-migrate
 
       - name: Upload report artifact
         if: always()
