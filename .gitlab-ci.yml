@@ -50,6 +50,39 @@ behat:
     - vendor/bin/behat --format=allure --out=build/allure-results --strict --no-interaction
 
 
+address_smoke:
+  stage: test
+  image: php:8.2
+  services:
+    - name: postgres:15
+      alias: postgres
+    - name: mysql:8.0
+      alias: mysql
+  variables:
+    POSTGRES_DB: address_ci
+    POSTGRES_USER: address
+    POSTGRES_PASSWORD: address
+    MYSQL_DATABASE: address_projection
+    MYSQL_USER: address
+    MYSQL_PASSWORD: address
+    MYSQL_ROOT_PASSWORD: root
+    PG_DSN: "pgsql:host=postgres;port=5432;dbname=address_ci"
+    PG_USER: address
+    PG_PASS: address
+    MY_DSN: "mysql:host=mysql;port=3306;dbname=address_projection"
+    MY_USER: address
+    MY_PASS: address
+  before_script:
+    - apt-get update && apt-get install -y git unzip libzip-dev libicu-dev libonig-dev libpq-dev
+    - docker-php-ext-install pdo pdo_mysql pdo_pgsql intl mbstring zip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --no-progress --no-interaction --prefer-dist
+  script:
+    - php bin/address-migrate
+    - php bin/address-projection-migrate
+    - php bin/address-projection-runner
+
+
 allure_report:
   stage: test
   image: alpine:latest

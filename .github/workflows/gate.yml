@@ -54,3 +54,74 @@ jobs:
           name: __DOMAIN__-report
           path: report/
           if-no-files-found: ignore
+
+  smoke-check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: address_ci
+          POSTGRES_USER: address
+          POSTGRES_PASSWORD: address
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U address -d address_ci"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: address_projection
+          MYSQL_USER: address
+          MYSQL_PASSWORD: address
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      PG_DSN: pgsql:host=127.0.0.1;port=5432;dbname=address_ci
+      PG_USER: address
+      PG_PASS: address
+      MY_DSN: mysql:host=127.0.0.1;port=3306;dbname=address_projection
+      MY_USER: address
+      MY_PASS: address
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: composer
+          coverage: none
+          extensions: pdo_mysql, pdo_pgsql
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.composer/cache/files
+            vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install dependency
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run address migrations
+        run: php bin/address-migrate
+
+      - name: Run projection migrations
+        run: php bin/address-projection-migrate
+
+      - name: Run projection runner
+        run: php bin/address-projection-runner
