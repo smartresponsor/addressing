@@ -34,7 +34,7 @@ jobs:
 
       - name: Build doc
         working-directory: docs
-        run: python -m mkdocs build --strict -f docs/mkdocs.yml --site-dir site-gh
+        run: python -m mkdocs build --strict -f mkdocs.yml --site-dir site-gh
 
 
       - name: Upload page artifact
