@@ -1,6 +1,6 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 
-name: address-codex-review
+name: __DOMAIN__-codex-review
 
 on:
   issue_comment:

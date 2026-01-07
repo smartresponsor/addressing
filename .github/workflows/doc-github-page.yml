@@ -1,13 +1,13 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 
-name: address-doc-github-page
+name: __DOMAIN__-doc-github-page
 
 on:
   push:
     branches: [ "master" ]
     paths:
       - "docs/**"
-      - ".github/workflows/address-doc-*.yml"
+      - ".github/workflows/doc-*.yml"
 
 permissions:
   contents: read
@@ -15,7 +15,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: address-doc-github-page
+  group: doc-github-page
   cancel-in-progress: true
 
 jobs:

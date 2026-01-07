@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   agent:
-    uses: ./.github/workflows/__DOMAIN__-agent-pr.yml
+    uses: ./.github/workflows/agent-pr.yml
     with:
       task: ${{ inputs.task }}
       kind: ${{ inputs.kind }}
