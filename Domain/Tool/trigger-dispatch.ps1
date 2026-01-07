@@ -2,27 +2,24 @@
 
 param(
   [Parameter(Mandatory=$true)][string]$Url,
-  [Parameter(Mandatory=$true)][ValidateSet("scan","health","doctor","validate","plan","codex")][string]$Task,
+  [Parameter(Mandatory=$true)][ValidateSet("scan","health","doctor","validate","plan","codex","pr")][string]$Task,
   [string]$Ref = "master",
+  [string]$Kind = "fix",
+  [string]$Message = "agent update",
   [string]$Note = ""
 )
 
 $ErrorActionPreference = "Stop"
 
-function To-Hex([byte[]]$Bytes) {
-  return ($Bytes | ForEach-Object { $_.ToString("x2") }) -join ""
-}
+function To-Hex([byte[]]$Bytes) { return ($Bytes | ForEach-Object { $_.ToString("x2") }) -join "" }
 
 function Hmac-Sha256-Hex([string]$Secret, [string]$Data) {
   $h = New-Object System.Security.Cryptography.HMACSHA256
   try {
     $h.Key = [System.Text.Encoding]::UTF8.GetBytes($Secret)
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($Data)
-    $hash = $h.ComputeHash($bytes)
-    return (To-Hex $hash)
-  } finally {
-    $h.Dispose()
-  }
+    return (To-Hex ($h.ComputeHash($bytes)))
+  } finally { $h.Dispose() }
 }
 
 $secret = $env:SR_TRIGGER_SECRET
@@ -34,6 +31,8 @@ $bodyObj = @{
   task = $Task
   ref = $Ref
   inputs = @{
+    kind = $Kind
+    message = $Message
     note = $Note
   }
 }
