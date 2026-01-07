@@ -31,12 +31,11 @@ jobs:
           path: |
             ~/.composer/cache/files
             vendor
+            .phpstan/cache
+            .psalm/cache
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-
-
-      - name: Install dependency
-        run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Domain gate (soft)
         shell: pwsh
@@ -46,6 +45,18 @@ jobs:
           SR_GATE_STRICT: "0"
         run: |
           pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "__DOMAIN__"
+
+      - name: Install dependency
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: PHPStan
+        run: composer run phpstan
+
+      - name: Psalm
+        run: composer run psalm
+
+      - name: Rector (dry-run)
+        run: composer run rector:dry
 
       - name: Upload report artifact
         if: always()

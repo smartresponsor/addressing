@@ -1,5 +1,6 @@
 stages:
   - test
+  - quality
 
 phpunit:
   stage: test
@@ -81,3 +82,36 @@ coverage:
     - bash <(curl -s https://codecov.io/bash) -f build/logs/clover.xml
   variables:
     CODECOV_TOKEN: $CODECOV_TOKEN
+
+phpstan:
+  stage: quality
+  image: php:8.2
+  before_script:
+    - apt-get update && apt-get install -y git unzip libzip-dev libicu-dev libonig-dev
+    - docker-php-ext-install pdo pdo_mysql intl mbstring zip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --no-progress --no-interaction --prefer-dist
+  script:
+    - composer run phpstan
+
+psalm:
+  stage: quality
+  image: php:8.2
+  before_script:
+    - apt-get update && apt-get install -y git unzip libzip-dev libicu-dev libonig-dev
+    - docker-php-ext-install pdo pdo_mysql intl mbstring zip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --no-progress --no-interaction --prefer-dist
+  script:
+    - composer run psalm
+
+rector_dry:
+  stage: quality
+  image: php:8.2
+  before_script:
+    - apt-get update && apt-get install -y git unzip libzip-dev libicu-dev libonig-dev
+    - docker-php-ext-install pdo pdo_mysql intl mbstring zip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --no-progress --no-interaction --prefer-dist
+  script:
+    - composer run rector:dry
