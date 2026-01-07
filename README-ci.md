@@ -1,7 +1,7 @@
 Address CI gate (step 13)
 
 What it does
-- Runs Domain overlay checks on every PR/push to master:
+- Runs Domain overlay checks on every PR/push to master (mandatory, blocking gate):
   - doctor, scan, health, validate
 - Uploads report/ as CI artifact
 

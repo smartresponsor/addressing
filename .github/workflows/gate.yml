@@ -42,8 +42,8 @@ jobs:
         shell: pwsh
         env:
           SR_DOMAIN: "__DOMAIN__"
-          SR_CANON_REQUIRED: "0"
-          SR_GATE_STRICT: "0"
+          SR_CANON_REQUIRED: "1"
+          SR_GATE_STRICT: "1"
         run: |
           pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "__DOMAIN__"
 
