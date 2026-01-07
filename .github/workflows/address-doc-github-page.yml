@@ -34,10 +34,8 @@ jobs:
 
       - name: Build doc
         working-directory: docs
-        run: >
-          python -m mkdocs build --strict
-          --site-url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
-          --site-dir site-gh
+        run: python -m mkdocs build --strict --site-dir site-gh
+
 
       - name: Upload page artifact
         uses: actions/upload-pages-artifact@v3
