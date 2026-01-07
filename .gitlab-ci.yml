@@ -12,13 +12,23 @@ phpunit:
     MYSQL_DATABASE: testdb
     MYSQL_USER: test
     MYSQL_PASSWORD: test
+    COVERAGE_MIN: "80"
   before_script:
     - apt-get update && apt-get install -y git unzip libzip-dev libicu-dev libonig-dev
     - docker-php-ext-install pdo pdo_mysql intl mbstring zip
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
     - composer install --no-progress --no-interaction --prefer-dist
   script:
-    - vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+    - mkdir -p build/logs
+    - vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml | tee build/logs/coverage.txt
+    - |
+      coverage=$(awk -F'[:%]' '/^Lines:/ {gsub(/ /,"",$2); print $2}' build/logs/coverage.txt)
+      if [ -z "$coverage" ]; then
+        echo "Coverage parse failed (Lines)."
+        exit 1
+      fi
+      awk -v coverage="$coverage" -v min="$COVERAGE_MIN" 'BEGIN {exit (coverage+0 < min)}' \
+        || { echo "Coverage $coverage% is ниже минимума ${COVERAGE_MIN}%"; exit 1; }
   artifacts:
     when: always
     reports:
@@ -76,8 +86,18 @@ sonar:
 coverage:
   stage: test
   image: php:8.2
-  script:
-    - vendor/bin/phpunit --coverage-clover build/logs/clover.xml
-    - bash <(curl -s https://codecov.io/bash) -f build/logs/clover.xml
   variables:
+    COVERAGE_MIN: "80"
     CODECOV_TOKEN: $CODECOV_TOKEN
+  script:
+    - mkdir -p build/logs
+    - vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml | tee build/logs/coverage.txt
+    - |
+      coverage=$(awk -F'[:%]' '/^Lines:/ {gsub(/ /,"",$2); print $2}' build/logs/coverage.txt)
+      if [ -z "$coverage" ]; then
+        echo "Coverage parse failed (Lines)."
+        exit 1
+      fi
+      awk -v coverage="$coverage" -v min="$COVERAGE_MIN" 'BEGIN {exit (coverage+0 < min)}' \
+        || { echo "Coverage $coverage% is ниже минимума ${COVERAGE_MIN}%"; exit 1; }
+    - bash <(curl -s https://codecov.io/bash) -f build/logs/clover.xml
