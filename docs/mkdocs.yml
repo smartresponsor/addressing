@@ -1,5 +1,6 @@
 site_name: Addressing
 site_url: https://docs.addressing.smartresponsor.com/
+docs_dir: page
 use_directory_urls: true
 
 plugins:
