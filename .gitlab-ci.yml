@@ -1,9 +1,17 @@
 stages:
   - test
 
+.php_job: &php_job
+  image: php:8.2
+  before_script:
+    - apt-get update && apt-get install -y git unzip libzip-dev libicu-dev libonig-dev
+    - docker-php-ext-install pdo pdo_mysql intl mbstring zip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --no-progress --no-interaction --prefer-dist
+
 phpunit:
   stage: test
-  image: php:8.2
+  <<: *php_job
   services:
     - name: mysql:8.0
       alias: db
@@ -12,11 +20,6 @@ phpunit:
     MYSQL_DATABASE: testdb
     MYSQL_USER: test
     MYSQL_PASSWORD: test
-  before_script:
-    - apt-get update && apt-get install -y git unzip libzip-dev libicu-dev libonig-dev
-    - docker-php-ext-install pdo pdo_mysql intl mbstring zip
-    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-    - composer install --no-progress --no-interaction --prefer-dist
   script:
     - vendor/bin/phpunit --coverage-clover build/logs/clover.xml
   artifacts:
@@ -29,10 +32,43 @@ phpunit:
       - build/logs
   coverage: '/Lines.*: (\d+.\d+%)/'
 
+phpstan:
+  stage: test
+  <<: *php_job
+  script:
+    - vendor/bin/phpstan analyse src --level=max
+
+psalm:
+  stage: test
+  <<: *php_job
+  script:
+    - vendor/bin/psalm
+
+rector:
+  stage: test
+  <<: *php_job
+  script:
+    - vendor/bin/rector process --dry-run
+
+domain_gate:
+  stage: test
+  image: mcr.microsoft.com/powershell:7.4-alpine-3.19
+  variables:
+    SR_DOMAIN: "__DOMAIN__"
+    SR_CANON_REQUIRED: "0"
+    SR_GATE_STRICT: "0"
+  script:
+    - pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "__DOMAIN__"
+  artifacts:
+    when: always
+    paths:
+      - report/
+    expire_in: 1 week
+
 
 behat:
   stage: test
-  image: php:8.2
+  <<: *php_job
   services:
     - name: mysql:8.0
       alias: db
@@ -41,11 +77,6 @@ behat:
     MYSQL_DATABASE: testdb
     MYSQL_USER: test
     MYSQL_PASSWORD: test
-  before_script:
-    - apt-get update && apt-get install -y git unzip libzip-dev libicu-dev libonig-dev
-    - docker-php-ext-install pdo pdo_mysql intl mbstring zip
-    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-    - composer install --no-progress --no-interaction --prefer-dist
   script:
     - vendor/bin/behat --format=allure --out=build/allure-results --strict --no-interaction
 
@@ -75,7 +106,7 @@ sonar:
 
 coverage:
   stage: test
-  image: php:8.2
+  <<: *php_job
   script:
     - vendor/bin/phpunit --coverage-clover build/logs/clover.xml
     - bash <(curl -s https://codecov.io/bash) -f build/logs/clover.xml
