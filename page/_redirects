@@ -1,0 +1,6 @@
+# Normalize trailing slash
+/*  /:splat  301
+
+# If you decide Cloudflare custom domain is canonical, keep the docs in one place.
+# Example:
+# https://address-doc.pages.dev/*  https://docs.example.com/:splat  301
