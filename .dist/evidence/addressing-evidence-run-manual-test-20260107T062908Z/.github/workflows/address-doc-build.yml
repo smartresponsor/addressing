@@ -1,0 +1,32 @@
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+name: address-doc-build
+
+on:
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - "docs/**"
+      - ".github/workflows/address-doc-*.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-doc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install doc dependency
+        working-directory: docs
+        run: python -m pip install -r requirements.txt
+
+      - name: Build doc
+        working-directory: docs
+        run: python -m mkdocs build --strict

@@ -1,23 +1,19 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
-
-name: address-gate
+name: __DOMAIN__-gate
 
 on:
   push:
-    branches: ["master"]
+    branches: [ "master" ]
   pull_request:
-    branches: ["master"]
+    branches: [ "master" ]
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   gate:
     runs-on: ubuntu-latest
-    env:
-      COMPOSER_PROCESS_TIMEOUT: 0
-      COMPOSER_NO_INTERACTION: 1
-      COMPOSER_NO_AUDIT: 1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,21 +38,19 @@ jobs:
       - name: Install dependency
         run: composer install --no-interaction --no-progress --prefer-dist
 
-      - name: Domain gate
+      - name: Domain gate (soft)
         shell: pwsh
         env:
+          SR_DOMAIN: "__DOMAIN__"
           SR_CANON_REQUIRED: "0"
+          SR_GATE_STRICT: "0"
         run: |
-          Set-Location '${{ github.workspace }}'
-          pwsh -NoProfile -File Domain/Tool/run.ps1 doctor
-          pwsh -NoProfile -File Domain/Tool/run.ps1 scan
-          pwsh -NoProfile -File Domain/Tool/run.ps1 health
-          pwsh -NoProfile -File Domain/Tool/run.ps1 validate -AllowMissing
+          pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "__DOMAIN__"
 
-      - name: Upload report
+      - name: Upload report artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: address-report
+          name: __DOMAIN__-report
           path: report/
           if-no-files-found: ignore

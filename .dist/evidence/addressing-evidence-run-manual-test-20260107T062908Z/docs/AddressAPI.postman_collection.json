@@ -1,0 +1,133 @@
+{
+  "info": {
+    "name": "Address API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Address",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"city\": \"Kyiv\",\n  \"country\": \"UA\",\n  \"street\": \"Khreshchatyk\",\n  \"zipcode\": \"01001\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/address",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "address"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Address by ID",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8000/address/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "address",
+            "1"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Search Address by City",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8000/address/search?city=Kyiv",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "address",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "city",
+              "value": "Kyiv"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "List Addresses (Paginated)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8000/address/list?page=1&limit=10",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "address",
+            "list"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Advanced Search",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"city\": \"Kyiv\",\n  \"country\": \"UA\",\n  \"page\": 1,\n  \"limit\": 5\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/address/search-advanced",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "address",
+            "search-advanced"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+﻿// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 
 function textEncoder() {
   return new TextEncoder();
@@ -23,52 +23,56 @@ function safeEqual(a, b) {
 
 async function hmacHex(secret, data) {
   const key = await crypto.subtle.importKey(
-    "raw",
-    textEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
+      "raw",
+      textEncoder().encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
   );
   const sig = await crypto.subtle.sign("HMAC", key, textEncoder().encode(data));
   return toHex(sig);
 }
 
 function envInt(env, key, def) {
-  const v = env[key];
+  const v = env && env[key];
   if (typeof v !== "string" || v.trim() === "") return def;
   const n = Number(v);
   return Number.isFinite(n) ? n : def;
 }
 
 function envStr(env, key, def) {
-  const v = env[key];
-  if (typeof v !== "string" || typeof v.trim !== "function") return def;
-  if (v.trim() === "") return def;
-  return v;
+  const v = env && env[key];
+  if (typeof v !== "string") return def;
+  const s = v.trim();
+  return s === "" ? def : s;
 }
 
 function parseAllowedTask(env) {
-  const raw = envStr(env, "SR_ALLOWED_TASK", "scan,health,doctor,validate,plan,codex");
-  return raw.split(",").map(s => s.trim()).filter(Boolean);
+  const raw = envStr(env, "SR_ALLOWED_TASK", "scan,health,doctor,validate,plan,codex,pr");
+  return raw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
 }
 
-function json(status, obj) {
+function json(obj, status = 200) {
   return new Response(JSON.stringify(obj, null, 2), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8" }
+    headers: { "content-type": "application/json; charset=utf-8" },
   });
 }
 
 function bad(status, code, message) {
-  return json(status, { ok: false, code, message });
+  return json({ ok: false, code, message }, status);
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    if (url.pathname === "/health") {
-      return json(200, { ok: true, service: "address-agent-trigger" });
+    if (url.pathname === "/health" || url.pathname === "/health/") {
+      const repoName = envStr(env, "GH_REPO", "unknown");
+      return json({ ok: true, service: `${repoName}-agent-trigger` }, 200);
     }
 
     if (url.pathname !== "/dispatch") {
@@ -86,11 +90,15 @@ export default {
     const sigHeader = (request.headers.get("X-SR-Signature") || "").toLowerCase();
 
     const ts = Number(tsHeader);
-    if (!Number.isFinite(ts) || ts <= 0) return bad(401, "BadTimestamp", "X-SR-Timestamp required (unix seconds)");
+    if (!Number.isFinite(ts) || ts <= 0) {
+      return bad(401, "BadTimestamp", "X-SR-Timestamp required (unix seconds)");
+    }
 
     const skew = envInt(env, "SR_TIME_SKEW_SEC", 300);
     const now = Math.floor(Date.now() / 1000);
-    if (Math.abs(now - ts) > skew) return bad(401, "TimestampSkew", "Timestamp outside allowed window");
+    if (Math.abs(now - ts) > skew) {
+      return bad(401, "TimestampSkew", "Timestamp outside allowed window");
+    }
 
     const rawBody = await request.text();
     const expected = await hmacHex(secret, `${ts}.${rawBody}`);
@@ -122,35 +130,50 @@ export default {
 
     const ref = String(payload.ref || refDefault).trim() || refDefault;
 
-    const inputs = (payload && typeof payload.inputs === "object" && payload.inputs) ? payload.inputs : {};
+    const inputs =
+        payload && typeof payload.inputs === "object" && payload.inputs ? payload.inputs : {};
     inputs.task = task;
 
     const ghUrl = `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/dispatches`;
+
     const ghRes = await fetch(ghUrl, {
       method: "POST",
       headers: {
-        "Accept": "application/vnd.github+json",
-        "Authorization": `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${token}`,
         "X-GitHub-Api-Version": ghApiVersion,
-        "User-Agent": "sr-address-agent-trigger"
+        "User-Agent": `sr-${repo}-agent-trigger`,
       },
-      body: JSON.stringify({ ref, inputs })
+      body: JSON.stringify({ ref, inputs }),
     });
 
     if (ghRes.status === 204) {
-      return json(200, { ok: true, dispatched: true, repo: `${owner}/${repo}`, workflow, ref, task });
+      return json(
+          {
+            ok: true,
+            dispatched: true,
+            repo: `${owner}/${repo}`,
+            workflow,
+            ref,
+            task,
+          },
+          200
+      );
     }
 
     const text = await ghRes.text();
-    return json(ghRes.status, {
-      ok: false,
-      dispatched: false,
-      status: ghRes.status,
-      repo: `${owner}/${repo}`,
-      workflow,
-      ref,
-      task,
-      github: text.slice(0, 2000)
-    });
-  }
+    return json(
+        {
+          ok: false,
+          dispatched: false,
+          status: ghRes.status,
+          repo: `${owner}/${repo}`,
+          workflow,
+          ref,
+          task,
+          github: text.slice(0, 2000),
+        },
+        ghRes.status
+    );
+  },
 };

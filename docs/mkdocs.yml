@@ -1,4 +1,5 @@
-site_name: Addressing
+﻿site_name: Addressing
+docs_dir: page
 site_description: SmartResponsor Addressing component
 repo_url: https://github.com/taa0662621456/addressing
 repo_name: taa0662621456/addressing
@@ -16,18 +17,22 @@ theme:
     - search.highlight
 nav:
   - Home: index.md
-  - Start:
-      - Quick start: guide/quick-start.md
-      - Local check: guide/local-check.md
-  - Operation:
-      - Cloudflare Page: operation/cloudflare-page.md
-      - GitHub Page reserve: operation/github-page.md
+  - Automation:
+      - Automation kit: automation-kit.md
   - Release:
-      - Checklist: release/checklist.md
-      - Report: release/report.md
-  - Reference:
-      - Command: reference/command.md
+      - Checklist: RELEASE_CHECKLIST.md
+      - Notes: RELEASE_NOTES.md
+  - Sketch 31:
+      - Envelope: address-sketch31-envelope-split-address-data-engine-locator.md
+      - Compile repair: address-sketch31-report-compile-repair.md
+      - Contract validated: address-sketch31-report-contract-validated.md
+      - Cut locator: address-sketch31-report-cut-locator.md
+      - HTTP addressdata: address-sketch31-report-http-addressdata.md
+      - Runtime fix: address-sketch31-report-runtime-fix.md
+      - Split tooling: address-sketch31-report-split-tooling.md
+
 extra_css:
   - asset/extra.css
+
 
 

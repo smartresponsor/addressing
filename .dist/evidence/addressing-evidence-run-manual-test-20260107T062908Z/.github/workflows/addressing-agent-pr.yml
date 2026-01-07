@@ -1,22 +1,26 @@
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
-
-name: address-agent-pr
+﻿# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+name: addressing-agent-pr
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       task:
-        description: "plan|codex|pr"
+        type: string
         required: true
         default: "pr"
+      kind:
+        type: string
+        required: false
+        default: "fix"
       message:
-        description: "Short reason (used in PR title/body)"
+        type: string
         required: false
         default: "agent update"
 
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 jobs:
   agent:
@@ -40,51 +44,56 @@ jobs:
       - name: Run Domain tools (soft)
         shell: pwsh
         env:
+          SR_DOMAIN: "addressing"
           SR_CANON_REQUIRED: "0"
         run: |
-          Set-Location '${{ github.workspace }}'
+          Set-Location "${{ github.workspace }}"
 
-          pwsh -NoProfile -File Domain/Tool/run.ps1 doctor
+          pwsh -NoProfile -File Domain/Tool/run.ps1 doctor -Domain "addressing" -Repo "${{ github.workspace }}"
           $global:LASTEXITCODE = 0
 
-          pwsh -NoProfile -File Domain/Tool/run.ps1 scan
+          pwsh -NoProfile -File Domain/Tool/run.ps1 scan -Domain "addressing"
           $global:LASTEXITCODE = 0
 
-          pwsh -NoProfile -File Domain/Tool/run.ps1 health
+          pwsh -NoProfile -File Domain/Tool/run.ps1 health -Domain "addressing" -Repo "${{ github.workspace }}"
           $global:LASTEXITCODE = 0
 
-          pwsh -NoProfile -File Domain/Tool/run.ps1 validate -AllowMissing
+          pwsh -NoProfile -File Domain/Tool/run.ps1 validate -Domain "addressing" -Repo "${{ github.workspace }}" -AllowMissing
           $global:LASTEXITCODE = 0
 
           if ('${{ inputs.task }}' -eq 'plan') {
-            pwsh -NoProfile -File Domain/Tool/run.ps1 plan
+            pwsh -NoProfile -File Domain/Tool/run.ps1 plan -Domain "addressing"
             $global:LASTEXITCODE = 0
           }
 
           if ('${{ inputs.task }}' -eq 'codex' -or '${{ inputs.task }}' -eq 'pr') {
-            pwsh -NoProfile -File Domain/Tool/run.ps1 plan
+            pwsh -NoProfile -File Domain/Tool/run.ps1 plan -Domain "addressing"
             $global:LASTEXITCODE = 0
-            pwsh -NoProfile -File Domain/Tool/run.ps1 codex
+            pwsh -NoProfile -File Domain/Tool/run.ps1 codex -Domain "addressing"
             $global:LASTEXITCODE = 0
           }
 
-      - name: Prepare PR branch (only for task=pr)
+      - name: Prepare PR branch (task=pr)
         if: ${{ inputs.task == 'pr' }}
         shell: bash
         run: |
           set -euo pipefail
           ts="$(date -u +%Y%m%dT%H%M%SZ)"
-          br="agent/pr-${ts}"
+          kind="${{ inputs.kind }}"
+          kind="$(echo "$kind" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9-' )"
+          if [ -z "$kind" ]; then kind="fix"; fi
+          br="ai/${kind}-${ts}"
+          echo "KIND=$kind" >> "$GITHUB_ENV"
           echo "BRANCH=$br" >> "$GITHUB_ENV"
           git checkout -b "$br"
 
-      - name: Allowlist check + commit (only for task=pr)
+      - name: Commit allowlisted files (task=pr)
         if: ${{ inputs.task == 'pr' }}
         shell: bash
         run: |
           set -euo pipefail
 
-          bad="$(git status --porcelain | awk '{print $2}' | grep -vE '^(Domain/|\.github/workflows/|docs/)$' || true)"
+          bad="$(git status --porcelain | awk '{print $2}' | grep -vE '^(Domain/|\.github/workflows/|docs/)' || true)"
           if [ -n "$bad" ]; then
             echo "Blocked paths detected:"
             echo "$bad"
@@ -99,52 +108,41 @@ jobs:
           fi
 
           msg="${{ inputs.message }}"
-          git commit -m "ai: ${msg}"
+          kind="${KIND:-fix}"
+          git commit -m "${kind}: ${msg}"
 
-      - name: Push branch (only for task=pr)
+      - name: Push branch (task=pr)
         if: ${{ inputs.task == 'pr' }}
         shell: bash
         run: |
           set -euo pipefail
           git push -u origin "$BRANCH"
 
-      - name: Install gh (only for task=pr)
-        if: ${{ inputs.task == 'pr' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          if command -v gh >/dev/null 2>&1; then
-            gh --version
-            exit 0
-          fi
-          sudo apt-get update -y
-          sudo apt-get install -y gh
-          gh --version
-
-      - name: Create PR (only for task=pr)
+      - name: Create PR (task=pr)
         if: ${{ inputs.task == 'pr' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          title="ai: ${{ inputs.message }}"
-          cat > /tmp/pr_body.txt <<'EOF'
+          kind="${KIND:-fix}"
+          title="${kind}: ${{ inputs.message }}"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          cat > /tmp/pr_body.txt <<EOF
           Automated agent PR.
 
-          - Task: __TASK__
-          - Run: __RUN__
+          - Task: ${{ inputs.task }}
+
+          - Kind: ${KIND:-fix}
+          - Run: $run_url
           EOF
-          
-          sed -i "s|__TASK__|${{ inputs.task }}|g" /tmp/pr_body.txt
-          sed -i "s|__RUN__|$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID|g" /tmp/pr_body.txt
-          
           gh pr create --base master --head "$BRANCH" --title "$title" --body-file /tmp/pr_body.txt || true
 
       - name: Upload agent artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: address-agent-report
+          name: addressing-agent-report
           path: report/
           if-no-files-found: ignore
+

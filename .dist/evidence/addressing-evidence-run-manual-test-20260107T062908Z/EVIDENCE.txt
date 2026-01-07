@@ -1,0 +1,6 @@
+﻿domain: addressing
+kind: run
+ref: manual-test
+train: 
+tsUtc: 2026-01-07T06:29:09.0421324Z
+commit: e39add515e07c38a5f215a9b87db9a5433bd987d

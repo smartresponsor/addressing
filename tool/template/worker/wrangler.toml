@@ -1,0 +1,13 @@
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+name = "__DOMAIN__-agent-trigger"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+GH_OWNER = "__OWNER__"
+GH_REPO = "__REPO__"
+GH_WORKFLOW = "__DOMAIN__-agent-dispatch.yml"
+GH_REF = "master"
+SR_TIME_SKEW_SEC = "300"
+SR_ALLOWED_TASK = "scan,health,doctor,validate,plan,codex,pr"
