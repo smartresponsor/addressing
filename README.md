@@ -15,6 +15,11 @@ This package contains:
 3) Use `SmartResponsor\Layer\Address\AddressRepository` in your bootstrap to persist data.
 4) Run `php bin/address-projection-runner` to refresh MySQL projection.
 
+## Ops runbooks
+- [Migration](docs/ops/migration.md)
+- [Rollback](docs/ops/rollback.md)
+- [Recovery](docs/ops/recovery.md)
+
 ## Canon
 - Layer-first path: `src/Entity/Address/Address*.php`; mirror interface in `src/Contract/Address/`.
 - No plural in class or method names.
