@@ -56,10 +56,10 @@ The applier updates normalized/geo fields, sets `validation_status=validated`, t
 
 
 ## GA — Hardening
-- Audit retention tool with TTL in days.
-- Projection daemon with durable watermark.
-- Index policy CLI to enable/disable trigram and composite index set.
-- Install script for on‑prem bootstrap (Postgres + MySQL).
+- Audit retention tool with TTL in days → `bin/address-audit-retention` (purges `address_audit` based on `ADDRESS_AUDIT_TTL_DAYS`).
+- Projection daemon with durable watermark → `bin/address-projection-daemon` (persists watermark in `ADDRESS_PROJECTION_STATE`).
+- Index policy CLI to enable/disable trigram and composite index set → `bin/address-index-policy` (`enable/disable-trgm`, `enable/disable-composite`).
+- Install script for on‑prem bootstrap (Postgres + MySQL) → planned (roadmap: add `bin/address-install` with bootstrap instructions).
 
 
 ## Mirror interfaces per Symfony layer
