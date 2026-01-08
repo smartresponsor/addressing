@@ -1,0 +1,36 @@
+﻿# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+name: addressing-gate-agent
+
+on:
+  push:
+    branches:
+      - "ai/**"
+  pull_request:
+    branches-ignore:
+      - "master"
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: composer
+
+      - run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: PHPStan (soft)
+        continue-on-error: true
+        run: vendor/bin/phpstan analyse src --level=max
+
+      - name: Tests (soft)
+        continue-on-error: true
+        run: vendor/bin/phpunit || true
