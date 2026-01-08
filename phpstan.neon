@@ -2,8 +2,8 @@ parameters:
   level: 7
   paths:
     - src
-  checkGenericClassInNonGenericObjectType: false
   reportUnmatchedIgnoredErrors: true
   parallel:
     processTimeout: 300.0
-includes: []
+includes:
+  - phpstan-baseline.neon

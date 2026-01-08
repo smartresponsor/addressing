@@ -1,66 +1,109 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 
 param(
-  [string]$Base = "master",
-  [string]$TaskDir = "Domain/Ai/task",
-  [string]$PlanPath = "report/address-ai-plan.md",
-  [string]$CodexPath = "report/address-codex-prompt.txt",
-  [string]$AllowPath = "Domain/**,.github/workflows/**,docs/**"
+    [string]$Base = "master",
+    [string]$TaskDir = "Domain/Ai/task",
+    [string]$PlanPath = "report/address-ai-plan.md",
+    [string]$CodexPath = "report/address-codex-prompt.txt",
+    [string]$AllowPath = "Domain/**,.github/workflows/**,docs/**"
 )
 
 $ErrorActionPreference = "Stop"
 
-function Ensure-Dir([string]$Path) {
-  if ($null -eq $Path -or $Path.Trim() -eq "") { return }
-  if (-not (Test-Path $Path)) { New-Item -ItemType Directory -Force -Path $Path | Out-Null }
-}
-
-function Read-Text([string]$Path) {
-  if (-not (Test-Path $Path)) { return "" }
-  return (Get-Content -LiteralPath $Path -Raw -Encoding UTF8)
-}
-
-function Get-UtcStamp {
-  return (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ")
-}
-
-function Get-BranchName([string]$stamp) {
-  if ($env:SR_AGENT_BRANCH -and $env:SR_AGENT_BRANCH.Trim() -ne "") {
-    return $env:SR_AGENT_BRANCH.Trim()
-  }
-  return "agent/pr-$stamp"
-}
-
-function Get-RepoSlug {
-  $url = (git config --get remote.origin.url)
-  if (-not $url) { return "" }
-  if ($url -match "github\.com[:/](.+?)(\.git)?$") { return $Matches[1] }
-  return ""
-}
-
-function Assert-AllowList([string[]]$changed, [string]$allowCsv) {
-  $allow = @()
-  foreach ($a in $allowCsv.Split(",")) {
-    $t = $a.Trim()
-    if ($t -ne "") { $allow += $t }
-  }
-
-  foreach ($p in $changed) {
-    $ok = $false
-    foreach ($rule in $allow) {
-      if ($rule -eq "Domain/**" -and $p -like "Domain/*") { $ok = $true; break }
-      if ($rule -eq ".github/workflows/**" -and $p -like ".github/workflows/*") { $ok = $true; break }
-      if ($rule -eq "docs/**" -and $p -like "docs/*") { $ok = $true; break }
+function Ensure-Dir([string]$Path)
+{
+    if ($null -eq $Path -or $Path.Trim() -eq "")
+    {
+        return
     }
-    if (-not $ok) { throw "Path is not allowed for agent PR: $p" }
-  }
+    if (-not(Test-Path $Path))
+    {
+        New-Item -ItemType Directory -Force -Path $Path | Out-Null
+    }
+}
+
+function Read-Text([string]$Path)
+{
+    if (-not(Test-Path $Path))
+    {
+        return ""
+    }
+    return (Get-Content -LiteralPath $Path -Raw -Encoding UTF8)
+}
+
+function Get-UtcStamp
+{
+    return (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ")
+}
+
+function Get-BranchName([string]$stamp)
+{
+    if ($env:SR_AGENT_BRANCH -and $env:SR_AGENT_BRANCH.Trim() -ne "")
+    {
+        return $env:SR_AGENT_BRANCH.Trim()
+    }
+    return "agent/pr-$stamp"
+}
+
+function Get-RepoSlug
+{
+    $url = (git config --get remote.origin.url)
+    if (-not$url)
+    {
+        return ""
+    }
+    if ($url -match "github\.com[:/](.+?)(\.git)?$")
+    {
+        return $Matches[1]
+    }
+    return ""
+}
+
+function Assert-AllowList([string[]]$changed, [string]$allowCsv)
+{
+    $allow = @()
+    foreach ($a in $allowCsv.Split(","))
+    {
+        $t = $a.Trim()
+        if ($t -ne "")
+        {
+            $allow += $t
+        }
+    }
+
+    foreach ($p in $changed)
+    {
+        $ok = $false
+        foreach ($rule in $allow)
+        {
+            if ($rule -eq "Domain/**" -and $p -like "Domain/*")
+            {
+                $ok = $true; break
+            }
+            if ($rule -eq ".github/workflows/**" -and $p -like ".github/workflows/*")
+            {
+                $ok = $true; break
+            }
+            if ($rule -eq "docs/**" -and $p -like "docs/*")
+            {
+                $ok = $true; break
+            }
+        }
+        if (-not$ok)
+        {
+            throw "Path is not allowed for agent PR: $p"
+        }
+    }
 }
 
 $stamp = Get-UtcStamp
 $branch = Get-BranchName $stamp
 
 $repoSlug = Get-RepoSlug
-if (-not $repoSlug -or $repoSlug.Trim() -eq "") { throw "Cannot detect repo slug from origin remote." }
+if (-not$repoSlug -or $repoSlug.Trim() -eq "")
+{
+    throw "Cannot detect repo slug from origin remote."
+}
 
 $plan = Read-Text $PlanPath
 $codex = Read-Text $CodexPath
@@ -78,22 +121,28 @@ $body += "- base: $Base"
 $body += ""
 $body += "## Plan"
 $body += ""
-if ($plan.Trim() -ne "") {
-  $body += "```text"
-  $body += $plan.TrimEnd()
-  $body += "```"
-} else {
-  $body += "_Plan file not found: $PlanPath_"
+if ($plan.Trim() -ne "")
+{
+    $body += "```text"
+    $body += $plan.TrimEnd()
+    $body += '```'
+}
+else
+{
+    $body += "_Plan file not found: $PlanPath_"
 }
 $body += ""
 $body += "## Codex prompt"
 $body += ""
-if ($codex.Trim() -ne "") {
-  $body += "```text"
-  $body += $codex.TrimEnd()
-  $body += "```"
-} else {
-  $body += "_Codex prompt file not found: $CodexPath_"
+if ($codex.Trim() -ne "")
+{
+    $body += "```text"
+    $body += $codex.TrimEnd()
+    $body += '```'
+}
+else
+{
+    $body += "_Codex prompt file not found: $CodexPath_"
 }
 
 ($body -join "`n") | Set-Content -LiteralPath $taskFile -Encoding UTF8
@@ -105,7 +154,10 @@ git checkout -B $branch "origin/$Base" | Out-Null
 git add $taskFile
 
 $changed = (git diff --cached --name-only)
-if (-not $changed -or $changed.Count -eq 0) { throw "Nothing to commit for PR." }
+if (-not$changed -or $changed.Count -eq 0)
+{
+    throw "Nothing to commit for PR."
+}
 
 Assert-AllowList $changed $AllowPath
 
@@ -121,5 +173,12 @@ $prBody = "Agent task generated by workflow. See $taskFile."
 gh pr create --base $Base --head $branch --title $prTitle --body $prBody | Out-Null
 
 $prUrl = (gh pr view --json url -q .url)
-if ($prUrl) { Write-Host "OK: PR $prUrl" } else { Write-Host "OK: PR created" }
+if ($prUrl)
+{
+    Write-Host "OK: PR $prUrl"
+}
+else
+{
+    Write-Host "OK: PR created"
+}
 exit 0
