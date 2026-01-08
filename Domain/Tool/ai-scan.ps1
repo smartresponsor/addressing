@@ -7,16 +7,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-function Ensure-Dir([string]$Path) {
-  if ([string]::IsNullOrWhiteSpace($Path)) { return }
-  if (-not (Test-Path $Path)) { New-Item -ItemType Directory -Force -Path $Path | Out-Null }
-}
-
-function Resolve-Domain([string]$d) {
-  if (-not [string]::IsNullOrWhiteSpace($d)) { return $d }
-  if ($env:SR_DOMAIN -and -not [string]::IsNullOrWhiteSpace($env:SR_DOMAIN)) { return $env:SR_DOMAIN.Trim() }
-  return "component"
-}
+. "$PSScriptRoot/lib/common.ps1"
 
 function Find-CanonBin {
   $candidates = @(
@@ -43,7 +34,10 @@ if (-not $bin) {
   if ($env:SR_CANON_SCAN_CMD -and $env:SR_CANON_SCAN_CMD.Trim() -ne "") {
     $cmd = $env:SR_CANON_SCAN_CMD.Replace("{out}", $Out)
     Write-Host "Running: $cmd"
-    cmd /c $cmd | Out-Null
+    $proc = Start-Process -FilePath "cmd.exe" -ArgumentList @("/c", $cmd) -NoNewWindow -Wait -PassThru
+    if ($proc.ExitCode -ne 0) {
+      throw "Canon scan command failed (exit $($proc.ExitCode)): $cmd"
+    }
     if (-not (Test-Path $Out)) {
       throw "Canon scan finished but output not found: $Out"
     }

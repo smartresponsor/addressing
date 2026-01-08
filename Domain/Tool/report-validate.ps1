@@ -9,16 +9,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-function Ensure-Dir([string]$Path) {
-  if ([string]::IsNullOrWhiteSpace($Path)) { return }
-  if (-not (Test-Path $Path)) { New-Item -ItemType Directory -Force -Path $Path | Out-Null }
-}
-
-function Resolve-Domain([string]$d) {
-  if (-not [string]::IsNullOrWhiteSpace($d)) { return $d }
-  if ($env:SR_DOMAIN -and -not [string]::IsNullOrWhiteSpace($env:SR_DOMAIN)) { return $env:SR_DOMAIN.Trim() }
-  return "component"
-}
+. "$PSScriptRoot/lib/common.ps1"
 
 $Domain = Resolve-Domain $Domain
 $repoPath = Resolve-Path -Path $Repo -ErrorAction Stop
@@ -46,7 +37,8 @@ if (-not (Test-Path $reportDir)) {
   throw "report directory not found: $reportDir"
 }
 
-$files = Get-ChildItem -Path $reportDir -Filter "*.json" -File -ErrorAction SilentlyContinue
+$files = Get-ChildItem -Path $reportDir -Filter "*.json" -File -ErrorAction SilentlyContinue |
+  Sort-Object -Property FullName
 $bad = @()
 foreach ($f in $files) {
   try {
@@ -61,7 +53,7 @@ $outObj = [ordered]@{
   ok = $okFlag
   domain = $Domain
   jsonCount = $files.Count
-  invalidJson = $bad
+  invalidJson = ($bad | Sort-Object)
   tsUtc = (Get-Date).ToUniversalTime().ToString("o")
 }
 
