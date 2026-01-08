@@ -1,9 +1,36 @@
 stages:
+  - quality
   - test
+
+.php_job_template: &php_job_template
+  image: php:8.2
+  before_script:
+    - apt-get update && apt-get install -y git unzip libzip-dev libicu-dev libonig-dev bc
+    - docker-php-ext-install pdo pdo_mysql pdo_pgsql intl mbstring zip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --no-progress --no-interaction --prefer-dist
+
+phpstan:
+  stage: quality
+  <<: *php_job_template
+  script:
+    - composer phpstan
+
+psalm:
+  stage: quality
+  <<: *php_job_template
+  script:
+    - composer psalm
+
+rector:
+  stage: quality
+  <<: *php_job_template
+  script:
+    - composer rector:dry
 
 phpunit:
   stage: test
-  image: php:8.2
+  <<: *php_job_template
   services:
     - name: mysql:8.0
       alias: db
@@ -12,72 +39,48 @@ phpunit:
     MYSQL_DATABASE: testdb
     MYSQL_USER: test
     MYSQL_PASSWORD: test
-  before_script:
-    - apt-get update && apt-get install -y git unzip libzip-dev libicu-dev libonig-dev
-    - docker-php-ext-install pdo pdo_mysql intl mbstring zip
-    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-    - composer install --no-progress --no-interaction --prefer-dist
+    MIN_COVERAGE: "80"
   script:
-    - vendor/bin/phpunit --coverage-clover build/logs/clover.xml
-  artifacts:
-    when: always
-    reports:
-      junit: build/logs/junit.xml
-      cobertura: build/logs/clover.xml
-    paths:
-      - build/coverage-html
-      - build/logs
-  coverage: '/Lines.*: (\d+.\d+%)/'
+    - |
+      vendor/bin/phpunit --coverage-clover build/logs/clover.xml --coverage-text | tee build/logs/coverage.txt
+      
+      COVERAGE=$(grep -Eo 'Lines:\s+[0-9]+(\.[0-9]+)?%' build/logs/coverage.txt | awk '{print $2}' | tr -d '%')
+      echo "Coverage: ${COVERAGE}%"
+      
+      if [ -n "$COVERAGE" ] && [ "$(echo "$COVERAGE < $MIN_COVERAGE" | bc -l)" -eq 1 ]; then
+        echo "Coverage below ${MIN_COVERAGE}%"
+        exit 1
+      fi
+  coverage: '/Lines.*: (\d+\.\d+%)/'
 
 
-behat:
+migration_smoke:
   stage: test
-  image: php:8.2
+  <<: *php_job_template
   services:
     - name: mysql:8.0
       alias: db
+    - name: postgres:15
+      alias: pg
   variables:
+    MYSQL_DATABASE: smartresponsor
+    MYSQL_USER: smartresponsor
+    MYSQL_PASSWORD: smartresponsor
     MYSQL_ROOT_PASSWORD: root
-    MYSQL_DATABASE: testdb
-    MYSQL_USER: test
-    MYSQL_PASSWORD: test
-  before_script:
-    - apt-get update && apt-get install -y git unzip libzip-dev libicu-dev libonig-dev
-    - docker-php-ext-install pdo pdo_mysql intl mbstring zip
-    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-    - composer install --no-progress --no-interaction --prefer-dist
+
+    POSTGRES_DB: smartresponsor
+    POSTGRES_USER: smartresponsor
+    POSTGRES_PASSWORD: smartresponsor
+
+    PG_DSN: pgsql:host=pg;port=5432;dbname=smartresponsor
+    PG_USER: smartresponsor
+    PG_PASS: smartresponsor
+
+    MY_DSN: mysql:host=db;port=3306;dbname=smartresponsor
+    MY_USER: smartresponsor
+    MY_PASS: smartresponsor
   script:
-    - vendor/bin/behat --format=allure --out=build/allure-results --strict --no-interaction
-
-
-allure_report:
-  stage: test
-  image: alpine:latest
-  script:
-    - echo "Allure results are stored in build/allure-results"
-  artifacts:
-    when: always
-    paths:
-      - build/allure-results
-    expire_in: 1 week
-
-
-sonar:
-  stage: test
-  image: sonarsource/sonar-scanner-cli:latest
-  script:
-    - sonar-scanner -Dsonar.login=$SONAR_TOKEN
-  variables:
-    SONAR_TOKEN: $SONAR_TOKEN
-  only:
-    - main
-
-
-coverage:
-  stage: test
-  image: php:8.2
-  script:
-    - vendor/bin/phpunit --coverage-clover build/logs/clover.xml
-    - bash <(curl -s https://codecov.io/bash) -f build/logs/clover.xml
-  variables:
-    CODECOV_TOKEN: $CODECOV_TOKEN
+    - until pg_isready -h pg -U smartresponsor; do sleep 2; done
+    - until mysqladmin ping -h db -u root -proot; do sleep 2; done
+    - php bin/address-migrate
+    - php bin/address-projection-migrate
