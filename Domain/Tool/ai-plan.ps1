@@ -26,7 +26,7 @@ if ([string]::IsNullOrWhiteSpace($Scan)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($Out)) {
-  $Out = ("docs/agent/{0}-ai-plan.md" -f $Domain)
+  $Out = ("report/{0}-ai-plan.md" -f $Domain)
 }
 
 Ensure-Dir (Split-Path -Parent $Out)

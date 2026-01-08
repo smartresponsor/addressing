@@ -22,11 +22,11 @@ function Resolve-Domain([string]$d) {
 $Domain = Resolve-Domain $Domain
 
 if ([string]::IsNullOrWhiteSpace($Plan)) {
-  $Plan = ("docs/agent/{0}-ai-plan.md" -f $Domain)
+  $Plan = ("report/{0}-ai-plan.md" -f $Domain)
 }
 
 if ([string]::IsNullOrWhiteSpace($Out)) {
-  $Out = ("docs/agent/{0}-codex-prompt.txt" -f $Domain)
+  $Out = ("report/{0}-codex-prompt.txt" -f $Domain)
 }
 
 Ensure-Dir (Split-Path -Parent $Out)
