@@ -9,12 +9,22 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Resolve-Shell {
+  $cmd = Get-Command pwsh -ErrorAction SilentlyContinue
+  if ($cmd -and $cmd.Source) { return "pwsh" }
+  $cmd = Get-Command powershell -ErrorAction SilentlyContinue
+  if ($cmd -and $cmd.Source) { return "powershell" }
+  throw "No PowerShell executable found (pwsh or powershell)."
+}
+
 function Print-Help {
   $txt = @"
 Domain tool runner
 
 Usage:
   pwsh -NoProfile -File Domain/Tool/run.ps1 help
+  powershell -NoProfile -ExecutionPolicy Bypass -File Domain/Tool/run.ps1 help
+
   pwsh -NoProfile -File Domain/Tool/run.ps1 doctor   [-Domain <name>] [-Repo <path>] [-Out <file.json>]
   pwsh -NoProfile -File Domain/Tool/run.ps1 scan     [-Domain <name>] [-Out <file.json>]
   pwsh -NoProfile -File Domain/Tool/run.ps1 health   [-Domain <name>] [-Repo <path>] [-Out <file.json>]
@@ -55,7 +65,12 @@ $ToolDir = Resolve-ToolDir
 function Call-Tool([string]$Name, [string[]]$A) {
   $p = Join-Path $ToolDir $Name
   if (-not (Test-Path $p)) { throw "Tool not found: Domain/Tool/$Name" }
-  & pwsh -NoProfile -File $p @A
+  $sh = Resolve-Shell
+  if ($sh -eq "pwsh") {
+    & pwsh -NoProfile -File $p @A
+  } else {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $p @A
+  }
   exit $LASTEXITCODE
 }
 

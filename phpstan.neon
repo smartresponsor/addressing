@@ -5,5 +5,5 @@ parameters:
   checkGenericClassInNonGenericObjectType: false
   reportUnmatchedIgnoredErrors: true
   parallel:
-    processTimeout: 300
+    processTimeout: 300.0
 includes: []

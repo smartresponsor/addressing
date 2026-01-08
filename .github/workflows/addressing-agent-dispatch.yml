@@ -1,5 +1,5 @@
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
-name: __DOMAIN__-agent-dispatch
+﻿# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+name: addressing-agent-dispatch
 
 on:
   workflow_dispatch:
@@ -24,8 +24,9 @@ permissions:
 
 jobs:
   agent:
-    uses: ./.github/workflows/agent-pr.yml
+    uses: ./.github/workflows/addressing-agent-pr.yml
     with:
       task: ${{ inputs.task }}
       kind: ${{ inputs.kind }}
       message: ${{ inputs.message }}
+

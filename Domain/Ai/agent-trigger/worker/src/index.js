@@ -1,9 +1,15 @@
 ﻿// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 
+function textEncoder() {
+  return new TextEncoder();
+}
+
 function toHex(bytes) {
   const b = new Uint8Array(bytes);
   let out = "";
-  for (let i = 0; i < b.length; i++) out += b[i].toString(16).padStart(2, "0");
+  for (let i = 0; i < b.length; i++) {
+    out += b[i].toString(16).padStart(2, "0");
+  }
   return out;
 }
 
@@ -15,81 +21,54 @@ function safeEqual(a, b) {
   return diff === 0;
 }
 
-function envStr(env, key, def = "") {
-  const v = env && env[key];
-  if (typeof v !== "string") return def;
-  const s = v.trim();
-  return s === "" ? def : s;
+async function hmacHex(secret, data) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    textEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, textEncoder().encode(data));
+  return toHex(sig);
 }
 
 function envInt(env, key, def) {
-  const v = envStr(env, key, "");
-  if (!v) return def;
+  const v = env[key];
+  if (typeof v !== "string" || v.trim() === "") return def;
   const n = Number(v);
   return Number.isFinite(n) ? n : def;
 }
 
+function envStr(env, key, def) {
+  const v = env[key];
+  if (typeof v !== "string" || typeof v.trim !== "function") return def;
+  if (v.trim() === "") return def;
+  return v;
+}
+
 function parseAllowedTask(env) {
-  const raw = envStr(env, "SR_ALLOWED_TASK", "scan,health,doctor,validate,plan,codex,pr");
-  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+  const raw = envStr(env, "SR_ALLOWED_TASK", "scan,health,doctor,validate,plan,codex");
+  return raw.split(",").map(s => s.trim()).filter(Boolean);
 }
 
-async function hmacHex(secret, data) {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-      "raw",
-      enc.encode(secret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"]
-  );
-  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(data));
-  return toHex(sig);
-}
-
-function json(obj, status = 200, extraHeaders = {}) {
+function json(status, obj) {
   return new Response(JSON.stringify(obj, null, 2), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8", ...extraHeaders },
+    headers: { "content-type": "application/json; charset=utf-8" }
   });
 }
 
-function bad(status, code, message, extra = {}) {
-  return json({ ok: false, code, message, ...extra }, status);
-}
-
-// Rotation model:
-// - clients send header X-SR-Kid: K1 / K2
-// - worker reads SR_TRIGGER_SECRET_K1 / SR_TRIGGER_SECRET_K2
-// - fallback for old clients: SR_TRIGGER_SECRET (no kid)
-function pickSecret(env, kidHeaderRaw) {
-  const kidHeader = (kidHeaderRaw || "").trim().toUpperCase();
-
-  if (kidHeader) {
-    const byKid = envStr(env, `SR_TRIGGER_SECRET_${kidHeader}`, "");
-    if (byKid) return { kid: kidHeader, secret: byKid, mode: "kid" };
-  }
-
-  const k1 = envStr(env, "SR_TRIGGER_SECRET_K1", "");
-  if (k1) return { kid: "K1", secret: k1, mode: "default_k1" };
-
-  const legacy = envStr(env, "SR_TRIGGER_SECRET", "");
-  if (legacy) return { kid: "", secret: legacy, mode: "legacy" };
-
-  return { kid: kidHeader || "K1", secret: "", mode: "missing" };
+function bad(status, code, message) {
+  return json(status, { ok: false, code, message });
 }
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (url.pathname === "/" || url.pathname === "") {
-      return json({ ok: true, service: `${envStr(env, "GH_REPO", "unknown")}-agent-trigger` }, 200);
-    }
-
-    if (url.pathname === "/health" || url.pathname === "/health/") {
-      const repoName = envStr(env, "GH_REPO", "unknown");
-      return json({ ok: true, service: `${repoName}-agent-trigger` }, 200);
+    if (url.pathname === "/health") {
+      return json(200, { ok: true, service: "addressing-agent-trigger" });
     }
 
     if (url.pathname !== "/dispatch") {
@@ -100,34 +79,25 @@ export default {
       return bad(405, "MethodNotAllowed", "POST required");
     }
 
-    const kidHeader = request.headers.get("X-SR-Kid") || "";
-    const picked = pickSecret(env, kidHeader);
-
-    if (!picked.secret) {
-      return bad(500, "Misconfig", "Trigger secret not set (SR_TRIGGER_SECRET_K1/K2 or legacy SR_TRIGGER_SECRET)");
-    }
+    const secret = envStr(env, "SR_TRIGGER_SECRET", "");
+    if (!secret) return bad(500, "Misconfig", "SR_TRIGGER_SECRET not set");
 
     const tsHeader = request.headers.get("X-SR-Timestamp") || "";
     const sigHeader = (request.headers.get("X-SR-Signature") || "").toLowerCase();
 
     const ts = Number(tsHeader);
-    if (!Number.isFinite(ts) || ts <= 0) {
-      return bad(401, "BadTimestamp", "X-SR-Timestamp required (unix seconds)");
-    }
+    if (!Number.isFinite(ts) || ts <= 0) return bad(401, "BadTimestamp", "X-SR-Timestamp required (unix seconds)");
 
     const skew = envInt(env, "SR_TIME_SKEW_SEC", 300);
     const now = Math.floor(Date.now() / 1000);
-    if (Math.abs(now - ts) > skew) {
-      return bad(401, "TimestampSkew", "Timestamp outside allowed window");
-    }
+    if (Math.abs(now - ts) > skew) return bad(401, "TimestampSkew", "Timestamp outside allowed window");
 
     const rawBody = await request.text();
-    const expected = await hmacHex(picked.secret, `${ts}.${rawBody}`);
-    if (!safeEqual(expected, sigHeader)) {
-      return bad(403, "BadSignature", "Signature mismatch", { kid: picked.kid, mode: picked.mode });
-    }
+    const expected = await hmacHex(secret, `${ts}.${rawBody}`);
 
-    let payload = {};
+    if (!safeEqual(expected, sigHeader)) return bad(403, "BadSignature", "Signature mismatch");
+
+    let payload;
     try {
       payload = rawBody.trim() ? JSON.parse(rawBody) : {};
     } catch {
@@ -152,61 +122,36 @@ export default {
 
     const ref = String(payload.ref || refDefault).trim() || refDefault;
 
-    const inputs =
-        payload && typeof payload.inputs === "object" && payload.inputs ? payload.inputs : {};
+    const inputs = (payload && typeof payload.inputs === "object" && payload.inputs) ? payload.inputs : {};
     inputs.task = task;
 
     const ghUrl = `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/dispatches`;
-
-    let ghRes;
-    try {
-      ghRes = await fetch(ghUrl, {
-        method: "POST",
-        headers: {
-          Accept: "application/vnd.github+json",
-          Authorization: `Bearer ${token}`,
-          "X-GitHub-Api-Version": ghApiVersion,
-          "User-Agent": `sr-${repo}-agent-trigger`,
-        },
-        body: JSON.stringify({ ref, inputs }),
-      });
-    } catch (e) {
-      return bad(502, "GitHubDispatchFailed", "GitHub dispatch request failed", {
-        error: String(e && e.message ? e.message : e),
-      });
-    }
+    const ghRes = await fetch(ghUrl, {
+      method: "POST",
+      headers: {
+        "Accept": "application/vnd.github+json",
+        "Authorization": `Bearer ${token}`,
+        "X-GitHub-Api-Version": ghApiVersion,
+        "User-Agent": "sr-addressing-agent-trigger"
+      },
+      body: JSON.stringify({ ref, inputs })
+    });
 
     if (ghRes.status === 204) {
-      return json(
-          {
-            ok: true,
-            dispatched: true,
-            repo: `${owner}/${repo}`,
-            workflow,
-            ref,
-            task,
-            kid: picked.kid,
-            mode: picked.mode,
-          },
-          200
-      );
+      return json(200, { ok: true, dispatched: true, repo: `${owner}/${repo}`, workflow, ref, task });
     }
 
     const text = await ghRes.text();
-    return json(
-        {
-          ok: false,
-          dispatched: false,
-          status: ghRes.status,
-          repo: `${owner}/${repo}`,
-          workflow,
-          ref,
-          task,
-          kid: picked.kid,
-          mode: picked.mode,
-          github: text.slice(0, 2000),
-        },
-        ghRes.status >= 200 && ghRes.status <= 599 ? ghRes.status : 502
-    );
-  },
+    return json(ghRes.status, {
+      ok: false,
+      dispatched: false,
+      status: ghRes.status,
+      repo: `${owner}/${repo}`,
+      workflow,
+      ref,
+      task,
+      github: text.slice(0, 2000)
+    });
+  }
 };
+

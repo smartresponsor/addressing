@@ -1,0 +1,111 @@
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+name: addressing-codex-review
+
+on:
+  workflow_dispatch:
+    inputs:
+      context:
+        description: "Optional label for context. No checkout."
+        required: false
+        default: "pr"
+  issue_comment:
+    types: [ created ]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  codex-review:
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       contains(github.event.comment.body, '/ai codex-review'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build no-AI review artifact (no checkout)
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "report")) { New-Item -ItemType Directory -Force -Path "report" | Out-Null }
+
+          $out = "report/addressing-codex-review.md"
+          $ts = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+
+          $repo = "${{ github.repository }}"
+          $runUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          $actor = "${{ github.actor }}"
+          $event = "${{ github.event_name }}"
+          $ctx = "${{ inputs.context }}"
+
+          $issueNum = ""
+          if ("${{ github.event_name }}" -eq "issue_comment") { $issueNum = "${{ github.event.issue.number }}" }
+
+          $lines = @(
+            "No-AI review artifact (no checkout, no secrets).",
+            "",
+            "Generated: $ts",
+            "Repo: $repo",
+            "Actor: $actor",
+            "Event: $event",
+            "Context: $ctx",
+            "Issue/PR: $issueNum",
+            "Run: $runUrl",
+            "",
+            "A) Review checklist (fill manually)",
+            "- No hardcode in templates (no addressing literals in tool/template)",
+            "- Worker: /health/ works with trailing slash",
+            "- Allowlist: scan,health,doctor,validate,plan,code,codex,pr",
+            "- Gate: green",
+            "- Docs: mkdocs strict config (docs_dir=page, root=docs) correct",
+            "- Naming canon: singular everywhere",
+            "- Mirror interfaces present (LayerInterface mirrors)",
+            "",
+            "B) Findings",
+            "1) Issue:",
+            "   Evidence:",
+            "   Fix:",
+            "",
+            "2) Issue:",
+            "   Evidence:",
+            "   Fix:",
+            "",
+            "C) Next PR envelope (copy-paste to report/addressing-pr-envelope.md)",
+            "Goal:",
+            "Slice: ATOM",
+            "Limits: files_max=5, loc_max=600",
+            "Canon: singular naming, mirror interface layers, EN-only comments, copyright header",
+            "Inputs:",
+            "Paths:",
+            "Outputs:",
+            "Acceptance Criteria:",
+            "Notes:"
+          )
+
+          Set-Content -Path $out -Value $lines -Encoding UTF8
+          Write-Host "OK: wrote $out"
+
+      - name: Upload review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: addressing-codex-review
+          path: report/
+          if-no-files-found: error
+
+      - name: Comment PR (short)
+        if: github.event_name == 'issue_comment'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body =
+              "addressing-codex-review finished (no-AI, no checkout). " +
+              "See workflow artifact: addressing-codex-review. " +
+              "File: report/addressing-codex-review.md";
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body
+            });

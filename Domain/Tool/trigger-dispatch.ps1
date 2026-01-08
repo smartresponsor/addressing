@@ -2,37 +2,31 @@
 
 param(
   [Parameter(Mandatory=$true)][string]$Url,
-  [Parameter(Mandatory=$true)][ValidateSet("scan","health","doctor","validate","plan","codex","pr")][string]$Task,
+  [Parameter(Mandatory=$true)][ValidateSet("scan","health","doctor","validate","plan","codex")][string]$Task,
   [string]$Ref = "master",
-  [string]$Kind = "fix",
-  [string]$Message = "agent update",
-  [string]$Note = "",
-  [string]$Kid = "K1"
+  [string]$Note = ""
 )
 
 $ErrorActionPreference = "Stop"
 
-function To-Hex([byte[]]$Bytes) { return ($Bytes | ForEach-Object { $_.ToString("x2") }) -join "" }
+function To-Hex([byte[]]$Bytes) {
+  return ($Bytes | ForEach-Object { $_.ToString("x2") }) -join ""
+}
 
 function Hmac-Sha256-Hex([string]$Secret, [string]$Data) {
   $h = New-Object System.Security.Cryptography.HMACSHA256
   try {
     $h.Key = [System.Text.Encoding]::UTF8.GetBytes($Secret)
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($Data)
-    return (To-Hex ($h.ComputeHash($bytes)))
-  } finally { $h.Dispose() }
+    $hash = $h.ComputeHash($bytes)
+    return (To-Hex $hash)
+  } finally {
+    $h.Dispose()
+  }
 }
 
-$kidUp = $Kid.Trim().ToUpper()
-if ($kidUp -notmatch '^K\d+$') { throw "Bad Kid: $Kid (expected K1, K2, ...)" }
-
-$envName = "SR_TRIGGER_SECRET_$kidUp"
-$secret = (Get-Item "Env:$envName" -ErrorAction SilentlyContinue).Value
-
-# backward compat (если вдруг надо)
-if (-not $secret) { $secret = $env:SR_TRIGGER_SECRET }
-
-if (-not $secret) { throw "$envName (or SR_TRIGGER_SECRET legacy) is not set in environment" }
+$secret = $env:SR_TRIGGER_SECRET
+if (-not $secret) { throw "SR_TRIGGER_SECRET env var is required" }
 
 $ts = [int][DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
 
@@ -40,8 +34,6 @@ $bodyObj = @{
   task = $Task
   ref = $Ref
   inputs = @{
-    kind = $Kind
-    message = $Message
     note = $Note
   }
 }
@@ -52,10 +44,9 @@ $sig = Hmac-Sha256-Hex $secret "$ts.$body"
 $headers = @{
   "X-SR-Timestamp" = "$ts"
   "X-SR-Signature" = $sig
-  "X-SR-Kid" = $kidUp
   "Content-Type" = "application/json"
 }
 
-Write-Host "POST $Url task=$Task ref=$Ref kid=$kidUp"
+Write-Host "POST $Url task=$Task ref=$Ref"
 $res = Invoke-RestMethod -Method Post -Uri $Url -Headers $headers -Body $body
 $res | ConvertTo-Json -Depth 6
