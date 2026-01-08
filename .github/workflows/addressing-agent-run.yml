@@ -1,7 +1,7 @@
 ﻿# file: .github/workflows/addressing-agent-pr.yml
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 
-name: addressing-agent-pr
+name: addressing-agent-run
 
 on:
   workflow_call:
@@ -21,7 +21,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
   actions: write
 
 jobs:
@@ -123,7 +122,7 @@ jobs:
           echo "BRANCH=$br" >> "$GITHUB_ENV"
           git checkout -b "$br"
 
-      - name: Commit allowlisted files (task=pr)
+      - name: Commit allow-listed files (task=pr)
         if: ${{ inputs.task == 'pr' }}
         shell: bash
         run: |
@@ -166,27 +165,6 @@ jobs:
         run: |
           set -euo pipefail
           git push -u origin "$BRANCH"
-
-      - name: Create PR (task=pr)
-        if: ${{ inputs.task == 'pr' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          kind="${KIND:-fix}"
-          title="${kind}: ${{ inputs.message }}"
-          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          cat > /tmp/pr_body.txt <<EOF
-          Automated agent PR (no-AI mode).
-
-          - Kind: ${kind}
-          - Run: ${run_url}
-
-          Next: fill report/addressing-pr-envelope.md and rerun /ai pr.
-          EOF
-
-          gh pr create --base master --head "$BRANCH" --title "$title" --body-file /tmp/pr_body.txt
 
       - name: Upload agent artifact
         if: always()
