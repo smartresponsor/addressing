@@ -3,7 +3,9 @@
 function toHex(bytes) {
   const b = new Uint8Array(bytes);
   let out = "";
-  for (let i = 0; i < b.length; i++) out += b[i].toString(16).padStart(2, "0");
+  for (let i = 0; i < b.length; i++) {
+    out += b[i].toString(16).padStart(2, "0");
+  }
   return out;
 }
 
@@ -13,25 +15,6 @@ function safeEqual(a, b) {
   let diff = 0;
   for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return diff === 0;
-}
-
-function envStr(env, key, def = "") {
-  const v = env && env[key];
-  if (typeof v !== "string") return def;
-  const s = v.trim();
-  return s === "" ? def : s;
-}
-
-function envInt(env, key, def) {
-  const v = envStr(env, key, "");
-  if (!v) return def;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : def;
-}
-
-function parseAllowedTask(env) {
-  const raw = envStr(env, "SR_ALLOWED_TASK", "scan,health,doctor,validate,plan,codex,pr");
-  return raw.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
 async function hmacHex(secret, data) {
@@ -47,36 +30,72 @@ async function hmacHex(secret, data) {
   return toHex(sig);
 }
 
-function json(obj, status = 200, extraHeaders = {}) {
+function envInt(env, key, def) {
+  const v = env && env[key];
+  if (typeof v !== "string" || v.trim() === "") return def;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : def;
+}
+
+function envStr(env, key, def) {
+  const v = env && env[key];
+  if (typeof v !== "string") return def;
+  const s = v.trim();
+  return s === "" ? def : s;
+}
+
+function parseCsvUpper(raw) {
+  return String(raw || "")
+      .split(",")
+      .map((s) => s.trim().toUpperCase())
+      .filter(Boolean);
+}
+
+function parseAllowedTask(env) {
+  const raw = envStr(env, "SR_ALLOWED_TASK", "scan,health,doctor,validate,plan,codex,pr");
+  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+function parseAllowedKid(env) {
+  const raw = envStr(env, "SR_TRIGGER_ALLOWED_KID", "K1,K2");
+  const kids = parseCsvUpper(raw).filter((k) => /^K\d+$/.test(k));
+  return kids.length ? kids : ["K1"];
+}
+
+function json(obj, status = 200) {
   return new Response(JSON.stringify(obj, null, 2), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8", ...extraHeaders },
+    headers: { "content-type": "application/json; charset=utf-8" },
   });
 }
 
-function bad(status, code, message, extra = {}) {
-  return json({ ok: false, code, message, ...extra }, status);
+function bad(status, code, message, extra = undefined) {
+  const body = { ok: false, code, message };
+  if (extra && typeof extra === "object") Object.assign(body, extra);
+  return json(body, status);
 }
 
-// Rotation model:
-// - clients send header X-SR-Kid: K1 / K2
-// - worker reads SR_TRIGGER_SECRET_K1 / SR_TRIGGER_SECRET_K2
-// - fallback for old clients: SR_TRIGGER_SECRET (no kid)
-function pickSecret(env, kidHeaderRaw) {
-  const kidHeader = (kidHeaderRaw || "").trim().toUpperCase();
-
-  if (kidHeader) {
-    const byKid = envStr(env, `SR_TRIGGER_SECRET_${kidHeader}`, "");
-    if (byKid) return { kid: kidHeader, secret: byKid, mode: "kid" };
+function pickKidCandidates(env, headerKid) {
+  const allowed = parseAllowedKid(env);
+  const wanted = String(headerKid || "").trim().toUpperCase();
+  if (wanted) {
+    if (!/^K\d+$/.test(wanted)) return { error: "BadKid", candidates: [] };
+    if (!allowed.includes(wanted)) return { error: "KidNotAllowed", candidates: [] };
+    return { error: "", candidates: [wanted] };
   }
 
-  const k1 = envStr(env, "SR_TRIGGER_SECRET_K1", "");
-  if (k1) return { kid: "K1", secret: k1, mode: "default_k1" };
+  const defKid = envStr(env, "SR_TRIGGER_DEFAULT_KID", allowed[0]).trim().toUpperCase();
+  const def = allowed.includes(defKid) ? defKid : allowed[0];
+  const others = allowed.filter((k) => k !== def);
 
-  const legacy = envStr(env, "SR_TRIGGER_SECRET", "");
-  if (legacy) return { kid: "", secret: legacy, mode: "legacy" };
+  return { error: "", candidates: [def, ...others] };
+}
 
-  return { kid: kidHeader || "K1", secret: "", mode: "missing" };
+function getSecretForKid(env, kid) {
+  const key = `SR_TRIGGER_SECRET_${kid}`;
+  const v = envStr(env, key, "");
+  if (v) return v;
+  return envStr(env, "SR_TRIGGER_SECRET", "");
 }
 
 export default {
@@ -84,7 +103,7 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/" || url.pathname === "") {
-      return json({ ok: true, service: `${envStr(env, "GH_REPO", "unknown")}-agent-trigger` }, 200);
+      return json({ ok: true, service: "agent-trigger", hint: "Use /health or POST /dispatch" }, 200);
     }
 
     if (url.pathname === "/health" || url.pathname === "/health/") {
@@ -100,15 +119,9 @@ export default {
       return bad(405, "MethodNotAllowed", "POST required");
     }
 
-    const kidHeader = request.headers.get("X-SR-Kid") || "";
-    const picked = pickSecret(env, kidHeader);
-
-    if (!picked.secret) {
-      return bad(500, "Misconfig", "Trigger secret not set (SR_TRIGGER_SECRET_K1/K2 or legacy SR_TRIGGER_SECRET)");
-    }
-
     const tsHeader = request.headers.get("X-SR-Timestamp") || "";
     const sigHeader = (request.headers.get("X-SR-Signature") || "").toLowerCase();
+    const kidHeader = request.headers.get("X-SR-Kid") || "";
 
     const ts = Number(tsHeader);
     if (!Number.isFinite(ts) || ts <= 0) {
@@ -122,12 +135,32 @@ export default {
     }
 
     const rawBody = await request.text();
-    const expected = await hmacHex(picked.secret, `${ts}.${rawBody}`);
-    if (!safeEqual(expected, sigHeader)) {
-      return bad(403, "BadSignature", "Signature mismatch", { kid: picked.kid, mode: picked.mode });
+
+    const pick = pickKidCandidates(env, kidHeader);
+    if (pick.error) {
+      return bad(401, pick.error, "Invalid or not allowed X-SR-Kid");
     }
 
-    let payload = {};
+    let usedKid = "";
+    let verified = false;
+
+    for (const kid of pick.candidates) {
+      const secret = getSecretForKid(env, kid);
+      if (!secret) continue;
+
+      const expected = await hmacHex(secret, `${ts}.${rawBody}`);
+      if (safeEqual(expected, sigHeader)) {
+        usedKid = kid;
+        verified = true;
+        break;
+      }
+    }
+
+    if (!verified) {
+      return bad(403, "BadSignature", "Signature mismatch", { kidTried: pick.candidates });
+    }
+
+    let payload;
     try {
       payload = rawBody.trim() ? JSON.parse(rawBody) : {};
     } catch {
@@ -136,6 +169,7 @@ export default {
 
     const task = String(payload.task || "").trim();
     const allowed = parseAllowedTask(env);
+
     if (!task) return bad(400, "BadTask", "task is required");
     if (!allowed.includes(task)) return bad(400, "BadTask", `task not allowed: ${task}`);
 
@@ -152,42 +186,25 @@ export default {
 
     const ref = String(payload.ref || refDefault).trim() || refDefault;
 
-    const inputs =
-        payload && typeof payload.inputs === "object" && payload.inputs ? payload.inputs : {};
+    const inputs = payload && typeof payload.inputs === "object" && payload.inputs ? payload.inputs : {};
     inputs.task = task;
 
     const ghUrl = `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/dispatches`;
 
-    let ghRes;
-    try {
-      ghRes = await fetch(ghUrl, {
-        method: "POST",
-        headers: {
-          Accept: "application/vnd.github+json",
-          Authorization: `Bearer ${token}`,
-          "X-GitHub-Api-Version": ghApiVersion,
-          "User-Agent": `sr-${repo}-agent-trigger`,
-        },
-        body: JSON.stringify({ ref, inputs }),
-      });
-    } catch (e) {
-      return bad(502, "GitHubDispatchFailed", "GitHub dispatch request failed", {
-        error: String(e && e.message ? e.message : e),
-      });
-    }
+    const ghRes = await fetch(ghUrl, {
+      method: "POST",
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${token}`,
+        "X-GitHub-Api-Version": ghApiVersion,
+        "User-Agent": `sr-${repo}-agent-trigger`,
+      },
+      body: JSON.stringify({ ref, inputs }),
+    });
 
     if (ghRes.status === 204) {
       return json(
-          {
-            ok: true,
-            dispatched: true,
-            repo: `${owner}/${repo}`,
-            workflow,
-            ref,
-            task,
-            kid: picked.kid,
-            mode: picked.mode,
-          },
+          { ok: true, dispatched: true, repo: `${owner}/${repo}`, workflow, ref, task, kid: usedKid },
           200
       );
     }
@@ -202,11 +219,12 @@ export default {
           workflow,
           ref,
           task,
-          kid: picked.kid,
-          mode: picked.mode,
+          kid: usedKid,
           github: text.slice(0, 2000),
         },
-        ghRes.status >= 200 && ghRes.status <= 599 ? ghRes.status : 502
+        ghRes.status
     );
   },
 };
+
+
