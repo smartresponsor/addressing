@@ -1,4 +1,4 @@
-# AI plan (component)
+# AI plan (addressing)
 
 Generated: 2026-01-08T00:11:57.8995883Z UTC
 
