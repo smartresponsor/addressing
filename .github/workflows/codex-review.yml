@@ -1,6 +1,6 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 
-name: __DOMAIN__-codex-review
+name: addressing-codex-review
 
 on:
   issue_comment:
@@ -35,7 +35,7 @@ jobs:
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           prompt-file: .github/codex/prompts/review.md
-          output-file: report/__DOMAIN__-codex-review.md
+          output-file: report/addressing-codex-review.md
           safety-strategy: drop-sudo
           sandbox: read-only
 
@@ -43,7 +43,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: __DOMAIN__-codex-review
+          name: addressing-codex-review
           path: report/
           if-no-files-found: ignore
 

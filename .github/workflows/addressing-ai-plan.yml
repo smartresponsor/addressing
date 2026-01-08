@@ -1,6 +1,6 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 
-name: __DOMAIN__-ai-plan
+name: addressing-ai-plan
 
 on:
   workflow_dispatch:
@@ -74,7 +74,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const path = 'report/__DOMAIN__-ai-plan.md';
+            const path = 'report/addressing-ai-plan.md';
             const exists = fs.existsSync(path);
             const body = exists
               ? "AI plan generated. See workflow artifacts: address-ai-report."

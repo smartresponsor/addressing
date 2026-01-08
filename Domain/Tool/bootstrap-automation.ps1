@@ -43,6 +43,11 @@ $wfFiles = @(
   @{ src = "evidence-release.yml"; dst = ("{0}-evidence-release.yml" -f $Domain) },
   @{ src = "agent-dispatch.yml"; dst = ("{0}-agent-dispatch.yml" -f $Domain) },
   @{ src = "agent-pr.yml"; dst = ("{0}-agent-pr.yml" -f $Domain) }
+  @{ src = "doc-build.yml"; dst = ("{0}-doc-build.yml" -f $Domain) },
+  @{ src = "doc-github-page.yml"; dst = ("{0}-doc-github-page.yml" -f $Domain) },
+  @{ src = "ai-plan.yml"; dst = ("{0}-ai-plan.yml" -f $Domain) },
+  @{ src = "codex-review.yml"; dst = ("{0}-codex-review.yml" -f $Domain) }
+
 )
 
 foreach ($m in $wfFiles) {

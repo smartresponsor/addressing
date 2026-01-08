@@ -79,7 +79,7 @@ D) Growth points (RU, prioritized)
 - Top 10 opportunities, each: impact, effort, risk, dependency, 1 measurable outcome.
 
 E) Roadmap as RWE envelopes (core deliverable)
-Create 6–8 envelopes first. Each envelope MUST be copy-pastable and use this exact schema:
+Creates 6–8 envelopes first. Each envelope MUST be copy-passable and use this exact schema:
 
 Envelope:
 - Id: <DOMAIN>-<TRACK>-<NN>
