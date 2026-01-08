@@ -1,0 +1,7 @@
+No-AI stub: addressing ai plan.
+
+Generated: 2026-01-08T06:53:29Z
+Repo: taa0662621456/addressing
+Run: https://github.com/taa0662621456/addressing/actions/runs/20807580925
+
+Fill this file manually or by later automation.
