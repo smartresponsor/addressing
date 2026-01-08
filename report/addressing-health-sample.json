@@ -1,0 +1,6 @@
+{
+  "ok": true,
+  "service": "addressing-agent-trigger",
+  "hint": "This is a sample payload. Replace with real health endpoint checks when app is present.",
+  "tsUtc": "2026-01-08T06:02:44.8681798Z"
+}
