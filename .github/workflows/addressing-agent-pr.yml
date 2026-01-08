@@ -1,5 +1,4 @@
 ﻿# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
-
 name: addressing-agent-pr
 
 on:
@@ -113,11 +112,3 @@ jobs:
           EOF
 
           gh pr create --base master --head "$BRANCH" --title "$title" --body-file /tmp/pr_body.txt
-
-      - name: Upload agent artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: addressing-agent-report
-          path: report/
-          if-no-files-found: ignore
