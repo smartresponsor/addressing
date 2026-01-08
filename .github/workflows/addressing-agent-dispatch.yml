@@ -29,4 +29,3 @@ jobs:
       task: ${{ inputs.task }}
       kind: ${{ inputs.kind }}
       message: ${{ inputs.message }}
-

@@ -1,6 +1,4 @@
-﻿# file: .github/workflows/addressing-agent-pr.yml
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
-
+﻿# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 name: addressing-agent-pr
 
 on:
@@ -63,51 +61,17 @@ jobs:
           pwsh -NoProfile -File Domain/Tool/run.ps1 validate -Domain "addressing" -Repo "${{ github.workspace }}" -AllowMissing
           $global:LASTEXITCODE = 0
 
-          exit 0
-
-      - name: Ensure report envelopes (no-AI mode)
-        shell: pwsh
-        run: |
-          if (-not (Test-Path "report")) { New-Item -ItemType Directory -Force -Path "report" | Out-Null }
-
-          $ts = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-          $repo = "${{ github.repository }}"
-          $runUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-          $files = @(
-            @{ path = "report/addressing-pr-envelope.md"; title = "addressing PR envelope" },
-            @{ path = "report/addressing-ai-plan.md"; title = "addressing ai plan" },
-            @{ path = "report/addressing-codex-review.md"; title = "addressing codex review" }
-          )
-
-          foreach ($f in $files) {
-            $p = $f.path
-            if (Test-Path $p) {
-              Write-Host "OK: $p exists"
-              continue
-            }
-
-            $lines = @(
-              "No-AI stub: $($f.title).",
-              "",
-              "Generated: $ts",
-              "Repo: $repo",
-              "Run: $runUrl",
-              "",
-              "Fill this file manually or by later automation."
-            )
-
-            Set-Content -Path $p -Value $lines -Encoding UTF8
-            Write-Host "OK: created $p"
+          if ('${{ inputs.task }}' -eq 'plan') {
+            pwsh -NoProfile -File Domain/Tool/run.ps1 plan -Domain "addressing"
+            $global:LASTEXITCODE = 0
           }
 
-      - name: Git identity
-        if: ${{ inputs.task == 'pr' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.email "17111337+taa0662621456@users.noreply.github.com"
-          git config user.name "taa0662621456"
+          if ('${{ inputs.task }}' -eq 'codex' -or '${{ inputs.task }}' -eq 'pr') {
+            pwsh -NoProfile -File Domain/Tool/run.ps1 plan -Domain "addressing"
+            $global:LASTEXITCODE = 0
+            pwsh -NoProfile -File Domain/Tool/run.ps1 codex -Domain "addressing"
+            $global:LASTEXITCODE = 0
+          }
 
       - name: Prepare PR branch (task=pr)
         if: ${{ inputs.task == 'pr' }}
@@ -147,19 +111,6 @@ jobs:
           kind="${KIND:-fix}"
           git commit -m "${kind}: ${msg}"
 
-      - name: Ensure gh
-        if: ${{ inputs.task == 'pr' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          if command -v gh >/dev/null 2>&1; then
-            gh --version
-            exit 0
-          fi
-          sudo apt-get update
-          sudo apt-get install -y gh
-          gh --version
-
       - name: Push branch (task=pr)
         if: ${{ inputs.task == 'pr' }}
         shell: bash
@@ -180,6 +131,7 @@ jobs:
           cat > /tmp/pr_body.txt <<EOF
           Automated agent PR.
 
+          - Task: ${{ inputs.task }}
           - Kind: ${kind}
           - Run: ${run_url}
           EOF
@@ -192,5 +144,3 @@ jobs:
           name: addressing-agent-report
           path: report/
           if-no-files-found: ignore
-
-#
