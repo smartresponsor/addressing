@@ -1,0 +1,7 @@
+{
+  "ok": true,
+  "status": "skipped",
+  "reason": "canon_cli_missing",
+  "hint": "Set SR_CANON_SCAN_CMD (use {out}) or add Canon as dev dependency.",
+  "tsUtc": "2026-01-08T06:46:59.4781118Z"
+}
