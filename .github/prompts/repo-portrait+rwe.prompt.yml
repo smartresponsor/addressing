@@ -25,24 +25,24 @@ Inputs (fill what you know; otherwise infer and mark assumptions explicitly):
 - Current stage: <sketch/RC/GA/...>
 - Constraints: no placeholders, production-grade output, minimal questions.
 - Canon invariants (must enforce):
-    - Single hyphen in filenames (no double hyphen)
-    - Singular naming (no plurals) in paths, classes, APIs
-    - Mirror interface layers: for each src/<Layer>/... there is src/<Layer>Interface/...
-      Service interfaces MUST live in src/ServiceInterface/<Domain>/...
-    - EN-only code comments and script messages
-    - Copyright header in code files:
-      "Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp"
-    - Default branch: master (origin/master)
+  - Single hyphen in filenames (no double hyphen)
+  - Singular naming (no plurals) in paths, classes, APIs
+  - Mirror interface layers: for each src/<Layer>/... there is src/<Layer>Interface/...
+    Service interfaces MUST live in src/ServiceInterface/<Domain>/...
+  - EN-only code comments and script messages
+  - Copyright header in code files:
+    "Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp"
+  - Default branch: master (origin/master)
 
 Repository context:
 - Use repository contents provided by the environment.
 - If you do not have full repo access, ask only for the minimum:
-    - tree listing (top 4 levels)
-    - CI workflows
-    - docs index (README + docs/**)
-    - API specs (OpenAPI/AsyncAPI)
-    - deployment manifests (Helm/Docker/Terraform)
-      Then proceed.
+  - tree listing (top 4 levels)
+  - CI workflows
+  - docs index (README + docs/**)
+  - API specs (OpenAPI/AsyncAPI)
+  - deployment manifests (Helm/Docker/Terraform)
+Then proceed.
 
 Output budget / chunking:
 - Max 8 envelopes per response.
@@ -61,14 +61,14 @@ B) Market portrait (short, RU, concrete)
 - Representative leaders (5–8) + why they are relevant
 - Competitive axes (5–7): reliability/SLO, API quality, ops maturity, extensibility, cost, compliance, UX/DX, ecosystem
 - Comparison table (compact): repo vs leaders on axes (H/M/L) + 1-line evidence each
-  If you cannot browse, label leaders as "representative (memory-based)" and focus on best-practice deltas.
+If you cannot browse, label leaders as "representative (memory-based)" and focus on best-practice deltas.
 
 C) Readiness scorecard (RU, actionable)
 For each readiness type:
 - Score 0–5
 - Evidence (repo signals)
 - Blocking gaps (top 3)
-  Readiness types:
+Readiness types:
 1) Production Ready
 2) Commercial Ready
 3) Product Ready
@@ -86,28 +86,28 @@ Envelope:
 - Goal: ...
 - Slice: ATOM | BUCKET | MAX-BUCKET
 - Limits:
-    - files_max: 5|16|20
-    - loc_max: 600|1200|1500
+  - files_max: 5|16|20
+  - loc_max: 600|1200|1500
 - Canon:
-    - single-hyphen
-    - singular naming
-    - mirror interface layers
-    - EN-only comments/messages
-    - copyright header
-    - master/origin-master
+  - single-hyphen
+  - singular naming
+  - mirror interface layers
+  - EN-only comments/messages
+  - copyright header
+  - master/origin-master
 - Inputs: (paths/docs in repo; or "TBD provided by user")
 - Paths: (glob patterns)
 - Outputs:
-    - MANIFEST.md
-    - code changes (short)
-    - tests (what + where)
-    - tools/smoke (what + where)
-    - ops/README (if relevant)
+  - MANIFEST.md
+  - code changes (short)
+  - tests (what + where)
+  - tools/smoke (what + where)
+  - ops/README (if relevant)
 - Acceptance Criteria:
-    - no stubs/TODO
-    - tests pass
-    - smoke passes
-    - meets readiness metric (state which)
+  - no stubs/TODO
+  - tests pass
+  - smoke passes
+  - meets readiness metric (state which)
 - Notes: risks/deps/tradeoffs
 
 Rules:
