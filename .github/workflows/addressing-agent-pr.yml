@@ -71,36 +71,36 @@ jobs:
         run: |
           if (-not (Test-Path "report")) { New-Item -ItemType Directory -Force -Path "report" | Out-Null }
 
-          $plan = "report/addressing-ai-plan.md"
-          $review = "report/addressing-codex-review.md"
-          $envp = "report/addressing-pr-envelope.md"
+          $ts = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+          $repo = "${{ github.repository }}"
+          $runUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-          if (-not (Test-Path $plan)) {
-            Set-Content -Path $plan -Value "No-AI mode. Seed plan placeholder. Fill manually or via Codex UI." -Encoding UTF8
+          $files = @(
+            @{ path = "report/addressing-pr-envelope.md"; title = "addressing PR envelope" },
+            @{ path = "report/addressing-ai-plan.md"; title = "addressing ai plan" },
+            @{ path = "report/addressing-codex-review.md"; title = "addressing codex review" }
+          )
+
+          foreach ($f in $files) {
+            $p = $f.path
+            if (Test-Path $p) {
+              Write-Host "OK: $p exists"
+              continue
+            }
+
+            $lines = @(
+              "No-AI stub: $($f.title).",
+              "",
+              "Generated: $ts",
+              "Repo: $repo",
+              "Run: $runUrl",
+              "",
+              "Fill this file manually or by later automation."
+            )
+
+            Set-Content -Path $p -Value $lines -Encoding UTF8
+            Write-Host "OK: created $p"
           }
-
-          if (-not (Test-Path $review)) {
-            Set-Content -Path $review -Value "No-AI mode. Seed review placeholder. Fill manually or via Codex UI." -Encoding UTF8
-          }
-
-          if (-not (Test-Path $envp)) {
-            $content = @"
-            No-AI mode PR envelope.
-
-            Goal:
-            Slice: ATOM
-            Limits: files_max=5, loc_max=600
-            Canon: singular naming, mirror interface layers, EN-only comments, copyright header
-            Inputs:
-            Paths:
-            Outputs:
-            Acceptance Criteria:
-            Notes:
-            "@.Trim()
-            Set-Content -Path $envp -Value $content -Encoding UTF8
-          }
-
-          Write-Host "OK: report ensured"
 
       - name: Prepare PR branch (task=pr)
         if: ${{ inputs.task == 'pr' }}
