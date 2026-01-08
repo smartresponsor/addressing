@@ -3,9 +3,33 @@ name: addressing-gate
 
 on:
   push:
-    branches: [ "master" ]
+    paths:
+      - ".github/workflows/**"
+      - "Domain/**"
+      - "src/**"
+      - "tests/**"
+      - "composer.json"
+      - "composer.lock"
+      - "phpstan.neon"
+      - "phpunit.xml.dist"
+      - "docs/**"
+      - "page/**"
   pull_request:
-    branches: [ "master" ]
+    paths:
+      - ".github/workflows/**"
+      - "Domain/**"
+      - "src/**"
+      - "tests/**"
+      - "composer.json"
+      - "composer.lock"
+      - "phpstan.neon"
+      - "phpunit.xml.dist"
+      - "docs/**"
+      - "page/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -13,7 +37,13 @@ permissions:
 
 jobs:
   gate:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: [ "8.2" ]
 
     services:
       mysql:
@@ -42,6 +72,7 @@ jobs:
           --health-retries=5
 
     env:
+      SR_DOMAIN: "addressing"
       MIN_COVERAGE: "80"
 
       PG_DSN: pgsql:host=127.0.0.1;port=5432;dbname=smartresponsor
@@ -54,12 +85,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@d59004228537ca90c8dca680592a08a675bf52b6 # v2
         with:
-          php-version: "8.2"
+          php-version: ${{ matrix.php-version }}
           tools: composer
           coverage: none
           extensions: pdo_mysql, pdo_pgsql, intl, mbstring, zip
@@ -68,7 +99,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y bc
 
       - name: Cache Composer
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             ~/.composer/cache/files
@@ -83,11 +114,10 @@ jobs:
       - name: Domain gate (strict)
         shell: pwsh
         env:
-          SR_DOMAIN: "addressing"
           SR_CANON_REQUIRED: "1"
           SR_GATE_STRICT: "1"
         run: |
-          pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "__DOMAIN__"
+          pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "${SR_DOMAIN}"
 
       - name: Quality checks
         run: |
@@ -98,8 +128,10 @@ jobs:
       - name: Unit tests with coverage threshold
         run: |
           vendor/bin/phpunit --coverage-clover build/logs/clover.xml --coverage-text | tee build/logs/coverage.txt
+
           COVERAGE=$(grep -Eo 'Lines:\s+[0-9]+(\.[0-9]+)?%' build/logs/coverage.txt | awk '{print $2}' | tr -d '%')
           echo "Coverage: ${COVERAGE}%"
+
           if [ -n "$COVERAGE" ] && [ "$(echo "$COVERAGE < $MIN_COVERAGE" | bc -l)" -eq 1 ]; then
             echo "Coverage below ${MIN_COVERAGE}%"
             exit 1
@@ -112,7 +144,7 @@ jobs:
 
       - name: Upload report artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: addressing-report
           path: report/
