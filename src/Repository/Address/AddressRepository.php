@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace App\Repository\Address;
 
 use App\Entity\Address\AddressData;
+use App\Entity\Address\AddressOutboxRules;
 use App\EntityInterface\Address\AddressInterface;
 use App\RepositoryInterface\Address\AddressRepositoryInterface;
 use DateTimeImmutable;
@@ -42,13 +43,7 @@ SQL;
         $this->bind($stmt, $address);
         $stmt->execute();
 
-        $this->appendOutbox('AddressCreated', 1, [
-            'id' => $address->id(),
-            'ownerId' => $address->ownerId(),
-            'vendorId' => $address->vendorId(),
-            'countryCode' => $address->countryCode(),
-            'createdAt' => $address->createdAt(),
-        ]);
+        $this->appendOutbox('AddressCreated', 1, AddressOutboxRules::addressCreatedPayload($address));
     }
 
     public function update(AddressInterface $address): void
@@ -68,10 +63,8 @@ SQL;
         $this->bind($stmt, $address);
         $stmt->execute();
 
-        $this->appendOutbox('AddressUpdated', 1, [
-            'id' => $address->id(),
-            'updatedAt' => $address->updatedAt() ?? (new DateTimeImmutable())->format(DATE_ATOM),
-        ]);
+        $updatedAt = $address->updatedAt() ?? (new DateTimeImmutable())->format(DATE_ATOM);
+        $this->appendOutbox('AddressUpdated', 1, AddressOutboxRules::addressUpdatedPayload($address->id(), $updatedAt));
     }
 
     public function get(string $id): ?AddressInterface
@@ -88,10 +81,8 @@ SQL;
         $stmt = $this->pdo->prepare('UPDATE address_entity SET deleted_at=now() WHERE id=:id AND deleted_at IS NULL');
         $stmt->execute([':id' => $id]);
 
-        $this->appendOutbox('AddressDeleted', 1, [
-            'id' => $id,
-            'deletedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
-        ]);
+        $deletedAt = new DateTimeImmutable();
+        $this->appendOutbox('AddressDeleted', 1, AddressOutboxRules::addressDeletedPayload($id, $deletedAt));
     }
 
     /**

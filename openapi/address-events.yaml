@@ -1,0 +1,107 @@
+openapi: 3.0.3
+info:
+  title: SmartResponsor Address Outbox Events
+  version: 0.1.0
+  description: |
+    Outbox event envelope and payload schemas for the Address domain.
+components:
+  schemas:
+    AddressOutboxEnvelope:
+      type: object
+      required:
+        - name
+        - version
+        - payload
+      properties:
+        name:
+          type: string
+          enum:
+            - AddressCreated
+            - AddressUpdated
+            - AddressDeleted
+            - AddressValidatedApplied
+        version:
+          type: integer
+          minimum: 1
+        payload:
+          oneOf:
+            - $ref: '#/components/schemas/AddressCreatedPayload'
+            - $ref: '#/components/schemas/AddressUpdatedPayload'
+            - $ref: '#/components/schemas/AddressDeletedPayload'
+            - $ref: '#/components/schemas/AddressValidatedAppliedPayload'
+    AddressCreatedPayload:
+      type: object
+      required:
+        - id
+        - countryCode
+        - createdAt
+      properties:
+        id:
+          type: string
+        ownerId:
+          type: string
+          nullable: true
+        vendorId:
+          type: string
+          nullable: true
+        countryCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+        createdAt:
+          type: string
+          format: date-time
+    AddressUpdatedPayload:
+      type: object
+      required:
+        - id
+        - updatedAt
+      properties:
+        id:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+    AddressDeletedPayload:
+      type: object
+      required:
+        - id
+        - deletedAt
+      properties:
+        id:
+          type: string
+        deletedAt:
+          type: string
+          format: date-time
+    AddressValidatedAppliedPayload:
+      type: object
+      required:
+        - id
+        - fingerprint
+        - validatedAt
+      properties:
+        id:
+          type: string
+        fingerprint:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+        provider:
+          type: string
+          nullable: true
+        validatedAt:
+          type: string
+          format: date-time
+        deliverable:
+          type: boolean
+          nullable: true
+        granularity:
+          type: string
+          nullable: true
+        quality:
+          type: integer
+          minimum: 0
+          nullable: true
+        rawSha256:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+          nullable: true

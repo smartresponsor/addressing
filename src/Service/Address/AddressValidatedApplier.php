@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace App\Service\Address;
 
 use App\Contract\Address\AddressValidated;
+use App\Entity\Address\AddressOutboxRules;
 use App\ServiceInterface\Address\AddressValidatedApplierInterface;
 use PDO;
 use PDOException;
@@ -127,16 +128,16 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
                 throw new RuntimeException('not_found');
             }
 
-            $this->appendOutbox('AddressValidatedApplied', 1, [
-                'id' => $id,
-                'fingerprint' => $fingerprint,
-                'provider' => $validated->validationProvider,
-                'validatedAt' => $validatedAt->format(DATE_ATOM),
-                'deliverable' => $validated->verdict?->deliverable,
-                'granularity' => $validated->verdict?->granularity,
-                'quality' => $validated->verdict?->quality,
-                'rawSha256' => $params[':validation_raw_sha256'] ?? null,
-            ]);
+            $this->appendOutbox('AddressValidatedApplied', 1, AddressOutboxRules::addressValidatedAppliedPayload(
+                $id,
+                $fingerprint,
+                $validated->validationProvider,
+                $validatedAt,
+                $validated->verdict?->deliverable,
+                $validated->verdict?->granularity,
+                $validated->verdict?->quality,
+                $params[':validation_raw_sha256'] ?? null
+            ));
 
             $this->pdo->commit();
         } catch (PDOException) {
