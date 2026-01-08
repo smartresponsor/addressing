@@ -1,4 +1,5 @@
 ﻿# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
 name: addressing-agent-pr
 
 on:
@@ -16,6 +17,9 @@ on:
         type: string
         required: false
         default: "agent update"
+    secrets:
+      SR_PR_TOKEN:
+        required: true
 
 permissions:
   contents: write
@@ -41,38 +45,6 @@ jobs:
       - name: Install dependency
         run: composer install --no-interaction --no-progress --prefer-dist
 
-      - name: Run Domain tools (soft)
-        shell: pwsh
-        env:
-          SR_DOMAIN: "addressing"
-          SR_CANON_REQUIRED: "0"
-        run: |
-          Set-Location "${{ github.workspace }}"
-
-          pwsh -NoProfile -File Domain/Tool/run.ps1 doctor -Domain "addressing" -Repo "${{ github.workspace }}"
-          $global:LASTEXITCODE = 0
-
-          pwsh -NoProfile -File Domain/Tool/run.ps1 scan -Domain "addressing"
-          $global:LASTEXITCODE = 0
-
-          pwsh -NoProfile -File Domain/Tool/run.ps1 health -Domain "addressing" -Repo "${{ github.workspace }}"
-          $global:LASTEXITCODE = 0
-
-          pwsh -NoProfile -File Domain/Tool/run.ps1 validate -Domain "addressing" -Repo "${{ github.workspace }}" -AllowMissing
-          $global:LASTEXITCODE = 0
-
-          if ('${{ inputs.task }}' -eq 'plan') {
-            pwsh -NoProfile -File Domain/Tool/run.ps1 plan -Domain "addressing"
-            $global:LASTEXITCODE = 0
-          }
-
-          if ('${{ inputs.task }}' -eq 'codex' -or '${{ inputs.task }}' -eq 'pr') {
-            pwsh -NoProfile -File Domain/Tool/run.ps1 plan -Domain "addressing"
-            $global:LASTEXITCODE = 0
-            pwsh -NoProfile -File Domain/Tool/run.ps1 codex -Domain "addressing"
-            $global:LASTEXITCODE = 0
-          }
-
       - name: Prepare PR branch (task=pr)
         if: ${{ inputs.task == 'pr' }}
         shell: bash
@@ -92,7 +64,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           bad="$(git status --porcelain | awk '{print $2}' | grep -vE '^(Domain/|\.github/workflows/|docs/|report/)' || true)"
           if [ -n "$bad" ]; then
             echo "Blocked paths detected:"
@@ -125,6 +96,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "Missing SR_PR_TOKEN (GH_TOKEN is empty)."
+            exit 2
+          fi
+
           kind="${KIND:-fix}"
           title="${kind}: ${{ inputs.message }}"
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
@@ -135,6 +111,7 @@ jobs:
           - Kind: ${kind}
           - Run: ${run_url}
           EOF
+
           gh pr create --base master --head "$BRANCH" --title "$title" --body-file /tmp/pr_body.txt
 
       - name: Upload agent artifact
