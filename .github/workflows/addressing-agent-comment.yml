@@ -1,0 +1,57 @@
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+name: addressing-agent-comment
+
+on:
+  issue_comment:
+    types: [ created ]
+
+permissions:
+  actions: write
+  issues: write
+  pull-requests: read
+  contents: read
+
+jobs:
+  dispatch:
+    if: |
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '/ai pr')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Parse command
+        id: cmd
+        shell: bash
+        run: |
+          body="${{ github.event.comment.body }}"
+          kind="fix"
+          msg="agent update"
+          # simple parsing: /ai pr kind=docs msg=hello world
+          if echo "$body" | grep -q "kind="; then
+            kind="$(echo "$body" | sed -n 's/.*kind=\([^ ]*\).*/\1/p' | head -n1)"
+          fi
+          if echo "$body" | grep -q "msg="; then
+            msg="$(echo "$body" | sed -n 's/.*msg=\(.*\)$/\1/p' | head -n1)"
+          fi
+          echo "kind=$kind" >> "$GITHUB_OUTPUT"
+          echo "msg=$msg" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch agent workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const kind = "${{ steps.cmd.outputs.kind }}";
+            const message = "${{ steps.cmd.outputs.msg }}";
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: "addressing-agent-dispatch.yml",
+              ref: "master",
+              inputs: { task: "pr", kind, message }
+            });
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: `OK: dispatched addressing-agent-dispatch (task=pr, kind=${kind}, message=${message})`
+            });

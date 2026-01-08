@@ -1,16 +1,16 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 
-name: addressing-ai-plan
+name: addressing-codex-review
 
 on:
   workflow_dispatch:
     inputs:
-      target_ref:
-        description: "Optional label for context (e.g. master, feature branch, PR number). No checkout."
+      context:
+        description: "Optional label for context. No checkout."
         required: false
-        default: "master"
+        default: "pr"
   issue_comment:
-    types: [created]
+    types: [ created ]
 
 permissions:
   issues: write
@@ -18,68 +18,64 @@ permissions:
   contents: read
 
 jobs:
-  ai-plan:
+  codex-review:
     if: |
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'issue_comment' &&
        github.event.issue.pull_request &&
-       contains(github.event.comment.body, '/ai plan'))
+       contains(github.event.comment.body, '/ai codex-review'))
     runs-on: ubuntu-latest
     steps:
-      - name: Build no-AI plan artifact (no checkout)
+      - name: Build no-AI review artifact (no checkout)
         shell: pwsh
         run: |
           if (-not (Test-Path "report")) { New-Item -ItemType Directory -Force -Path "report" | Out-Null }
 
-          $out = "report/addressing-ai-plan.md"
+          $out = "report/addressing-codex-review.md"
           $ts = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 
           $repo = "${{ github.repository }}"
           $runUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           $actor = "${{ github.actor }}"
           $event = "${{ github.event_name }}"
-          $target = "${{ inputs.target_ref }}"
+          $ctx = "${{ inputs.context }}"
 
           $issueNum = ""
           if ("${{ github.event_name }}" -eq "issue_comment") { $issueNum = "${{ github.event.issue.number }}" }
 
           $content = @"
-          No-AI plan artifact (no checkout, no secrets).
+          No-AI review artifact (no checkout, no secrets).
 
           Generated: $ts
           Repo: $repo
           Actor: $actor
           Event: $event
-          Target: $target
+          Context: $ctx
           Issue/PR: $issueNum
           Run: $runUrl
 
-          A) What we are trying to achieve
-          - Outcome:
-          - Constraints:
-          - Non-goals:
+          A) Review checklist (fill manually)
+          - No hardcode in templates (no addressing literals in tool/template)
+          - Worker: /health/ works with trailing slash
+          - Allowlist: scan,health,doctor,validate,plan,code,codex,pr
+          - Gate: green
+          - Docs: mkdocs strict config (docs_dir=page, root=docs) correct
+          - Naming canon: singular everywhere
+          - Mirror interfaces present (LayerInterface mirrors)
 
-          B) Current signals (fill manually)
-          - Gate: green/red
-          - Docs build: ok/fail
-          - Known blockers:
+          B) Findings
+          1) Issue:
+             Evidence:
+             Fix:
 
-          C) Roadmap (RWE Envelopes)
-          Envelope 1
+          2) Issue:
+             Evidence:
+             Fix:
+
+          C) Next PR envelope (copy-paste to report/addressing-pr-envelope.md)
           Goal:
           Slice: ATOM
           Limits: files_max=5, loc_max=600
-          Canon: singular naming, mirror interface layers, EN-only comments, copyright header
-          Inputs:
-          Paths:
-          Outputs:
-          Acceptance Criteria:
-          Notes:
-
-          Envelope 2
-          Goal:
-          Slice: BUCKET
-          Limits: files_max=16, loc_max=1200
           Canon: singular naming, mirror interface layers, EN-only comments, copyright header
           Inputs:
           Paths:
@@ -91,10 +87,10 @@ jobs:
           Set-Content -Path $out -Value $content -Encoding UTF8
           Write-Host "OK: wrote $out"
 
-      - name: Upload plan artifact
+      - name: Upload review artifact
         uses: actions/upload-artifact@v4
         with:
-          name: addressing-ai-plan
+          name: addressing-codex-review
           path: report/
           if-no-files-found: error
 
@@ -104,9 +100,9 @@ jobs:
         with:
           script: |
             const body =
-              "addressing-ai-plan finished (no-AI, no checkout). " +
-              "See workflow artifact: addressing-ai-plan. " +
-              "File: report/addressing-ai-plan.md";
+              "addressing-codex-review finished (no-AI, no checkout). " +
+              "See workflow artifact: addressing-codex-review. " +
+              "File: report/addressing-codex-review.md";
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,

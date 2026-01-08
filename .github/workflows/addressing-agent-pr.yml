@@ -1,4 +1,5 @@
 ﻿# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
 name: addressing-agent-pr
 
 on:
@@ -61,17 +62,45 @@ jobs:
           pwsh -NoProfile -File Domain/Tool/run.ps1 validate -Domain "addressing" -Repo "${{ github.workspace }}" -AllowMissing
           $global:LASTEXITCODE = 0
 
-          if ('${{ inputs.task }}' -eq 'plan') {
-            pwsh -NoProfile -File Domain/Tool/run.ps1 plan -Domain "addressing"
-            $global:LASTEXITCODE = 0
+          # No-AI mode:
+          # - do not call plan/codex tools that require OPENAI_API_KEY
+          # - rely on report-driven envelopes
+
+      - name: Ensure report envelopes (no-AI mode)
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "report")) { New-Item -ItemType Directory -Force -Path "report" | Out-Null }
+
+          $plan = "report/addressing-ai-plan.md"
+          $review = "report/addressing-codex-review.md"
+          $envp = "report/addressing-pr-envelope.md"
+
+          if (-not (Test-Path $plan)) {
+            Set-Content -Path $plan -Value "No-AI mode. Seed plan placeholder. Fill manually or via Codex UI." -Encoding UTF8
           }
 
-          if ('${{ inputs.task }}' -eq 'codex' -or '${{ inputs.task }}' -eq 'pr') {
-            pwsh -NoProfile -File Domain/Tool/run.ps1 plan -Domain "addressing"
-            $global:LASTEXITCODE = 0
-            pwsh -NoProfile -File Domain/Tool/run.ps1 codex -Domain "addressing"
-            $global:LASTEXITCODE = 0
+          if (-not (Test-Path $review)) {
+            Set-Content -Path $review -Value "No-AI mode. Seed review placeholder. Fill manually or via Codex UI." -Encoding UTF8
           }
+
+          if (-not (Test-Path $envp)) {
+            $content = @"
+            No-AI mode PR envelope.
+
+            Goal:
+            Slice: ATOM
+            Limits: files_max=5, loc_max=600
+            Canon: singular naming, mirror interface layers, EN-only comments, copyright header
+            Inputs:
+            Paths:
+            Outputs:
+            Acceptance Criteria:
+            Notes:
+            "@.Trim()
+            Set-Content -Path $envp -Value $content -Encoding UTF8
+          }
+
+          Write-Host "OK: report ensured"
 
       - name: Prepare PR branch (task=pr)
         if: ${{ inputs.task == 'pr' }}
@@ -87,20 +116,20 @@ jobs:
           echo "BRANCH=$br" >> "$GITHUB_ENV"
           git checkout -b "$br"
 
-      - name: Commit allowlisted files (task=pr)
+      - name: Commit allow-listed files (task=pr)
         if: ${{ inputs.task == 'pr' }}
         shell: bash
         run: |
           set -euo pipefail
 
-          bad="$(git status --porcelain | awk '{print $2}' | grep -vE '^(Domain/|\.github/workflows/|docs/)' || true)"
+          bad="$(git status --porcelain | awk '{print $2}' | grep -vE '^(Domain/|\.github/workflows/|docs/|report/)' || true)"
           if [ -n "$bad" ]; then
             echo "Blocked paths detected:"
             echo "$bad"
             exit 2
           fi
 
-          git add Domain/ .github/workflows/ docs/ 2>/dev/null || true
+          git add Domain/ .github/workflows/ docs/ report/ 2>/dev/null || true
 
           if git diff --cached --quiet; then
             echo "No staged changes to commit."
@@ -129,12 +158,12 @@ jobs:
           title="${kind}: ${{ inputs.message }}"
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           cat > /tmp/pr_body.txt <<EOF
-          Automated agent PR.
+          Automated agent PR (no-AI mode).
 
           - Task: ${{ inputs.task }}
-
           - Kind: ${KIND:-fix}
           - Run: $run_url
+          - Envelope: report/addressing-pr-envelope.md
           EOF
           gh pr create --base master --head "$BRANCH" --title "$title" --body-file /tmp/pr_body.txt || true
 
@@ -145,4 +174,3 @@ jobs:
           name: addressing-agent-report
           path: report/
           if-no-files-found: ignore
-
