@@ -72,19 +72,43 @@ if (Test-Path $wkTpl) {
   $repoFinal = $Repo
   if ([string]::IsNullOrWhiteSpace($repoFinal)) { $repoFinal = "__REPO__" }
 
-  $wr = Read-Text (Join-Path $wkTpl "wrangler.toml")
-  $wr = $wr.Replace("__DOMAIN__", $Domain).Replace("__OWNER__", $ownerFinal).Replace("__REPO__", $repoFinal)
-  Write-Text (Join-Path $wkOut "wrangler.toml") $wr
+  $compatDate = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd")
 
-  Copy-Item -Recurse -Force -Path (Join-Path $wkTpl "src") -Destination (Join-Path $wkOut "src")
-  Copy-Item -Force -Path (Join-Path $wkTpl "package.json") -Destination (Join-Path $wkOut "package.json")
+  $wrPath = Join-Path $wkTpl "wrangler.toml"
+  if (Test-Path $wrPath) {
+    $wr = Read-Text $wrPath
+    $wr = $wr.Replace("__DOMAIN__", $Domain).Replace("__OWNER__", $ownerFinal).Replace("__REPO__", $repoFinal).Replace("__COMPAT_DATE__", $compatDate)
+    Write-Text (Join-Path $wkOut "wrangler.toml") $wr
+  }
+
+  $pkgPath = Join-Path $wkTpl "package.json"
+  if (Test-Path $pkgPath) {
+    Copy-Item -Force -Path $pkgPath -Destination (Join-Path $wkOut "package.json")
+  }
+
+  # Ensure we do not create src/src nesting and clean legacy worker copies
+  $dstSrc = Join-Path $wkOut "src"
+  $legacyNested = Join-Path $dstSrc "src"
+  if (Test-Path $legacyNested) { Remove-Item -Recurse -Force -Path $legacyNested }
+  if (Test-Path $dstSrc) { Remove-Item -Recurse -Force -Path $dstSrc }
+  Ensure-Dir $dstSrc
+
+  $srcDir = Join-Path $wkTpl "src"
+  if (Test-Path $srcDir) {
+    Copy-Item -Recurse -Force -Path (Join-Path $srcDir "*") -Destination $dstSrc
+  }
+
+  $gitignorePath = Join-Path $wkTpl ".gitignore"
+  if (Test-Path $gitignorePath) {
+    Copy-Item -Force -Path $gitignorePath -Destination (Join-Path $wkOut ".gitignore")
+  }
 
   # Replace placeholders inside worker files
   $wkFiles = Get-ChildItem -Recurse -File -Path $wkOut
   foreach ($f in $wkFiles) {
     try {
       $txt = Get-Content -Path $f.FullName -Raw -ErrorAction Stop
-      $txt = $txt.Replace("__DOMAIN__", $Domain).Replace("__OWNER__", $ownerFinal).Replace("__REPO__", $repoFinal)
+      $txt = $txt.Replace("__DOMAIN__", $Domain).Replace("__OWNER__", $ownerFinal).Replace("__REPO__", $repoFinal).Replace("__COMPAT_DATE__", $compatDate)
       Set-Content -Path $f.FullName -Value $txt -Encoding UTF8
     } catch { }
   }
