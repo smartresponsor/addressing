@@ -1,0 +1,74 @@
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+name: addressing-agent-draft-pr
+
+on:
+  workflow_dispatch:
+    inputs:
+      head:
+        description: "Source branch (e.g. ai/fix-20260108T063139Z)"
+        required: true
+      base:
+        description: "Base branch"
+        required: false
+        default: "master"
+      title:
+        description: "PR title"
+        required: false
+        default: "agent: draft PR"
+      message:
+        description: "Short message for PR body"
+        required: false
+        default: "Automated draft PR (agent)"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  draft-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure gh
+        shell: bash
+        run: |
+          set -euo pipefail
+          if command -v gh >/dev/null 2>&1; then
+            gh --version
+          else
+            sudo apt-get update
+            sudo apt-get install -y gh
+          fi
+
+      - name: Create draft PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          head="${{ inputs.head }}"
+          base="${{ inputs.base }}"
+          title="${{ inputs.title }}"
+          msg="${{ inputs.message }}"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+          cat > /tmp/pr_body.txt <<EOF
+          ${msg}
+
+          - Mode: draft
+          - Head: ${head}
+          - Base: ${base}
+          - Run: ${run_url}
+
+          Next:
+          - fill report/addressing-pr-envelope.md
+          - mark PR as Ready for review
+          EOF
+
+          gh pr create \
+            --draft \
+            --base "$base" \
+            --head "$head" \
+            --title "$title" \
+            --body-file /tmp/pr_body.txt
