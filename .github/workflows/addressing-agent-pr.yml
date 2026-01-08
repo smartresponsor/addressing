@@ -62,9 +62,7 @@ jobs:
           pwsh -NoProfile -File Domain/Tool/run.ps1 validate -Domain "addressing" -Repo "${{ github.workspace }}" -AllowMissing
           $global:LASTEXITCODE = 0
 
-          # No-AI mode:
-          # - do not call plan/codex tools that require OPENAI_API_KEY
-          # - rely on report-driven envelopes
+          exit 0
 
       - name: Ensure report envelopes (no-AI mode)
         shell: pwsh
@@ -102,6 +100,14 @@ jobs:
             Write-Host "OK: created $p"
           }
 
+      - name: Git identity
+        if: ${{ inputs.task == 'pr' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.email "17111337+taa0662621456@users.noreply.github.com"
+          git config user.name "taa0662621456"
+
       - name: Prepare PR branch (task=pr)
         if: ${{ inputs.task == 'pr' }}
         shell: bash
@@ -116,7 +122,7 @@ jobs:
           echo "BRANCH=$br" >> "$GITHUB_ENV"
           git checkout -b "$br"
 
-      - name: Commit allow-listed files (task=pr)
+      - name: Commit allowlisted files (task=pr)
         if: ${{ inputs.task == 'pr' }}
         shell: bash
         run: |
@@ -140,6 +146,19 @@ jobs:
           kind="${KIND:-fix}"
           git commit -m "${kind}: ${msg}"
 
+      - name: Ensure gh
+        if: ${{ inputs.task == 'pr' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if command -v gh >/dev/null 2>&1; then
+            gh --version
+            exit 0
+          fi
+          sudo apt-get update
+          sudo apt-get install -y gh
+          gh --version
+
       - name: Push branch (task=pr)
         if: ${{ inputs.task == 'pr' }}
         shell: bash
@@ -150,7 +169,7 @@ jobs:
       - name: Create PR (task=pr)
         if: ${{ inputs.task == 'pr' }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
@@ -160,12 +179,13 @@ jobs:
           cat > /tmp/pr_body.txt <<EOF
           Automated agent PR (no-AI mode).
 
-          - Task: ${{ inputs.task }}
-          - Kind: ${KIND:-fix}
-          - Run: $run_url
-          - Envelope: report/addressing-pr-envelope.md
+          - Kind: ${kind}
+          - Run: ${run_url}
+
+          Next: fill report/addressing-pr-envelope.md and rerun /ai pr.
           EOF
-          gh pr create --base master --head "$BRANCH" --title "$title" --body-file /tmp/pr_body.txt || true
+
+          gh pr create --base master --head "$BRANCH" --title "$title" --body-file /tmp/pr_body.txt
 
       - name: Upload agent artifact
         if: always()
