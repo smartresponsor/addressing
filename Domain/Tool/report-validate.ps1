@@ -46,7 +46,7 @@ if (-not (Test-Path $reportDir)) {
   throw "report directory not found: $reportDir"
 }
 
-$files = Get-ChildItem -Path $reportDir -Filter "*.json" -File -ErrorAction SilentlyContinue
+$files = Get-ChildItem -Path $reportDir -Filter "*.json" -File -ErrorAction SilentlyContinue | Sort-Object FullName
 $bad = @()
 foreach ($f in $files) {
   try {
@@ -56,12 +56,21 @@ foreach ($f in $files) {
   }
 }
 
+$bad = $bad | Sort-Object
+$nameStats = $files | Group-Object Name | Sort-Object Name | ForEach-Object {
+  [ordered]@{
+    name = $_.Name
+    count = $_.Count
+  }
+}
+
 $okFlag = ($bad.Count -eq 0)
 $outObj = [ordered]@{
   ok = $okFlag
   domain = $Domain
   jsonCount = $files.Count
   invalidJson = $bad
+  fileNameStats = $nameStats
   tsUtc = (Get-Date).ToUniversalTime().ToString("o")
 }
 
