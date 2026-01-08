@@ -43,52 +43,52 @@ jobs:
           $issueNum = ""
           if ("${{ github.event_name }}" -eq "issue_comment") { $issueNum = "${{ github.event.issue.number }}" }
 
-          $content = @"
-          No-AI plan artifact (no checkout, no secrets).
+          $lines = @(
+            "No-AI plan artifact (no checkout, no secrets).",
+            "",
+            "Generated: $ts",
+            "Repo: $repo",
+            "Actor: $actor",
+            "Event: $event",
+            "Target: $target",
+            "Issue/PR: $issueNum",
+            "Run: $runUrl",
+            "",
+            "A) What we are trying to achieve",
+            "- Outcome:",
+            "- Constraints:",
+            "- Non-goals:",
+            "",
+            "B) Current signals (fill manually)",
+            "- Gate: green/red",
+            "- Docs build: ok/fail",
+            "- Known blockers:",
+            "",
+            "C) Roadmap (RWE Envelopes)",
+            "Envelope 1",
+            "Goal:",
+            "Slice: ATOM",
+            "Limits: files_max=5, loc_max=600",
+            "Canon: singular naming, mirror interface layers, EN-only comments, copyright header",
+            "Inputs:",
+            "Paths:",
+            "Outputs:",
+            "Acceptance Criteria:",
+            "Notes:",
+            "",
+            "Envelope 2",
+            "Goal:",
+            "Slice: BUCKET",
+            "Limits: files_max=16, loc_max=1200",
+            "Canon: singular naming, mirror interface layers, EN-only comments, copyright header",
+            "Inputs:",
+            "Paths:",
+            "Outputs:",
+            "Acceptance Criteria:",
+            "Notes:"
+          )
 
-          Generated: $ts
-          Repo: $repo
-          Actor: $actor
-          Event: $event
-          Target: $target
-          Issue/PR: $issueNum
-          Run: $runUrl
-
-          A) What we are trying to achieve
-          - Outcome:
-          - Constraints:
-          - Non-goals:
-
-          B) Current signals (fill manually)
-          - Gate: green/red
-          - Docs build: ok/fail
-          - Known blockers:
-
-          C) Roadmap (RWE Envelopes)
-          Envelope 1
-          Goal:
-          Slice: ATOM
-          Limits: files_max=5, loc_max=600
-          Canon: singular naming, mirror interface layers, EN-only comments, copyright header
-          Inputs:
-          Paths:
-          Outputs:
-          Acceptance Criteria:
-          Notes:
-
-          Envelope 2
-          Goal:
-          Slice: BUCKET
-          Limits: files_max=16, loc_max=1200
-          Canon: singular naming, mirror interface layers, EN-only comments, copyright header
-          Inputs:
-          Paths:
-          Outputs:
-          Acceptance Criteria:
-          Notes:
-          "@.Trim()
-
-          Set-Content -Path $out -Value $content -Encoding UTF8
+          Set-Content -Path $out -Value $lines -Encoding UTF8
           Write-Host "OK: wrote $out"
 
       - name: Upload plan artifact

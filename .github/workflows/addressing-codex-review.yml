@@ -43,48 +43,48 @@ jobs:
           $issueNum = ""
           if ("${{ github.event_name }}" -eq "issue_comment") { $issueNum = "${{ github.event.issue.number }}" }
 
-          $content = @"
-          No-AI review artifact (no checkout, no secrets).
+          $lines = @(
+            "No-AI review artifact (no checkout, no secrets).",
+            "",
+            "Generated: $ts",
+            "Repo: $repo",
+            "Actor: $actor",
+            "Event: $event",
+            "Context: $ctx",
+            "Issue/PR: $issueNum",
+            "Run: $runUrl",
+            "",
+            "A) Review checklist (fill manually)",
+            "- No hardcode in templates (no addressing literals in tool/template)",
+            "- Worker: /health/ works with trailing slash",
+            "- Allowlist: scan,health,doctor,validate,plan,code,codex,pr",
+            "- Gate: green",
+            "- Docs: mkdocs strict config (docs_dir=page, root=docs) correct",
+            "- Naming canon: singular everywhere",
+            "- Mirror interfaces present (LayerInterface mirrors)",
+            "",
+            "B) Findings",
+            "1) Issue:",
+            "   Evidence:",
+            "   Fix:",
+            "",
+            "2) Issue:",
+            "   Evidence:",
+            "   Fix:",
+            "",
+            "C) Next PR envelope (copy-paste to report/addressing-pr-envelope.md)",
+            "Goal:",
+            "Slice: ATOM",
+            "Limits: files_max=5, loc_max=600",
+            "Canon: singular naming, mirror interface layers, EN-only comments, copyright header",
+            "Inputs:",
+            "Paths:",
+            "Outputs:",
+            "Acceptance Criteria:",
+            "Notes:"
+          )
 
-          Generated: $ts
-          Repo: $repo
-          Actor: $actor
-          Event: $event
-          Context: $ctx
-          Issue/PR: $issueNum
-          Run: $runUrl
-
-          A) Review checklist (fill manually)
-          - No hardcode in templates (no addressing literals in tool/template)
-          - Worker: /health/ works with trailing slash
-          - Allowlist: scan,health,doctor,validate,plan,code,codex,pr
-          - Gate: green
-          - Docs: mkdocs strict config (docs_dir=page, root=docs) correct
-          - Naming canon: singular everywhere
-          - Mirror interfaces present (LayerInterface mirrors)
-
-          B) Findings
-          1) Issue:
-             Evidence:
-             Fix:
-
-          2) Issue:
-             Evidence:
-             Fix:
-
-          C) Next PR envelope (copy-paste to report/addressing-pr-envelope.md)
-          Goal:
-          Slice: ATOM
-          Limits: files_max=5, loc_max=600
-          Canon: singular naming, mirror interface layers, EN-only comments, copyright header
-          Inputs:
-          Paths:
-          Outputs:
-          Acceptance Criteria:
-          Notes:
-          "@.Trim()
-
-          Set-Content -Path $out -Value $content -Encoding UTF8
+          Set-Content -Path $out -Value $lines -Encoding UTF8
           Write-Host "OK: wrote $out"
 
       - name: Upload review artifact
