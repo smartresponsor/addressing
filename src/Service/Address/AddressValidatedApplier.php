@@ -161,7 +161,7 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
                 $this->pdo->rollBack();
             }
             throw $e;
-        } catch (PDOException) {
+        } catch (\Throwable) {
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
