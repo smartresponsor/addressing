@@ -61,7 +61,7 @@ final class PdoRepository implements RepositoryInterface
      * @param string $prefix
      * @param string|null $country
      * @param int $limit
-     * @return array|\App\Projection\AddressIndex\IndexRecord[]
+     * @return array<\App\Projection\AddressIndex\IndexRecord>
      */
     public function search(string $prefix, ?string $country = null, int $limit = 20): array
     {
@@ -82,7 +82,7 @@ final class PdoRepository implements RepositoryInterface
     }
 
     /**
-     * @param array $row
+     * @param array<string, mixed> $row
      * @return \App\Projection\AddressIndex\IndexRecord
      */
     private function hydrate(array $row): IndexRecord

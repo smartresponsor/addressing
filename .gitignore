@@ -26,3 +26,7 @@ Thumbs.db
 # Docker overrides
 /.docker/
 /docker-compose.override.yml
+
+# Node
+node_modules/
+**/node_modules/

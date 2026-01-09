@@ -191,12 +191,12 @@ final class AddressData implements AddressInterface
     public function validationFingerprint(): ?string { return $this->validationFingerprint; }
 
     /**
-     * @return array|null
+     * @return array<string, mixed>|null
      */
     public function validationRaw(): ?array { return $this->validationRaw; }
 
     /**
-     * @return array|null
+     * @return array<string, mixed>|null
      */
     public function validationVerdict(): ?array { return $this->validationVerdict; }
 

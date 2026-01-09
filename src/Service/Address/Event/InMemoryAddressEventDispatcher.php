@@ -11,48 +11,45 @@ use App\ServiceInterface\Address\Event\AddressEventInterface;
 use Throwable;
 
 /**
+ * In-memory event dispatcher.
  *
+ * Absolute guarantees:
+ * - dispatcher never breaks the main execution flow
+ * - listener failures are fully isolated
+ * - ordering is preserved
+ * - no side effects outside this process
  */
 final class InMemoryAddressEventDispatcher implements AddressEventDispatcherInterface
 {
     /**
-     * @var array<string, list<callable>>
+     * @var array<string, list<callable(AddressEventInterface): void>>
      */
-    private array $listeners = [];
+    private array $listener = [];
 
     /**
-     * @param string $eventName
-     * @param callable $listener
-     * @return void
+     * {@inheritdoc}
      */
     public function subscribe(string $eventName, callable $listener): void
     {
-        $this->listeners[$eventName][] = $listener;
+        $this->listener[$eventName][] = $listener;
     }
 
     /**
-     * @param \App\ServiceInterface\Address\Event\AddressEventInterface $event
-     * @return void
+     * {@inheritdoc}
+     *
+     * Absolute rule:
+     * dispatcher must never throw or affect business flow.
      */
     public function dispatch(AddressEventInterface $event): void
     {
         $name = $event->name();
 
-        if (empty($this->listeners[$name])) {
-            return;
-        }
-
-        $listeners = $this->listeners[$name];
-
-        foreach ($listeners as $listener) {
+        foreach ($this->listener[$name] ?? [] as $listener) {
             try {
                 $listener($event);
-            } catch (Throwable $e) {
-                // Listener failures are intentionally isolated.
-
-                // Extension point:
-                // - logger
-                // - metrics
+            } catch (Throwable) {
+                // intentionally ignored:
+                // dispatcher must never break the main flow
             }
         }
     }

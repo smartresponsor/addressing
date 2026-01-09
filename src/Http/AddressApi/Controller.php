@@ -12,6 +12,7 @@ namespace App\Http\AddressApi;
 
 use App\Entity\Address\AddressData;
 use App\EntityInterface\Address\AddressInterface;
+use App\Contract\Address\AddressValidated;
 use App\Repository\Address\AddressRepository;
 use App\Service\Address\AddressValidatedApplier;
 use DateTimeImmutable;
@@ -31,12 +32,10 @@ use Symfony\Component\Uid\Ulid;
 final class Controller
 {
     /**
-     * @param \PDO $pg
      * @param \App\Repository\Address\AddressRepository $repo
      * @param \App\Service\Address\AddressValidatedApplier $validatedApplier
      */
     public function __construct(
-        private readonly PDO                     $pg,
         private readonly AddressRepository       $repo,
         private readonly AddressValidatedApplier $validatedApplier,
     ) {
@@ -48,7 +47,7 @@ final class Controller
      */
     public static function fromPg(PDO $pg): self
     {
-        return new self($pg, new AddressRepository($pg), new AddressValidatedApplier($pg));
+        return new self(new AddressRepository($pg), new AddressValidatedApplier($pg));
     }
 
     /**
@@ -168,7 +167,7 @@ final class Controller
     {
         $in = self::json($req);
 
-        $validated = [
+        $validated = AddressValidated::fromArray([
             'line1Norm' => self::optStr($in, 'line1Norm'),
             'cityNorm' => self::optStr($in, 'cityNorm'),
             'regionNorm' => self::optStr($in, 'regionNorm'),
@@ -176,9 +175,10 @@ final class Controller
             'latitude' => self::optFloat($in, 'latitude'),
             'longitude' => self::optFloat($in, 'longitude'),
             'geohash' => self::optStr($in, 'geohash'),
-            'status' => self::optStr($in, 'status') ?? self::optStr($in, 'validationStatus') ?? 'verified',
-            'provider' => self::optStr($in, 'provider') ?? self::optStr($in, 'validationProvider'),
-        ];
+            'validationProvider' => self::optStr($in, 'provider') ?? self::optStr($in, 'validationProvider'),
+            'validatedAt' => self::optStr($in, 'validatedAt'),
+            'dedupeKey' => self::optStr($in, 'dedupeKey'),
+        ]);
 
         $this->validatedApplier->apply($id, $validated);
 
@@ -193,7 +193,7 @@ final class Controller
 
     /**
      * @param \Symfony\Component\HttpFoundation\Request $req
-     * @return array
+     * @return array<string, mixed>
      */
     private static function json(Request $req): array
     {
@@ -206,7 +206,7 @@ final class Controller
     }
 
     /**
-     * @param array $in
+     * @param array<string, mixed> $in
      * @param string $key
      * @return string
      */
@@ -219,7 +219,7 @@ final class Controller
     }
 
     /**
-     * @param array $in
+     * @param array<string, mixed> $in
      * @param string $key
      * @return string|null
      */
@@ -236,7 +236,7 @@ final class Controller
     }
 
     /**
-     * @param array $in
+     * @param array<string, mixed> $in
      * @param string $key
      * @return float|null
      */
@@ -256,7 +256,7 @@ final class Controller
 
     /**
      * @param \App\EntityInterface\Address\AddressInterface $a
-     * @return array
+     * @return array<string, mixed>
      */
     private static function toArray(AddressInterface $a): array
     {
