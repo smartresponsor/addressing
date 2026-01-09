@@ -8,18 +8,17 @@ namespace App\Service\Address\Event;
 
 use App\ServiceInterface\Address\Event\AddressEventDispatcherInterface;
 use App\ServiceInterface\Address\Event\AddressEventInterface;
-
-/**
- *
- */
+use Throwable;
 
 /**
  *
  */
 final class InMemoryAddressEventDispatcher implements AddressEventDispatcherInterface
 {
-    /** @var array */
-    private array $listener = [];
+    /**
+     * @var array<string, list<callable>>
+     */
+    private array $listeners = [];
 
     /**
      * @param string $eventName
@@ -28,8 +27,7 @@ final class InMemoryAddressEventDispatcher implements AddressEventDispatcherInte
      */
     public function subscribe(string $eventName, callable $listener): void
     {
-        $this->listener[$eventName] ??= [];
-        $this->listener[$eventName][] = $listener;
+        $this->listeners[$eventName][] = $listener;
     }
 
     /**
@@ -39,8 +37,23 @@ final class InMemoryAddressEventDispatcher implements AddressEventDispatcherInte
     public function dispatch(AddressEventInterface $event): void
     {
         $name = $event->name();
-        foreach ($this->listener[$name] ?? [] as $listener) {
-            $listener($event);
+
+        if (empty($this->listeners[$name])) {
+            return;
+        }
+
+        $listeners = $this->listeners[$name];
+
+        foreach ($listeners as $listener) {
+            try {
+                $listener($event);
+            } catch (Throwable $e) {
+                // Listener failures are intentionally isolated.
+
+                // Extension point:
+                // - logger
+                // - metrics
+            }
         }
     }
 }

@@ -1,6 +1,5 @@
 <?php
 declare(strict_types=1);
-
 /*
  * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
  * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
@@ -11,107 +10,148 @@ declare(strict_types=1);
 namespace App\Service\Address;
 
 use App\ServiceInterface\Address\AddressOutboxDrainerInterface;
+use JsonException;
 use PDO;
+use Throwable;
 
 /**
  *
  */
-
-/**
- *
- */
-final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
+final readonly class AddressOutboxDrainer implements AddressOutboxDrainerInterface
 {
     /**
      * @param \PDO $pdo
      */
-    public function __construct(private readonly PDO $pdo)
+    public function __construct(private PDO $pdo)
     {
     }
 
     /**
-     * @param string $url
-     * @param int $limit
-     * @param int $retryLimit
-     * @param int $timeoutSec
-     * @param int $backoffMs
-     * @return int
+     * Drains unpublished outbox events and delivers them over HTTP.
+     *
+     * Absolute guarantees:
+     * - the drainer never throws
+     * - each row is processed at most once per run
+     * - failures are recorded and isolated
+     * - database state is always consistent
      */
-    public function drain(string $url, int $limit, int $retryLimit, int $timeoutSec, int $backoffMs): int
+    public function drain(
+        string $url,
+        int    $limit,
+        int    $retryLimit,
+        int    $timeoutSec,
+        int    $backoffMs
+    ): int
     {
-        $sel = $this->pdo->prepare(
-            'SELECT id, event_name, event_version, payload '
-            . 'FROM address_outbox WHERE published_at IS NULL '
-            . 'ORDER BY id ASC LIMIT :lim'
-        );
-        $sel->bindValue(':lim', $limit, PDO::PARAM_INT);
-        $sel->execute();
+        $processed = 0;
 
-        $rows = $sel->fetchAll(PDO::FETCH_ASSOC);
-        $count = 0;
+        try {
+            $stmt = $this->pdo->prepare(
+                'SELECT id, event_name, event_version, payload
+                 FROM address_outbox
+                 WHERE published_at IS NULL
+                 ORDER BY id ASC
+                 LIMIT :lim
+                 FOR UPDATE SKIP LOCKED'
+            );
+            $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+            $stmt->execute();
 
-        foreach ($rows as $r) {
-            $payload = json_decode((string)($r['payload'] ?? ''), true);
-            if (!is_array($payload)) {
-                $payload = null;
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($rows as $row) {
+                $this->processRow(
+                    $row,
+                    $url,
+                    $retryLimit,
+                    $timeoutSec,
+                    $backoffMs
+                );
+                $processed++;
             }
+        } catch (Throwable) {
+            // Absolute rule:
+            // the drainer must never break the main execution flow.
+        }
 
-            $err = null;
-            $ok = $this->post(
+        return $processed;
+    }
+
+    /**
+     * Processes a single outbox row.
+     */
+    private function processRow(
+        array  $row,
+        string $url,
+        int    $retryLimit,
+        int    $timeoutSec,
+        int    $backoffMs
+    ): void
+    {
+        $id = (int)$row['id'];
+        $error = null;
+
+        try {
+            $payload = $this->decodePayload($row['payload'] ?? null);
+
+            $ok = $this->postWithRetry(
                 $url,
                 [
-                    'name' => (string)$r['event_name'],
-                    'version' => (int)$r['event_version'],
+                    'name' => (string)$row['event_name'],
+                    'version' => (int)$row['event_version'],
                     'payload' => $payload,
                 ],
                 $retryLimit,
                 $timeoutSec,
                 $backoffMs,
-                $err
+                $error
             );
 
             if ($ok) {
-                $upd = $this->pdo->prepare(
-                    'UPDATE address_outbox '
-                    . 'SET published_at = now(), published_attempt = published_attempt + 1, last_error = NULL '
-                    . 'WHERE id = :id'
-                );
-                $upd->execute([':id' => $r['id']]);
+                $this->markPublished($id);
             } else {
-                $upd = $this->pdo->prepare(
-                    'UPDATE address_outbox '
-                    . 'SET published_attempt = published_attempt + 1, last_error = :err '
-                    . 'WHERE id = :id'
-                );
-                $upd->execute([':id' => $r['id'], ':err' => $err]);
+                $this->markFailed($id, $error);
             }
-
-            $count++;
+        } catch (Throwable $e) {
+            $this->markFailed($id, 'internal: ' . $e->getMessage());
         }
-
-        return $count;
     }
 
     /**
-     * @param string $url
-     * @param array $data
-     * @param int $retryLimit
-     * @param int $timeoutSec
-     * @param int $backoffMs
-     * @param string|null $error
-     * @return bool
+     * Decodes JSON payload strictly.
      */
-    private function post(
-        string $url,
-        array $data,
-        int $retryLimit,
-        int $timeoutSec,
-        int $backoffMs,
+    private function decodePayload(mixed $raw): ?array
+    {
+        if (!is_string($raw) || $raw === '') {
+            return null;
+        }
+
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    /**
+     * Sends payload over HTTP with retry and backoff.
+     */
+    private function postWithRetry(
+        string  $url,
+        array   $data,
+        int     $retryLimit,
+        int     $timeoutSec,
+        int     $backoffMs,
         ?string &$error
-    ): bool {
-        $payload = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        if ($payload === false) {
-            $error = 'json: encode failed';
+    ): bool
+    {
+        try {
+            $payload = json_encode(
+                $data,
+                JSON_UNESCAPED_UNICODE
+                | JSON_UNESCAPED_SLASHES
+                | JSON_THROW_ON_ERROR
+            );
+        } catch (JsonException) {
+            $error = 'json_encode_failed';
             return false;
         }
 
@@ -121,27 +161,15 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
         while (true) {
             $attempt++;
 
-            $ch = curl_init($url);
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => $payload,
-                CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-                CURLOPT_CONNECTTIMEOUT => $timeoutSec,
-                CURLOPT_TIMEOUT => $timeoutSec,
-            ]);
+            $result = $this->sendHttp(
+                $url,
+                $payload,
+                $timeoutSec,
+                $error
+            );
 
-            $resp = curl_exec($ch);
-            $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $err = curl_error($ch);
-            curl_close($ch);
-
-            if ($err !== '') {
-                $error = 'curl: ' . $err;
-            } elseif ($code >= 200 && $code < 300) {
+            if ($result === true) {
                 return true;
-            } else {
-                $error = 'http: ' . $code . ' body: ' . substr((string)$resp, 0, 500);
             }
 
             if ($attempt > $retryLimit) {
@@ -151,5 +179,77 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
             // Linear backoff with growth.
             usleep($backoffMs * 1000 * $attempt);
         }
+    }
+
+    /**
+     * Executes a single HTTP POST.
+     */
+    private function sendHttp(
+        string  $url,
+        string  $payload,
+        int     $timeoutSec,
+        ?string &$error
+    ): bool
+    {
+        $ch = curl_init($url);
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_CONNECTTIMEOUT => $timeoutSec,
+            CURLOPT_TIMEOUT => $timeoutSec,
+        ]);
+
+        $resp = curl_exec($ch);
+        $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err = curl_error($ch);
+
+        curl_close($ch);
+
+        if ($err !== '') {
+            $error = 'curl: ' . $err;
+            return false;
+        }
+
+        if ($code >= 200 && $code < 300) {
+            return true;
+        }
+
+        $error = 'http: ' . $code . ' body: ' . substr((string)$resp, 0, 500);
+        return false;
+    }
+
+    /**
+     * Marks an outbox row as published.
+     */
+    private function markPublished(int $id): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE address_outbox
+             SET published_at = now(),
+                 published_attempt = published_attempt + 1,
+                 last_error = NULL
+             WHERE id = :id'
+        );
+        $stmt->execute([':id' => $id]);
+    }
+
+    /**
+     * Marks an outbox row as failed.
+     */
+    private function markFailed(int $id, ?string $error): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE address_outbox
+             SET published_attempt = published_attempt + 1,
+                 last_error = :err
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            ':id' => $id,
+            ':err' => $error,
+        ]);
     }
 }
