@@ -48,6 +48,8 @@ final class Controller
             self::reqStr($in, 'line1'),
             self::optStr($in, 'line2'),
             self::reqStr($in, 'city'),
+            self::optLocalizedMap($in, 'line1Localized'),
+            self::optLocalizedMap($in, 'cityLocalized'),
             self::optStr($in, 'region'),
             self::optStr($in, 'postalCode'),
             strtoupper(self::reqStr($in, 'countryCode')),
@@ -195,6 +197,30 @@ final class Controller
         throw new RuntimeException('invalid_' . $key);
     }
 
+    /**
+     * @return array<string, string>|null
+     */
+    private static function optLocalizedMap(array $in, string $key): ?array
+    {
+        if (!array_key_exists($key, $in) || $in[$key] === null) {
+            return null;
+        }
+        if (!is_array($in[$key])) {
+            throw new RuntimeException('invalid_' . $key);
+        }
+        $out = [];
+        foreach ($in[$key] as $locale => $value) {
+            if (!is_string($locale) || !is_string($value)) {
+                throw new RuntimeException('invalid_' . $key);
+            }
+            $value = trim($value);
+            if ($value !== '') {
+                $out[$locale] = $value;
+            }
+        }
+        return $out === [] ? null : $out;
+    }
+
     private static function toArray(AddressInterface $a): array
     {
         return [
@@ -204,6 +230,8 @@ final class Controller
             'line1' => $a->line1(),
             'line2' => $a->line2(),
             'city' => $a->city(),
+            'line1Localized' => $a->line1Localized(),
+            'cityLocalized' => $a->cityLocalized(),
             'region' => $a->region(),
             'postalCode' => $a->postalCode(),
             'countryCode' => $a->countryCode(),

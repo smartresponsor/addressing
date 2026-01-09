@@ -14,5 +14,25 @@ final class Line
         $s = trim(preg_replace('/\s+/', ' ', $s));
         return $s;
     }
+    public static function normLocalized(string $s, string $locale): string
+    {
+        $s = self::norm($s);
+        self::assertValidForLocale($s, $locale);
+        return $s;
+    }
+    public static function isValidForLocale(string $s, string $locale): bool
+    {
+        $s = trim($s);
+        if ($s === '') {
+            return false;
+        }
+        return preg_match(LocaleRules::linePatternForLocale($locale), $s) === 1;
+    }
+    public static function assertValidForLocale(string $s, string $locale): void
+    {
+        if (!self::isValidForLocale($s, $locale)) {
+            throw new \InvalidArgumentException('line_invalid_locale');
+        }
+    }
     public function __toString(): string { return $this->v; }
 }

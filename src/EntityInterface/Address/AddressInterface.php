@@ -20,6 +20,10 @@ interface AddressInterface
     public function line1(): string;
     public function line2(): ?string;
     public function city(): string;
+    /** @return array<string, string>|null */
+    public function line1Localized(): ?array;
+    /** @return array<string, string>|null */
+    public function cityLocalized(): ?array;
     public function region(): ?string;
     public function postalCode(): ?string;
     public function countryCode(): string;

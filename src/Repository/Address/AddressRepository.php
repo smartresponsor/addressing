@@ -38,9 +38,19 @@ VALUES
      :dedupe_key, :created_at, :updated_at, :deleted_at)
 SQL;
 
-        $stmt = $this->pdo->prepare($sql);
-        $this->bind($stmt, $address);
-        $stmt->execute();
+        try {
+            $this->pdo->beginTransaction();
+            $stmt = $this->pdo->prepare($sql);
+            $this->bind($stmt, $address);
+            $stmt->execute();
+            $this->replaceLocalizations($address->id(), $address->line1Localized(), $address->cityLocalized());
+            $this->pdo->commit();
+        } catch (\Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
 
         $this->appendOutbox('AddressCreated', 1, [
             'id' => $address->id(),
@@ -55,7 +65,8 @@ SQL;
     {
         $sql = <<<'SQL'
 UPDATE address_entity SET
-    owner_id=:owner_id, vendor_id=:vendor_id, line1=:line1, line2=:line2, city=:city, region=:region,
+    owner_id=:owner_id, vendor_id=:vendor_id, line1=:line1, line2=:line2, city=:city,
+    region=:region,
     postal_code=:postal_code, country_code=:country_code,
     line1_norm=:line1_norm, city_norm=:city_norm, region_norm=:region_norm, postal_code_norm=:postal_code_norm,
     latitude=:latitude, longitude=:longitude, geohash=:geohash,
@@ -64,9 +75,19 @@ UPDATE address_entity SET
 WHERE id=:id
 SQL;
 
-        $stmt = $this->pdo->prepare($sql);
-        $this->bind($stmt, $address);
-        $stmt->execute();
+        try {
+            $this->pdo->beginTransaction();
+            $stmt = $this->pdo->prepare($sql);
+            $this->bind($stmt, $address);
+            $stmt->execute();
+            $this->replaceLocalizations($address->id(), $address->line1Localized(), $address->cityLocalized());
+            $this->pdo->commit();
+        } catch (\Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
 
         $this->appendOutbox('AddressUpdated', 1, [
             'id' => $address->id(),
@@ -188,6 +209,8 @@ SQL;
             ? (int) $r['validation_quality']
             : null;
 
+        $localizations = $this->fetchLocalizations((string) $r['id']);
+
         return new AddressData(
             (string) $r['id'],
             $r['owner_id'] !== null ? (string) $r['owner_id'] : null,
@@ -195,6 +218,8 @@ SQL;
             (string) $r['line1'],
             $r['line2'] !== null ? (string) $r['line2'] : null,
             (string) $r['city'],
+            $localizations['line1Localized'],
+            $localizations['cityLocalized'],
             $r['region'] !== null ? (string) $r['region'] : null,
             $r['postal_code'] !== null ? (string) $r['postal_code'] : null,
             (string) $r['country_code'],
@@ -242,6 +267,64 @@ SQL;
         }
         /** @var array<string, mixed> $decoded */
         return $decoded;
+    }
+
+    /**
+     * @param array<string, string>|null $line1
+     * @param array<string, string>|null $city
+     */
+    private function replaceLocalizations(string $id, ?array $line1, ?array $city): void
+    {
+        $this->pdo->prepare('DELETE FROM address_localization WHERE address_id = :id')->execute([':id' => $id]);
+
+        $line1 = $line1 ?? [];
+        $city = $city ?? [];
+        $locales = array_unique(array_merge(array_keys($line1), array_keys($city)));
+        if ($locales === []) {
+            return;
+        }
+
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO address_localization (address_id, locale, line1, city) VALUES (:id, :locale, :line1, :city)'
+        );
+        foreach ($locales as $locale) {
+            $stmt->execute([
+                ':id' => $id,
+                ':locale' => $locale,
+                ':line1' => $line1[$locale] ?? null,
+                ':city' => $city[$locale] ?? null,
+            ]);
+        }
+    }
+
+    /**
+     * @return array{line1Localized: ?array<string, string>, cityLocalized: ?array<string, string>}
+     */
+    private function fetchLocalizations(string $id): array
+    {
+        $stmt = $this->pdo->prepare('SELECT locale, line1, city FROM address_localization WHERE address_id = :id');
+        $stmt->execute([':id' => $id]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $line1 = [];
+        $city = [];
+        foreach ($rows as $row) {
+            $locale = (string) ($row['locale'] ?? '');
+            if ($locale === '') {
+                continue;
+            }
+            if (array_key_exists('line1', $row) && $row['line1'] !== null) {
+                $line1[$locale] = (string) $row['line1'];
+            }
+            if (array_key_exists('city', $row) && $row['city'] !== null) {
+                $city[$locale] = (string) $row['city'];
+            }
+        }
+
+        return [
+            'line1Localized' => $line1 === [] ? null : $line1,
+            'cityLocalized' => $city === [] ? null : $city,
+        ];
     }
 
     private function appendOutbox(string $name, int $version, array $payload): void
