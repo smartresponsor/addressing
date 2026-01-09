@@ -1,0 +1,119 @@
+openapi: 3.0.3
+info:
+  title: SmartResponsor AddressData Outbox Events
+  version: 0.1.0
+  description: |
+    AddressData outbox event contract for downstream consumers.
+paths: {}
+components:
+  schemas:
+    AddressOutboxEnvelope:
+      type: object
+      required:
+        - name
+        - version
+        - payload
+      properties:
+        name:
+          type: string
+          enum:
+            - AddressCreated
+            - AddressUpdated
+            - AddressDeleted
+            - AddressValidatedApplied
+        version:
+          type: integer
+          minimum: 1
+        payload:
+          oneOf:
+            - $ref: '#/components/schemas/AddressCreatedPayload'
+            - $ref: '#/components/schemas/AddressUpdatedPayload'
+            - $ref: '#/components/schemas/AddressDeletedPayload'
+            - $ref: '#/components/schemas/AddressValidatedAppliedPayload'
+    AddressCreatedPayload:
+      type: object
+      required:
+        - id
+        - ownerId
+        - vendorId
+        - countryCode
+        - createdAt
+      properties:
+        id:
+          type: string
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+        ownerId:
+          type: string
+          nullable: true
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+        vendorId:
+          type: string
+          nullable: true
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+        countryCode:
+          type: string
+          pattern: '^[A-Z]{2}$'
+        createdAt:
+          type: string
+          format: date-time
+    AddressUpdatedPayload:
+      type: object
+      required:
+        - id
+        - updatedAt
+      properties:
+        id:
+          type: string
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+        updatedAt:
+          type: string
+          format: date-time
+    AddressDeletedPayload:
+      type: object
+      required:
+        - id
+        - deletedAt
+      properties:
+        id:
+          type: string
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+        deletedAt:
+          type: string
+          format: date-time
+    AddressValidatedAppliedPayload:
+      type: object
+      required:
+        - id
+        - fingerprint
+        - provider
+        - validatedAt
+        - deliverable
+        - granularity
+        - quality
+        - rawSha256
+      properties:
+        id:
+          type: string
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+        fingerprint:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+        provider:
+          type: string
+          nullable: true
+        validatedAt:
+          type: string
+          format: date-time
+        deliverable:
+          type: boolean
+          nullable: true
+        granularity:
+          type: string
+          nullable: true
+        quality:
+          type: integer
+          nullable: true
+        rawSha256:
+          type: string
+          nullable: true
+          pattern: '^[a-f0-9]{64}$'

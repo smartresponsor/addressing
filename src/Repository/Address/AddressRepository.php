@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace App\Repository\Address;
 
 use App\Entity\Address\AddressData;
+use App\Entity\Address\AddressOutboxRules;
 use App\EntityInterface\Address\AddressInterface;
 use App\RepositoryInterface\Address\AddressRepositoryInterface;
 use DateTimeImmutable;
@@ -57,13 +58,16 @@ SQL;
         $this->bind($stmt, $address);
         $stmt->execute();
 
-        $this->appendOutbox('AddressCreated', [
-            'id' => $address->id(),
-            'ownerId' => $address->ownerId(),
-            'vendorId' => $address->vendorId(),
-            'countryCode' => $address->countryCode(),
-            'createdAt' => $address->createdAt(),
-        ]);
+        $this->appendOutbox(
+            'AddressCreated',
+            AddressOutboxRules::addressCreatedPayload(
+                $address->id(),
+                $address->ownerId(),
+                $address->vendorId(),
+                $address->countryCode(),
+                $address->createdAt()
+            )
+        );
     }
 
     /**
@@ -87,10 +91,13 @@ SQL;
         $this->bind($stmt, $address);
         $stmt->execute();
 
-        $this->appendOutbox('AddressUpdated', [
-            'id' => $address->id(),
-            'updatedAt' => $address->updatedAt() ?? (new DateTimeImmutable())->format(DATE_ATOM),
-        ]);
+        $this->appendOutbox(
+            'AddressUpdated',
+            AddressOutboxRules::addressUpdatedPayload(
+                $address->id(),
+                $address->updatedAt() ?? (new DateTimeImmutable())->format(DATE_ATOM)
+            )
+        );
     }
 
     /**
@@ -115,10 +122,13 @@ SQL;
         $stmt = $this->pdo->prepare('UPDATE address_entity SET deleted_at=now() WHERE id=:id AND deleted_at IS NULL');
         $stmt->execute([':id' => $id]);
 
-        $this->appendOutbox('AddressDeleted', [
-            'id' => $id,
-            'deletedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
-        ]);
+        $this->appendOutbox(
+            'AddressDeleted',
+            AddressOutboxRules::addressDeletedPayload(
+                $id,
+                (new DateTimeImmutable())->format(DATE_ATOM)
+            )
+        );
     }
 
     /**
