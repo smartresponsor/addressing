@@ -14,6 +14,7 @@ use App\RepositoryInterface\Address\AddressRepositoryInterface;
 use DateTimeImmutable;
 use PDO;
 use PDOStatement;
+use RuntimeException;
 
 /**
  *
@@ -121,6 +122,15 @@ SQL;
     }
 
     /**
+     * @param string $id
+     * @return void
+     */
+    public function markDeleted(string $id): void
+    {
+        $this->delete($id);
+    }
+
+    /**
      * @return array{items: AddressInterface[], nextCursor: ?string}
      */
     public function findPage(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, int $limit, ?string $cursor): array
@@ -205,7 +215,7 @@ SQL;
     }
 
     /**
-     * @param array $r
+     * @param array<string, mixed> $r
      * @return \App\Entity\Address\AddressData
      */
     private function map(array $r): AddressData
@@ -281,18 +291,22 @@ SQL;
 
     /**
      * @param string $name
-     * @param array $payload
+     * @param array<string, mixed> $payload
      * @return void
      */
     private function appendOutbox(string $name, array $payload): void
     {
+        $payloadJson = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($payloadJson === false) {
+            throw new RuntimeException('payload_encode_failed');
+        }
         $stmt = $this->pdo->prepare(
             'INSERT INTO address_outbox(event_name, event_version, payload) VALUES (:name, :ver, :payload::jsonb)'
         );
         $stmt->execute([
             ':name' => $name,
             ':ver' => 1,
-            ':payload' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ':payload' => $payloadJson,
         ]);
     }
 }

@@ -94,7 +94,7 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
 
     /**
      * @param string $url
-     * @param array $data
+     * @param array<string, mixed> $data
      * @param int $retryLimit
      * @param int $timeoutSec
      * @param int $backoffMs

@@ -55,7 +55,7 @@ final readonly class AddressValidated implements JsonSerializable
     }
 
     /**
-     * @param array $data
+     * @param array<string, mixed> $data
      * @return \App\Contract\Address\AddressValidated
      */
     public static function fromArray(array $data): self
@@ -110,7 +110,11 @@ final readonly class AddressValidated implements JsonSerializable
     public function fingerprint(): string
     {
         $arr = $this->jsonSerialize();
-        return hash('sha256', json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $json = json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($json === false) {
+            $json = '';
+        }
+        return hash('sha256', $json);
     }
 
     /** @return array<string, mixed> */
@@ -156,7 +160,7 @@ final readonly class AddressValidated implements JsonSerializable
     }
 
     /**
-     * @param array|null $data
+     * @param array<string, mixed>|null $data
      * @return string|null
      */
     private function encodeJsonNullable(?array $data): ?string
@@ -165,11 +169,11 @@ final readonly class AddressValidated implements JsonSerializable
             return null;
         }
 
-        try {
-            return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        } catch (Throwable) {
+        $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($json === false) {
             return null;
         }
+        return $json;
     }
 
     /**

@@ -17,8 +17,8 @@ final class ErrorMap
     /**
      * @param int $status
      * @param string $code
-     * @param array $message
-     * @param array $meta
+     * @param array<string, mixed> $message
+     * @param array<string, mixed> $meta
      * @return void
      */
     public static function emit(int $status, string $code, array $message, array $meta = []): void

@@ -102,12 +102,13 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
 
             if ($validated->raw !== null) {
                 $fields[] = 'validation_raw = :validation_raw::jsonb';
-                $params[':validation_raw'] = json_encode($validated->raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-                $params[':validation_raw_sha256'] = hash('sha256', $params[':validation_raw']);
+                $rawJson = $this->encodePayload($validated->raw);
+                $params[':validation_raw'] = $rawJson;
+                $params[':validation_raw_sha256'] = hash('sha256', $rawJson);
             }
             if ($validated->verdict !== null) {
                 $fields[] = 'validation_verdict = :validation_verdict::jsonb';
-                $params[':validation_verdict'] = json_encode($validated->verdict->jsonSerialize(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                $params[':validation_verdict'] = $this->encodePayload($validated->verdict->jsonSerialize());
 
                 if ($validated->verdict->deliverable !== null) {
                     $fields[] = 'validation_deliverable = :validation_deliverable';
@@ -155,6 +156,11 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
             ]);
 
             $this->pdo->commit();
+        } catch (RuntimeException $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
         } catch (PDOException) {
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
@@ -164,17 +170,31 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
     }
 
     /**
-     * @param array $payload
+     * @param array<string, mixed> $payload
      */
     private function appendOutbox(array $payload): void
     {
+        $payloadJson = $this->encodePayload($payload);
         $stmt = $this->pdo->prepare(
             'INSERT INTO address_outbox(event_name, event_version, payload) VALUES (:name, :ver, :payload::jsonb)'
         );
         $stmt->execute([
             ':name' => 'AddressValidatedApplied',
             ':ver' => 1,
-            ':payload' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ':payload' => $payloadJson,
         ]);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return string
+     */
+    private function encodePayload(array $payload): string
+    {
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($json === false) {
+            throw new RuntimeException('payload_encode_failed');
+        }
+        return $json;
     }
 }

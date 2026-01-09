@@ -27,13 +27,23 @@ final class StructuredLogger
     }
 
     /**
-     * @param array $event
+     * @param array<string, mixed> $event
      * @return void
      */
     public function log(array $event): void
     {
         $event['ts'] = $event['ts'] ?? (new DateTimeImmutable('now'))->format(DATE_ATOM);
-        $line = json_encode($event, JSON_UNESCAPED_UNICODE) . "\n";
+        $line = json_encode($event, JSON_UNESCAPED_UNICODE);
+        if ($line === false) {
+            $line = json_encode(
+                ['ts' => $event['ts'], 'error' => 'encode_failed'],
+                JSON_UNESCAPED_UNICODE
+            );
+        }
+        if ($line === false) {
+            return;
+        }
+        $line .= "\n";
         @file_put_contents($this->path, $line, FILE_APPEND|LOCK_EX);
     }
 }

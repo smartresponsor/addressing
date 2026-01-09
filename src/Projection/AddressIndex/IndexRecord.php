@@ -6,6 +6,10 @@ declare(strict_types=1);
 namespace App\Projection\AddressIndex;
 
 use App\Integration\Geocode\GeocodeResult;
+use App\Value\Address\Region;
+use App\Value\CountryCode;
+use App\Value\PostalCode;
+use App\Value\StreetLine;
 use DateTimeImmutable;
 
 /**
@@ -63,7 +67,9 @@ final readonly class IndexRecord
         return sprintf('%+.5f:%+.5f', $lat, $lon);
     }
 
-    /** @param array{line1:object,line2 $norm :?object,city:string,region:object,postal:object,country:object,digest:string} $norm */
+    /**
+     * @param array{line1: StreetLine, line2: ?StreetLine, city: string, region: Region, postal: PostalCode, country: CountryCode, digest: string} $norm
+     */
     public static function fromNormalized(array $norm, ?GeocodeResult $geo = null): self
     {
         $lat = $geo?->lat;
@@ -71,11 +77,11 @@ final readonly class IndexRecord
         $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
         return new self(
             $norm['digest'],
-            (string)$norm['line1'],
-            $norm['line2'] !== null ? (string)$norm['line2'] : null,
+            (string) $norm['line1'],
+            $norm['line2'] !== null ? (string) $norm['line2'] : null,
             (string)$norm['city'],
-            (string)$norm['region'],
-            (string)$norm['postal'],
+            (string) $norm['region'],
+            (string) $norm['postal'],
             $norm['country']->value(),
             $lat,
             $lon,
@@ -89,7 +95,7 @@ final readonly class IndexRecord
     }
 
     /**
-     * @return array
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
