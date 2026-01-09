@@ -5,9 +5,16 @@
 declare(strict_types=1);
 namespace App\Http\Schema;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 final class Validator
 {
-    /** @var array<string, array{required: list<string>, types: array<string,string>}> */
+    /** @var array */
     private array $schemas = [
         'ValidateRequest' => [
             'required' => ['line1','city','region','postal','country'],
@@ -19,6 +26,11 @@ final class Validator
         ],
     ];
 
+    /**
+     * @param string $schema
+     * @param array $data
+     * @return array|true[]
+     */
     public function validate(string $schema, array $data): array
     {
         if (!isset($this->schemas[$schema])) return ['ok'=>false,'error'=>'unknown_schema'];

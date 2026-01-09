@@ -11,20 +11,36 @@ namespace App\Service\Address;
 
 use App\Contract\Address\AddressValidated;
 use App\ServiceInterface\Address\AddressValidatedApplierInterface;
+use DateTimeImmutable;
 use PDO;
 use PDOException;
 use RuntimeException;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 final class AddressValidatedApplier implements AddressValidatedApplierInterface
 {
-    public function __construct(private PDO $pdo)
+    /**
+     * @param \PDO $pdo
+     */
+    public function __construct(private readonly PDO $pdo)
     {
     }
 
+    /**
+     * @param string $id
+     * @param \App\Contract\Address\AddressValidated $validated
+     * @return void
+     */
     public function apply(string $id, AddressValidated $validated): void
     {
         $fingerprint = $validated->fingerprint();
-        $now = new \DateTimeImmutable('now');
+        $now = new DateTimeImmutable('now');
         $validatedAt = $validated->validatedAt ?? $now;
 
         try {
@@ -127,7 +143,7 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
                 throw new RuntimeException('not_found');
             }
 
-            $this->appendOutbox('AddressValidatedApplied', 1, [
+            $this->appendOutbox([
                 'id' => $id,
                 'fingerprint' => $fingerprint,
                 'provider' => $validated->validationProvider,
@@ -147,15 +163,17 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
         }
     }
 
-    /** @param array<string, mixed> $payload */
-    private function appendOutbox(string $name, int $version, array $payload): void
+    /**
+     * @param array $payload
+     */
+    private function appendOutbox(array $payload): void
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO address_outbox(event_name, event_version, payload) VALUES (:name, :ver, :payload::jsonb)'
         );
         $stmt->execute([
-            ':name' => $name,
-            ':ver' => $version,
+            ':name' => 'AddressValidatedApplied',
+            ':ver' => 1,
             ':payload' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         ]);
     }

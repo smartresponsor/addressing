@@ -6,20 +6,32 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use App\Projection\AddressIndex\{IndexRecord,PdoRepository};
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 final class AddressIndexRepositoryTest extends TestCase
 {
-    private PDO $pdo;
     private PdoRepository $repo;
 
+    /**
+     * @return void
+     */
     protected function setUp(): void
     {
-        $this->pdo = new PDO('sqlite::memory:');
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo = new PDO('sqlite::memory:');
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $sql = file_get_contents(__DIR__ . '/../../src/Projection/AddressIndex/schema.sqlite.sql');
-        $this->pdo->exec($sql);
-        $this->repo = new PdoRepository($this->pdo);
+        $pdo->exec($sql);
+        $this->repo = new PdoRepository($pdo);
     }
 
+    /**
+     * @return void
+     */
     public function testUpsertAndFetch(): void
     {
         $r = new IndexRecord(
@@ -41,10 +53,10 @@ final class AddressIndexRepositoryTest extends TestCase
         );
         $this->repo->upsert($r);
         $got = $this->repo->getByDigest($r->digest);
-        $this->assertNotNull($got);
-        $this->assertSame('US', $got->country);
-        $this->assertSame('Houston', $got->city);
+        static::assertNotNull($got);
+        static::assertSame('US', $got->country);
+        static::assertSame('Houston', $got->city);
         $list = $this->repo->search('Hou', 'US', 10);
-        $this->assertGreaterThanOrEqual(1, count($list));
+        static::assertGreaterThanOrEqual(1, count($list));
     }
 }

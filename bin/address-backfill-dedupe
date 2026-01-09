@@ -6,10 +6,9 @@ declare(strict_types=1);
  * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
  * Owner: Marketing America Corp
  */
-use PDO;
 
 $pg = new PDO(getenv('PG_DSN'), getenv('PG_USER'), getenv('PG_PASS'), [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
 
-$sql = "UPDATE address_entity SET dedupe_key = address_canonical_key(line1_norm, city_norm, region_norm, postal_code_norm, country_code) WHERE dedupe_key IS NULL";
+$sql = 'UPDATE address_entity SET dedupe_key = address_canonical_key(line1_norm, city_norm, region_norm, postal_code_norm, country_code) WHERE dedupe_key IS NULL';
 $cnt = $pg->exec($sql);
-echo "Dedupe backfill updated rows: ".$cnt."\n";
+echo 'Dedupe backfill updated rows: ' .$cnt."\n";

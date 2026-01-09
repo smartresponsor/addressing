@@ -12,8 +12,15 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use App\Entity\Address\AddressData;
 use App\Service\Address\AddressProjection;
-use PDO;
 
+/**
+ * @param $v
+ * @return array|null
+ */
+/**
+ * @param $v
+ * @return array|null
+ */
 function decodeJsonNullable($v): ?array
 {
     if ($v === null) {
@@ -26,6 +33,11 @@ function decodeJsonNullable($v): ?array
     return is_array($d) ? $d : null;
 }
 
+/**
+ * @param array $r
+ * @param string $k
+ * @return bool|null
+ */
 function toBoolNullable(array $r, string $k): ?bool
 {
     if (!array_key_exists($k, $r) || $r[$k] === null) {

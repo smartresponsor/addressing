@@ -55,7 +55,7 @@ Output budget / chunking:
 - Avoid long file listings. Prefer aggregated counts + top paths.
 - Stop with NEXT: go next" when more envelopes are needed.
 
-Required output format (strict, in RU narrative):
+Required to be output format (strict, in RU narrative):
 
 A) Component portrait (short, RU)
 

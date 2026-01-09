@@ -5,9 +5,21 @@
 declare(strict_types=1);
 namespace App\Http\Middleware;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 final class Cors
 {
-    public static function handle(string $origin, string $method): void
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $origin
+     * @param string $method
+     * @return void
+     */
+    public static function handle(\Symfony\Component\HttpFoundation\Request $origin, string $method): void
     {
         $allow = getenv('CORS_ALLOW_ORIGINS') ?: '*';
         $methods = getenv('CORS_ALLOW_METHODS') ?: 'GET,POST,OPTIONS';
@@ -28,6 +40,11 @@ final class Cors
         }
     }
 
+    /**
+     * @param string $origin
+     * @param string $allowList
+     * @return bool
+     */
     private static function isAllowed(string $origin, string $allowList): bool
     {
         $items = array_filter(array_map('trim', explode(',', $allowList)), fn($s)=>$s!=='');

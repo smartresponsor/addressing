@@ -14,20 +14,37 @@ declare(strict_types=1);
 
 namespace App\Layer\Address;
 
-final class AddressUlid implements \App\UtilInterface\Address\AddressUlidInterface
+use App\UtilInterface\Address\AddressUlidInterface;
+
+/**
+ *
+ */
+
+/**
+ *
+ */
+final class AddressUlid implements AddressUlidInterface
 {
+    /**
+     * @return string
+     * @throws \Exception
+     */
     public static function generate(): string
     {
         // Simple Crockford Base32 without hyphens, 26 chars.
         $time = microtime(true);
         $ms = (int) round($time * 1000);
         $random = random_bytes(10);
-        $timePart = self::base32($ms, 10);
-        $randPart = self::base32FromBinary($random, 16);
+        $timePart = self::base32($ms);
+        $randPart = self::base32FromBinary($random);
         return $timePart . $randPart;
     }
 
-    private static function base32(int $value, int $length): string
+    /**
+     * @param int $value
+     * @return string
+     */
+    private static function base32(int $value): string
     {
         $alphabet = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
         $res = '';
@@ -35,10 +52,14 @@ final class AddressUlid implements \App\UtilInterface\Address\AddressUlidInterfa
             $res = $alphabet[$value % 32] . $res;
             $value = intdiv($value, 32);
         }
-        return str_pad($res, $length, '0', STR_PAD_LEFT);
+        return str_pad($res, 10, '0', STR_PAD_LEFT);
     }
 
-    private static function base32FromBinary(string $bin, int $length): string
+    /**
+     * @param string $bin
+     * @return string
+     */
+    private static function base32FromBinary(string $bin): string
     {
         $alphabet = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
         $bits = '';
@@ -46,7 +67,7 @@ final class AddressUlid implements \App\UtilInterface\Address\AddressUlidInterfa
             $bits .= str_pad(decbin(ord($c)), 8, '0', STR_PAD_LEFT);
         }
         $res = '';
-        for ($i = 0; $i < $length; $i++) {
+        for ($i = 0; $i < 16; $i++) {
             $chunk = substr($bits, $i * 5, 5);
             $idx = bindec(str_pad($chunk, 5, '0'));
             $res .= $alphabet[$idx % 32];

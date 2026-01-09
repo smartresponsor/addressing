@@ -5,8 +5,18 @@
 declare(strict_types=1);
 namespace App\Http\Middleware;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 final class SecurityHeaders
 {
+    /**
+     * @return void
+     */
     public static function apply(): void
     {
         $csp = getenv('CSP') ?: "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";

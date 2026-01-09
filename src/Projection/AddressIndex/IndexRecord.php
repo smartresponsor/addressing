@@ -6,39 +6,69 @@ declare(strict_types=1);
 namespace App\Projection\AddressIndex;
 
 use App\Integration\Geocode\GeocodeResult;
+use DateTimeImmutable;
 
-final class IndexRecord
+/**
+ *
+ */
+
+/**
+ *
+ */
+final readonly class IndexRecord
 {
+    /**
+     * @param string $digest
+     * @param string $line1
+     * @param string|null $line2
+     * @param string $city
+     * @param string $region
+     * @param string $postal
+     * @param string $country
+     * @param float|null $lat
+     * @param float|null $lon
+     * @param string|null $display
+     * @param string|null $provider
+     * @param float|null $confidence
+     * @param string $geoKey
+     * @param string $createdAt
+     * @param string $updatedAt
+     */
     public function __construct(
-        public readonly string $digest,
-        public readonly string $line1,
-        public readonly ?string $line2,
-        public readonly string $city,
-        public readonly string $region,
-        public readonly string $postal,
-        public readonly string $country,
-        public readonly ?float $lat,
-        public readonly ?float $lon,
-        public readonly ?string $display,
-        public readonly ?string $provider,
-        public readonly ?float $confidence,
-        public readonly string $geoKey,
-        public readonly string $createdAt,
-        public readonly string $updatedAt,
+        public string  $digest,
+        public string  $line1,
+        public ?string $line2,
+        public string  $city,
+        public string  $region,
+        public string  $postal,
+        public string  $country,
+        public ?float  $lat,
+        public ?float  $lon,
+        public ?string $display,
+        public ?string $provider,
+        public ?float  $confidence,
+        public string  $geoKey,
+        public string  $createdAt,
+        public string  $updatedAt,
     ) { }
 
+    /**
+     * @param float|null $lat
+     * @param float|null $lon
+     * @return string
+     */
     public static function geokey(?float $lat, ?float $lon): string
     {
         if ($lat === null || $lon === null) return '';
         return sprintf('%+.5f:%+.5f', $lat, $lon);
     }
 
-    /** @param array{line1:object,line2:?object,city:string,region:object,postal:object,country:object,digest:string} $norm */
+    /** @param array{line1:object,line2 $norm :?object,city:string,region:object,postal:object,country:object,digest:string} $norm */
     public static function fromNormalized(array $norm, ?GeocodeResult $geo = null): self
     {
         $lat = $geo?->lat;
         $lon = $geo?->lon;
-        $now = (new \DateTimeImmutable('now'))->format('Y-m-d H:i:s');
+        $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
         return new self(
             $norm['digest'],
             (string)$norm['line1'],
@@ -58,6 +88,9 @@ final class IndexRecord
         );
     }
 
+    /**
+     * @return array
+     */
     public function toArray(): array
     {
         return [

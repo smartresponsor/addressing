@@ -19,7 +19,8 @@
     "friends-of-behat/symfony-extension": "^2.1",
     "phpstan/phpstan": "^1.11",
     "vimeo/psalm": "dev-master",
-    "rector/rector": "^1.2"
+    "rector/rector": "^1.2",
+    "ext-pdo": "*"
   },
   "autoload": {
     "psr-4": {

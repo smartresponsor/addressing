@@ -10,8 +10,18 @@ namespace Tests\Service;
 use App\Contract\Address\AddressValidated;
 use PHPUnit\Framework\TestCase;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 final class AddressValidatedTest extends TestCase
 {
+    /**
+     * @return void
+     */
     public function testFingerprintStable(): void
     {
         $a = AddressValidated::fromArray([
@@ -24,6 +34,6 @@ final class AddressValidatedTest extends TestCase
             'cityNorm' => 'b',
             'validatedAt' => '2025-12-30T00:00:00Z',
         ]);
-        $this->assertSame($a->fingerprint(), $b->fingerprint());
+        static::assertSame($a->fingerprint(), $b->fingerprint());
     }
 }

@@ -12,8 +12,15 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use App\Entity\Address\AddressData;
 use App\Service\Address\AddressProjection;
-use PDO;
 
+/**
+ * @param $v
+ * @return array|null
+ */
+/**
+ * @param $v
+ * @return array|null
+ */
 function decodeJsonNullable($v): ?array
 {
     if ($v === null) {
@@ -26,6 +33,11 @@ function decodeJsonNullable($v): ?array
     return is_array($d) ? $d : null;
 }
 
+/**
+ * @param array $r
+ * @param string $k
+ * @return bool|null
+ */
 function toBoolNullable(array $r, string $k): ?bool
 {
     if (!array_key_exists($k, $r) || $r[$k] === null) {
@@ -56,7 +68,7 @@ $pg = new PDO((string)getenv('PG_DSN'), (string)getenv('PG_USER'), (string)geten
 $my = new PDO((string)getenv('MY_DSN'), (string)getenv('MY_USER'), (string)getenv('MY_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 $proj = new AddressProjection($my);
 
-$sql = "SELECT * FROM address_entity WHERE (updated_at IS NOT NULL AND updated_at > :since) OR (created_at > :since) ORDER BY updated_at NULLS LAST, created_at";
+$sql = 'SELECT * FROM address_entity WHERE (updated_at IS NOT NULL AND updated_at > :since) OR (created_at > :since) ORDER BY updated_at NULLS LAST, created_at';
 $stmt = $pg->prepare($sql);
 $stmt->execute([':since' => $since]);
 

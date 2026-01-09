@@ -5,6 +5,13 @@
 declare(strict_types=1);
 namespace App\Http\Middleware;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 final class IpGuard
 {
     /** @return list<string> */
@@ -16,6 +23,11 @@ final class IpGuard
         return array_values($parts);
     }
 
+    /**
+     * @param string $ip
+     * @param string $path
+     * @return bool
+     */
     public static function allowed(string $ip, string $path): bool
     {
         $deny = self::listFromEnv('DENY_IPS');

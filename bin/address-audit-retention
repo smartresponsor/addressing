@@ -6,11 +6,10 @@ declare(strict_types=1);
  * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
  * Owner: Marketing America Corp
  */
-use PDO;
 
 $ttlDays = (int) (getenv('ADDRESS_AUDIT_TTL_DAYS') ?: 90);
 $pdo = new PDO(getenv('PG_DSN'), getenv('PG_USER'), getenv('PG_PASS'), [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
 
 $stmt = $pdo->prepare("DELETE FROM address_audit WHERE changed_at < now() - (:ttl || ' day')::interval");
 $stmt->execute([':ttl' => (string)$ttlDays]);
-echo "Audit purged rows: ".$stmt->rowCount()."\n";
+echo 'Audit purged rows: ' .$stmt->rowCount()."\n";

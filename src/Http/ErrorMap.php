@@ -5,9 +5,23 @@
 declare(strict_types=1);
 namespace App\Http;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 final class ErrorMap
 {
-    public static function emit(int $status, string $code, string $message, array $meta = []): void
+    /**
+     * @param int $status
+     * @param string $code
+     * @param array $message
+     * @param array $meta
+     * @return void
+     */
+    public static function emit(int $status, string $code, array $message, array $meta = []): void
     {
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
