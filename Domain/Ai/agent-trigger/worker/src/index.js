@@ -43,12 +43,11 @@ function envInt(env, key, def) {
 function envStr(env, key, def) {
     const v = env[key];
     if (typeof v !== 'string' || typeof v.trim !== 'function') return def;
-    if (v.trim() === '') return def;
-    return v;
+    return v.trim() === '' ? def : v;
 }
 
 function parseAllowedTask(env) {
-    const raw = envStr(env, 'SR_ALLOWED_TASK', 'scan,health,doctor,validate,plan,codex');
+    const raw = envStr(env, 'SR_ALLOWED_TASK', 'scan,health,doctor,validate,plan,codex,pr');
     return raw.split(',').map(s => s.trim()).filter(Boolean);
 }
 
@@ -68,7 +67,7 @@ export default {
         const url = new URL(request.url);
 
         if (url.pathname === '/health') {
-            return json(200, {ok: true, service: 'addressing-agent-trigger'});
+            return json(200, {ok: true, service: 'sr-agent-trigger'});
         }
 
         if (url.pathname !== '/dispatch') {
@@ -79,23 +78,39 @@ export default {
             return bad(405, 'MethodNotAllowed', 'POST required');
         }
 
-        const secret = envStr(env, 'SR_TRIGGER_SECRET', '');
-        if (!secret) return bad(500, 'Misconfig', 'SR_TRIGGER_SECRET not set');
+        const kid = (request.headers.get('X-SR-Kid') || 'K1').toUpperCase();
+        if (!/^K\d+$/.test(kid)) {
+            return bad(401, 'BadKid', 'Invalid X-SR-Kid');
+        }
+
+        const secret =
+            envStr(env, `SR_TRIGGER_SECRET_${kid}`, '') ||
+            envStr(env, 'SR_TRIGGER_SECRET', '');
+
+        if (!secret) {
+            return bad(500, 'Misconfig', `Secret for ${kid} not configured`);
+        }
 
         const tsHeader = request.headers.get('X-SR-Timestamp') || '';
         const sigHeader = (request.headers.get('X-SR-Signature') || '').toLowerCase();
 
         const ts = Number(tsHeader);
-        if (!Number.isFinite(ts) || ts <= 0) return bad(401, 'BadTimestamp', 'X-SR-Timestamp required (unix seconds)');
+        if (!Number.isFinite(ts) || ts <= 0) {
+            return bad(401, 'BadTimestamp', 'X-SR-Timestamp required');
+        }
 
         const skew = envInt(env, 'SR_TIME_SKEW_SEC', 300);
         const now = Math.floor(Date.now() / 1000);
-        if (Math.abs(now - ts) > skew) return bad(401, 'TimestampSkew', 'Timestamp outside allowed window');
+        if (Math.abs(now - ts) > skew) {
+            return bad(401, 'TimestampSkew', 'Timestamp outside allowed window');
+        }
 
         const rawBody = await request.text();
         const expected = await hmacHex(secret, `${ts}.${rawBody}`);
 
-        if (!safeEqual(expected, sigHeader)) return bad(403, 'BadSignature', 'Signature mismatch');
+        if (!safeEqual(expected, sigHeader)) {
+            return bad(403, 'BadSignature', 'Signature mismatch');
+        }
 
         let payload;
         try {
@@ -107,7 +122,9 @@ export default {
         const task = String(payload.task || '').trim();
         const allowed = parseAllowedTask(env);
         if (!task) return bad(400, 'BadTask', 'task is required');
-        if (!allowed.includes(task)) return bad(400, 'BadTask', `task not allowed: ${task}`);
+        if (!allowed.includes(task)) {
+            return bad(400, 'BadTask', `task not allowed: ${task}`);
+        }
 
         const owner = envStr(env, 'GH_OWNER', '');
         const repo = envStr(env, 'GH_REPO', '');
@@ -117,41 +134,37 @@ export default {
         const ghApiVersion = envStr(env, 'GH_API_VERSION', '2022-11-28');
 
         if (!owner || !repo || !workflow || !token) {
-            return bad(500, 'Misconfig', 'GH_OWNER/GH_REPO/GH_WORKFLOW/GH_TOKEN must be set');
+            return bad(500, 'Misconfig', 'GitHub env vars missing');
         }
 
         const ref = String(payload.ref || refDefault).trim() || refDefault;
-
-        const inputs = (payload && typeof payload.inputs === 'object' && payload.inputs) ? payload.inputs : {};
+        const inputs = payload.inputs && typeof payload.inputs === 'object' ? payload.inputs : {};
         inputs.task = task;
 
         const ghUrl = `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/dispatches`;
         const ghRes = await fetch(ghUrl, {
             method: 'POST',
             headers: {
-                'Accept': 'application/vnd.github+json',
-                'Authorization': `Bearer ${token}`,
+                Accept: 'application/vnd.github+json',
+                Authorization: `Bearer ${token}`,
                 'X-GitHub-Api-Version': ghApiVersion,
-                'User-Agent': 'sr-addressing-agent-trigger'
+                'User-Agent': 'sr-agent-trigger'
             },
             body: JSON.stringify({ref, inputs})
         });
 
         if (ghRes.status === 204) {
-            return json(200, {ok: true, dispatched: true, repo: `${owner}/${repo}`, workflow, ref, task});
+            return json(200, {ok: true, dispatched: true, task, ref, kid});
         }
 
         const text = await ghRes.text();
         return json(ghRes.status, {
             ok: false,
             dispatched: false,
-            status: ghRes.status,
-            repo: `${owner}/${repo}`,
-            workflow,
-            ref,
             task,
+            ref,
+            kid,
             github: text.slice(0, 2000)
         });
     }
 };
-
