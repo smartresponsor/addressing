@@ -53,8 +53,8 @@ final class AddressService
         return $this->repo->findByDedupeKey($dedupeKey);
     }
 
-    public function get(string $id): ?AddressInterface
+    public function get(string $id, ?string $ownerId, ?string $vendorId): ?AddressInterface
     {
-        return $this->repo->get($id);
+        return $this->repo->get($id, $ownerId, $vendorId);
     }
 }

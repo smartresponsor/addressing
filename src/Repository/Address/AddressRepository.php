@@ -68,6 +68,8 @@ SQL;
      */
     public function update(AddressInterface $address): void
     {
+        $this->ensureTenantScope($address->ownerId(), $address->vendorId());
+        $tenantWhere = $this->tenantWhereClause($address->ownerId(), $address->vendorId());
         $sql = <<<'SQL'
 UPDATE address_entity SET
     owner_id=:owner_id, vendor_id=:vendor_id, line1=:line1, line2=:line2, city=:city, region=:region,
@@ -76,10 +78,10 @@ UPDATE address_entity SET
     latitude=:latitude, longitude=:longitude, geohash=:geohash,
     validation_status=:validation_status, validation_provider=:validation_provider, validated_at=:validated_at,
     dedupe_key=:dedupe_key, updated_at=:updated_at, deleted_at=:deleted_at
-WHERE id=:id
+WHERE id=:id AND %s
 SQL;
 
-        $stmt = $this->prepare($sql);
+        $stmt = $this->prepare(sprintf($sql, $tenantWhere));
         $this->bind($stmt, $address);
         $stmt->execute();
 
@@ -93,10 +95,15 @@ SQL;
      * @param string $id
      * @return \App\EntityInterface\Address\AddressInterface|null
      */
-    public function get(string $id): ?AddressInterface
+    public function get(string $id, ?string $ownerId, ?string $vendorId): ?AddressInterface
     {
-        $stmt = $this->prepare('SELECT * FROM address_entity WHERE id=:id AND deleted_at IS NULL');
-        $stmt->execute([':id' => $id]);
+        $this->ensureTenantScope($ownerId, $vendorId);
+        $params = array_merge([':id' => $id], $this->tenantParams($ownerId, $vendorId));
+        $stmt = $this->prepare(
+            'SELECT * FROM address_entity WHERE id=:id AND deleted_at IS NULL AND '
+            . $this->tenantWhereClause($ownerId, $vendorId)
+        );
+        $stmt->execute($params);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!is_array($row)) {
@@ -110,10 +117,15 @@ SQL;
      * @param string $id
      * @return void
      */
-    public function delete(string $id): void
+    public function delete(string $id, ?string $ownerId, ?string $vendorId): void
     {
-        $stmt = $this->prepare('UPDATE address_entity SET deleted_at=now() WHERE id=:id AND deleted_at IS NULL');
-        $stmt->execute([':id' => $id]);
+        $this->ensureTenantScope($ownerId, $vendorId);
+        $params = array_merge([':id' => $id], $this->tenantParams($ownerId, $vendorId));
+        $stmt = $this->prepare(
+            'UPDATE address_entity SET deleted_at=now() WHERE id=:id AND deleted_at IS NULL AND '
+            . $this->tenantWhereClause($ownerId, $vendorId)
+        );
+        $stmt->execute($params);
 
         $this->appendOutbox('AddressDeleted', [
             'id' => $id,
@@ -143,9 +155,9 @@ SQL;
      * @param string $id
      * @return void
      */
-    public function markDeleted(string $id): void
+    public function markDeleted(string $id, ?string $ownerId, ?string $vendorId): void
     {
-        $this->delete($id);
+        $this->delete($id, $ownerId, $vendorId);
     }
 
     /**
@@ -153,20 +165,12 @@ SQL;
      */
     public function findPage(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, int $limit, ?string $cursor): array
     {
+        $this->ensureTenantScope($ownerId, $vendorId);
         $limit = max(1, min(200, $limit));
         $driverAttr = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
         $driver = is_string($driverAttr) ? $driverAttr : '';
-        $params = [];
-        $where = ['deleted_at IS NULL'];
-
-        if ($ownerId) {
-            $where[] = 'owner_id = :owner_id';
-            $params[':owner_id'] = $ownerId;
-        }
-        if ($vendorId) {
-            $where[] = 'vendor_id = :vendor_id';
-            $params[':vendor_id'] = $vendorId;
-        }
+        $params = $this->tenantParams($ownerId, $vendorId);
+        $where = ['deleted_at IS NULL', $this->tenantWhereClause($ownerId, $vendorId)];
         if ($countryCode) {
             $where[] = 'country_code = :country_code';
             $params[':country_code'] = $countryCode;
@@ -446,5 +450,39 @@ SQL;
             throw new RuntimeException('prepare_failed');
         }
         return $stmt;
+    }
+
+    private function ensureTenantScope(?string $ownerId, ?string $vendorId): void
+    {
+        if ($ownerId === null && $vendorId === null) {
+            throw new RuntimeException('tenant_scope_required');
+        }
+    }
+
+    private function tenantWhereClause(?string $ownerId, ?string $vendorId): string
+    {
+        $clauses = [];
+        if ($ownerId !== null) {
+            $clauses[] = 'owner_id = :owner_id';
+        }
+        if ($vendorId !== null) {
+            $clauses[] = 'vendor_id = :vendor_id';
+        }
+        return '(' . implode(' AND ', $clauses) . ')';
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    private function tenantParams(?string $ownerId, ?string $vendorId): array
+    {
+        $params = [];
+        if ($ownerId !== null) {
+            $params[':owner_id'] = $ownerId;
+        }
+        if ($vendorId !== null) {
+            $params[':vendor_id'] = $vendorId;
+        }
+        return $params;
     }
 }

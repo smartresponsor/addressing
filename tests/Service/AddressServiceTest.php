@@ -33,7 +33,7 @@ final class AddressServiceTest extends TestCase
         $address = $this->makeAddress('addr-1');
         $this->service->create($address);
 
-        $found = $this->repo->get('addr-1');
+        $found = $this->repo->get('addr-1', $address->ownerId(), $address->vendorId());
         static::assertNotNull($found);
         static::assertSame('123 Main St', $found->line1());
     }
@@ -46,7 +46,7 @@ final class AddressServiceTest extends TestCase
         $updated = $this->makeAddress('addr-2', line1: '456 Broad St', updatedAt: (new DateTimeImmutable('now'))->format('Y-m-d H:i:sP'));
         $this->service->update($updated);
 
-        $found = $this->repo->get('addr-2');
+        $found = $this->repo->get('addr-2', $updated->ownerId(), $updated->vendorId());
         static::assertNotNull($found);
         static::assertSame('456 Broad St', $found->line1());
     }
@@ -56,7 +56,7 @@ final class AddressServiceTest extends TestCase
         $this->service->create($this->makeAddress('addr-3'));
         $this->service->create($this->makeAddress('addr-4', line1: '500 Elm St'));
 
-        $result = $this->service->search(null, null, null, 'Main', 10, null);
+        $result = $this->service->search('owner-1', 'vendor-1', null, 'Main', 10, null);
         static::assertCount(1, $result['items']);
         static::assertSame('123 Main St', $result['items'][0]->line1());
     }
@@ -84,8 +84,32 @@ final class AddressServiceTest extends TestCase
         static::assertSame('addr-6', $payload['id'] ?? null);
     }
 
+    public function testTenantIsolationForGetUpdateAndSearch(): void
+    {
+        $tenantOne = $this->makeAddress('addr-7', ownerId: 'owner-1', vendorId: 'vendor-1');
+        $tenantTwo = $this->makeAddress('addr-8', ownerId: 'owner-2', vendorId: 'vendor-2', line1: '987 Other St');
+        $this->service->create($tenantOne);
+        $this->service->create($tenantTwo);
+
+        $foundOtherTenant = $this->service->get('addr-7', 'owner-2', 'vendor-2');
+        static::assertNull($foundOtherTenant);
+
+        $updateWrongTenant = $this->makeAddress('addr-7', ownerId: 'owner-2', vendorId: 'vendor-2', line1: 'Hacked St');
+        $this->service->update($updateWrongTenant);
+
+        $stillOriginal = $this->service->get('addr-7', 'owner-1', 'vendor-1');
+        static::assertNotNull($stillOriginal);
+        static::assertSame('123 Main St', $stillOriginal->line1());
+
+        $results = $this->service->search('owner-2', 'vendor-2', null, null, 10, null);
+        static::assertCount(1, $results['items']);
+        static::assertSame('addr-8', $results['items'][0]->id());
+    }
+
     private function makeAddress(
         string  $id,
+        string  $ownerId = 'owner-1',
+        string  $vendorId = 'vendor-1',
         string  $line1 = '123 Main St',
         ?string $dedupeKey = null,
         ?string $updatedAt = null
@@ -95,8 +119,8 @@ final class AddressServiceTest extends TestCase
 
         return new AddressData(
             $id,
-            'owner-1',
-            'vendor-1',
+            $ownerId,
+            $vendorId,
             $line1,
             null,
             'Houston',
@@ -153,6 +177,7 @@ CREATE TABLE address_entity (
   validation_deliverable INTEGER NULL,
   validation_granularity TEXT NULL,
   validation_quality INTEGER NULL
+  ,CONSTRAINT address_tenant_scope_chk CHECK (owner_id IS NOT NULL OR vendor_id IS NOT NULL)
 );
 
 CREATE TABLE address_outbox (
