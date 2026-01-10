@@ -32,8 +32,15 @@ final class Postal
     public static function norm(string $s): string
     {
         $s = strtoupper(trim($s));
-        $s = preg_replace('/[^A-Z0-9- ]/', '', $s);
-        return preg_replace('/\s+/', ' ', $s);
+        $filtered = preg_replace('/[^A-Z0-9- ]/', '', $s);
+        if ($filtered === null) {
+            $filtered = $s;
+        }
+        $normalized = preg_replace('/\s+/', ' ', $filtered);
+        if ($normalized === null) {
+            return $filtered;
+        }
+        return $normalized;
     }
 
     /**

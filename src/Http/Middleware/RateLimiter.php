@@ -40,6 +40,9 @@ final class RateLimiter
      */
     private function init(): void
     {
+        if ($this->pdo === null) {
+            return;
+        }
         try {
             $this->pdo->exec('CREATE TABLE IF NOT EXISTS rate_limit (
                 client TEXT NOT NULL,
@@ -59,26 +62,29 @@ final class RateLimiter
      */
     public function check(string $client, string $key): bool
     {
-        if (!$this->pdo) return true; // no DB — no rate limiting
+        if ($this->pdo === null) {
+            return true; // no DB — no rate limiting
+        }
+        $pdo = $this->pdo;
         $now = time();
         $minWindow = $now - 60;
 
-        $stmt = $this->pdo->prepare('SELECT ts, cnt FROM rate_limit WHERE client = :c AND rkey = :k');
+        $stmt = $pdo->prepare('SELECT ts, cnt FROM rate_limit WHERE client = :c AND rkey = :k');
         $stmt->execute([':c' => $client, ':k' => $key]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$row) {
-            $stmt = $this->pdo->prepare('INSERT OR REPLACE INTO rate_limit (client,rkey,ts,cnt) VALUES (:c,:k,:t,1)');
+        if (!is_array($row)) {
+            $stmt = $pdo->prepare('INSERT OR REPLACE INTO rate_limit (client,rkey,ts,cnt) VALUES (:c,:k,:t,1)');
             $stmt->execute([':c' => $client, ':k' => $key, ':t' => $now]);
             return true;
         }
 
-        $ts = (int)$row['ts'];
-        $cnt = (int)$row['cnt'];
+        $ts = $this->asInt($row['ts'] ?? null);
+        $cnt = $this->asInt($row['cnt'] ?? null);
 
         if ($ts < $minWindow) {
             // New window
-            $stmt = $this->pdo->prepare('UPDATE rate_limit SET ts = :t, cnt = 1 WHERE client = :c AND rkey = :k');
+            $stmt = $pdo->prepare('UPDATE rate_limit SET ts = :t, cnt = 1 WHERE client = :c AND rkey = :k');
             $stmt->execute([':t' => $now, ':c' => $client, ':k' => $key]);
             return true;
         }
@@ -89,8 +95,22 @@ final class RateLimiter
             return false;
         }
 
-        $stmt = $this->pdo->prepare('UPDATE rate_limit SET cnt = :n WHERE client = :c AND rkey = :k');
+        $stmt = $pdo->prepare('UPDATE rate_limit SET cnt = :n WHERE client = :c AND rkey = :k');
         $stmt->execute([':n' => $cnt + 1, ':c' => $client, ':k' => $key]);
         return true;
+    }
+
+    private function asInt(mixed $value): int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (int)$value;
+        }
+        if (is_float($value)) {
+            return (int)$value;
+        }
+        return 0;
     }
 }

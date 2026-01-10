@@ -31,7 +31,11 @@ final class Line
      */
     public static function norm(string $s): string
     {
-        return trim(preg_replace('/\s+/', ' ', $s));
+        $normalized = preg_replace('/\s+/', ' ', $s);
+        if ($normalized === null) {
+            $normalized = $s;
+        }
+        return trim($normalized);
     }
 
     /**

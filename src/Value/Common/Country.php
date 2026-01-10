@@ -24,7 +24,11 @@ final class Country
      */
     public function __construct(string $alpha2)
     {
-        $c = strtoupper(preg_replace('/[^A-Za-z]/', '', $alpha2));
+        $filtered = preg_replace('/[^A-Za-z]/', '', $alpha2);
+        if ($filtered === null) {
+            $filtered = '';
+        }
+        $c = strtoupper($filtered);
         if (strlen($c) !== 2) {
             throw new InvalidArgumentException('Country must be 2 letters');
         }

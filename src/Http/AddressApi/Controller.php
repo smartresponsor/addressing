@@ -100,9 +100,8 @@ final class Controller
      */
     public function get(Request $req, string $id): JsonResponse
     {
-        try {
-            $a = $this->repo->get($id);
-        } catch (RuntimeException) {
+        $a = $this->repo->get($id);
+        if ($a === null) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }
 
@@ -183,9 +182,8 @@ final class Controller
 
         $this->validatedApplier->apply($id, $validated);
 
-        try {
-            $a = $this->repo->get($id);
-        } catch (RuntimeException) {
+        $a = $this->repo->get($id);
+        if ($a === null) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }
 
