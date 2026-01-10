@@ -410,27 +410,41 @@ SQL;
     }
 
     /**
-     * @param string $name
-     * @param array $payload
-     * @return void
+     * @param non-empty-string $name
+     * @param array<mixed> $payload
      */
-    private function appendOutbox(string $name, array $payload): void
+    private function appendOutbox(string $name, array $payload = []): void
     {
-        $payloadJson = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $payloadJson = json_encode(
+            $payload,
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        );
+
         if ($payloadJson === false) {
             throw new RuntimeException('payload_encode_failed');
         }
 
+        if (!$this->pdo instanceof PDO) {
+            throw new LogicException('PDO not initialized');
+        }
+
         $driverAttr = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
         $driver = is_string($driverAttr) ? $driverAttr : '';
+
         $payloadExpr = $driver === 'pgsql'
             ? ':payload::jsonb'
             : ':payload';
 
-        $stmt = $this->prepare(
-            "INSERT INTO address_outbox (event_name, event_version, payload)
-         VALUES (:name, :ver, {$payloadExpr})"
-        );
+        $sql = "
+        INSERT INTO address_outbox (event_name, event_version, payload)
+        VALUES (:name, :ver, {$payloadExpr})
+    ";
+
+        $stmt = $this->pdo->prepare($sql);
+
+        if ($stmt === false) {
+            throw new RuntimeException('outbox_prepare_failed');
+        }
 
         $stmt->execute([
             ':name' => $name,
