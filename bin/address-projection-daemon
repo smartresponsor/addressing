@@ -12,8 +12,15 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use App\Entity\Address\AddressData;
 use App\Service\Address\AddressProjection;
-use PDO;
 
+/**
+ * @param $v
+ * @return array|null
+ */
+/**
+ * @param $v
+ * @return array|null
+ */
 function decodeJsonNullable($v): ?array
 {
     if ($v === null) {
@@ -26,6 +33,11 @@ function decodeJsonNullable($v): ?array
     return is_array($d) ? $d : null;
 }
 
+/**
+ * @param array $r
+ * @param string $k
+ * @return bool|null
+ */
 function toBoolNullable(array $r, string $k): ?bool
 {
     if (!array_key_exists($k, $r) || $r[$k] === null) {
@@ -38,6 +50,9 @@ function toBoolNullable(array $r, string $k): ?bool
     return false;
 }
 
+/**
+ * @return string
+ */
 function statePath(): string
 {
     $p = getenv('ADDRESS_PROJECTION_STATE') ?: '.state/address-projection.watermark';
@@ -47,6 +62,9 @@ function statePath(): string
     return $p;
 }
 
+/**
+ * @return string
+ */
 function readWatermark(): string
 {
     $p = statePath();
@@ -57,6 +75,10 @@ function readWatermark(): string
     return $s !== '' ? $s : '1970-01-01T00:00:00Z';
 }
 
+/**
+ * @param string $v
+ * @return void
+ */
 function writeWatermark(string $v): void
 {
     $p = statePath();
@@ -72,7 +94,7 @@ $proj = new AddressProjection($my);
 
 $wm = readWatermark();
 while (true) {
-    $sql = "SELECT * FROM address_entity WHERE (updated_at IS NOT NULL AND updated_at > :since) OR (created_at > :since) ORDER BY coalesce(updated_at, created_at) ASC LIMIT 1000";
+    $sql = 'SELECT * FROM address_entity WHERE (updated_at IS NOT NULL AND updated_at > :since) OR (created_at > :since) ORDER BY coalesce(updated_at, created_at) ASC LIMIT 1000';
     $stmt = $pg->prepare($sql);
     $stmt->execute([':since' => $wm]);
 

@@ -11,20 +11,36 @@ namespace App\Service\Address;
 
 use App\Contract\Address\AddressValidated;
 use App\ServiceInterface\Address\AddressValidatedApplierInterface;
+use DateTimeImmutable;
 use PDO;
 use PDOException;
 use RuntimeException;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 final class AddressValidatedApplier implements AddressValidatedApplierInterface
 {
-    public function __construct(private PDO $pdo)
+    /**
+     * @param \PDO $pdo
+     */
+    public function __construct(private readonly PDO $pdo)
     {
     }
 
+    /**
+     * @param string $id
+     * @param \App\Contract\Address\AddressValidated $validated
+     * @return void
+     */
     public function apply(string $id, AddressValidated $validated): void
     {
         $fingerprint = $validated->fingerprint();
-        $now = new \DateTimeImmutable('now');
+        $now = new DateTimeImmutable('now');
         $validatedAt = $validated->validatedAt ?? $now;
 
         try {
@@ -86,12 +102,13 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
 
             if ($validated->raw !== null) {
                 $fields[] = 'validation_raw = :validation_raw::jsonb';
-                $params[':validation_raw'] = json_encode($validated->raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-                $params[':validation_raw_sha256'] = hash('sha256', $params[':validation_raw']);
+                $rawJson = $this->encodePayload($validated->raw);
+                $params[':validation_raw'] = $rawJson;
+                $params[':validation_raw_sha256'] = hash('sha256', $rawJson);
             }
             if ($validated->verdict !== null) {
                 $fields[] = 'validation_verdict = :validation_verdict::jsonb';
-                $params[':validation_verdict'] = json_encode($validated->verdict->jsonSerialize(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                $params[':validation_verdict'] = $this->encodePayload($validated->verdict->jsonSerialize());
 
                 if ($validated->verdict->deliverable !== null) {
                     $fields[] = 'validation_deliverable = :validation_deliverable';
@@ -127,7 +144,7 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
                 throw new RuntimeException('not_found');
             }
 
-            $this->appendOutbox('AddressValidatedApplied', 1, [
+            $this->appendOutbox([
                 'id' => $id,
                 'fingerprint' => $fingerprint,
                 'provider' => $validated->validationProvider,
@@ -139,7 +156,12 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
             ]);
 
             $this->pdo->commit();
-        } catch (PDOException) {
+        } catch (RuntimeException $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        } catch (\Throwable) {
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
@@ -147,18 +169,37 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
         }
     }
 
-    /** @param array<string, mixed> $payload */
-    private function appendOutbox(string $name, int $version, array $payload): void
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function appendOutbox(array $payload): void
     {
+<<<<<<< HEAD
         $driver = (string) $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
         $payloadExpr = $driver === 'pgsql' ? ':payload::jsonb' : ':payload';
+=======
+        $payloadJson = $this->encodePayload($payload);
+>>>>>>> origin/master
         $stmt = $this->pdo->prepare(
             "INSERT INTO address_outbox(event_name, event_version, payload) VALUES (:name, :ver, {$payloadExpr})"
         );
         $stmt->execute([
-            ':name' => $name,
-            ':ver' => $version,
-            ':payload' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ':name' => 'AddressValidatedApplied',
+            ':ver' => 1,
+            ':payload' => $payloadJson,
         ]);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return string
+     */
+    private function encodePayload(array $payload): string
+    {
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($json === false) {
+            throw new RuntimeException('payload_encode_failed');
+        }
+        return $json;
     }
 }

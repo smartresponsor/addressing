@@ -12,7 +12,19 @@ namespace App\ServiceInterface\Address;
 
 use App\Contract\Address\AddressValidated;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 interface AddressValidatedApplierInterface
 {
+    /**
+     * @param string $id
+     * @param \App\Contract\Address\AddressValidated $validated
+     * @return void
+     */
     public function apply(string $id, AddressValidated $validated): void;
 }

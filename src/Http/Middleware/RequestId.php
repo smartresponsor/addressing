@@ -5,8 +5,19 @@
 declare(strict_types=1);
 namespace App\Http\Middleware;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 final class RequestId
 {
+    /**
+     * @return string
+     * @throws \Exception
+     */
     public static function ensure(): string
     {
         $id = $_SERVER['HTTP_X_REQUEST_ID'] ?? bin2hex(random_bytes(12));

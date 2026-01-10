@@ -6,9 +6,24 @@ declare(strict_types=1);
 
 namespace App\ServiceInterface\Address\Event;
 
+use DateTimeImmutable;
+
+/**
+ *
+ */
+
+/**
+ *
+ */
 interface AddressEventInterface
 {
-    public function occurredAt(): \DateTimeImmutable;
+    /**
+     * @return \DateTimeImmutable
+     */
+    public function occurredAt(): DateTimeImmutable;
 
+    /**
+     * @return string
+     */
     public function name(): string;
 }

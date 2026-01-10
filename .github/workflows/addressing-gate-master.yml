@@ -1,8 +1,9 @@
 ﻿# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
-name: addressing-gate
+name: addressing-gate-master
 
 on:
   push:
+    branches: [ "master" ]
     paths:
       - ".github/workflows/**"
       - "Domain/**"
@@ -15,6 +16,7 @@ on:
       - "docs/**"
       - "page/**"
   pull_request:
+    branches: [ "master" ]
     paths:
       - ".github/workflows/**"
       - "Domain/**"

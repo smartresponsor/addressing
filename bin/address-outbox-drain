@@ -11,14 +11,23 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use App\Service\Address\AddressOutboxDrainer;
-use PDO;
+use JetBrains\PhpStorm\NoReturn;
 
-function usage(): void
+/**
+ * @return void
+ */
+#[NoReturn] function usage(): void
 {
     fwrite(STDERR, "Usage: address-outbox-drain <url> [--limit=200] [--retry=3] [--timeout=5] [--backoff=100]\n");
     exit(2);
 }
 
+/**
+ * @param array $argv
+ * @param string $prefix
+ * @param int $default
+ * @return int
+ */
 function readIntOpt(array $argv, string $prefix, int $default): int
 {
     foreach ($argv as $a) {

@@ -13,12 +13,30 @@ namespace App\Service\Address;
 use App\ServiceInterface\Address\AddressOutboxDrainerInterface;
 use PDO;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
 {
-    public function __construct(private PDO $pdo)
+    /**
+     * @param \PDO $pdo
+     */
+    public function __construct(private readonly PDO $pdo)
     {
     }
 
+    /**
+     * @param string $url
+     * @param int $limit
+     * @param int $retryLimit
+     * @param int $timeoutSec
+     * @param int $backoffMs
+     * @return int
+     */
     public function drain(string $url, int $limit, int $retryLimit, int $timeoutSec, int $backoffMs): int
     {
         $sel = $this->pdo->prepare(
@@ -74,6 +92,15 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
         return $count;
     }
 
+    /**
+     * @param string $url
+     * @param array<string, mixed> $data
+     * @param int $retryLimit
+     * @param int $timeoutSec
+     * @param int $backoffMs
+     * @param string|null $error
+     * @return bool
+     */
     private function post(
         string $url,
         array $data,
@@ -106,7 +133,7 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
 
             $resp = curl_exec($ch);
             $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $err = (string)curl_error($ch);
+            $err = curl_error($ch);
             curl_close($ch);
 
             if ($err !== '') {

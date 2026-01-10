@@ -14,13 +14,28 @@ use App\RepositoryInterface\Address\AddressRepositoryInterface;
 use DateTimeImmutable;
 use PDO;
 use PDOStatement;
+use RuntimeException;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 final class AddressRepository implements AddressRepositoryInterface
 {
-    public function __construct(private PDO $pdo)
+    /**
+     * @param \PDO $pdo
+     */
+    public function __construct(private readonly PDO $pdo)
     {
     }
 
+    /**
+     * @param \App\EntityInterface\Address\AddressInterface $address
+     * @return void
+     */
     public function create(AddressInterface $address): void
     {
         $sql = <<<'SQL'
@@ -42,7 +57,7 @@ SQL;
         $this->bind($stmt, $address);
         $stmt->execute();
 
-        $this->appendOutbox('AddressCreated', 1, [
+        $this->appendOutbox('AddressCreated', [
             'id' => $address->id(),
             'ownerId' => $address->ownerId(),
             'vendorId' => $address->vendorId(),
@@ -51,6 +66,10 @@ SQL;
         ]);
     }
 
+    /**
+     * @param \App\EntityInterface\Address\AddressInterface $address
+     * @return void
+     */
     public function update(AddressInterface $address): void
     {
         $sql = <<<'SQL'
@@ -68,12 +87,16 @@ SQL;
         $this->bind($stmt, $address);
         $stmt->execute();
 
-        $this->appendOutbox('AddressUpdated', 1, [
+        $this->appendOutbox('AddressUpdated', [
             'id' => $address->id(),
             'updatedAt' => $address->updatedAt() ?? (new DateTimeImmutable())->format(DATE_ATOM),
         ]);
     }
 
+    /**
+     * @param string $id
+     * @return \App\EntityInterface\Address\AddressInterface|null
+     */
     public function get(string $id): ?AddressInterface
     {
         $stmt = $this->pdo->prepare('SELECT * FROM address_entity WHERE id=:id AND deleted_at IS NULL');
@@ -83,12 +106,16 @@ SQL;
         return $row ? $this->map($row) : null;
     }
 
+    /**
+     * @param string $id
+     * @return void
+     */
     public function delete(string $id): void
     {
         $stmt = $this->pdo->prepare('UPDATE address_entity SET deleted_at=now() WHERE id=:id AND deleted_at IS NULL');
         $stmt->execute([':id' => $id]);
 
-        $this->appendOutbox('AddressDeleted', 1, [
+        $this->appendOutbox('AddressDeleted', [
             'id' => $id,
             'deletedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
         ]);
@@ -106,6 +133,15 @@ SQL;
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $row ? $this->map($row) : null;
+    }
+
+    /**
+     * @param string $id
+     * @return void
+     */
+    public function markDeleted(string $id): void
+    {
+        $this->delete($id);
     }
 
     /**
@@ -162,6 +198,11 @@ SQL;
         return ['items' => $items, 'nextCursor' => $nextCursor];
     }
 
+    /**
+     * @param \PDOStatement $stmt
+     * @param \App\EntityInterface\Address\AddressInterface $a
+     * @return void
+     */
     private function bind(PDOStatement $stmt, AddressInterface $a): void
     {
         $stmt->bindValue(':id', $a->id());
@@ -189,6 +230,10 @@ SQL;
         $stmt->bindValue(':deleted_at', $a->deletedAt());
     }
 
+    /**
+     * @param array<string, mixed> $r
+     * @return \App\Entity\Address\AddressData
+     */
     private function map(array $r): AddressData
     {
         $validationRaw = $this->decodeJsonNullable($r['validation_raw'] ?? null);
@@ -260,17 +305,29 @@ SQL;
         return $decoded;
     }
 
-    private function appendOutbox(string $name, int $version, array $payload): void
+    /**
+     * @param string $name
+     * @param array<string, mixed> $payload
+     * @return void
+     */
+    private function appendOutbox(string $name, array $payload): void
     {
+<<<<<<< HEAD
         $driver = (string) $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
         $payloadExpr = $driver === 'pgsql' ? ':payload::jsonb' : ':payload';
+=======
+        $payloadJson = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($payloadJson === false) {
+            throw new RuntimeException('payload_encode_failed');
+        }
+>>>>>>> origin/master
         $stmt = $this->pdo->prepare(
             "INSERT INTO address_outbox(event_name, event_version, payload) VALUES (:name, :ver, {$payloadExpr})"
         );
         $stmt->execute([
             ':name' => $name,
-            ':ver' => $version,
-            ':payload' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ':ver' => 1,
+            ':payload' => $payloadJson,
         ]);
     }
 }

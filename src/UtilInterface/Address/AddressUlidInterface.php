@@ -12,7 +12,17 @@ declare(strict_types=1);
 
 namespace App\UtilInterface\Address;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 interface AddressUlidInterface
 {
+    /**
+     * @return string
+     */
     public static function generate(): string;
 }

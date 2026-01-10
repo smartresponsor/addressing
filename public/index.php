@@ -45,7 +45,7 @@ $pg = new PDO($pgDsn, $pgUser === '' ? null : $pgUser, $pgPass === '' ? null : $
 $req = Request::createFromGlobals();
 
 (new RequestId())->handle($req);
-(new Cors())->handle($req);
+Cors::handle($req);
 (new IpGuard())->handle($req);
 (new RateLimiter($limitPdo))->handle($req);
 
@@ -82,7 +82,7 @@ try {
 
     (new JsonResponse(['error' => 'not_found'], 404))->send();
 } catch (RuntimeException $e) {
-    $code = (string) $e->getMessage();
+    $code = $e->getMessage();
     if ($code === 'not_found') {
         ErrorMap::emit(404, $code);
         exit(0);
@@ -93,5 +93,5 @@ try {
     }
     ErrorMap::emit(500, 'runtime', ['message' => $code]);
 } catch (Throwable $e) {
-    ErrorMap::emit(500, 'unhandled', ['message' => $e->getMessage()]);
+    ErrorMap::emit(500, 'unhandled', (string)['message' => $e->getMessage()]);
 }

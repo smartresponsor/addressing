@@ -12,20 +12,34 @@ namespace App\Contract\Address;
 
 use JsonSerializable;
 
-final class AddressValidationVerdict implements JsonSerializable
+/**
+ *
+ */
+
+/**
+ *
+ */
+final readonly class AddressValidationVerdict implements JsonSerializable
 {
     /**
+     * @param bool|null $deliverable
+     * @param string|null $granularity
+     * @param int|null $quality
      * @param array<string, mixed> $signal
      */
     public function __construct(
-        public readonly ?bool $deliverable,
-        public readonly ?string $granularity,
-        public readonly ?int $quality,
-        public readonly array $signal = [],
+        public ?bool   $deliverable,
+        public ?string $granularity,
+        public ?int    $quality,
+        /** @var array<string, mixed> */
+        public array   $signal = [],
     ) {
     }
 
-    /** @param array<string, mixed>|null $data */
+    /**
+     * @param array<string, mixed>|null $data
+     * @return \App\Contract\Address\AddressValidationVerdict|null
+     */
     public static function fromArray(?array $data): ?self
     {
         if ($data === null) {

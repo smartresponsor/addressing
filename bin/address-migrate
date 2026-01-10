@@ -6,7 +6,12 @@ declare(strict_types=1);
  * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
  * Owner: Marketing America Corp
  */
-use PDO;
+
+/**
+ * @param string $k
+ * @param string|null $d
+ * @return string|null
+ */
 function env(string $k, ?string $d=null): ?string { $v=getenv($k); return $v===false?$d:$v; }
 $dsn=env('PG_DSN'); $user=env('PG_USER'); $pass=env('PG_PASS');
 if (!$dsn||!$user){ fwrite(STDERR, "PG_DSN/PG_USER are required\n"); exit(2); }

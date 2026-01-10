@@ -2,7 +2,7 @@ FROM php:8.2-cli
 
 # Устанавливаем системные зависимости
 RUN apt-get update && apt-get install -y \
-    git unzip libzip-dev libicu-dev libonig-dev \ 
+    git unzip libzip-dev libicu-dev libonig-dev \ \
     && docker-php-ext-install pdo pdo_mysql intl mbstring zip
 
 # Устанавливаем composer

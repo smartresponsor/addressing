@@ -7,8 +7,11 @@ declare(strict_types=1);
  * Owner: Marketing America Corp
  */
 
-use PDO;
-
+/**
+ * @param string $k
+ * @param string|null $d
+ * @return string|null
+ */
 function env(string $k, ?string $d=null): ?string { $v=getenv($k); return $v===false?$d:$v; }
 
 $dsn=env('MYSQL_DSN'); $user=env('MYSQL_USER'); $pass=env('MYSQL_PASS');
@@ -23,6 +26,12 @@ if ($baseSql === false) {
 }
 $pdo->exec($baseSql);
 
+/**
+ * @param \PDO $pdo
+ * @param string $table
+ * @param string $column
+ * @return bool
+ */
 function hasColumn(PDO $pdo, string $table, string $column): bool
 {
     $stmt = $pdo->prepare(
@@ -33,6 +42,12 @@ function hasColumn(PDO $pdo, string $table, string $column): bool
     return isset($row['c']) && (int) $row['c'] > 0;
 }
 
+/**
+ * @param \PDO $pdo
+ * @param string $table
+ * @param string $index
+ * @return bool
+ */
 function hasIndex(PDO $pdo, string $table, string $index): bool
 {
     $stmt = $pdo->prepare(

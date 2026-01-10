@@ -14,12 +14,26 @@ use App\EntityInterface\Address\AddressInterface;
 use App\ServiceInterface\Address\AddressProjectionInterface;
 use PDO;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 final class AddressProjection implements AddressProjectionInterface
 {
-    public function __construct(private PDO $pdo)
+    /**
+     * @param \PDO $pdo
+     */
+    public function __construct(private readonly PDO $pdo)
     {
     }
 
+    /**
+     * @param \App\EntityInterface\Address\AddressInterface $a
+     * @return void
+     */
     public function upsert(AddressInterface $a): void
     {
         $sql = <<<'SQL'

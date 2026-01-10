@@ -12,34 +12,54 @@ namespace App\Http\AddressApi;
 
 use App\Entity\Address\AddressData;
 use App\EntityInterface\Address\AddressInterface;
+use App\Contract\Address\AddressValidated;
 use App\Repository\Address\AddressRepository;
 use App\Service\Address\AddressValidatedApplier;
+use DateTimeImmutable;
 use PDO;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Uid\Ulid;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 final class Controller
 {
+    /**
+     * @param \App\Repository\Address\AddressRepository $repo
+     * @param \App\Service\Address\AddressValidatedApplier $validatedApplier
+     */
     public function __construct(
-        private PDO $pg,
-        private AddressRepository $repo,
-        private AddressValidatedApplier $validatedApplier,
+        private readonly AddressRepository       $repo,
+        private readonly AddressValidatedApplier $validatedApplier,
     ) {
     }
 
+    /**
+     * @param \PDO $pg
+     * @return self
+     */
     public static function fromPg(PDO $pg): self
     {
-        return new self($pg, new AddressRepository($pg), new AddressValidatedApplier($pg));
+        return new self(new AddressRepository($pg), new AddressValidatedApplier($pg));
     }
 
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $req
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
     public function create(Request $req): JsonResponse
     {
         $in = self::json($req);
 
         $id = (string) new Ulid();
-        $now = (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
+        $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
 
         $a = new AddressData(
             $id,
@@ -72,6 +92,11 @@ final class Controller
         return new JsonResponse(['id' => $id], 201);
     }
 
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $req
+     * @param string $id
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
     public function get(Request $req, string $id): JsonResponse
     {
         try {
@@ -83,12 +108,21 @@ final class Controller
         return new JsonResponse(self::toArray($a));
     }
 
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $req
+     * @param string $id
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
     public function markDeleted(Request $req, string $id): JsonResponse
     {
         $this->repo->markDeleted($id);
         return new JsonResponse(['ok' => true]);
     }
 
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $req
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
     public function page(Request $req): JsonResponse
     {
         $limit = (int) ($req->query->get('limit') ?? 25);
@@ -124,11 +158,16 @@ final class Controller
         ]);
     }
 
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $req
+     * @param string $id
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
     public function applyValidated(Request $req, string $id): JsonResponse
     {
         $in = self::json($req);
 
-        $validated = [
+        $validated = AddressValidated::fromArray([
             'line1Norm' => self::optStr($in, 'line1Norm'),
             'cityNorm' => self::optStr($in, 'cityNorm'),
             'regionNorm' => self::optStr($in, 'regionNorm'),
@@ -136,9 +175,10 @@ final class Controller
             'latitude' => self::optFloat($in, 'latitude'),
             'longitude' => self::optFloat($in, 'longitude'),
             'geohash' => self::optStr($in, 'geohash'),
-            'status' => self::optStr($in, 'status') ?? self::optStr($in, 'validationStatus') ?? 'verified',
-            'provider' => self::optStr($in, 'provider') ?? self::optStr($in, 'validationProvider'),
-        ];
+            'validationProvider' => self::optStr($in, 'provider') ?? self::optStr($in, 'validationProvider'),
+            'validatedAt' => self::optStr($in, 'validatedAt'),
+            'dedupeKey' => self::optStr($in, 'dedupeKey'),
+        ]);
 
         $this->validatedApplier->apply($id, $validated);
 
@@ -151,6 +191,10 @@ final class Controller
         return new JsonResponse(self::toArray($a));
     }
 
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $req
+     * @return array<string, mixed>
+     */
     private static function json(Request $req): array
     {
         $raw = $req->getContent();
@@ -161,6 +205,11 @@ final class Controller
         return $data;
     }
 
+    /**
+     * @param array<string, mixed> $in
+     * @param string $key
+     * @return string
+     */
     private static function reqStr(array $in, string $key): string
     {
         if (!array_key_exists($key, $in) || !is_string($in[$key]) || trim($in[$key]) === '') {
@@ -169,6 +218,11 @@ final class Controller
         return trim($in[$key]);
     }
 
+    /**
+     * @param array<string, mixed> $in
+     * @param string $key
+     * @return string|null
+     */
     private static function optStr(array $in, string $key): ?string
     {
         if (!array_key_exists($key, $in) || $in[$key] === null) {
@@ -181,6 +235,11 @@ final class Controller
         return $v === '' ? null : $v;
     }
 
+    /**
+     * @param array<string, mixed> $in
+     * @param string $key
+     * @return float|null
+     */
     private static function optFloat(array $in, string $key): ?float
     {
         if (!array_key_exists($key, $in) || $in[$key] === null || $in[$key] === '') {
@@ -195,6 +254,10 @@ final class Controller
         throw new RuntimeException('invalid_' . $key);
     }
 
+    /**
+     * @param \App\EntityInterface\Address\AddressInterface $a
+     * @return array<string, mixed>
+     */
     private static function toArray(AddressInterface $a): array
     {
         return [

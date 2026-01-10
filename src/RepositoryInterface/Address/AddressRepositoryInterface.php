@@ -11,14 +11,37 @@ namespace App\RepositoryInterface\Address;
 
 use App\EntityInterface\Address\AddressInterface;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 interface AddressRepositoryInterface
 {
+    /**
+     * @param \App\EntityInterface\Address\AddressInterface $address
+     * @return void
+     */
     public function create(AddressInterface $address): void;
 
+    /**
+     * @param \App\EntityInterface\Address\AddressInterface $address
+     * @return void
+     */
     public function update(AddressInterface $address): void;
 
+    /**
+     * @param string $id
+     * @return \App\EntityInterface\Address\AddressInterface|null
+     */
     public function get(string $id): ?AddressInterface;
 
+    /**
+     * @param string $id
+     * @return void
+     */
     public function delete(string $id): void;
 
     public function findByDedupeKey(string $dedupeKey): ?AddressInterface;

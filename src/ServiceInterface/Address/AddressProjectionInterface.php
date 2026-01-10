@@ -14,7 +14,18 @@ namespace App\ServiceInterface\Address;
 
 use App\EntityInterface\Address\AddressInterface;
 
+/**
+ *
+ */
+
+/**
+ *
+ */
 interface AddressProjectionInterface
 {
+    /**
+     * @param \App\EntityInterface\Address\AddressInterface $a
+     * @return void
+     */
     public function upsert(AddressInterface $a): void;
 }

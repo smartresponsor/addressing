@@ -11,9 +11,12 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use App\Service\Address\AddressValidatedApplier;
-use PDO;
+use JetBrains\PhpStorm\NoReturn;
 
-function usage(): void
+/**
+ * @return void
+ */
+#[NoReturn] function usage(): void
 {
     fwrite(STDERR, "Usage: address-apply-validated <json-file>|- (NDJSON or single JSON)\n");
     exit(2);

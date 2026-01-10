@@ -14,26 +14,50 @@ use DateTimeImmutable;
 use JsonSerializable;
 use Throwable;
 
-final class AddressValidated implements JsonSerializable
+/**
+ *
+ */
+
+/**
+ *
+ */
+final readonly class AddressValidated implements JsonSerializable
 {
+    /**
+     * @param string|null $line1Norm
+     * @param string|null $cityNorm
+     * @param string|null $regionNorm
+     * @param string|null $postalCodeNorm
+     * @param float|null $latitude
+     * @param float|null $longitude
+     * @param string|null $geohash
+     * @param string|null $validationProvider
+     * @param \DateTimeImmutable|null $validatedAt
+     * @param string|null $dedupeKey
+     * @param array|null $raw
+     * @param \App\Contract\Address\AddressValidationVerdict|null $verdict
+     */
     public function __construct(
-        public readonly ?string $line1Norm,
-        public readonly ?string $cityNorm,
-        public readonly ?string $regionNorm,
-        public readonly ?string $postalCodeNorm,
-        public readonly ?float $latitude,
-        public readonly ?float $longitude,
-        public readonly ?string $geohash,
-        public readonly ?string $validationProvider,
-        public readonly ?DateTimeImmutable $validatedAt,
-        public readonly ?string $dedupeKey,
+        public ?string                   $line1Norm,
+        public ?string                   $cityNorm,
+        public ?string                   $regionNorm,
+        public ?string                   $postalCodeNorm,
+        public ?float                    $latitude,
+        public ?float                    $longitude,
+        public ?string                   $geohash,
+        public ?string                   $validationProvider,
+        public ?DateTimeImmutable        $validatedAt,
+        public ?string                   $dedupeKey,
         /** @var array<string, mixed>|null */
-        public readonly ?array $raw = null,
-        public readonly ?AddressValidationVerdict $verdict = null,
+        public ?array                    $raw = null,
+        public ?AddressValidationVerdict $verdict = null,
     ) {
     }
 
-    /** @param array<string, mixed> $data */
+    /**
+     * @param array<string, mixed> $data
+     * @return \App\Contract\Address\AddressValidated
+     */
     public static function fromArray(array $data): self
     {
         $line1Norm = self::asNullableString($data['line1Norm'] ?? null);
@@ -80,10 +104,17 @@ final class AddressValidated implements JsonSerializable
         );
     }
 
+    /**
+     * @return string
+     */
     public function fingerprint(): string
     {
         $arr = $this->jsonSerialize();
-        return hash('sha256', json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $json = json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($json === false) {
+            $json = '';
+        }
+        return hash('sha256', $json);
     }
 
     /** @return array<string, mixed> */
@@ -128,20 +159,27 @@ final class AddressValidated implements JsonSerializable
         ];
     }
 
-    /** @param array<string, mixed>|null $data */
+    /**
+     * @param array<string, mixed>|null $data
+     * @return string|null
+     */
     private function encodeJsonNullable(?array $data): ?string
     {
         if ($data === null) {
             return null;
         }
 
-        try {
-            return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        } catch (Throwable) {
+        $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($json === false) {
             return null;
         }
+        return $json;
     }
 
+    /**
+     * @param mixed $v
+     * @return string|null
+     */
     private static function asNullableString(mixed $v): ?string
     {
         if ($v === null) {
@@ -151,6 +189,10 @@ final class AddressValidated implements JsonSerializable
         return $s === '' ? null : $s;
     }
 
+    /**
+     * @param mixed $v
+     * @return float|null
+     */
     private static function asNullableFloat(mixed $v): ?float
     {
         if ($v === null || $v === '') {
@@ -165,6 +207,10 @@ final class AddressValidated implements JsonSerializable
         return null;
     }
 
+    /**
+     * @param mixed $v
+     * @return \DateTimeImmutable|null
+     */
     private static function asNullableDate(mixed $v): ?DateTimeImmutable
     {
         if ($v === null || $v === '') {
@@ -172,7 +218,7 @@ final class AddressValidated implements JsonSerializable
         }
         try {
             return new DateTimeImmutable((string)$v);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return null;
         }
     }
