@@ -34,7 +34,9 @@ final readonly class AddressRepository implements AddressRepositoryInterface
      */
     public function create(AddressInterface $address): void
     {
-        $sql = <<<'SQL'
+        $this->pdo->beginTransaction();
+        try {
+            $sql = <<<'SQL'
 INSERT INTO address_entity
     (id, owner_id, vendor_id, line1, line2, city, region, postal_code, country_code,
      line1_norm, city_norm, region_norm, postal_code_norm,
@@ -49,17 +51,24 @@ VALUES
      :dedupe_key, :created_at, :updated_at, :deleted_at)
 SQL;
 
-        $stmt = $this->prepare($sql);
-        $this->bind($stmt, $address);
-        $stmt->execute();
+            $stmt = $this->prepare($sql);
+            $this->bind($stmt, $address);
+            $stmt->execute();
 
-        $this->appendOutbox('AddressCreated', [
-            'id' => $address->id(),
-            'ownerId' => $address->ownerId(),
-            'vendorId' => $address->vendorId(),
-            'countryCode' => $address->countryCode(),
-            'createdAt' => $address->createdAt(),
-        ]);
+            $this->appendOutbox('AddressCreated', [
+                'id' => $address->id(),
+                'ownerId' => $address->ownerId(),
+                'vendorId' => $address->vendorId(),
+                'countryCode' => $address->countryCode(),
+                'createdAt' => $address->createdAt(),
+            ]);
+            $this->pdo->commit();
+        } catch (\Throwable $exception) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $exception;
+        }
     }
 
     /**
@@ -70,7 +79,9 @@ SQL;
     {
         $this->ensureTenantScope($address->ownerId(), $address->vendorId());
         $tenantWhere = $this->tenantWhereClause($address->ownerId(), $address->vendorId());
-        $sql = <<<'SQL'
+        $this->pdo->beginTransaction();
+        try {
+            $sql = <<<'SQL'
 UPDATE address_entity SET
     owner_id=:owner_id, vendor_id=:vendor_id, line1=:line1, line2=:line2, city=:city, region=:region,
     postal_code=:postal_code, country_code=:country_code,
@@ -81,14 +92,25 @@ UPDATE address_entity SET
 WHERE id=:id AND %s
 SQL;
 
-        $stmt = $this->prepare(sprintf($sql, $tenantWhere));
-        $this->bind($stmt, $address);
-        $stmt->execute();
+            $stmt = $this->prepare(sprintf($sql, $tenantWhere));
+            $this->bind($stmt, $address);
+            $stmt->execute();
+            if ($stmt->rowCount() === 0) {
+                $this->pdo->rollBack();
+                return;
+            }
 
-        $this->appendOutbox('AddressUpdated', [
-            'id' => $address->id(),
-            'updatedAt' => $address->updatedAt() ?? (new DateTimeImmutable())->format(DATE_ATOM),
-        ]);
+            $this->appendOutbox('AddressUpdated', [
+                'id' => $address->id(),
+                'updatedAt' => $address->updatedAt() ?? (new DateTimeImmutable())->format(DATE_ATOM),
+            ]);
+            $this->pdo->commit();
+        } catch (\Throwable $exception) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $exception;
+        }
     }
 
     /**
@@ -121,16 +143,29 @@ SQL;
     {
         $this->ensureTenantScope($ownerId, $vendorId);
         $params = array_merge([':id' => $id], $this->tenantParams($ownerId, $vendorId));
-        $stmt = $this->prepare(
-            'UPDATE address_entity SET deleted_at=now() WHERE id=:id AND deleted_at IS NULL AND '
-            . $this->tenantWhereClause($ownerId, $vendorId)
-        );
-        $stmt->execute($params);
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->prepare(
+                'UPDATE address_entity SET deleted_at=now() WHERE id=:id AND deleted_at IS NULL AND '
+                . $this->tenantWhereClause($ownerId, $vendorId)
+            );
+            $stmt->execute($params);
+            if ($stmt->rowCount() === 0) {
+                $this->pdo->rollBack();
+                return;
+            }
 
-        $this->appendOutbox('AddressDeleted', [
-            'id' => $id,
-            'deletedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
-        ]);
+            $this->appendOutbox('AddressDeleted', [
+                'id' => $id,
+                'deletedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
+            ]);
+            $this->pdo->commit();
+        } catch (\Throwable $exception) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $exception;
+        }
     }
 
     public function findByDedupeKey(string $dedupeKey): ?AddressInterface
