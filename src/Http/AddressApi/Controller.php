@@ -66,6 +66,12 @@ final class Controller
             $id,
             self::optStr($in, 'ownerId'),
             self::optStr($in, 'vendorId'),
+            self::optStr($in, 'tag'),
+            self::optStr($in, 'name'),
+            self::optStr($in, 'company'),
+            self::optStr($in, 'phone'),
+            self::optStr($in, 'email'),
+            self::optArray($in, 'raw'),
             self::reqStr($in, 'line1'),
             self::optStr($in, 'line2'),
             self::reqStr($in, 'city'),
@@ -254,6 +260,24 @@ final class Controller
     }
 
     /**
+     * @param array<string, mixed> $in
+     * @param string $key
+     * @return array<string, mixed>|null
+     */
+    private static function optArray(array $in, string $key): ?array
+    {
+        if (!array_key_exists($key, $in) || $in[$key] === null) {
+            return null;
+        }
+        if (!is_array($in[$key])) {
+            throw new RuntimeException('invalid_' . $key);
+        }
+        /** @var array<string, mixed> $value */
+        $value = $in[$key];
+        return $value;
+    }
+
+    /**
      * @param \App\EntityInterface\Address\AddressInterface $a
      * @return array<string, mixed>
      */
@@ -263,6 +287,11 @@ final class Controller
             'id' => $a->id(),
             'ownerId' => $a->ownerId(),
             'vendorId' => $a->vendorId(),
+            'tag' => $a->tag(),
+            'name' => $a->name(),
+            'company' => $a->company(),
+            'phone' => $a->phone(),
+            'email' => $a->email(),
             'line1' => $a->line1(),
             'line2' => $a->line2(),
             'city' => $a->city(),

@@ -37,6 +37,36 @@ interface AddressInterface
     public function vendorId(): ?string;
 
     /**
+     * @return string|null
+     */
+    public function tag(): ?string;
+
+    /**
+     * @return string|null
+     */
+    public function name(): ?string;
+
+    /**
+     * @return string|null
+     */
+    public function company(): ?string;
+
+    /**
+     * @return string|null
+     */
+    public function phone(): ?string;
+
+    /**
+     * @return string|null
+     */
+    public function email(): ?string;
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function raw(): ?array;
+
+    /**
      * @return string
      */
     public function line1(): string;

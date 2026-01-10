@@ -51,6 +51,29 @@ final class AddressServiceTest extends TestCase
         static::assertSame('456 Broad St', $found->line1());
     }
 
+    public function testCreateStoresContactFields(): void
+    {
+        $address = $this->makeAddress(
+            'addr-2b',
+            tag: 'shipping',
+            name: 'Jane Doe',
+            company: 'Acme Co',
+            phone: '+1-555-1234',
+            email: 'jane@example.test',
+            raw: ['source' => 'import', 'note' => 'primary']
+        );
+        $this->service->create($address);
+
+        $found = $this->repo->get('addr-2b');
+        static::assertNotNull($found);
+        static::assertSame('shipping', $found->tag());
+        static::assertSame('Jane Doe', $found->name());
+        static::assertSame('Acme Co', $found->company());
+        static::assertSame('+1-555-1234', $found->phone());
+        static::assertSame('jane@example.test', $found->email());
+        static::assertSame(['source' => 'import', 'note' => 'primary'], $found->raw());
+    }
+
     public function testSearchReturnsMatchingRows(): void
     {
         $this->service->create($this->makeAddress('addr-3'));
@@ -87,6 +110,12 @@ final class AddressServiceTest extends TestCase
     private function makeAddress(
         string  $id,
         string  $line1 = '123 Main St',
+        ?string $tag = null,
+        ?string $name = null,
+        ?string $company = null,
+        ?string $phone = null,
+        ?string $email = null,
+        ?array  $raw = null,
         ?string $dedupeKey = null,
         ?string $updatedAt = null
     ): AddressData
@@ -97,6 +126,12 @@ final class AddressServiceTest extends TestCase
             $id,
             'owner-1',
             'vendor-1',
+            $tag,
+            $name,
+            $company,
+            $phone,
+            $email,
+            $raw,
             $line1,
             null,
             'Houston',
@@ -127,6 +162,12 @@ CREATE TABLE address_entity (
   id TEXT PRIMARY KEY,
   owner_id TEXT NULL,
   vendor_id TEXT NULL,
+  tag TEXT NULL,
+  name TEXT NULL,
+  company TEXT NULL,
+  phone TEXT NULL,
+  email TEXT NULL,
+  raw TEXT NULL,
   line1 TEXT NOT NULL,
   line2 TEXT NULL,
   city TEXT NOT NULL,

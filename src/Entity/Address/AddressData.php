@@ -23,6 +23,12 @@ final class AddressData implements AddressInterface
      * @param string $id
      * @param string|null $ownerId
      * @param string|null $vendorId
+     * @param string|null $tag
+     * @param string|null $name
+     * @param string|null $company
+     * @param string|null $phone
+     * @param string|null $email
+     * @param array|null $raw
      * @param string $line1
      * @param string|null $line2
      * @param string $city
@@ -54,6 +60,13 @@ final class AddressData implements AddressInterface
         public string  $id,
         public ?string $ownerId,
         public ?string $vendorId,
+        public ?string $tag,
+        public ?string $name,
+        public ?string $company,
+        public ?string $phone,
+        public ?string $email,
+        /** @var array<string, mixed>|null */
+        public ?array  $raw,
         public string  $line1,
         public ?string $line2,
         public string  $city,
@@ -108,6 +121,54 @@ final class AddressData implements AddressInterface
     public function vendorId(): ?string
     {
         return $this->vendorId;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function tag(): ?string
+    {
+        return $this->tag;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function name(): ?string
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function company(): ?string
+    {
+        return $this->company;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function phone(): ?string
+    {
+        return $this->phone;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function email(): ?string
+    {
+        return $this->email;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function raw(): ?array
+    {
+        return $this->raw;
     }
 
     /**

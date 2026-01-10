@@ -36,13 +36,15 @@ final readonly class AddressRepository implements AddressRepositoryInterface
     {
         $sql = <<<'SQL'
 INSERT INTO address_entity
-    (id, owner_id, vendor_id, line1, line2, city, region, postal_code, country_code,
+    (id, owner_id, vendor_id, tag, name, company, phone, email, raw,
+     line1, line2, city, region, postal_code, country_code,
      line1_norm, city_norm, region_norm, postal_code_norm,
      latitude, longitude, geohash,
      validation_status, validation_provider, validated_at,
      dedupe_key, created_at, updated_at, deleted_at)
 VALUES
-    (:id, :owner_id, :vendor_id, :line1, :line2, :city, :region, :postal_code, :country_code,
+    (:id, :owner_id, :vendor_id, :tag, :name, :company, :phone, :email, :raw,
+     :line1, :line2, :city, :region, :postal_code, :country_code,
      :line1_norm, :city_norm, :region_norm, :postal_code_norm,
      :latitude, :longitude, :geohash,
      :validation_status, :validation_provider, :validated_at,
@@ -70,7 +72,9 @@ SQL;
     {
         $sql = <<<'SQL'
 UPDATE address_entity SET
-    owner_id=:owner_id, vendor_id=:vendor_id, line1=:line1, line2=:line2, city=:city, region=:region,
+    owner_id=:owner_id, vendor_id=:vendor_id, tag=:tag, name=:name, company=:company, phone=:phone, email=:email,
+    raw=:raw,
+    line1=:line1, line2=:line2, city=:city, region=:region,
     postal_code=:postal_code, country_code=:country_code,
     line1_norm=:line1_norm, city_norm=:city_norm, region_norm=:region_norm, postal_code_norm=:postal_code_norm,
     latitude=:latitude, longitude=:longitude, geohash=:geohash,
@@ -220,9 +224,16 @@ SQL;
      */
     private function bind(PDOStatement $stmt, AddressInterface $a): void
     {
+        $rawJson = $this->encodeJsonNullable($a->raw());
         $stmt->bindValue(':id', $a->id());
         $stmt->bindValue(':owner_id', $a->ownerId());
         $stmt->bindValue(':vendor_id', $a->vendorId());
+        $stmt->bindValue(':tag', $a->tag());
+        $stmt->bindValue(':name', $a->name());
+        $stmt->bindValue(':company', $a->company());
+        $stmt->bindValue(':phone', $a->phone());
+        $stmt->bindValue(':email', $a->email());
+        $stmt->bindValue(':raw', $rawJson);
         $stmt->bindValue(':line1', $a->line1());
         $stmt->bindValue(':line2', $a->line2());
         $stmt->bindValue(':city', $a->city());
@@ -256,11 +267,18 @@ SQL;
         $validationDeliverable = $this->asNullableBool($r['validation_deliverable'] ?? null);
         $validationGranularity = $this->asNullableString($r['validation_granularity'] ?? null);
         $validationQuality = $this->asNullableInt($r['validation_quality'] ?? null);
+        $raw = $this->decodeJsonNullable($r['raw'] ?? null);
 
         return new AddressData(
             $this->asString($r['id'] ?? null, 'id'),
             $this->asNullableString($r['owner_id'] ?? null),
             $this->asNullableString($r['vendor_id'] ?? null),
+            $this->asNullableString($r['tag'] ?? null),
+            $this->asNullableString($r['name'] ?? null),
+            $this->asNullableString($r['company'] ?? null),
+            $this->asNullableString($r['phone'] ?? null),
+            $this->asNullableString($r['email'] ?? null),
+            $raw,
             $this->asString($r['line1'] ?? null, 'line1'),
             $this->asNullableString($r['line2'] ?? null),
             $this->asString($r['city'] ?? null, 'city'),
@@ -314,6 +332,18 @@ SQL;
         }
         /** @var array<string, mixed> $decoded */
         return $decoded;
+    }
+
+    private function encodeJsonNullable(?array $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        $encoded = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($encoded === false) {
+            throw new RuntimeException('json_encode_failed');
+        }
+        return $encoded;
     }
 
     private function asString(mixed $value, string $field): string
