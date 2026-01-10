@@ -1,0 +1,57 @@
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+name: addressing-gate
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: composer
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.composer/cache/files
+            vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install dependency
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Domain gate (soft)
+        shell: pwsh
+        env:
+          SR_DOMAIN: "addressing"
+          SR_CANON_REQUIRED: "0"
+          SR_GATE_STRICT: "0"
+        run: |
+          pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "addressing"
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: addressing-report
+          path: report/
+          if-no-files-found: ignore
+
