@@ -34,6 +34,18 @@ CREATE TABLE IF NOT EXISTS address_entity (
   deleted_at TIMESTAMPTZ NULL
 );
 
+CREATE TABLE IF NOT EXISTS address_localization (
+  address_id CHAR(26) NOT NULL,
+  locale VARCHAR(32) NOT NULL,
+  line1 VARCHAR(256) NULL,
+  city VARCHAR(128) NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (address_id, locale),
+  CONSTRAINT address_localization_address_fk
+    FOREIGN KEY (address_id) REFERENCES address_entity(id) ON DELETE CASCADE
+);
+
 CREATE INDEX IF NOT EXISTS address_owner_idx ON address_entity(owner_id);
 CREATE INDEX IF NOT EXISTS address_vendor_idx ON address_entity(vendor_id);
 CREATE INDEX IF NOT EXISTS address_country_idx ON address_entity(country_code);

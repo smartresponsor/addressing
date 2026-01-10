@@ -55,4 +55,18 @@ interface AddressRepositoryInterface
         int $limit,
         ?string $cursor
     ): array;
+
+    /**
+     * @param string $addressId
+     * @param array<string, string>|null $line1Localized
+     * @param array<string, string>|null $cityLocalized
+     * @return void
+     */
+    public function replaceLocalizations(string $addressId, ?array $line1Localized, ?array $cityLocalized): void;
+
+    /**
+     * @param string $addressId
+     * @return array{line1Localized: ?array<string, string>, cityLocalized: ?array<string, string>}
+     */
+    public function fetchLocalizations(string $addressId): array;
 }

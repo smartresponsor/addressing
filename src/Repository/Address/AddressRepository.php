@@ -53,17 +53,21 @@ VALUES
      :dedupe_key, :created_at, :updated_at, :deleted_at)
 SQL;
 
-        $stmt = $this->pdo->prepare($sql);
-        $this->bind($stmt, $address);
-        $stmt->execute();
+        $this->runInTransaction(function () use ($address, $sql): void {
+            $stmt = $this->pdo->prepare($sql);
+            $this->bind($stmt, $address);
+            $stmt->execute();
 
-        $this->appendOutbox('AddressCreated', [
-            'id' => $address->id(),
-            'ownerId' => $address->ownerId(),
-            'vendorId' => $address->vendorId(),
-            'countryCode' => $address->countryCode(),
-            'createdAt' => $address->createdAt(),
-        ]);
+            $this->replaceLocalizations($address->id(), $address->line1Localized(), $address->cityLocalized());
+
+            $this->appendOutbox('AddressCreated', [
+                'id' => $address->id(),
+                'ownerId' => $address->ownerId(),
+                'vendorId' => $address->vendorId(),
+                'countryCode' => $address->countryCode(),
+                'createdAt' => $address->createdAt(),
+            ]);
+        });
     }
 
     /**
@@ -83,14 +87,18 @@ UPDATE address_entity SET
 WHERE id=:id
 SQL;
 
-        $stmt = $this->pdo->prepare($sql);
-        $this->bind($stmt, $address);
-        $stmt->execute();
+        $this->runInTransaction(function () use ($address, $sql): void {
+            $stmt = $this->pdo->prepare($sql);
+            $this->bind($stmt, $address);
+            $stmt->execute();
 
-        $this->appendOutbox('AddressUpdated', [
-            'id' => $address->id(),
-            'updatedAt' => $address->updatedAt() ?? (new DateTimeImmutable())->format(DATE_ATOM),
-        ]);
+            $this->replaceLocalizations($address->id(), $address->line1Localized(), $address->cityLocalized());
+
+            $this->appendOutbox('AddressUpdated', [
+                'id' => $address->id(),
+                'updatedAt' => $address->updatedAt() ?? (new DateTimeImmutable())->format(DATE_ATOM),
+            ]);
+        });
     }
 
     /**
@@ -103,7 +111,11 @@ SQL;
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $row ? $this->map($row) : null;
+        if (!$row) {
+            return null;
+        }
+        $localized = $this->fetchLocalizations($id);
+        return $this->map($row, $localized['line1Localized'], $localized['cityLocalized']);
     }
 
     /**
@@ -169,7 +181,10 @@ SQL;
         $stmt->execute();
 
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $items = array_map(fn (array $r): AddressInterface => $this->map($r), $rows);
+        $items = array_map(function (array $r): AddressInterface {
+            $localized = $this->fetchLocalizations((string) $r['id']);
+            return $this->map($r, $localized['line1Localized'], $localized['cityLocalized']);
+        }, $rows);
 
         $nextCursor = null;
         if (count($rows) === $limit && $rows !== []) {
@@ -216,9 +231,11 @@ SQL;
 
     /**
      * @param array<string, mixed> $r
+     * @param array<string, string>|null $line1Localized
+     * @param array<string, string>|null $cityLocalized
      * @return \App\Entity\Address\AddressData
      */
-    private function map(array $r): AddressData
+    private function map(array $r, ?array $line1Localized, ?array $cityLocalized): AddressData
     {
         $validationRaw = $this->decodeJsonNullable($r['validation_raw'] ?? null);
         $validationVerdict = $this->decodeJsonNullable($r['validation_verdict'] ?? null);
@@ -243,6 +260,8 @@ SQL;
             $r['region'] !== null ? (string) $r['region'] : null,
             $r['postal_code'] !== null ? (string) $r['postal_code'] : null,
             (string) $r['country_code'],
+            $line1Localized,
+            $cityLocalized,
             $r['line1_norm'] !== null ? (string) $r['line1_norm'] : null,
             $r['city_norm'] !== null ? (string) $r['city_norm'] : null,
             $r['region_norm'] !== null ? (string) $r['region_norm'] : null,
@@ -264,6 +283,105 @@ SQL;
             $validationGranularity,
             $validationQuality
         );
+    }
+
+    /**
+     * @param string $addressId
+     * @param array<string, string>|null $line1Localized
+     * @param array<string, string>|null $cityLocalized
+     * Empty maps are treated as null. Empty string values are preserved as-is.
+     * @return void
+     */
+    public function replaceLocalizations(string $addressId, ?array $line1Localized, ?array $cityLocalized): void
+    {
+        $line1Localized = $this->assertLocalizedMap($line1Localized, 'line1Localized');
+        $cityLocalized = $this->assertLocalizedMap($cityLocalized, 'cityLocalized');
+
+        $stmt = $this->pdo->prepare('DELETE FROM address_localization WHERE address_id = :id');
+        $stmt->execute([':id' => $addressId]);
+
+        if ($line1Localized === null && $cityLocalized === null) {
+            return;
+        }
+
+        $locales = array_unique(array_merge(
+            array_keys($line1Localized ?? []),
+            array_keys($cityLocalized ?? [])
+        ));
+        if ($locales === []) {
+            return;
+        }
+
+        $now = (new DateTimeImmutable())->format('Y-m-d H:i:sP');
+        $insert = $this->pdo->prepare(
+            'INSERT INTO address_localization (address_id, locale, line1, city, created_at, updated_at)
+             VALUES (:address_id, :locale, :line1, :city, :created_at, :updated_at)'
+        );
+
+        foreach ($locales as $locale) {
+            $insert->execute([
+                ':address_id' => $addressId,
+                ':locale' => $locale,
+                ':line1' => $line1Localized[$locale] ?? null,
+                ':city' => $cityLocalized[$locale] ?? null,
+                ':created_at' => $now,
+                ':updated_at' => $now,
+            ]);
+        }
+    }
+
+    /**
+     * @param string $addressId
+     * @return array{line1Localized: ?array<string, string>, cityLocalized: ?array<string, string>}
+     */
+    public function fetchLocalizations(string $addressId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT locale, line1, city FROM address_localization WHERE address_id = :id ORDER BY locale ASC'
+        );
+        $stmt->execute([':id' => $addressId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $line1Localized = [];
+        $cityLocalized = [];
+
+        foreach ($rows as $row) {
+            $locale = (string) $row['locale'];
+            if (array_key_exists('line1', $row) && $row['line1'] !== null) {
+                $line1Localized[$locale] = (string) $row['line1'];
+            }
+            if (array_key_exists('city', $row) && $row['city'] !== null) {
+                $cityLocalized[$locale] = (string) $row['city'];
+            }
+        }
+
+        return [
+            'line1Localized' => $line1Localized === [] ? null : $line1Localized,
+            'cityLocalized' => $cityLocalized === [] ? null : $cityLocalized,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed>|null $map
+     * @param string $field
+     * @return array<string, string>|null
+     */
+    private function assertLocalizedMap(?array $map, string $field): ?array
+    {
+        if ($map === null) {
+            return null;
+        }
+        $out = [];
+        foreach ($map as $locale => $value) {
+            if (!is_string($locale)) {
+                throw new RuntimeException('invalid_' . $field . '_key');
+            }
+            if (!is_string($value)) {
+                throw new RuntimeException('invalid_' . $field . '_value');
+            }
+            $out[$locale] = $value;
+        }
+        return $out === [] ? null : $out;
     }
 
     /** @return array<string, mixed>|null */
@@ -300,13 +418,40 @@ SQL;
         if ($payloadJson === false) {
             throw new RuntimeException('payload_encode_failed');
         }
+        $payloadExpr = ':payload';
+        if ($this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'pgsql') {
+            $payloadExpr = ':payload::jsonb';
+        }
         $stmt = $this->pdo->prepare(
-            'INSERT INTO address_outbox(event_name, event_version, payload) VALUES (:name, :ver, :payload::jsonb)'
+            'INSERT INTO address_outbox(event_name, event_version, payload) VALUES (:name, :ver, ' . $payloadExpr . ')'
         );
         $stmt->execute([
             ':name' => $name,
             ':ver' => 1,
             ':payload' => $payloadJson,
         ]);
+    }
+
+    /**
+     * @param callable(): void $fn
+     * @return void
+     */
+    private function runInTransaction(callable $fn): void
+    {
+        $inTransaction = $this->pdo->inTransaction();
+        if (!$inTransaction) {
+            $this->pdo->beginTransaction();
+        }
+        try {
+            $fn();
+            if (!$inTransaction) {
+                $this->pdo->commit();
+            }
+        } catch (\Throwable $e) {
+            if (!$inTransaction && $this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 }

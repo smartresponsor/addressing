@@ -67,6 +67,16 @@ interface AddressInterface
     public function countryCode(): string;
 
     /**
+     * @return array<string, string>|null
+     */
+    public function line1Localized(): ?array;
+
+    /**
+     * @return array<string, string>|null
+     */
+    public function cityLocalized(): ?array;
+
+    /**
      * @return string|null
      */
     public function line1Norm(): ?string;

@@ -29,6 +29,8 @@ final class AddressData implements AddressInterface
      * @param string|null $region
      * @param string|null $postalCode
      * @param string $countryCode
+     * @param array<string, string>|null $line1Localized
+     * @param array<string, string>|null $cityLocalized
      * @param string|null $line1Norm
      * @param string|null $cityNorm
      * @param string|null $regionNorm
@@ -60,6 +62,10 @@ final class AddressData implements AddressInterface
         public ?string $region,
         public ?string $postalCode,
         public string $countryCode,
+        /** @var array<string, string>|null */
+        public ?array $line1Localized,
+        /** @var array<string, string>|null */
+        public ?array $cityLocalized,
         public ?string $line1Norm,
         public ?string $cityNorm,
         public ?string $regionNorm,
@@ -129,6 +135,16 @@ final class AddressData implements AddressInterface
      * @return string
      */
     public function countryCode(): string { return $this->countryCode; }
+
+    /**
+     * @return array<string, string>|null
+     */
+    public function line1Localized(): ?array { return $this->line1Localized; }
+
+    /**
+     * @return array<string, string>|null
+     */
+    public function cityLocalized(): ?array { return $this->cityLocalized; }
 
     /**
      * @return string|null
