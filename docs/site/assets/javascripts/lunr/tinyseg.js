@@ -1419,7 +1419,7 @@
 
         TinySegmenter.prototype.segment = function (input) {
             let i;
-            if (input == null || input == undefined || input == '') {
+            if (input == null || input === '') {
                 return [];
             }
             const result = [];

@@ -31,13 +31,14 @@ final class Normalizer
      * @return array{line1: StreetLine, line2: ?StreetLine, city: string, region: Region, postal: PostalCode, country: CountryCode, digest: string}
      */
     public function normalize(
-        string $line1,
+        string  $line1,
         ?string $line2,
-        string $city,
-        string $region,
-        string $postal,
-        string $country
-    ): array {
+        string  $city,
+        string  $region,
+        string  $postal,
+        string  $country
+    ): array
+    {
         $line1Obj = new StreetLine($line1);
         $line2Obj = null;
         if ($line2 !== null) {
@@ -60,7 +61,7 @@ final class Normalizer
             $line1Obj->value(),
             $line2Obj?->value() ?? '',
             strtolower($city),
-            (string) $regionObj,
+            (string)$regionObj,
             $postalObj->value(),
             $countryObj->value(),
         ]));

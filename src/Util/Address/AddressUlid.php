@@ -33,7 +33,7 @@ final class AddressUlid implements AddressUlidInterface
     {
         // Simple Crockford Base32 without hyphens, 26 chars.
         $time = microtime(true);
-        $ms = (int) round($time * 1000);
+        $ms = (int)round($time * 1000);
         $random = random_bytes(10);
         $timePart = self::base32($ms);
         $randPart = self::base32FromBinary($random);

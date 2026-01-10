@@ -3,6 +3,7 @@
  * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
  */
 declare(strict_types=1);
+
 namespace App\Value\Address;
 
 /**
@@ -19,7 +20,10 @@ final class Line
     /**
      * @param string $s
      */
-    public function __construct(string $s) { $this->v = self::norm($s); }
+    public function __construct(string $s)
+    {
+        $this->v = self::norm($s);
+    }
 
     /**
      * @param string $s
@@ -33,5 +37,8 @@ final class Line
     /**
      * @return string
      */
-    public function __toString(): string { return $this->v; }
+    public function __toString(): string
+    {
+        return $this->v;
+    }
 }

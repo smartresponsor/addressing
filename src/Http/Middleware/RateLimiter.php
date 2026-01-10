@@ -3,6 +3,7 @@
  * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
  */
 declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use PDO;
@@ -47,7 +48,8 @@ final class RateLimiter
                 cnt INTEGER NOT NULL,
                 PRIMARY KEY (client, rkey)
             )');
-        } catch (Throwable $e) {}
+        } catch (Throwable $e) {
+        }
     }
 
     /**
@@ -62,12 +64,12 @@ final class RateLimiter
         $minWindow = $now - 60;
 
         $stmt = $this->pdo->prepare('SELECT ts, cnt FROM rate_limit WHERE client = :c AND rkey = :k');
-        $stmt->execute([':c'=>$client, ':k'=>$key]);
+        $stmt->execute([':c' => $client, ':k' => $key]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$row) {
             $stmt = $this->pdo->prepare('INSERT OR REPLACE INTO rate_limit (client,rkey,ts,cnt) VALUES (:c,:k,:t,1)');
-            $stmt->execute([':c'=>$client, ':k'=>$key, ':t'=>$now]);
+            $stmt->execute([':c' => $client, ':k' => $key, ':t' => $now]);
             return true;
         }
 
@@ -77,7 +79,7 @@ final class RateLimiter
         if ($ts < $minWindow) {
             // New window
             $stmt = $this->pdo->prepare('UPDATE rate_limit SET ts = :t, cnt = 1 WHERE client = :c AND rkey = :k');
-            $stmt->execute([':t'=>$now, ':c'=>$client, ':k'=>$key]);
+            $stmt->execute([':t' => $now, ':c' => $client, ':k' => $key]);
             return true;
         }
 
@@ -88,7 +90,7 @@ final class RateLimiter
         }
 
         $stmt = $this->pdo->prepare('UPDATE rate_limit SET cnt = :n WHERE client = :c AND rkey = :k');
-        $stmt->execute([':n'=>$cnt + 1, ':c'=>$client, ':k'=>$key]);
+        $stmt->execute([':n' => $cnt + 1, ':c' => $client, ':k' => $key]);
         return true;
     }
 }

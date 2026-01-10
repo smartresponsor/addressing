@@ -1,15 +1,18 @@
 Domain/ (root) — SmartResponsor overlay (NOT Symfony project structure).
 
 What lives here
+
 - Plugin manifests for ecosystem components (Health / Canon / AI)
 - Offline repo-local tools (PowerShell wrappers) under Domain/Tool/
 - Prompts and policies under Domain/Ai/prompt/
 
 What must NOT live here
+
 - Application code (entities, controllers, services, etc.)
 - Secrets/keys/tokens
 
 Quick start (PowerShell)
+
 1) Canon scan (writes JSON to report/):
    .\Domain\Tool\ai-scan.ps1
 
@@ -31,9 +34,11 @@ Quick start (PowerShell)
    .\Domain\Tool\ai-apply.ps1 -Patch report/address.patch
 
 Outputs
+
 - All generated artifacts go into ./report/ (gitignored).
 
 Safety
+
 - ai-plan.ps1 is plan-only.
 - ai-codex-review.ps1 is analysis-only.
 - ai-apply.ps1 requires SR_ALLOW_APPLY=1.

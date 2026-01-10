@@ -15,7 +15,7 @@ use App\RepositoryInterface\Address\AddressRepositoryInterface;
 
 final class AddressService
 {
-    public function __construct(private AddressRepositoryInterface $repo)
+    public function __construct(private readonly AddressRepositoryInterface $repo)
     {
     }
 
@@ -37,9 +37,10 @@ final class AddressService
         ?string $vendorId,
         ?string $countryCode,
         ?string $q,
-        int $limit,
+        int     $limit,
         ?string $cursor
-    ): array {
+    ): array
+    {
         return $this->repo->findPage($ownerId, $vendorId, $countryCode, $q, $limit, $cursor);
     }
 

@@ -3,6 +3,7 @@
  * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
  */
 declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 /**
@@ -19,7 +20,7 @@ final class IpGuard
     {
         $v = getenv($name);
         if ($v === false || trim($v) === '') return [];
-        $parts = array_filter(array_map('trim', explode(',', $v)), fn($s)=>$s!=='');
+        $parts = array_filter(array_map('trim', explode(',', $v)), fn($s) => $s !== '');
         return array_values($parts);
     }
 

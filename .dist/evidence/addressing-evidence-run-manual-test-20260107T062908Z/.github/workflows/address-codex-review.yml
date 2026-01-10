@@ -4,7 +4,7 @@ name: address-codex-review
 
 on:
   issue_comment:
-    types: [created]
+    types: [ created ]
 
 permissions:
   contents: read

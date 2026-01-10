@@ -26,7 +26,7 @@ if (!is_dir($path)) {
 $limitPdo = new PDO('sqlite:' . $path . '/rate-limit.sqlite');
 $limitPdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-$pgDsn = (string) (getenv('PG_DSN') ?: getenv('DB_DSN'));
+$pgDsn = (string)(getenv('PG_DSN') ?: getenv('DB_DSN'));
 if ($pgDsn === '') {
     ErrorMap::emit(500, 'missing_pg_dsn', [
         'hint' => 'Set PG_DSN (or DB_DSN) to a Postgres connection string.',
@@ -34,8 +34,8 @@ if ($pgDsn === '') {
     exit(0);
 }
 
-$pgUser = (string) (getenv('PG_USER') ?: '');
-$pgPass = (string) (getenv('PG_PASS') ?: '');
+$pgUser = (string)(getenv('PG_USER') ?: '');
+$pgPass = (string)(getenv('PG_PASS') ?: '');
 
 $pg = new PDO($pgDsn, $pgUser === '' ? null : $pgUser, $pgPass === '' ? null : $pgPass, [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

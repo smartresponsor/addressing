@@ -12,14 +12,23 @@ declare(strict_types=1);
  * @param string|null $d
  * @return string|null
  */
-function env(string $k, ?string $d=null): ?string { $v=getenv($k); return $v===false?$d:$v; }
+function env(string $k, ?string $d = null): ?string
+{
+    $v = getenv($k);
+    return $v === false ? $d : $v;
+}
 
-$dsn=env('MYSQL_DSN'); $user=env('MYSQL_USER'); $pass=env('MYSQL_PASS');
-if (!$dsn||!$user){ fwrite(STDERR, "MYSQL_DSN/MYSQL_USER are required\n"); exit(2); }
+$dsn = env('MYSQL_DSN');
+$user = env('MYSQL_USER');
+$pass = env('MYSQL_PASS');
+if (!$dsn || !$user) {
+    fwrite(STDERR, "MYSQL_DSN/MYSQL_USER are required\n");
+    exit(2);
+}
 
-$pdo=new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES=>false]);
+$pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
 
-$baseSql=file_get_contents(__DIR__.'/../sql/mysql/001_projection.sql');
+$baseSql = file_get_contents(__DIR__ . '/../sql/mysql/001_projection.sql');
 if ($baseSql === false) {
     fwrite(STDERR, "missing sql/mysql/001_projection.sql\n");
     exit(2);
@@ -39,7 +48,7 @@ function hasColumn(PDO $pdo, string $table, string $column): bool
     );
     $stmt->execute([':t' => $table, ':c' => $column]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    return isset($row['c']) && (int) $row['c'] > 0;
+    return isset($row['c']) && (int)$row['c'] > 0;
 }
 
 /**
@@ -55,7 +64,7 @@ function hasIndex(PDO $pdo, string $table, string $index): bool
     );
     $stmt->execute([':t' => $table, ':i' => $index]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    return isset($row['c']) && (int) $row['c'] > 0;
+    return isset($row['c']) && (int)$row['c'] > 0;
 }
 
 $table = 'address_projection';

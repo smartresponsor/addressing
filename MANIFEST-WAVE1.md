@@ -3,6 +3,7 @@
 Generated: 2025-10-28T07:05:38
 
 Includes overlay for early envelopes:
+
 - E1–E2 Value Objects: Line, Region, Postal, Country (src/Value/**)
 - E3 Normalizer: src/Service/Normalize/Normalizer.php
 - E4 Parser: src/Service/Parse/Parser.php
@@ -13,6 +14,7 @@ Includes overlay for early envelopes:
 - E9 API tests, ErrorMap, RateLimiter, Postman
 
 How to use (overlay repo):
+
 1) Unzip into your component root (preserving src/, tools/, tests/, public/, openapi/).
 2) If using SQLite demo: ensure tools/index/address-index.sqlite exists or let API create it.
 3) Run tests: composer install && composer run test

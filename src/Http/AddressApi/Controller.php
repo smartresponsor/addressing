@@ -38,7 +38,8 @@ final class Controller
     public function __construct(
         private readonly AddressRepository       $repo,
         private readonly AddressValidatedApplier $validatedApplier,
-    ) {
+    )
+    {
     }
 
     /**
@@ -58,7 +59,7 @@ final class Controller
     {
         $in = self::json($req);
 
-        $id = (string) new Ulid();
+        $id = (string)new Ulid();
         $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
 
         $a = new AddressData(
@@ -125,7 +126,7 @@ final class Controller
      */
     public function page(Request $req): JsonResponse
     {
-        $limit = (int) ($req->query->get('limit') ?? 25);
+        $limit = (int)($req->query->get('limit') ?? 25);
         if ($limit < 1) {
             $limit = 1;
         }
@@ -150,7 +151,7 @@ final class Controller
 
         $res = $this->repo->findPage($ownerId, $vendorId, $countryCode, $q, $limit, $cursor);
 
-        $items = array_map(fn (AddressInterface $a): array => self::toArray($a), $res['items']);
+        $items = array_map(fn(AddressInterface $a): array => self::toArray($a), $res['items']);
 
         return new JsonResponse([
             'items' => $items,
@@ -246,10 +247,10 @@ final class Controller
             return null;
         }
         if (is_int($in[$key]) || is_float($in[$key])) {
-            return (float) $in[$key];
+            return (float)$in[$key];
         }
         if (is_string($in[$key]) && is_numeric($in[$key])) {
-            return (float) $in[$key];
+            return (float)$in[$key];
         }
         throw new RuntimeException('invalid_' . $key);
     }

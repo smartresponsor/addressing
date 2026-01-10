@@ -7,7 +7,7 @@ declare(strict_types=1);
  * Owner: Marketing America Corp
  */
 
-$pg = new PDO(getenv('PG_DSN'), getenv('PG_USER'), getenv('PG_PASS'), [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
+$pg = new PDO(getenv('PG_DSN'), getenv('PG_USER'), getenv('PG_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
 $pending = (int)$pg->query('SELECT count(*) FROM address_outbox WHERE published_at IS NULL')->fetchColumn();
 $published = (int)$pg->query('SELECT count(*) FROM address_outbox WHERE published_at IS NOT NULL')->fetchColumn();

@@ -34,6 +34,6 @@ final class AddressValidatedTest extends TestCase
             'cityNorm' => 'b',
             'validatedAt' => '2025-12-30T00:00:00Z',
         ]);
-        static::assertSame($a->fingerprint(), $b->fingerprint());
+        AddressValidatedTest::assertSame($a->fingerprint(), $b->fingerprint());
     }
 }

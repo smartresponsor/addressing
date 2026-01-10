@@ -2,11 +2,11 @@
 -- Safe to re-run (idempotent via IF NOT EXISTS).
 
 ALTER TABLE address_entity
-    ADD COLUMN IF NOT EXISTS validation_raw JSONB NULL,
-    ADD COLUMN IF NOT EXISTS validation_verdict JSONB NULL,
-    ADD COLUMN IF NOT EXISTS validation_deliverable BOOLEAN NULL,
+    ADD COLUMN IF NOT EXISTS validation_raw         JSONB       NULL,
+    ADD COLUMN IF NOT EXISTS validation_verdict     JSONB       NULL,
+    ADD COLUMN IF NOT EXISTS validation_deliverable BOOLEAN     NULL,
     ADD COLUMN IF NOT EXISTS validation_granularity VARCHAR(64) NULL,
-    ADD COLUMN IF NOT EXISTS validation_quality INT NULL;
+    ADD COLUMN IF NOT EXISTS validation_quality     INT         NULL;
 
 CREATE INDEX IF NOT EXISTS idx_address_entity_validation_deliverable
     ON address_entity (validation_deliverable)

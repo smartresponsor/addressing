@@ -3,6 +3,7 @@
  * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
  */
 declare(strict_types=1);
+
 namespace App\Projection\AddressIndex;
 
 use PDO;
@@ -19,7 +20,10 @@ final class PdoRepository implements RepositoryInterface
     /**
      * @param \PDO $pdo
      */
-    public function __construct(private readonly PDO $pdo) { $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); }
+    public function __construct(private readonly PDO $pdo)
+    {
+        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    }
 
     /**
      * @param \App\Projection\AddressIndex\IndexRecord $r
@@ -38,10 +42,10 @@ final class PdoRepository implements RepositoryInterface
         $stmt = $this->pdo->prepare($sql);
         $arr = $r->toArray();
         $stmt->execute([
-            ':digest'=>$arr['digest'], ':line1'=>$arr['line1'], ':line2'=>$arr['line2'], ':city'=>$arr['city'],
-            ':region'=>$arr['region'], ':postal'=>$arr['postal'], ':country'=>$arr['country'],
-            ':lat'=>$arr['lat'], ':lon'=>$arr['lon'], ':display'=>$arr['display'], ':provider'=>$arr['provider'],
-            ':confidence'=>$arr['confidence'], ':geo_key'=>$arr['geo_key'], ':created_at'=>$arr['created_at'], ':updated_at'=>$arr['updated_at'],
+            ':digest' => $arr['digest'], ':line1' => $arr['line1'], ':line2' => $arr['line2'], ':city' => $arr['city'],
+            ':region' => $arr['region'], ':postal' => $arr['postal'], ':country' => $arr['country'],
+            ':lat' => $arr['lat'], ':lon' => $arr['lon'], ':display' => $arr['display'], ':provider' => $arr['provider'],
+            ':confidence' => $arr['confidence'], ':geo_key' => $arr['geo_key'], ':created_at' => $arr['created_at'], ':updated_at' => $arr['updated_at'],
         ]);
     }
 
@@ -52,7 +56,7 @@ final class PdoRepository implements RepositoryInterface
     public function getByDigest(string $digest): ?IndexRecord
     {
         $stmt = $this->pdo->prepare('SELECT * FROM address_index WHERE digest = :d LIMIT 1');
-        $stmt->execute([':d'=>$digest]);
+        $stmt->execute([':d' => $digest]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ? $this->hydrate($row) : null;
     }
@@ -77,7 +81,9 @@ final class PdoRepository implements RepositoryInterface
         $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
         $stmt->execute();
         $out = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) { $out[] = $this->hydrate($row); }
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $out[] = $this->hydrate($row);
+        }
         return $out;
     }
 

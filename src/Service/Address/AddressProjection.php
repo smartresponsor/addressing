@@ -111,7 +111,7 @@ SQL;
             ':validated_at' => $a->validatedAt(),
             ':dedupe_key' => $a->dedupeKey(),
             ':validation_fingerprint' => $a->validationFingerprint(),
-            ':validation_deliverable' => $deliverable === null ? null : (int) $deliverable,
+            ':validation_deliverable' => $deliverable === null ? null : (int)$deliverable,
             ':validation_granularity' => $a->validationGranularity(),
             ':validation_quality' => $a->validationQuality(),
             ':validation_raw' => $raw === null ? null : json_encode($raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),

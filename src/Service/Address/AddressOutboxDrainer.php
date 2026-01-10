@@ -102,13 +102,14 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
      * @return bool
      */
     private function post(
-        string $url,
-        array $data,
-        int $retryLimit,
-        int $timeoutSec,
-        int $backoffMs,
+        string  $url,
+        array   $data,
+        int     $retryLimit,
+        int     $timeoutSec,
+        int     $backoffMs,
         ?string &$error
-    ): bool {
+    ): bool
+    {
         $payload = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($payload === false) {
             $error = 'json: encode failed';

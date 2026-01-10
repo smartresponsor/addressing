@@ -3,6 +3,7 @@
  * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
  */
 declare(strict_types=1);
+
 namespace App\Value\Common;
 
 use InvalidArgumentException;
@@ -24,7 +25,9 @@ final class Country
     public function __construct(string $alpha2)
     {
         $c = strtoupper(preg_replace('/[^A-Za-z]/', '', $alpha2));
-        if (strlen($c) !== 2) { throw new InvalidArgumentException('Country must be 2 letters'); }
+        if (strlen($c) !== 2) {
+            throw new InvalidArgumentException('Country must be 2 letters');
+        }
         $this->code = $c;
     }
 
@@ -32,15 +35,24 @@ final class Country
      * @param string|null $alpha2
      * @return self
      */
-    public static function from(?string $alpha2): self { return new self($alpha2 ?? 'US'); }
+    public static function from(?string $alpha2): self
+    {
+        return new self($alpha2 ?? 'US');
+    }
 
     /**
      * @return string
      */
-    public function value(): string { return $this->code; }
+    public function value(): string
+    {
+        return $this->code;
+    }
 
     /**
      * @return string
      */
-    public function __toString(): string { return $this->code; }
+    public function __toString(): string
+    {
+        return $this->code;
+    }
 }

@@ -33,7 +33,8 @@ final readonly class AddressValidationVerdict implements JsonSerializable
         public ?int    $quality,
         /** @var array<string, mixed> */
         public array   $signal = [],
-    ) {
+    )
+    {
     }
 
     /**
@@ -52,7 +53,7 @@ final readonly class AddressValidationVerdict implements JsonSerializable
             if (is_bool($v)) {
                 $deliverable = $v;
             } elseif (is_int($v) || is_float($v)) {
-                $deliverable = ((int) $v) === 1;
+                $deliverable = ((int)$v) === 1;
             } elseif (is_string($v)) {
                 $vv = strtolower(trim($v));
                 if (in_array($vv, ['1', 'true', 'yes'], true)) {
@@ -75,9 +76,9 @@ final readonly class AddressValidationVerdict implements JsonSerializable
             if (is_int($q)) {
                 $quality = $q;
             } elseif (is_float($q)) {
-                $quality = (int) round($q);
+                $quality = (int)round($q);
             } elseif (is_string($q) && is_numeric($q)) {
-                $quality = (int) round((float) $q);
+                $quality = (int)round((float)$q);
             }
             if ($quality !== null) {
                 $quality = max(0, min(100, $quality));

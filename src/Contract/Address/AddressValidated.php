@@ -51,7 +51,8 @@ final readonly class AddressValidated implements JsonSerializable
         /** @var array<string, mixed>|null */
         public ?array                    $raw = null,
         public ?AddressValidationVerdict $verdict = null,
-    ) {
+    )
+    {
     }
 
     /**

@@ -54,7 +54,7 @@ interface AddressRepositoryInterface
         ?string $vendorId,
         ?string $countryCode,
         ?string $q,
-        int $limit,
+        int     $limit,
         ?string $cursor
     ): array;
 }

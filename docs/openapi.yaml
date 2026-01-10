@@ -110,7 +110,7 @@ components:
   schemas:
     AddressDTO:
       type: object
-      required: [city, country, street, zipcode]
+      required: [ city, country, street, zipcode ]
       properties:
         city: { type: string }
         country: { type: string }

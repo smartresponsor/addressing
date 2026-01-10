@@ -34,8 +34,8 @@ final class AddressServiceTest extends TestCase
         $this->service->create($address);
 
         $found = $this->repo->get('addr-1');
-        $this->assertNotNull($found);
-        $this->assertSame('123 Main St', $found->line1());
+        static::assertNotNull($found);
+        static::assertSame('123 Main St', $found->line1());
     }
 
     public function testUpdateChangesAddress(): void
@@ -47,18 +47,18 @@ final class AddressServiceTest extends TestCase
         $this->service->update($updated);
 
         $found = $this->repo->get('addr-2');
-        $this->assertNotNull($found);
-        $this->assertSame('456 Broad St', $found->line1());
+        static::assertNotNull($found);
+        static::assertSame('456 Broad St', $found->line1());
     }
 
     public function testSearchReturnsMatchingRows(): void
     {
-        $this->service->create($this->makeAddress('addr-3', line1: '123 Main St'));
+        $this->service->create($this->makeAddress('addr-3'));
         $this->service->create($this->makeAddress('addr-4', line1: '500 Elm St'));
 
         $result = $this->service->search(null, null, null, 'Main', 10, null);
-        $this->assertCount(1, $result['items']);
-        $this->assertSame('123 Main St', $result['items'][0]->line1());
+        static::assertCount(1, $result['items']);
+        static::assertSame('123 Main St', $result['items'][0]->line1());
     }
 
     public function testDedupeFindsExistingAddress(): void
@@ -66,8 +66,8 @@ final class AddressServiceTest extends TestCase
         $this->service->create($this->makeAddress('addr-5', dedupeKey: 'dedupe-1'));
 
         $found = $this->service->dedupe('dedupe-1');
-        $this->assertNotNull($found);
-        $this->assertSame('addr-5', $found->id());
+        static::assertNotNull($found);
+        static::assertSame('addr-5', $found->id());
     }
 
     public function testOutboxEventRecordedOnCreate(): void
@@ -77,19 +77,20 @@ final class AddressServiceTest extends TestCase
         $row = $this->pdo->query('SELECT event_name, event_version, payload FROM address_outbox ORDER BY id ASC')
             ->fetch(PDO::FETCH_ASSOC);
 
-        $this->assertNotFalse($row);
-        $this->assertSame('AddressCreated', $row['event_name']);
-        $this->assertSame(1, (int) $row['event_version']);
-        $payload = json_decode((string) $row['payload'], true);
-        $this->assertSame('addr-6', $payload['id'] ?? null);
+        static::assertNotFalse($row);
+        static::assertSame('AddressCreated', $row['event_name']);
+        static::assertSame(1, (int)$row['event_version']);
+        $payload = json_decode((string)$row['payload'], true);
+        static::assertSame('addr-6', $payload['id'] ?? null);
     }
 
     private function makeAddress(
-        string $id,
-        string $line1 = '123 Main St',
+        string  $id,
+        string  $line1 = '123 Main St',
         ?string $dedupeKey = null,
         ?string $updatedAt = null
-    ): AddressData {
+    ): AddressData
+    {
         $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
 
         return new AddressData(

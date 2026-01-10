@@ -59,7 +59,7 @@ final readonly class IndexProjector
     private function handle(string $line1, ?string $line2, string $city, string $region, string $postal, string $country): void
     {
         $norm = $this->normalizer->normalize($line1, $line2, $city, $region, $postal, $country);
-        $rec = (new Projector())->project($norm, null);
+        $rec = (new Projector())->project($norm);
         $this->repo->upsert($rec);
     }
 }

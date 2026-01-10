@@ -3,6 +3,7 @@
  * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
  */
 declare(strict_types=1);
+
 namespace App\Tools\Log;
 
 use DateTimeImmutable;
@@ -44,6 +45,6 @@ final class StructuredLogger
             return;
         }
         $line .= "\n";
-        @file_put_contents($this->path, $line, FILE_APPEND|LOCK_EX);
+        @file_put_contents($this->path, $line, FILE_APPEND | LOCK_EX);
     }
 }

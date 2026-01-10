@@ -7,9 +7,9 @@ declare(strict_types=1);
  * Owner: Marketing America Corp
  */
 
-$ttlDays = (int) (getenv('ADDRESS_DELETE_TTL_DAYS') ?: 30);
-$pg = new PDO(getenv('PG_DSN'), getenv('PG_USER'), getenv('PG_PASS'), [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
-$my = new PDO(getenv('MY_DSN'), getenv('MY_USER'), getenv('MY_PASS'), [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
+$ttlDays = (int)(getenv('ADDRESS_DELETE_TTL_DAYS') ?: 30);
+$pg = new PDO(getenv('PG_DSN'), getenv('PG_USER'), getenv('PG_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$my = new PDO(getenv('MY_DSN'), getenv('MY_USER'), getenv('MY_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
 $pg->beginTransaction();
 try {
@@ -20,7 +20,7 @@ try {
 
     if ($ids) {
         // hard delete from Postgres
-        $in = implode(',', array_map(fn($i)=>$pg->quote($i), $ids));
+        $in = implode(',', array_map(fn($i) => $pg->quote($i), $ids));
         $pg->exec("DELETE FROM address_entity WHERE id IN ($in)");
         // purge projection
         $inMy = implode(',', array_fill(0, count($ids), '?'));
@@ -28,9 +28,9 @@ try {
         $stmt->execute($ids);
     }
     $pg->commit();
-    echo 'Purged ' .count($ids)." rows (TTL {$ttlDays} days)\n";
+    echo 'Purged ' . count($ids) . " rows (TTL {$ttlDays} days)\n";
 } catch (Throwable $e) {
     $pg->rollBack();
-    fwrite(STDERR, 'Error: ' .$e->getMessage()."\n");
+    fwrite(STDERR, 'Error: ' . $e->getMessage() . "\n");
     exit(1);
 }

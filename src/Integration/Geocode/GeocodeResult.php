@@ -23,11 +23,12 @@ final readonly class GeocodeResult
      * @param float|null $confidence
      */
     public function __construct(
-        public ?float $lat,
-        public ?float $lon,
+        public ?float  $lat,
+        public ?float  $lon,
         public ?string $displayName,
         public ?string $provider,
-        public ?float $confidence,
-    ) {
+        public ?float  $confidence,
+    )
+    {
     }
 }

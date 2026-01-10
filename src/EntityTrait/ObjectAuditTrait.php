@@ -28,17 +28,17 @@ trait ObjectAuditTrait
     protected ?int $id = null;
 
     #[ORM\Column(name: 'published', type: 'boolean', options: ['default' => true])]
-    #[Groups(['read','write'])]
+    #[Groups(['read', 'write'])]
     private bool $published = true;
 
-    #[ORM\Column(type:'boolean')]
-    private bool $isDeleted=false;
+    #[ORM\Column(type: 'boolean')]
+    private bool $isDeleted = false;
 
-    #[ORM\Column(type:'datetime_immutable', nullable:true)]
-    private ?DateTimeImmutable $deletedAt=null;
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?DateTimeImmutable $deletedAt = null;
 
-    #[ORM\Column(type:'datetime_immutable', nullable:true)]
-    private ?DateTimeImmutable $deletedBy=null;
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?DateTimeImmutable $deletedBy = null;
 
     #[ORM\Column(name: 'slug', type: 'string', unique: true)]
     private string $slug;
@@ -48,7 +48,7 @@ trait ObjectAuditTrait
 
     #[ORM\Column(type: 'string', length: 255, unique: true)]
     #[Assert\NotBlank]
-    #[Groups(['read','write'])]
+    #[Groups(['read', 'write'])]
     private string $token;
 
     #[ORM\Column(type: 'json', nullable: true)]
@@ -92,11 +92,11 @@ trait ObjectAuditTrait
     protected int $version = 1;
 
     #[ORM\Column(type: 'datetime_immutable')]
-    #[Groups(['read','write'])]
+    #[Groups(['read', 'write'])]
     private ?DateTimeImmutable $expiresAt = null;
 
     #[ORM\Column(type: 'json', nullable: true)]
-    #[Groups(['read','write'])]
+    #[Groups(['read', 'write'])]
     private ?array $ipRestriction = [];
 
     #region Lifecycle
@@ -232,19 +232,29 @@ trait ObjectAuditTrait
     /**
      * @return void
      */
-    public function softDelete(): void { $this->isDeleted=true; $this->deletedAt=new DateTimeImmutable(); }
+    public function softDelete(): void
+    {
+        $this->isDeleted = true;
+        $this->deletedAt = new DateTimeImmutable();
+    }
 
     /**
      * @return void
      */
     #[ORM\PrePersist]
-    public function onPrePersist(): void { $this->createdAt=new DateTimeImmutable(); }
+    public function onPrePersist(): void
+    {
+        $this->createdAt = new DateTimeImmutable();
+    }
 
     /**
      * @return void
      */
     #[ORM\PreUpdate]
-    public function onPreUpdate(): void { $this->updatedAt=new DateTimeImmutable(); }
+    public function onPreUpdate(): void
+    {
+        $this->updatedAt = new DateTimeImmutable();
+    }
 
     /**
      * @return int|null
@@ -453,7 +463,6 @@ trait ObjectAuditTrait
     {
         $this->lockedBy = $lockedBy;
     }
-
 
 
 }

@@ -25,6 +25,8 @@ use RuntimeException;
  */
 final class AddressValidatedApplier implements AddressValidatedApplierInterface
 {
+    private $encodePayload;
+
     /**
      * @param \PDO $pdo
      */
@@ -170,19 +172,22 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param array $payload
      */
     private function appendOutbox(array $payload): void
     {
-<<<<<<< HEAD
-        $driver = (string) $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-        $payloadExpr = $driver === 'pgsql' ? ':payload::jsonb' : ':payload';
-=======
         $payloadJson = $this->encodePayload($payload);
->>>>>>> origin/master
+
+        $driver = (string) $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $payloadExpr = $driver === 'pgsql'
+            ? ':payload::jsonb'
+            : ':payload';
+
         $stmt = $this->pdo->prepare(
-            "INSERT INTO address_outbox(event_name, event_version, payload) VALUES (:name, :ver, {$payloadExpr})"
+            "INSERT INTO address_outbox (event_name, event_version, payload)
+         VALUES (:name, :ver, {$payloadExpr})"
         );
+
         $stmt->execute([
             ':name' => 'AddressValidatedApplied',
             ':ver' => 1,
@@ -190,8 +195,9 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
         ]);
     }
 
+
     /**
-     * @param array<string, mixed> $payload
+     * @param array $payload
      * @return string
      */
     private function encodePayload(array $payload): string

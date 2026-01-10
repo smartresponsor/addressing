@@ -1,24 +1,32 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 
 param(
-  [Parameter(Mandatory = $true, Position = 0)]
-  [string]$Action,
-  [Parameter(ValueFromRemainingArguments = $true)]
-  [string[]]$Arg
+    [Parameter(Mandatory = $true, Position = 0)]
+    [string]$Action,
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$Arg
 )
 
 $ErrorActionPreference = "Stop"
 
-function Resolve-Shell {
-  $cmd = Get-Command pwsh -ErrorAction SilentlyContinue
-  if ($cmd -and $cmd.Source) { return "pwsh" }
-  $cmd = Get-Command powershell -ErrorAction SilentlyContinue
-  if ($cmd -and $cmd.Source) { return "powershell" }
-  throw "No PowerShell executable found (pwsh or powershell)."
+function Resolve-Shell
+{
+    $cmd = Get-Command pwsh -ErrorAction SilentlyContinue
+    if ($cmd -and $cmd.Source)
+    {
+        return "pwsh"
+    }
+    $cmd = Get-Command powershell -ErrorAction SilentlyContinue
+    if ($cmd -and $cmd.Source)
+    {
+        return "powershell"
+    }
+    throw "No PowerShell executable found (pwsh or powershell)."
 }
 
-function Print-Help {
-  $txt = @"
+function Print-Help
+{
+    $txt = @"
 Domain tool runner
 
 Usage:
@@ -36,57 +44,86 @@ Notes:
 - All commands are repo-local and should not modify application code.
 - Canon scan is optional by default. Set SR_CANON_REQUIRED=1 to enforce.
 "@
-  Write-Host $txt
+    Write-Host $txt
 }
 
-function Resolve-ToolDir {
-  $d = $PSScriptRoot
-  if ([string]::IsNullOrWhiteSpace($d)) {
-    if (-not [string]::IsNullOrWhiteSpace($PSCommandPath)) {
-      $d = Split-Path -Parent $PSCommandPath
+function Resolve-ToolDir
+{
+    $d = $PSScriptRoot
+    if ( [string]::IsNullOrWhiteSpace($d))
+    {
+        if (-not [string]::IsNullOrWhiteSpace($PSCommandPath))
+        {
+            $d = Split-Path -Parent $PSCommandPath
+        }
     }
-  }
-  if ([string]::IsNullOrWhiteSpace($d)) {
-    if ($MyInvocation -and $MyInvocation.MyCommand -and $MyInvocation.MyCommand.Path) {
-      $d = Split-Path -Parent $MyInvocation.MyCommand.Path
+    if ( [string]::IsNullOrWhiteSpace($d))
+    {
+        if ($MyInvocation -and $MyInvocation.MyCommand -and $MyInvocation.MyCommand.Path)
+        {
+            $d = Split-Path -Parent $MyInvocation.MyCommand.Path
+        }
     }
-  }
-  if ([string]::IsNullOrWhiteSpace($d)) {
-    $d = Join-Path (Get-Location) "Domain/Tool"
-  }
-  if ([string]::IsNullOrWhiteSpace($d)) {
-    throw "Cannot resolve Domain/Tool directory path."
-  }
-  return $d
+    if ( [string]::IsNullOrWhiteSpace($d))
+    {
+        $d = Join-Path (Get-Location) "Domain/Tool"
+    }
+    if ( [string]::IsNullOrWhiteSpace($d))
+    {
+        throw "Cannot resolve Domain/Tool directory path."
+    }
+    return $d
 }
 
 $ToolDir = Resolve-ToolDir
 
-function Call-Tool([string]$Name, [string[]]$A) {
-  $p = Join-Path $ToolDir $Name
-  if (-not (Test-Path $p)) { throw "Tool not found: Domain/Tool/$Name" }
-  $sh = Resolve-Shell
-  if ($sh -eq "pwsh") {
-    & pwsh -NoProfile -File $p @A
-  } else {
-    & powershell -NoProfile -ExecutionPolicy Bypass -File $p @A
-  }
-  exit $LASTEXITCODE
+function Call-Tool([string]$Name, [string[]]$A)
+{
+    $p = Join-Path $ToolDir $Name
+    if (-not(Test-Path $p))
+    {
+        throw "Tool not found: Domain/Tool/$Name"
+    }
+    $sh = Resolve-Shell
+    if ($sh -eq "pwsh")
+    {
+        & pwsh -NoProfile -File $p @A
+    }
+    else
+    {
+        & powershell -NoProfile -ExecutionPolicy Bypass -File $p @A
+    }
+    exit $LASTEXITCODE
 }
 
 $act = $Action.ToLowerInvariant()
 
-switch ($act) {
-  "help" { Print-Help; exit 0 }
-  "doctor" { Call-Tool "doctor.ps1" $Arg }
-  "scan" { Call-Tool "ai-scan.ps1" $Arg }
-  "health" { Call-Tool "health-sample.ps1" $Arg }
-  "validate" { Call-Tool "report-validate.ps1" $Arg }
-  "plan" { Call-Tool "ai-plan.ps1" $Arg }
-  "codex" { Call-Tool "ai-codex-review.ps1" $Arg }
-  default {
-    Write-Host "Unknown action: $Action"
-    Print-Help
-    exit 2
-  }
+switch ($act)
+{
+    "help" {
+        Print-Help; exit 0
+    }
+    "doctor" {
+        Call-Tool "doctor.ps1" $Arg
+    }
+    "scan" {
+        Call-Tool "ai-scan.ps1" $Arg
+    }
+    "health" {
+        Call-Tool "health-sample.ps1" $Arg
+    }
+    "validate" {
+        Call-Tool "report-validate.ps1" $Arg
+    }
+    "plan" {
+        Call-Tool "ai-plan.ps1" $Arg
+    }
+    "codex" {
+        Call-Tool "ai-codex-review.ps1" $Arg
+    }
+    default {
+        Write-Host "Unknown action: $Action"
+        Print-Help
+        exit 2
+    }
 }

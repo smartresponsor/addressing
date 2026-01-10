@@ -1,7 +1,9 @@
 # Changelog
 
 ## [1.0.0] - 2025-10-04
+
 ### Added
+
 - Address domain entities, repositories, validators.
 - AddressEngine with strategies (UA, CA, AU).
 - AddressFormatter facade + factory + contract.
@@ -12,8 +14,10 @@
 - Dockerfile for Allure Reports.
 
 ### Fixed
+
 - Namespace cleanup in Format/Contract/Factory/Strategy.
 - Refactoring legacy `AddressFormatStrategy*` → `AddressFormatter*`.
 
 ### Notes
+
 - First stable commercial-ready release.

@@ -29,13 +29,14 @@ final class AddressUpdatedEvent implements AddressEventInterface
      * @param string $country
      */
     public function __construct(
-        public readonly string $line1,
+        public readonly string  $line1,
         public readonly ?string $line2,
-        public readonly string $city,
-        public readonly string $region,
-        public readonly string $postal,
-        public readonly string $country
-    ) {
+        public readonly string  $city,
+        public readonly string  $region,
+        public readonly string  $postal,
+        public readonly string  $country
+    )
+    {
         $this->at = new DateTimeImmutable('now');
     }
 

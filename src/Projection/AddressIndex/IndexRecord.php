@@ -3,6 +3,7 @@
  * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
  */
 declare(strict_types=1);
+
 namespace App\Projection\AddressIndex;
 
 use App\Integration\Geocode\GeocodeResult;
@@ -54,7 +55,9 @@ final readonly class IndexRecord
         public string  $geoKey,
         public string  $createdAt,
         public string  $updatedAt,
-    ) { }
+    )
+    {
+    }
 
     /**
      * @param float|null $lat
@@ -77,11 +80,11 @@ final readonly class IndexRecord
         $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
         return new self(
             $norm['digest'],
-            (string) $norm['line1'],
-            $norm['line2'] !== null ? (string) $norm['line2'] : null,
+            (string)$norm['line1'],
+            $norm['line2'] !== null ? (string)$norm['line2'] : null,
             (string)$norm['city'],
-            (string) $norm['region'],
-            (string) $norm['postal'],
+            (string)$norm['region'],
+            (string)$norm['postal'],
             $norm['country']->value(),
             $lat,
             $lon,

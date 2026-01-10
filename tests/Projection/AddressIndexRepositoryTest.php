@@ -3,8 +3,9 @@
  * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
  */
 declare(strict_types=1);
+
 use PHPUnit\Framework\TestCase;
-use App\Projection\AddressIndex\{IndexRecord,PdoRepository};
+use App\Projection\AddressIndex\{IndexRecord, PdoRepository};
 
 /**
  *
@@ -53,10 +54,10 @@ final class AddressIndexRepositoryTest extends TestCase
         );
         $this->repo->upsert($r);
         $got = $this->repo->getByDigest($r->digest);
-        static::assertNotNull($got);
-        static::assertSame('US', $got->country);
-        static::assertSame('Houston', $got->city);
+        AddressIndexRepositoryTest::assertNotNull($got);
+        AddressIndexRepositoryTest::assertSame('US', $got->country);
+        AddressIndexRepositoryTest::assertSame('Houston', $got->city);
         $list = $this->repo->search('Hou', 'US', 10);
-        static::assertGreaterThanOrEqual(1, count($list));
+        AddressIndexRepositoryTest::assertGreaterThanOrEqual(1, count($list));
     }
 }

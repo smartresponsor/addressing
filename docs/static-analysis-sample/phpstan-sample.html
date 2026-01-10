@@ -1,28 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>PHPStan Report Sample</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h1 { color: rgb(79, 91, 147); }
-    .issue { margin: 10px 0; padding: 10px; border: 1px solid rgb(204, 204, 204); border-radius: 6px; }
-    .error { background: rgb(255, 224, 224); }
-    .warning { background: rgb(255, 243, 205); }
-  </style>
+    <meta charset="UTF-8">
+    <title>PHPStan Report Sample</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            color: rgb(79, 91, 147);
+        }
+
+        .issue {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid rgb(204, 204, 204);
+            border-radius: 6px;
+        }
+
+        .error {
+            background: rgb(255, 224, 224);
+        }
+
+        .warning {
+            background: rgb(255, 243, 205);
+        }
+    </style>
 </head>
 <body>
-  <h1>PHPStan Report – Sample</h1>
-  <p>Пример отчёта статического анализа PHPStan.</p>
+<h1>PHPStan Report – Sample</h1>
+<p>Пример отчёта статического анализа PHPStan.</p>
 
-  <div class="issue error">
+<div class="issue error">
     <strong>src/Service/Address/AddressService.php:42</strong><br>
     Call to method <code>getCity()</code> on an unknown class <code>AddressCity</code>.
-  </div>
+</div>
 
-  <div class="issue warning">
+<div class="issue warning">
     <strong>src/Entity/Address/Address.php:15</strong><br>
     Property <code>$zipcode</code> has no typehint specified.
-  </div>
+</div>
 </body>
 </html>

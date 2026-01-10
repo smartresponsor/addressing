@@ -22,7 +22,7 @@ use Throwable;
 final class InMemoryAddressEventDispatcher implements AddressEventDispatcherInterface
 {
     /**
-     * @var array<string, list<callable(AddressEventInterface): void>>
+     * @var array<list<callable(AddressEventInterface): void>>
      */
     private array $listener = [];
 

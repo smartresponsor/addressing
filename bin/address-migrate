@@ -12,10 +12,20 @@ declare(strict_types=1);
  * @param string|null $d
  * @return string|null
  */
-function env(string $k, ?string $d=null): ?string { $v=getenv($k); return $v===false?$d:$v; }
-$dsn=env('PG_DSN'); $user=env('PG_USER'); $pass=env('PG_PASS');
-if (!$dsn||!$user){ fwrite(STDERR, "PG_DSN/PG_USER are required\n"); exit(2); }
-$pdo=new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
+function env(string $k, ?string $d = null): ?string
+{
+    $v = getenv($k);
+    return $v === false ? $d : $v;
+}
+
+$dsn = env('PG_DSN');
+$user = env('PG_USER');
+$pass = env('PG_PASS');
+if (!$dsn || !$user) {
+    fwrite(STDERR, "PG_DSN/PG_USER are required\n");
+    exit(2);
+}
+$pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 $sqlDir = __DIR__ . '/../sql/postgres';
 if (!is_dir($sqlDir)) {
     fwrite(STDERR, "missing sql directory\n");

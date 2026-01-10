@@ -180,7 +180,7 @@
                                     r = m - 1;
                                 } else {
                                     ans = m;
-                                    if (pos == LEFT) {
+                                    if (pos === LEFT) {
                                         r = m - 1;
                                     } else {
                                         l = m + 1;
@@ -192,7 +192,7 @@
                     },
 
                     isFinal: function (acceptor) {
-                        return this.dict[acceptor.l].length == acceptor.strOffset;
+                        return this.dict[acceptor.l].length === acceptor.strOffset;
                     },
 
                     createAcceptor: function () {
@@ -236,7 +236,7 @@
 
                     sortuniq: function (a) {
                         return a.sort().filter(function (item, pos, arr) {
-                            return !pos || item != arr[pos - 1];
+                            return !pos || item !== arr[pos - 1];
                         })
                     },
 
@@ -312,8 +312,8 @@
                         strOffset: 0,
                         isFinal: false,
                         transit: function (ch) {
-                            if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' ||
-                                ch == '\u00A0' || ch == '\u2003'//nbsp and emsp
+                            if (ch === ' ' || ch === '\t' || ch === '\r' || ch === '\n' ||
+                                ch === '\u00A0' || ch === '\u2003'//nbsp and emsp
                             ) {
                                 this.isFinal = true;
                                 this.strOffset++;
@@ -337,7 +337,7 @@
                         strOffset: 0,
                         isFinal: false,
                         transit: function (ch) {
-                            if (this.strOffset == 0 && ch.match(/^[\@\(\)\/\,\-\."`]$/)) {
+                            if (this.strOffset === 0 && ch.match(/^[\@\(\)\/\,\-\."`]$/)) {
                                 this.isFinal = true;
                                 this.strOffset++;
                             } else {
@@ -389,7 +389,7 @@
                             type: acceptor.type
                         };
 
-                        if (acceptor.type == 'PART') {
+                        if (acceptor.type === 'PART') {
                             for (let j = p + 1; j <= i; j++) {
                                 path[j].merge = p;
                             }
@@ -406,7 +406,7 @@
                 fallback: function (path, leftBoundary, text, i) {
                     const _info = path[leftBoundary];
                     if (text[i].match(/[\u0E48-\u0E4E]/)) {
-                        if (leftBoundary != 0)
+                        if (leftBoundary !== 0)
                             leftBoundary = path[leftBoundary].p;
                         return {
                             p: leftBoundary,
@@ -459,10 +459,10 @@
                         } else {
                             if (path.unk < selectedPath.unk)
                                 return path;
-                            if (path.unk == selectedPath.unk) {
+                            if (path.unk === selectedPath.unk) {
                                 if (path.mw < selectedPath.mw)
                                     return path
-                                if (path.mw == selectedPath.mw) {
+                                if (path.mw === selectedPath.mw) {
                                     if (path.w < selectedPath.w)
                                         return path;
                                 }
@@ -488,7 +488,7 @@
                 if (pat.length <= offset)
                     return false;
                 const _ch = pat[offset];
-                return _ch == ch ||
+                return _ch === ch ||
                     (_ch.match(/[กข]/) && ch.match(/[ก-ฮ]/)) ||
                     (_ch.match(/[มบ]/) && ch.match(/[ก-ฮ]/)) ||
                     (_ch.match(/\u0E49/) && ch.match(/[\u0E48-\u0E4B]/));
@@ -502,7 +502,7 @@
                         isFinal: false,
                         transit: function (ch) {
                             if (isMatch(Rule0.pat, this.strOffset, ch)) {
-                                this.isFinal = (this.strOffset + 1 == Rule0.pat.length);
+                                this.isFinal = (this.strOffset + 1 === Rule0.pat.length);
                                 this.strOffset++;
                             } else {
                                 this.isError = true;
@@ -534,7 +534,7 @@
                             if (this.patterns.length > 0) {
                                 const len = 1 + offset;
                                 this.isFinal = this.patterns.some(function (pat) {
-                                    return pat.length == len;
+                                    return pat.length === len;
                                 });
                                 this.strOffset++;
                             } else {
@@ -852,14 +852,14 @@
 // assert.equal(actual, expected, message_opt);
 
             assert.equal = function equal(actual, expected, message) {
-                if (actual != expected) fail(actual, expected, message, '==', assert.equal);
+                if (actual !== expected) fail(actual, expected, message, '==', assert.equal);
             };
 
 // 6. The non-equality assertion tests for whether two objects are not equal
 // with != assert.notEqual(actual, expected, message_opt);
 
             assert.notEqual = function notEqual(actual, expected, message) {
-                if (actual == expected) {
+                if (actual === expected) {
                     fail(actual, expected, message, '!=', assert.notEqual);
                 }
             };
@@ -879,7 +879,7 @@
                     return true;
 
                 } else if (util.isBuffer(actual) && util.isBuffer(expected)) {
-                    if (actual.length != expected.length) return false;
+                    if (actual.length !== expected.length) return false;
 
                     for (let i = 0; i < actual.length; i++) {
                         if (actual[i] !== expected[i]) return false;
@@ -905,7 +905,7 @@
                     // 7.4. Other pairs that do not both pass typeof value == 'object',
                     // equivalence is determined by ==.
                 } else if (!util.isObject(actual) && !util.isObject(expected)) {
-                    return actual == expected;
+                    return actual === expected;
 
                     // 7.5 For all other Object pairs, including Array objects, equivalence is
                     // determined by having the same number of owned properties (as verified
@@ -919,7 +919,7 @@
             }
 
             function isArguments(object) {
-                return Object.prototype.toString.call(object) == '[object Arguments]';
+                return Object.prototype.toString.call(object) === '[object Arguments]';
             }
 
             function objEquiv(a, b) {
@@ -945,14 +945,14 @@
                 let key, i;
                 // having the same number of owned properties (keys incorporates
                 // hasOwnProperty)
-                if (ka.length != kb.length)
+                if (ka.length !== kb.length)
                     return false;
                 //the same set of keys (although not necessarily the same order),
                 ka.sort();
                 kb.sort();
                 //~~~cheap key test
                 for (i = ka.length - 1; i >= 0; i--) {
-                    if (ka[i] != kb[i])
+                    if (ka[i] !== kb[i])
                         return false;
                 }
                 //equivalent values for every corresponding key, and
@@ -1102,10 +1102,10 @@
                     left = str.length;
 
                     while (i >= 0 && !result) {
-                        if (i == ai) {
+                        if (i === ai) {
                             begs.push(i);
                             ai = str.indexOf(a, i + 1);
-                        } else if (begs.length == 1) {
+                        } else if (begs.length === 1) {
                             result = [begs.pop(), bi];
                         } else {
                             beg = begs.pop();
@@ -1142,7 +1142,7 @@
             const escPeriod = '\0PERIOD' + Math.random() + '\0';
 
             function numeric(str) {
-                return parseInt(str, 10) == str
+                return parseInt(str, 10) === str
                     ? parseInt(str, 10)
                     : str.charCodeAt(0);
             }
@@ -1284,7 +1284,7 @@
                     const x = numeric(n[0]);
                     const y = numeric(n[1]);
                     const width = Math.max(n[0].length, n[1].length);
-                    let incr = n.length == 3
+                    let incr = n.length === 3
                         ? Math.abs(numeric(n[2]))
                         : 1;
                     let test = lte;
@@ -1876,7 +1876,7 @@
 
 // lotta situps...
                 function makeAbs(self, f) {
-                    let abs = f;
+                    let abs;
                     if (f.charAt(0) === '/') {
                         abs = path.join(self.root, f)
                     } else if (isAbsolute(f) || f === '') {
@@ -5493,7 +5493,7 @@
                         previous = options.leading === false ? 0 : _.now();
                         timeout = null;
                         result = func.apply(context, args);
-                        if (!timeout) context = args = null;
+                        if (true) context = args = null;
                     };
                     return function () {
                         const now = _.now();
@@ -5532,7 +5532,7 @@
                             timeout = null;
                             if (!immediate) {
                                 result = func.apply(context, args);
-                                if (!timeout) context = args = null;
+                                if (true) context = args = null;
                             }
                         }
                     };
@@ -6091,7 +6091,7 @@
 
                 // Generate a unique integer id (unique within the entire client session).
                 // Useful for temporary DOM ids.
-                const idCounter = 0;
+                let idCounter = 0;
                 _.uniqueId = function (prefix) {
                     const id = ++idCounter + '';
                     return prefix ? prefix + id : id;
@@ -6580,7 +6580,7 @@
                         base = ' ' + formatError(value);
                     }
 
-                    if (keys.length === 0 && (!array || value.length == 0)) {
+                    if (keys.length === 0 && (!array || value.length === 0)) {
                         return braces[0] + base + braces[1];
                     }
 
@@ -6715,7 +6715,7 @@
 
 
                 function reduceToSingleString(output, base, braces) {
-                    const numLinesEst = 0;
+                    let numLinesEst = 0;
                     const length = output.reduce(function (prev, cur) {
                         numLinesEst++;
                         if (cur.indexOf('\n') >= 0) numLinesEst++;
