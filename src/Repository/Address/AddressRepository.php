@@ -19,16 +19,12 @@ use RuntimeException;
 /**
  *
  */
-
-/**
- *
- */
-final class AddressRepository implements AddressRepositoryInterface
+final readonly class AddressRepository implements AddressRepositoryInterface
 {
     /**
      * @param \PDO $pdo
      */
-    public function __construct(private readonly PDO $pdo)
+    public function __construct(private PDO $pdo)
     {
     }
 
@@ -150,7 +146,7 @@ SQL;
     public function findPage(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, int $limit, ?string $cursor): array
     {
         $limit = max(1, min(200, $limit));
-        $driver = (string) $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $driver = (string)$this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
         $params = [];
         $where = ['deleted_at IS NULL'];
 
@@ -185,13 +181,13 @@ SQL;
         $stmt->execute();
 
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $items = array_map(fn (array $r): AddressInterface => $this->map($r), $rows);
+        $items = array_map(fn(array $r): AddressInterface => $this->map($r), $rows);
 
         $nextCursor = null;
         if (count($rows) === $limit && $rows !== []) {
             $last = end($rows);
             if (is_array($last) && isset($last['id'])) {
-                $nextCursor = (string) $last['id'];
+                $nextCursor = (string)$last['id'];
             }
         }
 
@@ -240,40 +236,40 @@ SQL;
         $validationVerdict = $this->decodeJsonNullable($r['validation_verdict'] ?? null);
         $validationDeliverable = null;
         if (array_key_exists('validation_deliverable', $r) && $r['validation_deliverable'] !== null) {
-            $validationDeliverable = ((int) $r['validation_deliverable']) === 1;
+            $validationDeliverable = ((int)$r['validation_deliverable']) === 1;
         }
         $validationGranularity = array_key_exists('validation_granularity', $r) && $r['validation_granularity'] !== null
-            ? (string) $r['validation_granularity']
+            ? (string)$r['validation_granularity']
             : null;
         $validationQuality = array_key_exists('validation_quality', $r) && $r['validation_quality'] !== null
-            ? (int) $r['validation_quality']
+            ? (int)$r['validation_quality']
             : null;
 
         return new AddressData(
-            (string) $r['id'],
-            $r['owner_id'] !== null ? (string) $r['owner_id'] : null,
-            $r['vendor_id'] !== null ? (string) $r['vendor_id'] : null,
-            (string) $r['line1'],
-            $r['line2'] !== null ? (string) $r['line2'] : null,
-            (string) $r['city'],
-            $r['region'] !== null ? (string) $r['region'] : null,
-            $r['postal_code'] !== null ? (string) $r['postal_code'] : null,
-            (string) $r['country_code'],
-            $r['line1_norm'] !== null ? (string) $r['line1_norm'] : null,
-            $r['city_norm'] !== null ? (string) $r['city_norm'] : null,
-            $r['region_norm'] !== null ? (string) $r['region_norm'] : null,
-            $r['postal_code_norm'] !== null ? (string) $r['postal_code_norm'] : null,
-            array_key_exists('latitude', $r) && $r['latitude'] !== null ? (float) $r['latitude'] : null,
-            array_key_exists('longitude', $r) && $r['longitude'] !== null ? (float) $r['longitude'] : null,
-            $r['geohash'] !== null ? (string) $r['geohash'] : null,
-            (string) $r['validation_status'],
-            $r['validation_provider'] !== null ? (string) $r['validation_provider'] : null,
-            $r['validated_at'] !== null ? (string) $r['validated_at'] : null,
-            $r['dedupe_key'] !== null ? (string) $r['dedupe_key'] : null,
-            (string) $r['created_at'],
-            $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
-            $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null,
-            array_key_exists('validation_fingerprint', $r) && $r['validation_fingerprint'] !== null ? (string) $r['validation_fingerprint'] : null,
+            (string)$r['id'],
+            $r['owner_id'] !== null ? (string)$r['owner_id'] : null,
+            $r['vendor_id'] !== null ? (string)$r['vendor_id'] : null,
+            (string)$r['line1'],
+            $r['line2'] !== null ? (string)$r['line2'] : null,
+            (string)$r['city'],
+            $r['region'] !== null ? (string)$r['region'] : null,
+            $r['postal_code'] !== null ? (string)$r['postal_code'] : null,
+            (string)$r['country_code'],
+            $r['line1_norm'] !== null ? (string)$r['line1_norm'] : null,
+            $r['city_norm'] !== null ? (string)$r['city_norm'] : null,
+            $r['region_norm'] !== null ? (string)$r['region_norm'] : null,
+            $r['postal_code_norm'] !== null ? (string)$r['postal_code_norm'] : null,
+            array_key_exists('latitude', $r) && $r['latitude'] !== null ? (float)$r['latitude'] : null,
+            array_key_exists('longitude', $r) && $r['longitude'] !== null ? (float)$r['longitude'] : null,
+            $r['geohash'] !== null ? (string)$r['geohash'] : null,
+            (string)$r['validation_status'],
+            $r['validation_provider'] !== null ? (string)$r['validation_provider'] : null,
+            $r['validated_at'] !== null ? (string)$r['validated_at'] : null,
+            $r['dedupe_key'] !== null ? (string)$r['dedupe_key'] : null,
+            (string)$r['created_at'],
+            $r['updated_at'] !== null ? (string)$r['updated_at'] : null,
+            $r['deleted_at'] !== null ? (string)$r['deleted_at'] : null,
+            array_key_exists('validation_fingerprint', $r) && $r['validation_fingerprint'] !== null ? (string)$r['validation_fingerprint'] : null,
             $validationRaw,
             $validationVerdict,
             $validationDeliverable,
@@ -292,7 +288,7 @@ SQL;
             /** @var array<string, mixed> $v */
             return $v;
         }
-        $s = (string) $v;
+        $s = (string)$v;
         $s = trim($s);
         if ($s === '') {
             return null;
@@ -312,18 +308,21 @@ SQL;
      */
     private function appendOutbox(string $name, array $payload): void
     {
-<<<<<<< HEAD
-        $driver = (string) $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-        $payloadExpr = $driver === 'pgsql' ? ':payload::jsonb' : ':payload';
-=======
         $payloadJson = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($payloadJson === false) {
             throw new RuntimeException('payload_encode_failed');
         }
->>>>>>> origin/master
+
+        $driver = (string)$this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $payloadExpr = $driver === 'pgsql'
+            ? ':payload::jsonb'
+            : ':payload';
+
         $stmt = $this->pdo->prepare(
-            "INSERT INTO address_outbox(event_name, event_version, payload) VALUES (:name, :ver, {$payloadExpr})"
+            "INSERT INTO address_outbox (event_name, event_version, payload)
+         VALUES (:name, :ver, {$payloadExpr})"
         );
+
         $stmt->execute([
             ':name' => $name,
             ':ver' => 1,
