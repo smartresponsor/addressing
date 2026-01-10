@@ -81,7 +81,9 @@ CREATE TABLE IF NOT EXISTS address_outbox
     event_version INT         NOT NULL DEFAULT 1,
     payload       JSONB       NOT NULL,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    published_at  TIMESTAMPTZ NULL
+    published_at  TIMESTAMPTZ NULL,
+    locked_at     TIMESTAMPTZ NULL,
+    locked_by     VARCHAR(64) NULL
 );
 
 CREATE INDEX IF NOT EXISTS address_outbox_pub_idx ON address_outbox (published_at);
@@ -213,5 +215,7 @@ CREATE INDEX IF NOT EXISTS address_validation_fp_idx ON address_entity (validati
 
 -- Outbox: attempts and last error for robust draining
 ALTER TABLE IF EXISTS address_outbox
+    ADD COLUMN IF NOT EXISTS locked_at        TIMESTAMPTZ NULL,
+    ADD COLUMN IF NOT EXISTS locked_by        VARCHAR(64) NULL,
     ADD COLUMN IF NOT EXISTS published_attempt INT  NOT NULL DEFAULT 0,
     ADD COLUMN IF NOT EXISTS last_error        TEXT NULL;
