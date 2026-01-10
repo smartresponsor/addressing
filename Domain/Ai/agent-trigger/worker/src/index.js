@@ -79,8 +79,19 @@ export default {
             return bad(405, 'MethodNotAllowed', 'POST required');
         }
 
-        const secret = envStr(env, 'SR_TRIGGER_SECRET', '');
-        if (!secret) return bad(500, 'Misconfig', 'SR_TRIGGER_SECRET not set');
+        const kid = (request.headers.get("X-SR-Kid") || "K1").toUpperCase();
+
+        if (!/^K\d+$/.test(kid)) {
+            return bad(401, "BadKid", "Invalid X-SR-Kid");
+        }
+
+        const secret =
+            envStr(env, `SR_TRIGGER_SECRET_${kid}`, "") ||
+            envStr(env, "SR_TRIGGER_SECRET", ""); // fallback for legacy
+
+        if (!secret) {
+            return bad(500, "Misconfig", `Secret for ${kid} not configured`);
+        }
 
         const tsHeader = request.headers.get('X-SR-Timestamp') || '';
         const sigHeader = (request.headers.get('X-SR-Signature') || '').toLowerCase();
