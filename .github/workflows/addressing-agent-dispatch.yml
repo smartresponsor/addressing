@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       task:
-        description: "run only (reserved for future)"
+        description: "plan|codex|pr"
         required: true
         default: "pr"
       kind:
@@ -13,18 +13,20 @@ on:
         required: false
         default: "fix"
       message:
-        description: "Short reason (used in commit message)"
+        description: "Short reason (used in PR title/body)"
         required: false
         default: "agent update"
 
 permissions:
   contents: write
+  pull-requests: write
   actions: write
 
 jobs:
-  dispatch:
-    uses: ./.github/workflows/addressing-agent-run.yml
+  agent:
+    uses: ./.github/workflows/addressing-agent-pr.yml
     with:
       task: ${{ inputs.task }}
       kind: ${{ inputs.kind }}
       message: ${{ inputs.message }}
+

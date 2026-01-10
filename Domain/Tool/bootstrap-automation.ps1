@@ -50,6 +50,13 @@ $wkTpl = Join-Path $tplRoot "worker"
 $wfOut = Join-Path $repoRoot ".github/workflows"
 Ensure-Dir $wfOut
 
+# Cleanup legacy template workflows accidentally committed (e.g., __DOMAIN__-gate.yml)
+if ($Force.IsPresent) {
+  Get-ChildItem -Path $wfOut -Filter "__DOMAIN__*.yml" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+  Get-ChildItem -Path $wfOut -Filter "*__DOMAIN__*.yml" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+}
+
+
 $wfFiles = @(
 @{ src = "gate.yml"; dst = ("{0}-gate.yml" -f $Domain) },
 @{ src = "evidence-release.yml"; dst = ("{0}-evidence-release.yml" -f $Domain) },
@@ -98,7 +105,7 @@ if (Test-Path $wkTpl)
     $repoFinal = $Repo
     if ( [string]::IsNullOrWhiteSpace($repoFinal))
     {
-        $repoFinal = "__REPO__"
+        $repoFinal = $Domain
     }
 
     $compatDate = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd")
