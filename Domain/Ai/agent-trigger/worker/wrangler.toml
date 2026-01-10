@@ -5,8 +5,8 @@ main = "src/index.js"
 compatibility_date = "2025-01-01"
 
 [vars]
-GH_OWNER = "__OWNER__"
-GH_REPO = "__REPO__"
+GH_OWNER = "marketing-america-corp"
+GH_REPO = "addressing"
 GH_WORKFLOW = "addressing-agent-dispatch.yml"
 GH_REF = "master"
 SR_TIME_SKEW_SEC = "300"
