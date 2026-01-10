@@ -163,6 +163,8 @@ CREATE TABLE address_outbox (
   payload TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   published_at TEXT NULL,
+  locked_at TEXT NULL,
+  locked_by TEXT NULL,
   published_attempt INTEGER NOT NULL DEFAULT 0,
   last_error TEXT NULL
 );
