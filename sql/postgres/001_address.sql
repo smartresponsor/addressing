@@ -1,5 +1,8 @@
+-- Migration: address data domain schema (Postgres)
+-- Version: 001
+-- Depends on: none
+-- Idempotent: yes (IF NOT EXISTS / CREATE OR REPLACE)
 -- Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
--- Address data domain schema (Postgres)
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
