@@ -1,0 +1,56 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+/*
+ * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+ * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
+ * Owner: Marketing America Corp
+ */
+
+/**
+ * @param string $k
+ * @param string|null $d
+ * @return string|null
+ */
+function env(string $k, ?string $d = null): ?string
+{
+    $v = getenv($k);
+    return $v === false ? $d : $v;
+}
+
+$dsn = env('PG_DSN');
+$user = env('PG_USER');
+$pass = env('PG_PASS');
+if (!$dsn || !$user) {
+    fwrite(STDERR, "PG_DSN/PG_USER are required\n");
+    exit(2);
+}
+
+$seedFile = __DIR__ . '/../sql/postgres/seed_demo.sql';
+if (!is_file($seedFile)) {
+    fwrite(STDERR, "missing seed file: {$seedFile}\n");
+    exit(2);
+}
+
+$pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+
+$pdo->beginTransaction();
+try {
+    $pdo->exec('TRUNCATE TABLE address_outbox, address_entity RESTART IDENTITY CASCADE');
+
+    $seedSql = file_get_contents($seedFile);
+    if ($seedSql === false) {
+        throw new RuntimeException("failed to read seed file: {$seedFile}");
+    }
+
+    $pdo->exec($seedSql);
+    $pdo->commit();
+} catch (Throwable $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    fwrite(STDERR, $e->getMessage() . "\n");
+    exit(2);
+}
+
+echo "Demo address data reset complete.\n";

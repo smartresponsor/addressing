@@ -18,3 +18,4 @@ This repository is the reference component for end-to-end automation in SmartRes
 ## Docs
 
 - [Address business flows](address-business-flows.md)
+- [Address demo data](address-demo-data.md)
