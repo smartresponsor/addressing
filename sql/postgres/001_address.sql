@@ -35,6 +35,17 @@ CREATE TABLE IF NOT EXISTS address_entity
     deleted_at          TIMESTAMPTZ      NULL
 );
 
+DO
+$$
+BEGIN
+    ALTER TABLE address_entity
+        ADD CONSTRAINT address_tenant_scope_chk CHECK (owner_id IS NOT NULL OR vendor_id IS NOT NULL);
+EXCEPTION
+    WHEN duplicate_object THEN
+        NULL;
+END
+$$;
+
 CREATE INDEX IF NOT EXISTS address_owner_idx ON address_entity (owner_id);
 CREATE INDEX IF NOT EXISTS address_vendor_idx ON address_entity (vendor_id);
 CREATE INDEX IF NOT EXISTS address_country_idx ON address_entity (country_code);

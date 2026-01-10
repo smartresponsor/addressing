@@ -36,13 +36,13 @@ interface AddressRepositoryInterface
      * @param string $id
      * @return \App\EntityInterface\Address\AddressInterface|null
      */
-    public function get(string $id): ?AddressInterface;
+    public function get(string $id, ?string $ownerId, ?string $vendorId): ?AddressInterface;
 
     /**
      * @param string $id
      * @return void
      */
-    public function delete(string $id): void;
+    public function delete(string $id, ?string $ownerId, ?string $vendorId): void;
 
     public function findByDedupeKey(string $dedupeKey): ?AddressInterface;
 

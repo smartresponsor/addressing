@@ -100,7 +100,8 @@ final class Controller
      */
     public function get(Request $req, string $id): JsonResponse
     {
-        $a = $this->repo->get($id);
+        [$ownerId, $vendorId] = self::tenantFromQuery($req);
+        $a = $this->repo->get($id, $ownerId, $vendorId);
         if ($a === null) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }
@@ -115,7 +116,8 @@ final class Controller
      */
     public function markDeleted(Request $req, string $id): JsonResponse
     {
-        $this->repo->markDeleted($id);
+        [$ownerId, $vendorId] = self::tenantFromQuery($req);
+        $this->repo->markDeleted($id, $ownerId, $vendorId);
         return new JsonResponse(['ok' => true]);
     }
 
@@ -166,6 +168,7 @@ final class Controller
     public function applyValidated(Request $req, string $id): JsonResponse
     {
         $in = self::json($req);
+        [$ownerId, $vendorId] = self::tenantFromQuery($req);
 
         $validated = AddressValidated::fromArray([
             'line1Norm' => self::optStr($in, 'line1Norm'),
@@ -182,7 +185,7 @@ final class Controller
 
         $this->validatedApplier->apply($id, $validated);
 
-        $a = $this->repo->get($id);
+        $a = $this->repo->get($id, $ownerId, $vendorId);
         if ($a === null) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }
@@ -232,6 +235,20 @@ final class Controller
         }
         $v = trim($in[$key]);
         return $v === '' ? null : $v;
+    }
+
+    /**
+     * @return array{0: ?string, 1: ?string}
+     */
+    private static function tenantFromQuery(Request $req): array
+    {
+        $ownerId = $req->query->get('ownerId');
+        $ownerId = is_string($ownerId) && $ownerId !== '' ? $ownerId : null;
+
+        $vendorId = $req->query->get('vendorId');
+        $vendorId = is_string($vendorId) && $vendorId !== '' ? $vendorId : null;
+
+        return [$ownerId, $vendorId];
     }
 
     /**
