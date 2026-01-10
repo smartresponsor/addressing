@@ -12,3 +12,6 @@ This repository is the reference component for end-to-end automation in SmartRes
 .\Domain\Tool\run.ps1 health
 .\Domain\Tool\run.ps1 validate
 ```
+
+## Docs
+- [Address business flows](address-business-flows.md)

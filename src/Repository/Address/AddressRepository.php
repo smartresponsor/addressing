@@ -94,12 +94,27 @@ SQL;
         ]);
     }
 
+    public function findByDedupeKey(string $dedupeKey): ?AddressInterface
+    {
+        $dedupeKey = trim($dedupeKey);
+        if ($dedupeKey === '') {
+            return null;
+        }
+
+        $stmt = $this->pdo->prepare('SELECT * FROM address_entity WHERE dedupe_key = :dedupe AND deleted_at IS NULL');
+        $stmt->execute([':dedupe' => $dedupeKey]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ? $this->map($row) : null;
+    }
+
     /**
      * @return array{items: AddressInterface[], nextCursor: ?string}
      */
     public function findPage(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, int $limit, ?string $cursor): array
     {
         $limit = max(1, min(200, $limit));
+        $driver = (string) $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
         $params = [];
         $where = ['deleted_at IS NULL'];
 
@@ -116,7 +131,8 @@ SQL;
             $params[':country_code'] = $countryCode;
         }
         if ($q) {
-            $where[] = "lower(line1 || ' ' || city || ' ' || coalesce(postal_code,'')) ILIKE lower(:q)";
+            $op = $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
+            $where[] = "lower(line1 || ' ' || city || ' ' || coalesce(postal_code,'')) {$op} lower(:q)";
             $params[':q'] = '%' . $q . '%';
         }
         if ($cursor) {
@@ -246,8 +262,10 @@ SQL;
 
     private function appendOutbox(string $name, int $version, array $payload): void
     {
+        $driver = (string) $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $payloadExpr = $driver === 'pgsql' ? ':payload::jsonb' : ':payload';
         $stmt = $this->pdo->prepare(
-            'INSERT INTO address_outbox(event_name, event_version, payload) VALUES (:name, :ver, :payload::jsonb)'
+            "INSERT INTO address_outbox(event_name, event_version, payload) VALUES (:name, :ver, {$payloadExpr})"
         );
         $stmt->execute([
             ':name' => $name,

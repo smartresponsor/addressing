@@ -150,8 +150,10 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
     /** @param array<string, mixed> $payload */
     private function appendOutbox(string $name, int $version, array $payload): void
     {
+        $driver = (string) $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $payloadExpr = $driver === 'pgsql' ? ':payload::jsonb' : ':payload';
         $stmt = $this->pdo->prepare(
-            'INSERT INTO address_outbox(event_name, event_version, payload) VALUES (:name, :ver, :payload::jsonb)'
+            "INSERT INTO address_outbox(event_name, event_version, payload) VALUES (:name, :ver, {$payloadExpr})"
         );
         $stmt->execute([
             ':name' => $name,

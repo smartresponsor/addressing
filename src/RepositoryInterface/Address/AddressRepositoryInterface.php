@@ -21,6 +21,8 @@ interface AddressRepositoryInterface
 
     public function delete(string $id): void;
 
+    public function findByDedupeKey(string $dedupeKey): ?AddressInterface;
+
     /**
      * @return array{items: list<AddressInterface>, nextCursor: ?string}
      */
