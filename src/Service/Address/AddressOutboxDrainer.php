@@ -23,10 +23,17 @@ use PDO;
 final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
 {
     /**
-     * @param \PDO $pdo
+     * @var callable|null
      */
-    public function __construct(private readonly PDO $pdo)
+    private $sender;
+
+    /**
+     * @param \PDO $pdo
+     * @param callable|null $sender
+     */
+    public function __construct(private readonly PDO $pdo, ?callable $sender = null)
     {
+        $this->sender = $sender;
     }
 
     /**
@@ -39,15 +46,8 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
      */
     public function drain(string $url, int $limit, int $retryLimit, int $timeoutSec, int $backoffMs): int
     {
-        $sel = $this->pdo->prepare(
-            'SELECT id, event_name, event_version, payload '
-            . 'FROM address_outbox WHERE published_at IS NULL '
-            . 'ORDER BY id ASC LIMIT :lim'
-        );
-        $sel->bindValue(':lim', $limit, PDO::PARAM_INT);
-        $sel->execute();
-
-        $rows = $sel->fetchAll(PDO::FETCH_ASSOC);
+        $lockId = bin2hex(random_bytes(16));
+        $rows = $this->reserveRows($lockId, $limit);
         $count = 0;
 
         foreach ($rows as $r) {
@@ -57,7 +57,7 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
             }
 
             $err = null;
-            $ok = $this->post(
+            $ok = $this->send(
                 $url,
                 [
                     'name' => (string)$r['event_name'],
@@ -73,14 +73,16 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
             if ($ok) {
                 $upd = $this->pdo->prepare(
                     'UPDATE address_outbox '
-                    . 'SET published_at = now(), published_attempt = published_attempt + 1, last_error = NULL '
+                    . 'SET published_at = now(), locked_at = NULL, locked_by = NULL, '
+                    . 'published_attempt = published_attempt + 1, last_error = NULL '
                     . 'WHERE id = :id'
                 );
                 $upd->execute([':id' => $r['id']]);
             } else {
                 $upd = $this->pdo->prepare(
                     'UPDATE address_outbox '
-                    . 'SET published_attempt = published_attempt + 1, last_error = :err '
+                    . 'SET locked_at = NULL, locked_by = NULL, '
+                    . 'published_attempt = published_attempt + 1, last_error = :err '
                     . 'WHERE id = :id'
                 );
                 $upd->execute([':id' => $r['id'], ':err' => $err]);
@@ -90,6 +92,96 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
         }
 
         return $count;
+    }
+
+    /**
+     * @param string $lockId
+     * @param int $limit
+     * @return array<int, array<string, mixed>>
+     */
+    private function reserveRows(string $lockId, int $limit): array
+    {
+        $driver = (string)$this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+
+        if ($driver === 'pgsql') {
+            $stmt = $this->pdo->prepare(
+                'WITH cte AS ('
+                . 'SELECT id FROM address_outbox '
+                . 'WHERE published_at IS NULL AND locked_at IS NULL '
+                . 'ORDER BY id ASC LIMIT :lim '
+                . 'FOR UPDATE SKIP LOCKED'
+                . ') '
+                . 'UPDATE address_outbox '
+                . 'SET locked_at = now(), locked_by = :lockedBy '
+                . 'FROM cte '
+                . 'WHERE address_outbox.id = cte.id '
+                . 'RETURNING address_outbox.id, event_name, event_version, payload'
+            );
+            $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':lockedBy', $lockId);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        $this->pdo->beginTransaction();
+
+        $sel = $this->pdo->prepare(
+            'SELECT id FROM address_outbox '
+            . 'WHERE published_at IS NULL AND locked_at IS NULL '
+            . 'ORDER BY id ASC LIMIT :lim'
+        );
+        $sel->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $sel->execute();
+        $ids = $sel->fetchAll(PDO::FETCH_COLUMN);
+
+        if ($ids === [] || $ids === false) {
+            $this->pdo->commit();
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $upd = $this->pdo->prepare(
+            'UPDATE address_outbox '
+            . 'SET locked_at = CURRENT_TIMESTAMP, locked_by = ? '
+            . 'WHERE locked_at IS NULL AND id IN (' . $placeholders . ')'
+        );
+        $upd->execute(array_merge([$lockId], $ids));
+
+        $rows = $this->pdo->prepare(
+            'SELECT id, event_name, event_version, payload '
+            . 'FROM address_outbox WHERE locked_by = ? AND published_at IS NULL'
+        );
+        $rows->execute([$lockId]);
+        $result = $rows->fetchAll(PDO::FETCH_ASSOC);
+        $this->pdo->commit();
+
+        return $result;
+    }
+
+    /**
+     * @param string $url
+     * @param array<string, mixed> $data
+     * @param int $retryLimit
+     * @param int $timeoutSec
+     * @param int $backoffMs
+     * @param string|null $error
+     * @return bool
+     */
+    private function send(
+        string  $url,
+        array   $data,
+        int     $retryLimit,
+        int     $timeoutSec,
+        int     $backoffMs,
+        ?string &$error
+    ): bool
+    {
+        if (is_callable($this->sender)) {
+            return ($this->sender)($url, $data, $retryLimit, $timeoutSec, $backoffMs, $error);
+        }
+
+        return $this->post($url, $data, $retryLimit, $timeoutSec, $backoffMs, $error);
     }
 
     /**

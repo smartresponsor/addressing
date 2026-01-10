@@ -84,6 +84,20 @@ final class AddressServiceTest extends TestCase
         static::assertSame('addr-6', $payload['id'] ?? null);
     }
 
+    public function testUpdateMissingRowDoesNotWriteOutbox(): void
+    {
+        $this->service->update($this->makeAddress('missing-1'));
+
+        static::assertSame(0, $this->outboxCount());
+    }
+
+    public function testDeleteMissingRowDoesNotWriteOutbox(): void
+    {
+        $this->repo->delete('missing-2', 'owner-1', 'vendor-1');
+
+        static::assertSame(0, $this->outboxCount());
+    }
+
     public function testTenantIsolationForGetUpdateAndSearch(): void
     {
         $tenantOne = $this->makeAddress('addr-7', ownerId: 'owner-1', vendorId: 'vendor-1');
@@ -104,6 +118,13 @@ final class AddressServiceTest extends TestCase
         $results = $this->service->search('owner-2', 'vendor-2', null, null, 10, null);
         static::assertCount(1, $results['items']);
         static::assertSame('addr-8', $results['items'][0]->id());
+    }
+
+    private function outboxCount(): int
+    {
+        $count = $this->pdo->query('SELECT COUNT(*) FROM address_outbox')->fetchColumn();
+
+        return (int)$count;
     }
 
     private function makeAddress(
@@ -188,6 +209,8 @@ CREATE TABLE address_outbox (
   payload TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   published_at TEXT NULL,
+  locked_at TEXT NULL,
+  locked_by TEXT NULL,
   published_attempt INTEGER NOT NULL DEFAULT 0,
   last_error TEXT NULL
 );
