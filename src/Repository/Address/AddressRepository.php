@@ -327,6 +327,10 @@ SQL;
         throw new RuntimeException('invalid_' . $field);
     }
 
+    /**
+     * @param mixed $value
+     * @return string|null
+     */
     private function asNullableString(mixed $value): ?string
     {
         if ($value === null) {
@@ -341,6 +345,10 @@ SQL;
         return null;
     }
 
+    /**
+     * @param mixed $value
+     * @return float|null
+     */
     private function asNullableFloat(mixed $value): ?float
     {
         if ($value === null) {
@@ -355,6 +363,10 @@ SQL;
         return null;
     }
 
+    /**
+     * @param mixed $value
+     * @return int|null
+     */
     private function asNullableInt(mixed $value): ?int
     {
         if ($value === null) {
@@ -372,6 +384,10 @@ SQL;
         return null;
     }
 
+    /**
+     * @param mixed $value
+     * @return bool|null
+     */
     private function asNullableBool(mixed $value): ?bool
     {
         if ($value === null) {
@@ -391,7 +407,7 @@ SQL;
 
     /**
      * @param string $name
-     * @param array<string, mixed> $payload
+     * @param array $payload
      * @return void
      */
     private function appendOutbox(string $name, array $payload): void
@@ -419,6 +435,10 @@ SQL;
         ]);
     }
 
+    /**
+     * @param string $sql
+     * @return \PDOStatement
+     */
     private function prepare(string $sql): PDOStatement
     {
         $stmt = $this->pdo->prepare($sql);
