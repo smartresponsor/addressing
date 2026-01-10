@@ -39,7 +39,7 @@ final class PdoRepository implements RepositoryInterface
                 lat=excluded.lat,lon=excluded.lon,display=excluded.display,provider=excluded.provider,confidence=excluded.confidence,geo_key=excluded.geo_key,
                 updated_at=excluded.updated_at';
         // Note: For MySQL replace ON CONFLICT with ON DUPLICATE KEY UPDATE and placeholders accordingly.
-        $stmt = $this->pdo->prepare($sql);
+        $stmt = $this->prepare($sql);
         $arr = $r->toArray();
         $stmt->execute([
             ':digest' => $arr['digest'], ':line1' => $arr['line1'], ':line2' => $arr['line2'], ':city' => $arr['city'],
@@ -55,12 +55,13 @@ final class PdoRepository implements RepositoryInterface
      */
     public function getByDigest(string $digest): ?IndexRecord
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM address_index WHERE digest = :d LIMIT 1');
+        $stmt = $this->prepare('SELECT * FROM address_index WHERE digest = :d LIMIT 1');
         $stmt->execute([':d' => $digest]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!is_array($row)) {
             return null;
         }
+        /** @var array<string, mixed> $row */
         return $this->hydrate($row);
     }
 
@@ -74,11 +75,11 @@ final class PdoRepository implements RepositoryInterface
     {
         $like = $prefix . '%';
         if ($country) {
-            $stmt = $this->pdo->prepare('SELECT * FROM address_index WHERE country = :c AND (city LIKE :q OR region LIKE :q OR postal LIKE :q OR line1 LIKE :q) ORDER BY updated_at DESC LIMIT :lim');
+            $stmt = $this->prepare('SELECT * FROM address_index WHERE country = :c AND (city LIKE :q OR region LIKE :q OR postal LIKE :q OR line1 LIKE :q) ORDER BY updated_at DESC LIMIT :lim');
             $stmt->bindValue(':c', strtoupper($country));
             $stmt->bindValue(':q', $like);
         } else {
-            $stmt = $this->pdo->prepare('SELECT * FROM address_index WHERE (city LIKE :q OR region LIKE :q OR postal LIKE :q OR line1 LIKE :q) ORDER BY updated_at DESC LIMIT :lim');
+            $stmt = $this->prepare('SELECT * FROM address_index WHERE (city LIKE :q OR region LIKE :q OR postal LIKE :q OR line1 LIKE :q) ORDER BY updated_at DESC LIMIT :lim');
             $stmt->bindValue(':q', $like);
         }
         $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
@@ -88,6 +89,7 @@ final class PdoRepository implements RepositoryInterface
             if (!is_array($row)) {
                 continue;
             }
+            /** @var array<string, mixed> $row */
             $out[] = $this->hydrate($row);
         }
         return $out;
@@ -155,5 +157,14 @@ final class PdoRepository implements RepositoryInterface
             return (float)$value;
         }
         return null;
+    }
+
+    private function prepare(string $sql): \PDOStatement
+    {
+        $stmt = $this->pdo->prepare($sql);
+        if ($stmt === false) {
+            throw new \RuntimeException('prepare_failed');
+        }
+        return $stmt;
     }
 }

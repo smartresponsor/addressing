@@ -49,7 +49,7 @@ VALUES
      :dedupe_key, :created_at, :updated_at, :deleted_at)
 SQL;
 
-        $stmt = $this->pdo->prepare($sql);
+        $stmt = $this->prepare($sql);
         $this->bind($stmt, $address);
         $stmt->execute();
 
@@ -79,7 +79,7 @@ UPDATE address_entity SET
 WHERE id=:id
 SQL;
 
-        $stmt = $this->pdo->prepare($sql);
+        $stmt = $this->prepare($sql);
         $this->bind($stmt, $address);
         $stmt->execute();
 
@@ -95,13 +95,14 @@ SQL;
      */
     public function get(string $id): ?AddressInterface
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM address_entity WHERE id=:id AND deleted_at IS NULL');
+        $stmt = $this->prepare('SELECT * FROM address_entity WHERE id=:id AND deleted_at IS NULL');
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!is_array($row)) {
             return null;
         }
+        /** @var array<string, mixed> $row */
         return $this->map($row);
     }
 
@@ -111,7 +112,7 @@ SQL;
      */
     public function delete(string $id): void
     {
-        $stmt = $this->pdo->prepare('UPDATE address_entity SET deleted_at=now() WHERE id=:id AND deleted_at IS NULL');
+        $stmt = $this->prepare('UPDATE address_entity SET deleted_at=now() WHERE id=:id AND deleted_at IS NULL');
         $stmt->execute([':id' => $id]);
 
         $this->appendOutbox('AddressDeleted', [
@@ -127,13 +128,14 @@ SQL;
             return null;
         }
 
-        $stmt = $this->pdo->prepare('SELECT * FROM address_entity WHERE dedupe_key = :dedupe AND deleted_at IS NULL');
+        $stmt = $this->prepare('SELECT * FROM address_entity WHERE dedupe_key = :dedupe AND deleted_at IS NULL');
         $stmt->execute([':dedupe' => $dedupeKey]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!is_array($row)) {
             return null;
         }
+        /** @var array<string, mixed> $row */
         return $this->map($row);
     }
 
@@ -180,7 +182,7 @@ SQL;
         }
 
         $sql = 'SELECT * FROM address_entity WHERE ' . implode(' AND ', $where) . ' ORDER BY id ASC LIMIT :limit';
-        $stmt = $this->pdo->prepare($sql);
+        $stmt = $this->prepare($sql);
         foreach ($params as $k => $v) {
             $stmt->bindValue($k, $v);
         }
@@ -188,10 +190,12 @@ SQL;
         $stmt->execute();
 
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        /** @var array<int, array<string, mixed>> $safeRows */
         $safeRows = [];
         if (is_array($rows)) {
             foreach ($rows as $row) {
                 if (is_array($row)) {
+                    /** @var array<string, mixed> $row */
                     $safeRows[] = $row;
                 }
             }
@@ -403,7 +407,7 @@ SQL;
             ? ':payload::jsonb'
             : ':payload';
 
-        $stmt = $this->pdo->prepare(
+        $stmt = $this->prepare(
             "INSERT INTO address_outbox (event_name, event_version, payload)
          VALUES (:name, :ver, {$payloadExpr})"
         );
@@ -413,5 +417,14 @@ SQL;
             ':ver' => 1,
             ':payload' => $payloadJson,
         ]);
+    }
+
+    private function prepare(string $sql): PDOStatement
+    {
+        $stmt = $this->pdo->prepare($sql);
+        if ($stmt === false) {
+            throw new RuntimeException('prepare_failed');
+        }
+        return $stmt;
     }
 }

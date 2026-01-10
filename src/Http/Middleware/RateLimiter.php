@@ -69,22 +69,23 @@ final class RateLimiter
         $now = time();
         $minWindow = $now - 60;
 
-        $stmt = $pdo->prepare('SELECT ts, cnt FROM rate_limit WHERE client = :c AND rkey = :k');
+        $stmt = $this->prepare($pdo, 'SELECT ts, cnt FROM rate_limit WHERE client = :c AND rkey = :k');
         $stmt->execute([':c' => $client, ':k' => $key]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!is_array($row)) {
-            $stmt = $pdo->prepare('INSERT OR REPLACE INTO rate_limit (client,rkey,ts,cnt) VALUES (:c,:k,:t,1)');
+            $stmt = $this->prepare($pdo, 'INSERT OR REPLACE INTO rate_limit (client,rkey,ts,cnt) VALUES (:c,:k,:t,1)');
             $stmt->execute([':c' => $client, ':k' => $key, ':t' => $now]);
             return true;
         }
 
+        /** @var array<string, mixed> $row */
         $ts = $this->asInt($row['ts'] ?? null);
         $cnt = $this->asInt($row['cnt'] ?? null);
 
         if ($ts < $minWindow) {
             // New window
-            $stmt = $pdo->prepare('UPDATE rate_limit SET ts = :t, cnt = 1 WHERE client = :c AND rkey = :k');
+            $stmt = $this->prepare($pdo, 'UPDATE rate_limit SET ts = :t, cnt = 1 WHERE client = :c AND rkey = :k');
             $stmt->execute([':t' => $now, ':c' => $client, ':k' => $key]);
             return true;
         }
@@ -95,7 +96,7 @@ final class RateLimiter
             return false;
         }
 
-        $stmt = $pdo->prepare('UPDATE rate_limit SET cnt = :n WHERE client = :c AND rkey = :k');
+        $stmt = $this->prepare($pdo, 'UPDATE rate_limit SET cnt = :n WHERE client = :c AND rkey = :k');
         $stmt->execute([':n' => $cnt + 1, ':c' => $client, ':k' => $key]);
         return true;
     }
@@ -112,5 +113,14 @@ final class RateLimiter
             return (int)$value;
         }
         return 0;
+    }
+
+    private function prepare(PDO $pdo, string $sql): \PDOStatement
+    {
+        $stmt = $pdo->prepare($sql);
+        if ($stmt === false) {
+            throw new \RuntimeException('prepare_failed');
+        }
+        return $stmt;
     }
 }

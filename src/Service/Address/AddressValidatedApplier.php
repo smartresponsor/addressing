@@ -45,7 +45,7 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
         try {
             $this->pdo->beginTransaction();
 
-            $stmt = $this->pdo->prepare('SELECT validation_fingerprint FROM address_entity WHERE id = :id FOR UPDATE');
+            $stmt = $this->prepare('SELECT validation_fingerprint FROM address_entity WHERE id = :id FOR UPDATE');
             $stmt->execute([':id' => $id]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!is_array($row)) {
@@ -53,6 +53,7 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
                 throw new RuntimeException('not_found');
             }
 
+            /** @var array<string, mixed> $row */
             $prev = $row['validation_fingerprint'] ?? null;
             if (is_string($prev) && $prev !== '' && $prev === $fingerprint) {
                 $this->pdo->commit();
@@ -131,7 +132,7 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
             $fields[] = 'updated_at = :updated_at';
 
             $sql = 'UPDATE address_entity SET ' . implode(', ', $fields) . ' WHERE id = :id';
-            $stmt = $this->pdo->prepare($sql);
+            $stmt = $this->prepare($sql);
             $ok = $stmt->execute($params);
 
             if (!$ok) {
@@ -181,7 +182,7 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
             ? ':payload::jsonb'
             : ':payload';
 
-        $stmt = $this->pdo->prepare(
+        $stmt = $this->prepare(
             "INSERT INTO address_outbox (event_name, event_version, payload)
          VALUES (:name, :ver, {$payloadExpr})"
         );
@@ -205,5 +206,14 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
             throw new RuntimeException('payload_encode_failed');
         }
         return $json;
+    }
+
+    private function prepare(string $sql): \PDOStatement
+    {
+        $stmt = $this->pdo->prepare($sql);
+        if ($stmt === false) {
+            throw new RuntimeException('prepare_failed');
+        }
+        return $stmt;
     }
 }
