@@ -99,7 +99,10 @@ SQL;
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $row ? $this->map($row) : null;
+        if (!is_array($row)) {
+            return null;
+        }
+        return $this->map($row);
     }
 
     /**
@@ -128,7 +131,10 @@ SQL;
         $stmt->execute([':dedupe' => $dedupeKey]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $row ? $this->map($row) : null;
+        if (!is_array($row)) {
+            return null;
+        }
+        return $this->map($row);
     }
 
     /**
@@ -146,7 +152,8 @@ SQL;
     public function findPage(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, int $limit, ?string $cursor): array
     {
         $limit = max(1, min(200, $limit));
-        $driver = (string)$this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $driverAttr = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $driver = is_string($driverAttr) ? $driverAttr : '';
         $params = [];
         $where = ['deleted_at IS NULL'];
 
@@ -181,11 +188,19 @@ SQL;
         $stmt->execute();
 
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $items = array_map(fn(array $r): AddressInterface => $this->map($r), $rows);
+        $safeRows = [];
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                if (is_array($row)) {
+                    $safeRows[] = $row;
+                }
+            }
+        }
+        $items = array_map(fn(array $r): AddressInterface => $this->map($r), $safeRows);
 
         $nextCursor = null;
-        if (count($rows) === $limit && $rows !== []) {
-            $last = end($rows);
+        if (count($safeRows) === $limit && $safeRows !== []) {
+            $last = end($safeRows);
             if (is_array($last) && isset($last['id'])) {
                 $nextCursor = (string)$last['id'];
             }
@@ -234,42 +249,35 @@ SQL;
     {
         $validationRaw = $this->decodeJsonNullable($r['validation_raw'] ?? null);
         $validationVerdict = $this->decodeJsonNullable($r['validation_verdict'] ?? null);
-        $validationDeliverable = null;
-        if (array_key_exists('validation_deliverable', $r) && $r['validation_deliverable'] !== null) {
-            $validationDeliverable = ((int)$r['validation_deliverable']) === 1;
-        }
-        $validationGranularity = array_key_exists('validation_granularity', $r) && $r['validation_granularity'] !== null
-            ? (string)$r['validation_granularity']
-            : null;
-        $validationQuality = array_key_exists('validation_quality', $r) && $r['validation_quality'] !== null
-            ? (int)$r['validation_quality']
-            : null;
+        $validationDeliverable = $this->asNullableBool($r['validation_deliverable'] ?? null);
+        $validationGranularity = $this->asNullableString($r['validation_granularity'] ?? null);
+        $validationQuality = $this->asNullableInt($r['validation_quality'] ?? null);
 
         return new AddressData(
-            (string)$r['id'],
-            $r['owner_id'] !== null ? (string)$r['owner_id'] : null,
-            $r['vendor_id'] !== null ? (string)$r['vendor_id'] : null,
-            (string)$r['line1'],
-            $r['line2'] !== null ? (string)$r['line2'] : null,
-            (string)$r['city'],
-            $r['region'] !== null ? (string)$r['region'] : null,
-            $r['postal_code'] !== null ? (string)$r['postal_code'] : null,
-            (string)$r['country_code'],
-            $r['line1_norm'] !== null ? (string)$r['line1_norm'] : null,
-            $r['city_norm'] !== null ? (string)$r['city_norm'] : null,
-            $r['region_norm'] !== null ? (string)$r['region_norm'] : null,
-            $r['postal_code_norm'] !== null ? (string)$r['postal_code_norm'] : null,
-            array_key_exists('latitude', $r) && $r['latitude'] !== null ? (float)$r['latitude'] : null,
-            array_key_exists('longitude', $r) && $r['longitude'] !== null ? (float)$r['longitude'] : null,
-            $r['geohash'] !== null ? (string)$r['geohash'] : null,
-            (string)$r['validation_status'],
-            $r['validation_provider'] !== null ? (string)$r['validation_provider'] : null,
-            $r['validated_at'] !== null ? (string)$r['validated_at'] : null,
-            $r['dedupe_key'] !== null ? (string)$r['dedupe_key'] : null,
-            (string)$r['created_at'],
-            $r['updated_at'] !== null ? (string)$r['updated_at'] : null,
-            $r['deleted_at'] !== null ? (string)$r['deleted_at'] : null,
-            array_key_exists('validation_fingerprint', $r) && $r['validation_fingerprint'] !== null ? (string)$r['validation_fingerprint'] : null,
+            $this->asString($r['id'] ?? null, 'id'),
+            $this->asNullableString($r['owner_id'] ?? null),
+            $this->asNullableString($r['vendor_id'] ?? null),
+            $this->asString($r['line1'] ?? null, 'line1'),
+            $this->asNullableString($r['line2'] ?? null),
+            $this->asString($r['city'] ?? null, 'city'),
+            $this->asNullableString($r['region'] ?? null),
+            $this->asNullableString($r['postal_code'] ?? null),
+            $this->asString($r['country_code'] ?? null, 'country_code'),
+            $this->asNullableString($r['line1_norm'] ?? null),
+            $this->asNullableString($r['city_norm'] ?? null),
+            $this->asNullableString($r['region_norm'] ?? null),
+            $this->asNullableString($r['postal_code_norm'] ?? null),
+            $this->asNullableFloat($r['latitude'] ?? null),
+            $this->asNullableFloat($r['longitude'] ?? null),
+            $this->asNullableString($r['geohash'] ?? null),
+            $this->asString($r['validation_status'] ?? null, 'validation_status'),
+            $this->asNullableString($r['validation_provider'] ?? null),
+            $this->asNullableString($r['validated_at'] ?? null),
+            $this->asNullableString($r['dedupe_key'] ?? null),
+            $this->asString($r['created_at'] ?? null, 'created_at'),
+            $this->asNullableString($r['updated_at'] ?? null),
+            $this->asNullableString($r['deleted_at'] ?? null),
+            $this->asNullableString($r['validation_fingerprint'] ?? null),
             $validationRaw,
             $validationVerdict,
             $validationDeliverable,
@@ -288,6 +296,9 @@ SQL;
             /** @var array<string, mixed> $v */
             return $v;
         }
+        if (!is_string($v) && !is_int($v) && !is_float($v) && !is_bool($v)) {
+            return null;
+        }
         $s = (string)$v;
         $s = trim($s);
         if ($s === '') {
@@ -299,6 +310,79 @@ SQL;
         }
         /** @var array<string, mixed> $decoded */
         return $decoded;
+    }
+
+    private function asString(mixed $value, string $field): string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+        if (is_int($value) || is_float($value) || is_bool($value)) {
+            return (string)$value;
+        }
+        throw new RuntimeException('invalid_' . $field);
+    }
+
+    private function asNullableString(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        if (is_string($value)) {
+            return $value;
+        }
+        if (is_int($value) || is_float($value) || is_bool($value)) {
+            return (string)$value;
+        }
+        return null;
+    }
+
+    private function asNullableFloat(mixed $value): ?float
+    {
+        if ($value === null) {
+            return null;
+        }
+        if (is_float($value) || is_int($value)) {
+            return (float)$value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (float)$value;
+        }
+        return null;
+    }
+
+    private function asNullableInt(mixed $value): ?int
+    {
+        if ($value === null) {
+            return null;
+        }
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_float($value)) {
+            return (int)$value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (int)$value;
+        }
+        return null;
+    }
+
+    private function asNullableBool(mixed $value): ?bool
+    {
+        if ($value === null) {
+            return null;
+        }
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_int($value)) {
+            return $value === 1;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return ((int)$value) === 1;
+        }
+        return null;
     }
 
     /**
@@ -313,7 +397,8 @@ SQL;
             throw new RuntimeException('payload_encode_failed');
         }
 
-        $driver = (string)$this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $driverAttr = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $driver = is_string($driverAttr) ? $driverAttr : '';
         $payloadExpr = $driver === 'pgsql'
             ? ':payload::jsonb'
             : ':payload';

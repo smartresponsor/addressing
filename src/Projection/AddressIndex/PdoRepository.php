@@ -58,7 +58,10 @@ final class PdoRepository implements RepositoryInterface
         $stmt = $this->pdo->prepare('SELECT * FROM address_index WHERE digest = :d LIMIT 1');
         $stmt->execute([':d' => $digest]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row ? $this->hydrate($row) : null;
+        if (!is_array($row)) {
+            return null;
+        }
+        return $this->hydrate($row);
     }
 
     /**
@@ -82,6 +85,9 @@ final class PdoRepository implements RepositoryInterface
         $stmt->execute();
         $out = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!is_array($row)) {
+                continue;
+            }
             $out[] = $this->hydrate($row);
         }
         return $out;
@@ -94,12 +100,60 @@ final class PdoRepository implements RepositoryInterface
     private function hydrate(array $row): IndexRecord
     {
         return new IndexRecord(
-            $row['digest'], $row['line1'], $row['line2'] ?? null, $row['city'], $row['region'], $row['postal'], $row['country'],
-            isset($row['lat']) && $row['lat'] !== null ? (float)$row['lat'] : null,
-            isset($row['lon']) && $row['lon'] !== null ? (float)$row['lon'] : null,
-            $row['display'] ?? null, $row['provider'] ?? null,
-            isset($row['confidence']) && $row['confidence'] !== null ? (float)$row['confidence'] : null,
-            $row['geo_key'] ?? '', $row['created_at'], $row['updated_at']
+            $this->asString($row['digest'] ?? null, 'digest'),
+            $this->asString($row['line1'] ?? null, 'line1'),
+            $this->asNullableString($row['line2'] ?? null),
+            $this->asString($row['city'] ?? null, 'city'),
+            $this->asString($row['region'] ?? null, 'region'),
+            $this->asString($row['postal'] ?? null, 'postal'),
+            $this->asString($row['country'] ?? null, 'country'),
+            $this->asNullableFloat($row['lat'] ?? null),
+            $this->asNullableFloat($row['lon'] ?? null),
+            $this->asNullableString($row['display'] ?? null),
+            $this->asNullableString($row['provider'] ?? null),
+            $this->asNullableFloat($row['confidence'] ?? null),
+            $this->asString($row['geo_key'] ?? null, 'geo_key'),
+            $this->asString($row['created_at'] ?? null, 'created_at'),
+            $this->asString($row['updated_at'] ?? null, 'updated_at')
         );
+    }
+
+    private function asString(mixed $value, string $field): string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+        if (is_int($value) || is_float($value) || is_bool($value)) {
+            return (string)$value;
+        }
+        throw new \RuntimeException('invalid_' . $field);
+    }
+
+    private function asNullableString(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        if (is_string($value)) {
+            return $value;
+        }
+        if (is_int($value) || is_float($value) || is_bool($value)) {
+            return (string)$value;
+        }
+        return null;
+    }
+
+    private function asNullableFloat(mixed $value): ?float
+    {
+        if ($value === null) {
+            return null;
+        }
+        if (is_float($value) || is_int($value)) {
+            return (float)$value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (float)$value;
+        }
+        return null;
     }
 }

@@ -186,8 +186,15 @@ final readonly class AddressValidated implements JsonSerializable
         if ($v === null) {
             return null;
         }
-        $s = trim((string)$v);
-        return $s === '' ? null : $s;
+        if (is_string($v)) {
+            $s = trim($v);
+            return $s === '' ? null : $s;
+        }
+        if (is_int($v) || is_float($v) || is_bool($v) || $v instanceof \Stringable) {
+            $s = trim((string)$v);
+            return $s === '' ? null : $s;
+        }
+        return null;
     }
 
     /**
@@ -218,9 +225,18 @@ final readonly class AddressValidated implements JsonSerializable
             return null;
         }
         try {
-            return new DateTimeImmutable((string)$v);
+            if ($v instanceof \DateTimeInterface) {
+                return DateTimeImmutable::createFromInterface($v);
+            }
+            if (is_string($v)) {
+                return new DateTimeImmutable($v);
+            }
+            if (is_int($v)) {
+                return new DateTimeImmutable('@' . $v);
+            }
         } catch (Throwable) {
             return null;
         }
+        return null;
     }
 }

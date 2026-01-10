@@ -13,7 +13,6 @@ use App\Contract\Address\AddressValidated;
 use App\ServiceInterface\Address\AddressValidatedApplierInterface;
 use DateTimeImmutable;
 use PDO;
-use PDOException;
 use RuntimeException;
 
 /**
@@ -25,8 +24,6 @@ use RuntimeException;
  */
 final class AddressValidatedApplier implements AddressValidatedApplierInterface
 {
-    private $encodePayload;
-
     /**
      * @param \PDO $pdo
      */
@@ -51,7 +48,7 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
             $stmt = $this->pdo->prepare('SELECT validation_fingerprint FROM address_entity WHERE id = :id FOR UPDATE');
             $stmt->execute([':id' => $id]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (!$row) {
+            if (!is_array($row)) {
                 $this->pdo->rollBack();
                 throw new RuntimeException('not_found');
             }
@@ -172,13 +169,14 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
     }
 
     /**
-     * @param array $payload
+     * @param array<string, mixed> $payload
      */
     private function appendOutbox(array $payload): void
     {
         $payloadJson = $this->encodePayload($payload);
 
-        $driver = (string) $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $driverAttr = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $driver = is_string($driverAttr) ? $driverAttr : '';
         $payloadExpr = $driver === 'pgsql'
             ? ':payload::jsonb'
             : ':payload';
@@ -197,7 +195,7 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
 
 
     /**
-     * @param array $payload
+     * @param array<string, mixed> $payload
      * @return string
      */
     private function encodePayload(array $payload): string
