@@ -1,4 +1,4 @@
-﻿# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 
 name = "addressing-agent-trigger"
 main = "src/index.js"
@@ -12,4 +12,11 @@ GH_REF = "master"
 SR_TIME_SKEW_SEC = "300"
 SR_ALLOWED_TASK = "scan,health,doctor,validate,plan,codex,pr"
 
+[durable_objects]
+bindings = [
+  { name = "SR_NONCE_GUARD", class_name = "SrNonceGuard" }
+]
 
+[[migrations]]
+tag = "v1"
+new_classes = ["SrNonceGuard"]

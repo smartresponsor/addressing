@@ -1,2 +1,7 @@
-SR_TRIGGER_SECRET_K1=__SET_LOCAL__
-SR_DEBUG=0
+# Required secrets (set your real values in .dev.vars)
+SR_TRIGGER_SECRET_K1=""
+GH_TOKEN=""
+
+# Optional
+SR_NONCE_TTL_SEC="600"
+SR_DEBUG="0"
