@@ -30,3 +30,9 @@ Thumbs.db
 # Node
 node_modules/
 **/node_modules/
+
+# AI
+/Domain/Ai/agent-trigger/worker/.dev.vars
+/Domain/Ai/agent-trigger/worker/.dev.vars.*
+!/Domain/Ai/agent-trigger/worker/.dev.vars.example
+

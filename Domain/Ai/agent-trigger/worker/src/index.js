@@ -1,170 +1,101 @@
-﻿// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
-
-function textEncoder() {
-    return new TextEncoder();
-}
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 
 function toHex(bytes) {
-    const b = new Uint8Array(bytes);
-    let out = '';
-    for (let i = 0; i < b.length; i++) {
-        out += b[i].toString(16).padStart(2, '0');
-    }
-    return out;
+  return [...new Uint8Array(bytes)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
-function safeEqual(a, b) {
-    if (typeof a !== 'string' || typeof b !== 'string') return false;
-    if (a.length !== b.length) return false;
-    let diff = 0;
-    for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-    return diff === 0;
+async function sha256Hex(str) {
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest("SHA-256", buf);
+  return toHex(hash);
 }
 
-async function hmacHex(secret, data) {
-    const key = await crypto.subtle.importKey(
-        'raw',
-        textEncoder().encode(secret),
-        {name: 'HMAC', hash: 'SHA-256'},
-        false,
-        ['sign']
-    );
-    const sig = await crypto.subtle.sign('HMAC', key, textEncoder().encode(data));
-    return toHex(sig);
+async function hmacSha256Hex(secret, str) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+
+  const sig = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(str),
+  );
+
+  return toHex(sig);
 }
 
-function envInt(env, key, def) {
-    const v = env[key];
-    if (typeof v !== 'string' || v.trim() === '') return def;
-    const n = Number(v);
-    return Number.isFinite(n) ? n : def;
+function constantTimeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
 }
 
-function envStr(env, key, def) {
-    const v = env[key];
-    if (typeof v !== 'string' || typeof v.trim !== 'function') return def;
-    return v.trim() === '' ? def : v;
-}
-
-function parseAllowedTask(env) {
-    const raw = envStr(env, 'SR_ALLOWED_TASK', 'scan,health,doctor,validate,plan,codex,pr');
-    return raw.split(',').map(s => s.trim()).filter(Boolean);
+function normalizeSecret(secret) {
+  if (!secret) return "";
+  let s = secret.trim();
+  if (
+    (s.startsWith('"') && s.endsWith('"')) ||
+    (s.startsWith("'") && s.endsWith("'"))
+  ) {
+    s = s.slice(1, -1);
+  }
+  return s.trim();
 }
 
 function json(status, obj) {
-    return new Response(JSON.stringify(obj, null, 2), {
-        status,
-        headers: {'content-type': 'application/json; charset=utf-8'}
-    });
-}
-
-function bad(status, code, message) {
-    return json(status, {ok: false, code, message});
+  return new Response(JSON.stringify(obj, null, 2), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 export default {
-    async fetch(request, env) {
-        const url = new URL(request.url);
-
-        if (url.pathname === '/health') {
-            return json(200, {ok: true, service: 'sr-agent-trigger'});
-        }
-
-        if (url.pathname !== '/dispatch') {
-            return bad(404, 'NotFound', 'Use /dispatch or /health');
-        }
-
-        if (request.method !== 'POST') {
-            return bad(405, 'MethodNotAllowed', 'POST required');
-        }
-
-        const kid = (request.headers.get('X-SR-Kid') || 'K1').toUpperCase();
-        if (!/^K\d+$/.test(kid)) {
-            return bad(401, 'BadKid', 'Invalid X-SR-Kid');
-        }
-
-        const secret =
-            envStr(env, `SR_TRIGGER_SECRET_${kid}`, '') ||
-            envStr(env, 'SR_TRIGGER_SECRET', '');
-
-        if (!secret) {
-            return bad(500, 'Misconfig', `Secret for ${kid} not configured`);
-        }
-
-        const tsHeader = request.headers.get('X-SR-Timestamp') || '';
-        const sigHeader = (request.headers.get('X-SR-Signature') || '').toLowerCase();
-
-        const ts = Number(tsHeader);
-        if (!Number.isFinite(ts) || ts <= 0) {
-            return bad(401, 'BadTimestamp', 'X-SR-Timestamp required');
-        }
-
-        const skew = envInt(env, 'SR_TIME_SKEW_SEC', 300);
-        const now = Math.floor(Date.now() / 1000);
-        if (Math.abs(now - ts) > skew) {
-            return bad(401, 'TimestampSkew', 'Timestamp outside allowed window');
-        }
-
-        const rawBody = await request.text();
-        const expected = await hmacHex(secret, `${ts}.${rawBody}`);
-
-        if (!safeEqual(expected, sigHeader)) {
-            return bad(403, 'BadSignature', 'Signature mismatch');
-        }
-
-        let payload;
-        try {
-            payload = rawBody.trim() ? JSON.parse(rawBody) : {};
-        } catch {
-            return bad(400, 'BadJson', 'Body must be JSON');
-        }
-
-        const task = String(payload.task || '').trim();
-        const allowed = parseAllowedTask(env);
-        if (!task) return bad(400, 'BadTask', 'task is required');
-        if (!allowed.includes(task)) {
-            return bad(400, 'BadTask', `task not allowed: ${task}`);
-        }
-
-        const owner = envStr(env, 'GH_OWNER', '');
-        const repo = envStr(env, 'GH_REPO', '');
-        const workflow = envStr(env, 'GH_WORKFLOW', '');
-        const token = envStr(env, 'GH_TOKEN', '');
-        const refDefault = envStr(env, 'GH_REF', 'master');
-        const ghApiVersion = envStr(env, 'GH_API_VERSION', '2022-11-28');
-
-        if (!owner || !repo || !workflow || !token) {
-            return bad(500, 'Misconfig', 'GitHub env vars missing');
-        }
-
-        const ref = String(payload.ref || refDefault).trim() || refDefault;
-        const inputs = payload.inputs && typeof payload.inputs === 'object' ? payload.inputs : {};
-        inputs.task = task;
-
-        const ghUrl = `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/dispatches`;
-        const ghRes = await fetch(ghUrl, {
-            method: 'POST',
-            headers: {
-                Accept: 'application/vnd.github+json',
-                Authorization: `Bearer ${token}`,
-                'X-GitHub-Api-Version': ghApiVersion,
-                'User-Agent': 'sr-agent-trigger'
-            },
-            body: JSON.stringify({ref, inputs})
-        });
-
-        if (ghRes.status === 204) {
-            return json(200, {ok: true, dispatched: true, task, ref, kid});
-        }
-
-        const text = await ghRes.text();
-        return json(ghRes.status, {
-            ok: false,
-            dispatched: false,
-            task,
-            ref,
-            kid,
-            github: text.slice(0, 2000)
-        });
+  async fetch(request, env) {
+    if (request.method !== "POST") {
+      return new Response("Method Not Allowed", { status: 405 });
     }
+
+    const kid = (request.headers.get("X-SR-Kid") || "").toUpperCase();
+    const ts = Number(request.headers.get("X-SR-Timestamp"));
+    const sig = (request.headers.get("X-SR-Signature") || "").toLowerCase();
+
+    if (!/^K\d+$/.test(kid) || !Number.isFinite(ts)) {
+      return json(401, { ok: false, code: "BadAuthHeader" });
+    }
+
+    const secret = normalizeSecret(env[`SR_TRIGGER_SECRET_${kid}`]);
+    if (!secret) {
+      return json(500, { ok: false, code: "SecretNotConfigured", kid });
+    }
+
+    const rawBody = await request.text();
+    const bodyHash = await sha256Hex(rawBody);
+    const signed = `${ts}.${bodyHash}`;
+    const expected = await hmacSha256Hex(secret, signed);
+
+    if (!constantTimeEqual(expected, sig)) {
+      const res = { ok: false, code: "BadSignature", kid };
+      if (env.SR_DEBUG === "1") {
+        res.debug = {
+          ts,
+          sig,
+          expected,
+          bodyHash,
+          signed,
+          secretSha256: await sha256Hex(secret),
+          rawBody,
+        };
+      }
+      return json(403, res);
+    }
+
+    return json(200, { ok: true, verified: true });
+  },
 };

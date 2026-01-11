@@ -1,93 +1,119 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 
-    [CmdletBinding()]
+[CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)][string]$Url,
     [Parameter(Mandatory = $true)]
-    [ValidateSet("scan", "health", "doctor", "validate", "plan", "codex", "pr")]
+    [string]$Url,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("scan","health","doctor","validate","plan","codex","pr")]
     [string]$Task,
+
     [string]$Ref = "master",
     [string]$Kind = "fix",
     [string]$Message = "agent update",
     [string]$Note = "",
+
     [ValidatePattern("^K\d+$")]
     [string]$Kid = "K1"
 )
 
 $ErrorActionPreference = "Stop"
 
-function To-Hex([byte[]]$Bytes)
-{
+if ($PSBoundParameters.ContainsKey("Debug")) {
+    $DebugPreference = "Continue"
+} else {
+    $DebugPreference = "SilentlyContinue"
+}
+
+function ConvertTo-HexStringLower {
+    param([byte[]]$Bytes)
     ($Bytes | ForEach-Object { $_.ToString("x2") }) -join ""
 }
 
-function Hmac-Sha256-Hex([string]$Secret, [string]$Data)
-{
-    $h = [System.Security.Cryptography.HMACSHA256]::new(
-            [System.Text.Encoding]::UTF8.GetBytes($Secret)
-    )
-    try
-    {
-        return To-Hex ($h.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($Data)))
-    }
-    finally
-    {
-        $h.Dispose()
+function Get-Sha256Hex {
+    param([string]$Value)
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($Value)
+        ConvertTo-HexStringLower ($sha.ComputeHash($bytes))
+    } finally {
+        $sha.Dispose()
     }
 }
 
-$kidUp = $Kid.ToUpper()
+function Get-HmacSha256Hex {
+    param(
+        [string]$Secret,
+        [string]$Value
+    )
+    $hmac = [System.Security.Cryptography.HMACSHA256]::new(
+        [System.Text.Encoding]::UTF8.GetBytes($Secret)
+    )
+    try {
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($Value)
+        ConvertTo-HexStringLower ($hmac.ComputeHash($bytes))
+    } finally {
+        $hmac.Dispose()
+    }
+}
+
+function Normalize-Secret {
+    param([string]$S)
+    if ($null -eq $S) { return "" }
+    $t = $S.Trim()
+
+    if (($t.StartsWith('"') -and $t.EndsWith('"')) -or ($t.StartsWith("'") -and $t.EndsWith("'"))) {
+        if ($t.Length -ge 2) {
+            $t = $t.Substring(1, $t.Length - 2)
+        }
+    }
+
+    return $t.Trim()
+}
+
+$kidUp = $Kid.ToUpperInvariant()
 $envName = "SR_TRIGGER_SECRET_$kidUp"
-$secret = (Get-Item "Env:$envName" -ErrorAction SilentlyContinue).Value
-if (-not$secret)
-{
+$secretRaw = (Get-Item "Env:$envName" -ErrorAction SilentlyContinue).Value
+$secret = Normalize-Secret $secretRaw
+
+if (-not $secret) {
     throw "Missing env var $envName"
 }
 
-$ts = [int][DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+$timestamp = [int][DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
 
-$bodyObj = @{
-    task = $Task
-    ref = $Ref
-    inputs = @{
-        kind = $Kind
+$bodyObj = [ordered]@{
+    task   = $Task
+    ref    = $Ref
+    inputs = [ordered]@{
+        kind    = $Kind
         message = $Message
-        note = $Note
+        note    = $Note
     }
 }
 
-function Canonical-Json($obj) {
-    if ($obj -is [hashtable]) {
-        $ordered = [ordered]@{}
-        foreach ($k in ($obj.Keys | Sort-Object)) {
-            $ordered[$k] = Canonical-Json $obj[$k]
-        }
-        return $ordered
-    }
-    if ($obj -is [array]) {
-        return @($obj | ForEach-Object { Canonical-Json $_ })
-    }
-    return $obj
-}
+$body = ($bodyObj | ConvertTo-Json -Depth 10 -Compress)
+$body = $body -replace "^\uFEFF", ""
+$body = $body -replace "\r?\n", ""
 
-$canonical = Canonical-Json $bodyObj
-$body = ($canonical | ConvertTo-Json -Depth 6 -Compress)
-
-$sig = Hmac-Sha256-Hex $secret "$ts.$body"
+$bodyHash = Get-Sha256Hex $body
+$signed = "$timestamp.$bodyHash"
+$signature = Get-HmacSha256Hex $secret $signed
 
 $headers = @{
-    "Content-Type" = "application/json"
-    "X-SR-Timestamp" = "$ts"
-    "X-SR-Signature" = $sig
-    "X-SR-Kid" = $kidUp
+    "X-SR-Timestamp" = "$timestamp"
+    "X-SR-Kid"       = $kidUp
+    "X-SR-Signature" = $signature
 }
 
 Write-Host "POST $Url task=$Task kid=$kidUp"
 
-$response = Invoke-RestMethod `
-  -Method Post `
-  -Uri $Url `
-  -Headers $headers `
-  -Body $body
+Write-Debug "secretSha256=$(Get-Sha256Hex $secret)"
+Write-Debug "timestamp=$timestamp"
+Write-Debug "body=$body"
+Write-Debug "bodySha256=$bodyHash"
+Write-Debug "signed=$signed"
+Write-Debug "signature=$signature"
 
-$response | ConvertTo-Json -Depth 6
+Invoke-RestMethod -Method Post -Uri $Url -Headers $headers -ContentType "application/json" -Body $body
