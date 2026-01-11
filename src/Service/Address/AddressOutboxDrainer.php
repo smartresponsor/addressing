@@ -51,7 +51,8 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
         $count = 0;
 
         foreach ($rows as $r) {
-            $payload = json_decode((string)($r['payload'] ?? ''), true);
+            $payloadRaw = $this->scalarToString($r['payload'] ?? null);
+            $payload = json_decode($payloadRaw, true);
             if (!is_array($payload)) {
                 $payload = null;
             }
@@ -60,8 +61,8 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
             $ok = $this->send(
                 $url,
                 [
-                    'name' => (string)$r['event_name'],
-                    'version' => (int)$r['event_version'],
+                    'name' => $this->scalarToString($r['event_name'] ?? null),
+                    'version' => $this->scalarToInt($r['event_version'] ?? null),
                     'payload' => $payload,
                 ],
                 $retryLimit,
@@ -101,7 +102,8 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
      */
     private function reserveRows(string $lockId, int $limit): array
     {
-        $driver = (string)$this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $driverAttr = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $driver = is_string($driverAttr) ? $driverAttr : '';
 
         if ($driver === 'pgsql') {
             $stmt = $this->pdo->prepare(
@@ -134,8 +136,7 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
         $sel->bindValue(':lim', $limit, PDO::PARAM_INT);
         $sel->execute();
         $ids = $sel->fetchAll(PDO::FETCH_COLUMN);
-
-        if ($ids === [] || $ids === false) {
+        if (!is_array($ids) || $ids === []) {
             $this->pdo->commit();
             return [];
         }
@@ -157,6 +158,34 @@ final class AddressOutboxDrainer implements AddressOutboxDrainerInterface
         $this->pdo->commit();
 
         return $result;
+    }
+
+    private function scalarToString(mixed $value): string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+        if (is_int($value) || is_float($value) || is_bool($value)) {
+            return (string)$value;
+        }
+        return '';
+    }
+
+    private function scalarToInt(mixed $value): int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_float($value)) {
+            return (int)$value;
+        }
+        if (is_bool($value)) {
+            return $value ? 1 : 0;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (int)$value;
+        }
+        return 0;
     }
 
     /**
