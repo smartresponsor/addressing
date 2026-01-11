@@ -245,7 +245,7 @@ SQL;
         if (count($safeRows) === $limit && $safeRows !== []) {
             $last = end($safeRows);
             if (is_array($last) && isset($last['id'])) {
-                $nextCursor = (string)$last['id'];
+                $nextCursor = $this->asNullableString($last['id'] ?? null);
             }
         }
 
@@ -460,7 +460,7 @@ SQL;
         }
 
         if (!$this->pdo instanceof PDO) {
-            throw new LogicException('PDO not initialized');
+            throw new \LogicException('PDO not initialized');
         }
 
         $driverAttr = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
