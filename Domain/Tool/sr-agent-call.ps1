@@ -15,7 +15,9 @@ param(
     [string]$Note = "",
 
     [ValidatePattern("^K\d+$")]
-    [string]$Kid = "K1"
+    [string]$Kid = "K1",
+
+    [string]$Nonce = ([guid]::NewGuid().ToString())
 )
 
 $ErrorActionPreference = "Stop"
@@ -105,6 +107,7 @@ $headers = @{
     "X-SR-Timestamp" = "$timestamp"
     "X-SR-Kid"       = $kidUp
     "X-SR-Signature" = $signature
+    "X-SR-Nonce"     = $Nonce
 }
 
 Write-Host "POST $Url task=$Task kid=$kidUp"
@@ -115,5 +118,6 @@ Write-Debug "body=$body"
 Write-Debug "bodySha256=$bodyHash"
 Write-Debug "signed=$signed"
 Write-Debug "signature=$signature"
+Write-Debug "nonce=$Nonce"
 
 Invoke-RestMethod -Method Post -Uri $Url -Headers $headers -ContentType "application/json" -Body $body
