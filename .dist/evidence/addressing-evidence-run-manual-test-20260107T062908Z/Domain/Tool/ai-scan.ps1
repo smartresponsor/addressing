@@ -35,8 +35,6 @@ function Resolve-Domain([string]$d)
 function Find-CanonBin
 {
     $candidates = @(
-    "vendor/bin/sr-canon",
-    "vendor/bin/smartresponsor-canon",
     "vendor/bin/canon"
     )
     foreach ($c in $candidates)

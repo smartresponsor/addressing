@@ -12,8 +12,6 @@ $ErrorActionPreference = "Stop"
 function Find-CanonBin
 {
     $candidates = @(
-    "vendor/bin/sr-canon",
-    "vendor/bin/smartresponsor-canon",
     "vendor/bin/canon"
     )
 

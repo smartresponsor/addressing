@@ -9,8 +9,6 @@ $ErrorActionPreference = "Stop"
 function Find-CanonBin([string]$Root)
 {
     $candidates = @(
-    (Join-Path $Root "vendor/bin/sr-canon"),
-    (Join-Path $Root "vendor/bin/smartresponsor-canon"),
     (Join-Path $Root "vendor/bin/canon")
     )
 
