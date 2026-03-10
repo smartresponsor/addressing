@@ -17,17 +17,20 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
     {
     }
 
-    public function apply(string $id, AddressValidated $validated): void
+    public function apply(string $id, AddressValidated $validated, ?string $ownerId = null, ?string $vendorId = null): void
     {
         $fingerprint = $validated->fingerprint();
         $now = new DateTimeImmutable('now');
         $validatedAt = $validated->validatedAt ?? $now;
+        $scopeParams = $this->tenantParams($ownerId, $vendorId);
+        $scopeWhere = $this->tenantWhereClause($ownerId, $vendorId);
+        $lockClause = $this->isPgsql() ? ' FOR UPDATE' : '';
 
         try {
             $this->pdo->beginTransaction();
 
-            $stmt = $this->prepare('SELECT validation_fingerprint FROM address_entity WHERE id = :id FOR UPDATE');
-            $stmt->execute([':id' => $id]);
+            $stmt = $this->prepare('SELECT validation_fingerprint FROM address_entity WHERE id = :id AND ' . $scopeWhere . $lockClause);
+            $stmt->execute(array_merge([':id' => $id], $scopeParams));
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!is_array($row)) {
                 $this->pdo->rollBack();
@@ -42,7 +45,7 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
             }
 
             $fields = [];
-            $params = [
+            $params = array_merge([
                 ':id' => $id,
                 ':updated_at' => $now->format('Y-m-d H:i:sP'),
                 ':validation_provider' => $validated->validationProvider,
@@ -50,7 +53,7 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
                 ':validated_at' => $validatedAt->format('Y-m-d H:i:sP'),
                 ':dedupe_key' => $validated->dedupeKey,
                 ':validation_fingerprint' => $fingerprint,
-            ];
+            ], $scopeParams);
 
             if ($validated->line1Norm !== null) {
                 $fields[] = 'line1_norm = :line1_norm';
@@ -82,13 +85,13 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
             }
 
             if ($validated->raw !== null) {
-                $fields[] = 'validation_raw = :validation_raw::jsonb';
+                $fields[] = $this->jsonAssignment('validation_raw', ':validation_raw');
                 $rawJson = $this->encodePayload($validated->raw);
                 $params[':validation_raw'] = $rawJson;
                 $params[':validation_raw_sha256'] = hash('sha256', $rawJson);
             }
             if ($validated->verdict !== null) {
-                $fields[] = 'validation_verdict = :validation_verdict::jsonb';
+                $fields[] = $this->jsonAssignment('validation_verdict', ':validation_verdict');
                 $params[':validation_verdict'] = $this->encodePayload($validated->verdict->jsonSerialize());
 
                 if ($validated->verdict->deliverable !== null) {
@@ -112,7 +115,7 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
             $fields[] = 'validation_fingerprint = :validation_fingerprint';
             $fields[] = 'updated_at = :updated_at';
 
-            $sql = 'UPDATE address_entity SET ' . implode(', ', $fields) . ' WHERE id = :id';
+            $sql = 'UPDATE address_entity SET ' . implode(', ', $fields) . ' WHERE id = :id AND ' . $scopeWhere;
             $stmt = $this->prepare($sql);
             $ok = $stmt->execute($params);
 
@@ -127,6 +130,8 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
 
             $this->appendOutbox([
                 'id' => $id,
+                'ownerId' => $ownerId,
+                'vendorId' => $vendorId,
                 'fingerprint' => $fingerprint,
                 'provider' => $validated->validationProvider,
                 'validatedAt' => $validatedAt->format(DATE_ATOM),
@@ -146,18 +151,11 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
         }
     }
 
-    /**
-     * @param array<string, mixed> $payload
-     */
+    /** @param array<string, mixed> $payload */
     private function appendOutbox(array $payload): void
     {
         $payloadJson = $this->encodePayload($payload);
-
-        $driverAttr = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-        $driver = is_string($driverAttr) ? $driverAttr : '';
-        $payloadExpr = $driver === 'pgsql'
-            ? ':payload::jsonb'
-            : ':payload';
+        $payloadExpr = $this->isPgsql() ? ':payload::jsonb' : ':payload';
 
         $stmt = $this->prepare(
             "INSERT INTO address_outbox (event_name, event_version, payload)
@@ -171,16 +169,60 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
         ]);
     }
 
-    /**
-     * @param array<string, mixed> $payload
-     */
+    /** @param array<string, mixed> $payload */
     private function encodePayload(array $payload): string
     {
         $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($json === false) {
             throw new RuntimeException('payload_encode_failed');
         }
+
         return $json;
+    }
+
+    private function jsonAssignment(string $field, string $placeholder): string
+    {
+        if ($this->isPgsql()) {
+            return $field . ' = ' . $placeholder . '::jsonb';
+        }
+
+        return $field . ' = ' . $placeholder;
+    }
+
+    private function tenantWhereClause(?string $ownerId, ?string $vendorId): string
+    {
+        if ($ownerId !== null && $vendorId !== null) {
+            return '(owner_id = :owner_id AND vendor_id = :vendor_id)';
+        }
+        if ($ownerId !== null) {
+            return '(owner_id = :owner_id)';
+        }
+        if ($vendorId !== null) {
+            return '(vendor_id = :vendor_id)';
+        }
+
+        return '1 = 1';
+    }
+
+    /** @return array<string, string> */
+    private function tenantParams(?string $ownerId, ?string $vendorId): array
+    {
+        $params = [];
+        if ($ownerId !== null) {
+            $params[':owner_id'] = $ownerId;
+        }
+        if ($vendorId !== null) {
+            $params[':vendor_id'] = $vendorId;
+        }
+
+        return $params;
+    }
+
+    private function isPgsql(): bool
+    {
+        $driverAttr = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+
+        return is_string($driverAttr) && $driverAttr === 'pgsql';
     }
 
     private function rollbackIfActive(): void
@@ -196,6 +238,7 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
         if ($stmt === false) {
             throw new RuntimeException('prepare_failed');
         }
+
         return $stmt;
     }
 }

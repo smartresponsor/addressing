@@ -131,7 +131,7 @@ final class Controller
             'dedupeKey' => self::optStr($in, 'dedupeKey'),
         ]);
 
-        $this->validatedApplier->apply($id, $validated);
+        $this->validatedApplier->apply($id, $validated, $ownerId, $vendorId);
 
         $address = $this->repo->get($id, $ownerId, $vendorId);
         if ($address === null) {
