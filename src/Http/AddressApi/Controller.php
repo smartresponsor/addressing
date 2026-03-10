@@ -1,18 +1,12 @@
 <?php
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
-
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
- * Owner: Marketing America Corp
- * English comments only. No placeholders or stubs.
- */
 
 namespace App\Http\AddressApi;
 
+use App\Contract\Address\AddressValidated;
 use App\Entity\Address\AddressData;
 use App\EntityInterface\Address\AddressInterface;
-use App\Contract\Address\AddressValidated;
 use App\Repository\Address\AddressRepository;
 use App\Service\Address\AddressValidatedApplier;
 use DateTimeImmutable;
@@ -22,19 +16,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Uid\Ulid;
 
-/**
- *
- */
-
-/**
- *
- */
 final class Controller
 {
-    /**
-     * @param \App\Repository\Address\AddressRepository $repo
-     * @param \App\Service\Address\AddressValidatedApplier $validatedApplier
-     */
     public function __construct(
         private readonly AddressRepository       $repo,
         private readonly AddressValidatedApplier $validatedApplier,
@@ -42,19 +25,11 @@ final class Controller
     {
     }
 
-    /**
-     * @param \PDO $pg
-     * @return self
-     */
     public static function fromPg(PDO $pg): self
     {
         return new self(new AddressRepository($pg), new AddressValidatedApplier($pg));
     }
 
-    /**
-     * @param \Symfony\Component\HttpFoundation\Request $req
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
-     */
     public function create(Request $req): JsonResponse
     {
         $in = self::json($req);
@@ -93,27 +68,17 @@ final class Controller
         return new JsonResponse(['id' => $id], 201);
     }
 
-    /**
-     * @param \Symfony\Component\HttpFoundation\Request $req
-     * @param string $id
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
-     */
     public function get(Request $req, string $id): JsonResponse
     {
         [$ownerId, $vendorId] = self::tenantFromQuery($req);
-        $a = $this->repo->get($id, $ownerId, $vendorId);
-        if ($a === null) {
+        $address = $this->repo->get($id, $ownerId, $vendorId);
+        if ($address === null) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }
 
-        return new JsonResponse(self::toArray($a));
+        return new JsonResponse(self::toArray($address));
     }
 
-    /**
-     * @param \Symfony\Component\HttpFoundation\Request $req
-     * @param string $id
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
-     */
     public function markDeleted(Request $req, string $id): JsonResponse
     {
         [$ownerId, $vendorId] = self::tenantFromQuery($req);
@@ -121,10 +86,6 @@ final class Controller
         return new JsonResponse(['ok' => true]);
     }
 
-    /**
-     * @param \Symfony\Component\HttpFoundation\Request $req
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
-     */
     public function page(Request $req): JsonResponse
     {
         $limit = (int)($req->query->get('limit') ?? 25);
@@ -135,20 +96,12 @@ final class Controller
             $limit = 200;
         }
 
-        $cursor = $req->query->get('cursor');
-        $cursor = is_string($cursor) && $cursor !== '' ? $cursor : null;
-
-        $ownerId = $req->query->get('ownerId');
-        $ownerId = is_string($ownerId) && $ownerId !== '' ? $ownerId : null;
-
-        $vendorId = $req->query->get('vendorId');
-        $vendorId = is_string($vendorId) && $vendorId !== '' ? $vendorId : null;
-
-        $countryCode = $req->query->get('countryCode');
-        $countryCode = is_string($countryCode) && $countryCode !== '' ? strtoupper($countryCode) : null;
-
-        $q = $req->query->get('q');
-        $q = is_string($q) && $q !== '' ? $q : null;
+        $cursor = self::queryStringOrNull($req, 'cursor');
+        $ownerId = self::queryStringOrNull($req, 'ownerId');
+        $vendorId = self::queryStringOrNull($req, 'vendorId');
+        $countryCode = self::queryStringOrNull($req, 'countryCode');
+        $countryCode = $countryCode !== null ? strtoupper($countryCode) : null;
+        $q = self::queryStringOrNull($req, 'q');
 
         $res = $this->repo->findPage($ownerId, $vendorId, $countryCode, $q, $limit, $cursor);
 
@@ -160,11 +113,6 @@ final class Controller
         ]);
     }
 
-    /**
-     * @param \Symfony\Component\HttpFoundation\Request $req
-     * @param string $id
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
-     */
     public function applyValidated(Request $req, string $id): JsonResponse
     {
         $in = self::json($req);
@@ -185,12 +133,12 @@ final class Controller
 
         $this->validatedApplier->apply($id, $validated);
 
-        $a = $this->repo->get($id, $ownerId, $vendorId);
-        if ($a === null) {
+        $address = $this->repo->get($id, $ownerId, $vendorId);
+        if ($address === null) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }
 
-        return new JsonResponse(self::toArray($a));
+        return new JsonResponse(self::toArray($address));
     }
 
     /**
@@ -242,13 +190,17 @@ final class Controller
      */
     private static function tenantFromQuery(Request $req): array
     {
-        $ownerId = $req->query->get('ownerId');
-        $ownerId = is_string($ownerId) && $ownerId !== '' ? $ownerId : null;
-
-        $vendorId = $req->query->get('vendorId');
-        $vendorId = is_string($vendorId) && $vendorId !== '' ? $vendorId : null;
+        $ownerId = self::queryStringOrNull($req, 'ownerId');
+        $vendorId = self::queryStringOrNull($req, 'vendorId');
 
         return [$ownerId, $vendorId];
+    }
+
+    private static function queryStringOrNull(Request $req, string $key): ?string
+    {
+        $value = $req->query->get($key);
+
+        return is_string($value) && $value !== '' ? $value : null;
     }
 
     /**
@@ -270,36 +222,33 @@ final class Controller
         throw new RuntimeException('invalid_' . $key);
     }
 
-    /**
-     * @param \App\EntityInterface\Address\AddressInterface $a
-     * @return array<string, mixed>
-     */
-    private static function toArray(AddressInterface $a): array
+    /** @return array<string, mixed> */
+    private static function toArray(AddressInterface $address): array
     {
         return [
-            'id' => $a->id(),
-            'ownerId' => $a->ownerId(),
-            'vendorId' => $a->vendorId(),
-            'line1' => $a->line1(),
-            'line2' => $a->line2(),
-            'city' => $a->city(),
-            'region' => $a->region(),
-            'postalCode' => $a->postalCode(),
-            'countryCode' => $a->countryCode(),
-            'line1Norm' => $a->line1Norm(),
-            'cityNorm' => $a->cityNorm(),
-            'regionNorm' => $a->regionNorm(),
-            'postalCodeNorm' => $a->postalCodeNorm(),
-            'latitude' => $a->latitude(),
-            'longitude' => $a->longitude(),
-            'geohash' => $a->geohash(),
-            'validationStatus' => $a->validationStatus(),
-            'validationProvider' => $a->validationProvider(),
-            'validatedAt' => $a->validatedAt(),
-            'dedupeKey' => $a->dedupeKey(),
-            'createdAt' => $a->createdAt(),
-            'updatedAt' => $a->updatedAt(),
-            'deletedAt' => $a->deletedAt(),
+            'id' => $address->id(),
+            'ownerId' => $address->ownerId(),
+            'vendorId' => $address->vendorId(),
+            'line1' => $address->line1(),
+            'line2' => $address->line2(),
+            'city' => $address->city(),
+            'region' => $address->region(),
+            'postalCode' => $address->postalCode(),
+            'countryCode' => $address->countryCode(),
+            'line1Norm' => $address->line1Norm(),
+            'cityNorm' => $address->cityNorm(),
+            'regionNorm' => $address->regionNorm(),
+            'postalCodeNorm' => $address->postalCodeNorm(),
+            'latitude' => $address->latitude(),
+            'longitude' => $address->longitude(),
+            'geohash' => $address->geohash(),
+            'validationStatus' => $address->validationStatus(),
+            'validationProvider' => $address->validationProvider(),
+            'validatedAt' => $address->validatedAt(),
+            'dedupeKey' => $address->dedupeKey(),
+            'createdAt' => $address->createdAt(),
+            'updatedAt' => $address->updatedAt(),
+            'deletedAt' => $address->deletedAt(),
         ];
     }
 }
