@@ -1,10 +1,5 @@
 <?php
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
- * Owner: Marketing America Corp
- * English comments only. No placeholders or stubs.
- */
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Service\Address;
@@ -13,29 +8,15 @@ use App\Contract\Address\AddressValidated;
 use App\ServiceInterface\Address\AddressValidatedApplierInterface;
 use DateTimeImmutable;
 use PDO;
+use PDOStatement;
 use RuntimeException;
 
-/**
- *
- */
-
-/**
- *
- */
 final class AddressValidatedApplier implements AddressValidatedApplierInterface
 {
-    /**
-     * @param \PDO $pdo
-     */
     public function __construct(private readonly PDO $pdo)
     {
     }
 
-    /**
-     * @param string $id
-     * @param \App\Contract\Address\AddressValidated $validated
-     * @return void
-     */
     public function apply(string $id, AddressValidated $validated): void
     {
         $fingerprint = $validated->fingerprint();
@@ -157,14 +138,10 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
 
             $this->pdo->commit();
         } catch (RuntimeException $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
+            $this->rollbackIfActive();
             throw $e;
         } catch (\Throwable) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
+            $this->rollbackIfActive();
             throw new RuntimeException('apply_failed');
         }
     }
@@ -194,10 +171,8 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
         ]);
     }
 
-
     /**
      * @param array<string, mixed> $payload
-     * @return string
      */
     private function encodePayload(array $payload): string
     {
@@ -208,7 +183,14 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
         return $json;
     }
 
-    private function prepare(string $sql): \PDOStatement
+    private function rollbackIfActive(): void
+    {
+        if ($this->pdo->inTransaction()) {
+            $this->pdo->rollBack();
+        }
+    }
+
+    private function prepare(string $sql): PDOStatement
     {
         $stmt = $this->pdo->prepare($sql);
         if ($stmt === false) {
