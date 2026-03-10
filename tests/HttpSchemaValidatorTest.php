@@ -21,6 +21,18 @@ final class HttpSchemaValidatorTest extends TestCase
         self::assertSame(['ok' => false, 'error' => 'type_countryHint'], $result);
     }
 
+    public function testValidateRejectsNullInRequiredField(): void
+    {
+        $validator = new Validator();
+
+        $result = $validator->validate('ParseRequest', [
+            'text' => null,
+            'countryHint' => 'GB',
+        ]);
+
+        self::assertSame(['ok' => false, 'error' => 'missing_text'], $result);
+    }
+
     public function testValidateAcceptsValidPayload(): void
     {
         $validator = new Validator();

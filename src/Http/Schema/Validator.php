@@ -39,7 +39,7 @@ final class Validator
         }
 
         foreach ($definition['required'] as $requiredKey) {
-            if (!array_key_exists($requiredKey, $data)) {
+            if (!array_key_exists($requiredKey, $data) || $data[$requiredKey] === null) {
                 return ['ok' => false, 'error' => 'missing_' . $requiredKey];
             }
         }
