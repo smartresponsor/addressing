@@ -1,4 +1,4 @@
-# SmartResponsor Address — RC-A Baseline (Data Domain)
+# Smartresponsor Address — RC-A Baseline (Data Domain)
 
 Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 
@@ -15,7 +15,7 @@ This package contains:
 
 1) Copy `.env.dist` → `.env` and export variables (PG_*, MY_*).
 2) `php bin/address-migrate`
-3) Use `SmartResponsor\Layer\Address\AddressRepository` in your bootstrap to persist data.
+3) Use `Smartresponsor\Layer\Address\AddressRepository` in your bootstrap to persist data.
 4) Run `php bin/address-projection-runner` to refresh MySQL projection.
 
 ## Canon
