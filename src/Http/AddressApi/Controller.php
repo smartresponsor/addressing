@@ -37,7 +37,7 @@ final class Controller
         $id = (string)new Ulid();
         $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
 
-        $a = new AddressData(
+        $address = new AddressData(
             $id,
             self::optStr($in, 'ownerId'),
             self::optStr($in, 'vendorId'),
@@ -63,7 +63,7 @@ final class Controller
             null
         );
 
-        $this->repo->create($a);
+        $this->repo->create($address);
 
         return new JsonResponse(['id' => $id], 201);
     }
@@ -105,7 +105,7 @@ final class Controller
 
         $res = $this->repo->findPage($ownerId, $vendorId, $countryCode, $q, $limit, $cursor);
 
-        $items = array_map(fn(AddressInterface $a): array => self::toArray($a), $res['items']);
+        $items = array_map(fn(AddressInterface $address): array => self::toArray($address), $res['items']);
 
         return new JsonResponse([
             'items' => $items,
@@ -141,10 +141,7 @@ final class Controller
         return new JsonResponse(self::toArray($address));
     }
 
-    /**
-     * @param \Symfony\Component\HttpFoundation\Request $req
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     private static function json(Request $req): array
     {
         $raw = $req->getContent();
