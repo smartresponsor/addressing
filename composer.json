@@ -1,6 +1,6 @@
 {
   "name": "your-org/address-engine",
-  "description": "AddressEngine \u2014 domain-driven Address library with Symfony & ApiPlatform integration",
+  "description": "AddressEngine — domain-driven Address library with Symfony & ApiPlatform integration",
   "type": "library",
   "license": "MIT",
   "require": {
@@ -20,7 +20,7 @@
     "behat/behat": "^3.14",
     "friends-of-behat/symfony-extension": "^2.1",
     "phpstan/phpstan": "^1.11",
-    "vimeo/psalm": "dev-master",
+    "vimeo/psalm": "^5.26",
     "rector/rector": "^1.2"
   },
   "autoload": {
