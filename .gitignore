@@ -36,3 +36,4 @@ node_modules/
 /Domain/Ai/agent-trigger/worker/.dev.vars.*
 !/Domain/Ai/agent-trigger/worker/.dev.vars.example
 
+docs/site/

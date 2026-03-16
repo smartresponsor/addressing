@@ -1,21 +1,14 @@
 #!/usr/bin/env php
 <?php
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
-
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
- * Owner: Marketing America Corp
- */
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use App\Contract\Address\AddressValidated;
 use App\Service\Address\AddressValidatedApplier;
 use JetBrains\PhpStorm\NoReturn;
 
-/**
- * @return void
- */
 #[NoReturn] function usage(): void
 {
     fwrite(STDERR, "Usage: address-apply-validated <json-file>|- (NDJSON or single JSON)\n");
@@ -65,9 +58,9 @@ if (str_contains($trim, "\n")) {
         exit(2);
     }
     if (isset($obj[0]) && is_array($obj[0])) {
-        foreach ($obj as $o) {
-            if (is_array($o)) {
-                $dataSet[] = $o;
+        foreach ($obj as $item) {
+            if (is_array($item)) {
+                $dataSet[] = $item;
             }
         }
     } else {
@@ -77,20 +70,26 @@ if (str_contains($trim, "\n")) {
 
 $ok = 0;
 $fail = 0;
-foreach ($dataSet as $ev) {
+foreach ($dataSet as $event) {
     try {
-        $id = $ev['id'] ?? null;
+        $id = $event['id'] ?? null;
         if (!is_string($id) || $id === '') {
             $fail++;
             continue;
         }
-        $payload = $ev;
-        unset($payload['id']);
-        $applier->apply($id, $payload);
+
+        $ownerId = isset($event['ownerId']) && is_string($event['ownerId']) && $event['ownerId'] !== '' ? $event['ownerId'] : null;
+        $vendorId = isset($event['vendorId']) && is_string($event['vendorId']) && $event['vendorId'] !== '' ? $event['vendorId'] : null;
+
+        $payload = $event;
+        unset($payload['id'], $payload['ownerId'], $payload['vendorId']);
+
+        $validated = AddressValidated::fromArray($payload);
+        $applier->apply($id, $validated, $ownerId, $vendorId);
         $ok++;
-    } catch (Throwable $e) {
+    } catch (Throwable $exception) {
         $fail++;
-        fwrite(STDERR, 'Error: ' . $e->getMessage() . "\n");
+        fwrite(STDERR, 'Error: ' . $exception->getMessage() . "\n");
     }
 }
 

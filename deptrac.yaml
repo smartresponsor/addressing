@@ -1,0 +1,82 @@
+# Managed by Commanding inspection
+deptrac:
+  paths:
+    - ./src
+
+  exclude_files:
+    - '#.*Test.*#'
+    - '#.*Kernel.php#'
+
+  layers:
+    - name: Controller
+      collectors:
+        - type: className
+          regex: '^App\\Controller\\.*'
+
+    - name: Http
+      collectors:
+        - type: className
+          regex: '^App\\(Request|Response|Dto|Command)\\.*'
+
+    - name: ServiceInterface
+      collectors:
+        - type: className
+          regex: '^App\\ServiceInterface\\.*'
+
+    - name: Service
+      collectors:
+        - type: className
+          regex: '^App\\Service\\.*'
+
+    - name: RepositoryInterface
+      collectors:
+        - type: className
+          regex: '^App\\RepositoryInterface\\.*'
+
+    - name: Repository
+      collectors:
+        - type: className
+          regex: '^App\\Repository\\.*'
+
+    - name: Entity
+      collectors:
+        - type: className
+          regex: '^App\\Entity\\.*'
+
+    - name: InfrastructureInterface
+      collectors:
+        - type: className
+          regex: '^App\\InfrastructureInterface\\.*'
+
+    - name: Infrastructure
+      collectors:
+        - type: className
+          regex: '^App\\Infrastructure\\.*'
+
+  ruleset:
+    Controller:
+      - Http
+      - Service
+      - ServiceInterface
+
+    Http:
+      - Service
+      - ServiceInterface
+
+    Service:
+      - ServiceInterface
+      - RepositoryInterface
+      - Entity
+      - InfrastructureInterface
+
+    Repository:
+      - Entity
+
+    Infrastructure:
+      - InfrastructureInterface
+      - Entity
+
+    ServiceInterface: ~
+    RepositoryInterface: ~
+    InfrastructureInterface: ~
+    Entity: ~

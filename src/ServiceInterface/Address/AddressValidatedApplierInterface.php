@@ -1,30 +1,13 @@
 <?php
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
- * Owner: Marketing America Corp
- * English comments only. No placeholders or stubs.
- */
 
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\ServiceInterface\Address;
 
 use App\Contract\Address\AddressValidated;
 
-/**
- *
- */
-
-/**
- *
- */
 interface AddressValidatedApplierInterface
 {
-    /**
-     * @param string $id
-     * @param \App\Contract\Address\AddressValidated $validated
-     * @return void
-     */
-    public function apply(string $id, AddressValidated $validated): void;
+    public function apply(string $id, AddressValidated $validated, ?string $ownerId = null, ?string $vendorId = null): void;
 }

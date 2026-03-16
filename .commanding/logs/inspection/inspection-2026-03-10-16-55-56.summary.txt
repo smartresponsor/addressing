@@ -1,0 +1,7 @@
+inspection_status=attention
+verdict=collect-only
+dominant_risk=medium
+ok=10
+warn=0
+fail=4
+findings=14

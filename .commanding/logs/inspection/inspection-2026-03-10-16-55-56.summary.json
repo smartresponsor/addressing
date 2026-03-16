@@ -1,0 +1,32 @@
+{
+  "inspection_status": "attention",
+  "verdict": "collect-only",
+  "dominant_risk": "medium",
+  "dominant_severity": "high",
+  "scoreboard": {
+    "ok": 10,
+    "warn": 0,
+    "fail": 4
+  },
+  "severity": {
+    "low": 9,
+    "medium": 3,
+    "high": 2
+  },
+  "category": {
+    "tooling": 3,
+    "config": 6,
+    "runtime": 1,
+    "style": 1,
+    "typing": 1,
+    "quality": 1,
+    "architecture": 1
+  },
+  "findings": 14,
+  "artifact": {
+    "log": "D:/PhpstormProjects/www/Addressing/.commanding/logs/inspection/latest.log",
+    "summary": "D:/PhpstormProjects/www/Addressing/.commanding/logs/inspection/latest.summary.txt",
+    "json": "D:/PhpstormProjects/www/Addressing/.commanding/logs/inspection/latest.summary.json",
+    "findings": "D:/PhpstormProjects/www/Addressing/.commanding/logs/inspection/latest.findings.ndjson"
+  }
+}
