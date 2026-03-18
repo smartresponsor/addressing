@@ -1,74 +1,125 @@
 {
-  "name": "your-org/address-engine",
-  "description": "AddressEngine \u2014 domain-driven Address library with Symfony & ApiPlatform integration",
-  "type": "library",
-  "license": "MIT",
-  "require": {
-    "php": "^8.4",
-    "doctrine/orm": "^2.15 || ^3.0",
-    "symfony/framework-bundle": "^6.4 || ^7.0",
-    "symfony/property-access": "^6.4 || ^7.0",
-    "symfony/property-info": "^6.4 || ^7.0",
-    "symfony/serializer": "^6.4 || ^7.0",
-    "symfony/uid": "^7.3",
-    "symfony/validator": "^6.4 || ^7.0",
-    "ext-pdo": "*",
-    "ext-curl": "*"
-  },
-  "require-dev": {
-    "behat/behat": "^3.14",
-    "deptrac/deptrac": "^3.0",
-    "friends-of-behat/symfony-extension": "^2.1",
-    "friendsofphp/php-cs-fixer": "^3.94",
-    "phpstan/phpstan": "^1.11",
-    "phpstan/phpstan-doctrine": "^1.5",
-    "phpstan/phpstan-symfony": "^1.4",
-    "phpunit/phpunit": "^10.5",
-    "rector/rector": "^1.2",
-    "vimeo/psalm": "^7.0"
-  },
-  "autoload": {
-    "psr-4": {
-      "App\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Tests\\": "tests/"
-    }
-  },
-  "scripts": {
-    "lint": "php -l $(git diff --cached --name-only --diff-filter=ACMRT | grep '\\.php$')",
-    "phpstan": "vendor/bin/phpstan analyse src --level=max",
-    "psalm": "vendor/bin/psalm",
-    "test": "vendor/bin/phpunit --configuration phpunit.xml.dist",
-    "stan": "vendor/bin/phpstan analyse",
-    "rector:dry": "vendor/bin/rector process --dry-run",
-    "quality": [
-      "@stan",
-      "@rector:dry"
-    ],
-    "qa:phpstan": "php -d memory_limit=1G vendor/bin/phpstan analyse -c phpstan.neon.dist",
-    "qa:rector": "php vendor/bin/rector process --dry-run",
-    "qa:deptrac": "php vendor/bin/deptrac analyse --config-file=deptrac.yaml",
-    "qa:cs": "php vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.dist.php",
-    "qa": [
-      "@qa:phpstan",
-      "@qa:deptrac",
-      "@qa:rector"
-    ],
-    "inspection": "bash ./.commanding/sh/inspection.sh full",
-    "inspection:bootstrap": "bash ./.commanding/sh/inspection.sh bootstrap",
-    "inspection:run": "bash ./.commanding/sh/inspection.sh run",
-    "inspection:latest": "bash ./.commanding/sh/inspection.sh latest",
-    "inspection:chat": "bash ./.commanding/sh/inspection.sh chat",
-    "inspection:baseline": "bash ./.commanding/sh/inspection.sh baseline",
-    "inspection:compare": "bash ./.commanding/sh/inspection.sh compare"
-  },
-  "config": {
-    "sort-packages": true,
-    "preferred-install": "dist"
-  },
-  "minimum-stability": "dev",
-  "prefer-stable": true
+    "name": "your-org/address-engine",
+    "description": "AddressEngine \u2014 domain-driven Address library with Symfony & ApiPlatform integration",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "doctrine/orm": "^2.15 || ^3.0",
+        "symfony/framework-bundle": "^6.4 || ^7.0",
+        "symfony/property-access": "^6.4 || ^7.0",
+        "symfony/property-info": "^6.4 || ^7.0",
+        "symfony/serializer": "^6.4 || ^7.0",
+        "symfony/uid": "^7.3",
+        "symfony/validator": "^6.4 || ^7.0",
+        "ext-pdo": "*",
+        "ext-curl": "*"
+    },
+    "require-dev": {
+        "behat/behat": "^3.14",
+        "deptrac/deptrac": "^3.0",
+        "friends-of-behat/symfony-extension": "^2.1",
+        "friendsofphp/php-cs-fixer": "^3.94",
+        "phpstan/phpstan": "^1.11",
+        "phpstan/phpstan-doctrine": "^1.5",
+        "phpstan/phpstan-symfony": "^1.4",
+        "phpunit/phpunit": "^10.5",
+        "rector/rector": "^1.2",
+        "vimeo/psalm": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "lint": "php -l $(git diff --cached --name-only --diff-filter=ACMRT | grep '\\.php $')",
+        "phpstan": "vendor/bin/phpstan analyse src --level=max",
+        "psalm": "vendor/bin/psalm",
+        "test": "vendor/bin/phpunit --configuration phpunit.xml.dist",
+        "stan": "vendor/bin/phpstan analyse",
+        "rector:dry": "vendor/bin/rector process --dry-run",
+        "quality": [
+            "@stan",
+            "@rector:dry"
+        ],
+        "qa:phpstan": "php -d memory_limit=1G vendor/bin/phpstan analyse -c phpstan.neon.dist",
+        "qa:rector": "php vendor/bin/rector process --dry-run",
+        "qa:deptrac": "php vendor/bin/deptrac analyse --config-file=deptrac.yaml",
+        "qa:cs": "php vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php -cs-fixer.dist.php",
+        "qa": [
+            "@qa:phpstan",
+            "@qa:deptrac",
+            "@qa:rector"
+        ],
+        "inspection": "bash ./.commanding/sh/inspection.sh full",
+        "inspection:bootstrap": "bash ./.commanding/sh/inspection.sh bootstrap",
+        "inspection:run": "bash ./.commanding/sh/inspection.sh run",
+        "inspection:latest": "bash ./.commanding/sh/inspection.sh latest",
+        "inspection:chat": "bash ./.commanding/sh/inspection.sh chat",
+        "inspection:baseline": "bash ./.commanding/sh/inspection.sh baseline",
+        "inspection:compare": "bash ./.commanding/sh/inspection.sh compare",
+        "lint": "@php tools/php/php84.php tools/qa/CatalogPhpLint.php",
+
+        "cs:fix": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php -cs-fixer.php",
+        "cs:check": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php -cs-fixer.php  --dry-run --diff",
+        "cs:check-quiet": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php -cs-fixer.php  --dry-run",
+
+        "stan": "@stan:conservative",
+        "stan:conservative": "tools/php/php82.php vendor/bin/phpstan analyse",
+        "stan:runtime-target": "@php tools/php/php84.php vendor/bin/phpstan analyse",
+
+        "md": "@php tools/php/php84.php vendor/bin/phpmd src,text phpmd.xml.dist",
+        "md:tests": "@php tools/php/php84.php vendor/bin/phpmd tests,text phpmd.xml.dist",
+
+        "test": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist",
+        "test:unit": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite unit",
+        "test:integration": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite integration",
+        "test:e2e": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite e2e",
+
+        "qa:style": [
+            "@lint",
+            "@cs:check"
+        ],
+        "qa:static": [
+            "@stan"
+        ],
+        "qa:smell": [
+            "@md",
+            "@md:tests"
+        ],
+        "qa:test": [
+            "@test"
+        ],
+        "qa:full": [
+            "@qa:style",
+            "@qa:static",
+            "@qa:smell",
+            "@qa:test"
+        ],
+
+        "smoke:runtime": "@php tools/php/php84.php tools/smoke/category-runtime-smoke.php",
+        "smoke:fixtures": "@php tools/php/php84.php tools/smoke/category-fixture-sanity.php",
+        "smoke:container": "@php tools/php/php84.php tools/smoke/category-container-boot-smoke.php",
+        "smoke:doctrine": "@php tools/php/php84.php tools/smoke/category-doctrine-mapping-smoke.php",
+        "smoke:fixture-load": "@php tools/php/php84.php tools/smoke/category-fixture-load-smoke.php",
+        "smoke:graphql": "@php tools/php/php84.php tools/smoke/category-graphql-smoke.php",
+
+        "report:owner-overlap": "@php tools/php/php84.php tools/inspection/CatalogOwnerOverlapReport.php",
+        "report:route-inventory": "@php tools/php/php84.php tools/inspection/CatalogRouteInventoryReport.php",
+        "report:class-alias": "@php tools/php/php84.php tools/inspection/CatalogClassAliasReport.php",
+        "report:runtime-proof": "@php tools/php/php84.php tools/inspection/CatalogRuntimeProofReport.php"
+
+    },
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

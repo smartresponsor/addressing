@@ -11,7 +11,7 @@ Files delivered (overlay)
 
 - src/Entity/Address/AddressData.php (replaces broken src/Entity/Address/Address.php)
 - src/Repository/Address/AddressRepository.php
-- src/Service/Address/AddressProjection.php
+- src/Service/Application/Address/AddressProjection.php
 - src/Value/CountryCode.php
 - src/Value/GeoPoint.php
 - src/Value/PostalCode.php

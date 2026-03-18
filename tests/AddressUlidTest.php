@@ -3,7 +3,7 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-use App\Util\Address\AddressUlid;
+use App\Util\Identifier\Address\AddressUlid;
 use PHPUnit\Framework\TestCase;
 
 final class AddressUlidTest extends TestCase

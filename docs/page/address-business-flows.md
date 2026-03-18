@@ -6,7 +6,7 @@ Short, business-focused flows with input/output trace for the Address domain.
 
 **Input:** API request payload with address fields (`line1`, `city`, `countryCode`, optional `dedupeKey`).  
 **Process:** `App\Http\AddressApi\Controller::create` builds `AddressData` and
-calls `App\Service\Address\AddressService::create`, which persists
+calls `App\Service\Application\Address\AddressService::create`, which persists
 via `App\Repository\Address\AddressRepository::create` and appends `AddressCreated` to `address_outbox`.  
 **Output:** `{ "id": "<ulid>" }` response + outbox row.
 
@@ -33,6 +33,6 @@ any).
 ## Outbox event delivery
 
 **Input:** target webhook URL + drain parameters (`limit`, `retryLimit`, `timeoutSec`, `backoffMs`).  
-**Process:** `App\Service\Address\AddressOutboxDrainer::drain` reads `address_outbox` rows and POSTs each event
+**Process:** `App\Service\Application\Address\AddressOutboxDrainer::drain` reads `address_outbox` rows and POSTs each event
 payload.  
 **Output:** published rows updated with `published_at`, or `last_error` filled on failure.

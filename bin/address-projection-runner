@@ -10,8 +10,8 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use App\Entity\Address\AddressData;
-use App\Service\Address\AddressProjection;
+use App\Entity\Record\Address\AddressData;
+use App\Service\Application\Address\AddressProjection;
 
 /**
  * @param $v

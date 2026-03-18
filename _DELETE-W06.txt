@@ -1,0 +1,6 @@
+.deptrac.cache
+.php-cs-fixer.cache
+.phpunit.result.cache
+var/.php-cs-fixer.cache
+qwerty1234567890
+qwerty1234567890.pub

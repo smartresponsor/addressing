@@ -8,7 +8,7 @@ Included fixes
 
 - Namespace normalized to App\Service\Address for AddressOutboxDrainer, AddressProjection, and AddressValidatedApplier.
 - bin scripts now require vendor/autoload.php and use App\Entity\Address\AddressData and
-  App\Service\Address\AddressProjection.
+  App\Service\Application\Address\AddressProjection.
 
 Prerequisite
 

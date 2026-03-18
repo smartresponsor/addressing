@@ -5,11 +5,11 @@ declare(strict_types=1);
 
 namespace App\Http\AddressApi;
 
-use App\Contract\Address\AddressValidated;
-use App\Entity\Address\AddressData;
-use App\EntityInterface\Address\AddressInterface;
-use App\Repository\Address\AddressRepository;
-use App\Service\Address\AddressValidatedApplier;
+use App\Contract\Message\Address\AddressValidated;
+use App\Entity\Record\Address\AddressData;
+use App\EntityInterface\Record\Address\AddressInterface;
+use App\Repository\Persistence\Address\AddressRepository;
+use App\Service\Application\Address\AddressValidatedApplier;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Uid\Ulid;

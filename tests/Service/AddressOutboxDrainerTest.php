@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
  */
@@ -6,8 +7,7 @@ declare(strict_types=1);
 
 namespace Tests\Service;
 
-use App\Service\Address\AddressOutboxDrainer;
-use PDO;
+use App\Service\Application\Address\AddressOutboxDrainer;
 use PHPUnit\Framework\TestCase;
 
 final class AddressOutboxDrainerTest extends TestCase
@@ -17,16 +17,16 @@ final class AddressOutboxDrainerTest extends TestCase
         $dbFile = tempnam(sys_get_temp_dir(), 'address-outbox-');
         static::assertNotFalse($dbFile);
 
-        $pdo1 = new PDO('sqlite:' . $dbFile);
-        $pdo2 = new PDO('sqlite:' . $dbFile);
-        $pdo1->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $pdo2->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo1 = new \PDO('sqlite:'.$dbFile);
+        $pdo2 = new \PDO('sqlite:'.$dbFile);
+        $pdo1->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $pdo2->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
         $pdo1->exec($this->schemaSql());
         $pdo1->exec(
-            "INSERT INTO address_outbox (event_name, event_version, payload) VALUES "
-            . "('AddressCreated', 1, '{\"id\":\"addr-1\"}'),"
-            . "('AddressCreated', 1, '{\"id\":\"addr-2\"}')"
+            'INSERT INTO address_outbox (event_name, event_version, payload) VALUES '
+            ."('AddressCreated', 1, '{\"id\":\"addr-1\"}'),"
+            ."('AddressCreated', 1, '{\"id\":\"addr-2\"}')"
         );
 
         $published = [];
@@ -39,9 +39,10 @@ final class AddressOutboxDrainerTest extends TestCase
                 int $retryLimit,
                 int $timeoutSec,
                 int $backoffMs,
-                ?string &$error
+                ?string &$error,
             ) use (&$published): bool {
                 $published[] = $data['payload']['id'] ?? null;
+
                 return true;
             }
         );
@@ -54,10 +55,11 @@ final class AddressOutboxDrainerTest extends TestCase
                 int $retryLimit,
                 int $timeoutSec,
                 int $backoffMs,
-                ?string &$error
+                ?string &$error,
             ) use (&$published, $drainer2): bool {
                 $published[] = $data['payload']['id'] ?? null;
                 $drainer2->drain('http://example.test', 10, 0, 1, 0);
+
                 return true;
             }
         );
@@ -68,7 +70,7 @@ final class AddressOutboxDrainerTest extends TestCase
         static::assertSame(['addr-1', 'addr-2'], $published);
 
         $rows = $pdo1->query('SELECT published_at FROM address_outbox ORDER BY id ASC')
-            ->fetchAll(PDO::FETCH_COLUMN);
+            ->fetchAll(\PDO::FETCH_COLUMN);
         static::assertCount(2, $rows);
         static::assertNotEmpty($rows[0]);
         static::assertNotEmpty($rows[1]);

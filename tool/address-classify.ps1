@@ -61,8 +61,8 @@ function Classify([string]$rel)
             $p -match '^src/EntityInterface/' -or
             $p -match '^src/Repository/' -or
             $p -match '^src/RepositoryInterface/' -or
-            $p -match '^src/Service/Address/' -or
-            $p -match '^src/ServiceInterface/Address/' -or
+            $p -match '^src/Service/Application/Address/' -or
+            $p -match '^src/ServiceInterface/Application/Address/' -or
             $p -match '^public/' -or
             $p -match '^openapi/' -or
             $p -match '^sql/' -or

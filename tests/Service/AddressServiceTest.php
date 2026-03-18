@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
  */
@@ -6,23 +7,21 @@ declare(strict_types=1);
 
 namespace Tests\Service;
 
-use App\Entity\Address\AddressData;
-use App\Repository\Address\AddressRepository;
-use App\Service\Address\AddressService;
-use DateTimeImmutable;
-use PDO;
+use App\Entity\Record\Address\AddressData;
+use App\Repository\Persistence\Address\AddressRepository;
+use App\Service\Application\Address\AddressService;
 use PHPUnit\Framework\TestCase;
 
 final class AddressServiceTest extends TestCase
 {
-    private PDO $pdo;
+    private \PDO $pdo;
     private AddressRepository $repo;
     private AddressService $service;
 
     protected function setUp(): void
     {
-        $this->pdo = new PDO('sqlite::memory:');
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->pdo = new \PDO('sqlite::memory:');
+        $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $this->pdo->exec($this->schemaSql());
         $this->repo = new AddressRepository($this->pdo);
         $this->service = new AddressService($this->repo);
@@ -43,7 +42,7 @@ final class AddressServiceTest extends TestCase
         $address = $this->makeAddress('addr-2');
         $this->service->create($address);
 
-        $updated = $this->makeAddress('addr-2', line1: '456 Broad St', updatedAt: (new DateTimeImmutable('now'))->format('Y-m-d H:i:sP'));
+        $updated = $this->makeAddress('addr-2', line1: '456 Broad St', updatedAt: (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP'));
         $this->service->update($updated);
 
         $found = $this->repo->get('addr-2', $updated->ownerId(), $updated->vendorId());
@@ -75,12 +74,12 @@ final class AddressServiceTest extends TestCase
         $this->service->create($this->makeAddress('addr-6'));
 
         $row = $this->pdo->query('SELECT event_name, event_version, payload FROM address_outbox ORDER BY id ASC')
-            ->fetch(PDO::FETCH_ASSOC);
+            ->fetch(\PDO::FETCH_ASSOC);
 
         static::assertNotFalse($row);
         static::assertSame('AddressCreated', $row['event_name']);
-        static::assertSame(1, (int)$row['event_version']);
-        $payload = json_decode((string)$row['payload'], true);
+        static::assertSame(1, (int) $row['event_version']);
+        $payload = json_decode((string) $row['payload'], true);
         static::assertSame('addr-6', $payload['id'] ?? null);
     }
 
@@ -124,19 +123,18 @@ final class AddressServiceTest extends TestCase
     {
         $count = $this->pdo->query('SELECT COUNT(*) FROM address_outbox')->fetchColumn();
 
-        return (int)$count;
+        return (int) $count;
     }
 
     private function makeAddress(
-        string  $id,
-        string  $ownerId = 'owner-1',
-        string  $vendorId = 'vendor-1',
-        string  $line1 = '123 Main St',
+        string $id,
+        string $ownerId = 'owner-1',
+        string $vendorId = 'vendor-1',
+        string $line1 = '123 Main St',
         ?string $dedupeKey = null,
-        ?string $updatedAt = null
-    ): AddressData
-    {
-        $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
+        ?string $updatedAt = null,
+    ): AddressData {
+        $now = (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
 
         return new AddressData(
             $id,

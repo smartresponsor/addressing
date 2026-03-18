@@ -5,8 +5,8 @@ declare(strict_types=1);
 
 namespace Tests\Service;
 
-use App\Contract\Address\AddressValidated;
-use App\Service\Address\AddressValidatedApplier;
+use App\Contract\Message\Address\AddressValidated;
+use App\Service\Application\Address\AddressValidatedApplier;
 use PHPUnit\Framework\TestCase;
 
 final class AddressValidatedApplierTest extends TestCase

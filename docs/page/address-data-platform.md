@@ -40,7 +40,7 @@ analysis:
 - `validation_deliverable`, `validation_granularity`, `validation_quality`
 
 These are defined in `sql/postgres/002_address_validation_verdict.sql` and populated from the
-`App\Contract\Address\AddressValidated` contract.
+`App\Contract\Message\Address\AddressValidated` contract.
 
 ### Outbox event (address_outbox)
 Every write emits a durable outbox row with:
@@ -103,7 +103,7 @@ Example response body aligned with `AddressResponse` in `openapi/address.yaml`:
 
 ## Sample outbox event payload
 Example event delivery envelope emitted by the outbox drainer for a validated apply, aligned with
-`App\Contract\Address\AddressValidated` and the outbox row payload:
+`App\Contract\Message\Address\AddressValidated` and the outbox row payload:
 
 ```json
 {
@@ -125,7 +125,7 @@ Example event delivery envelope emitted by the outbox drainer for a validated ap
 ## End-to-end traceability
 - **API contract → Address record:** `AddressCreateRequest` and `AddressResponse` in `openapi/address.yaml`
   map to `address_entity` columns defined in `sql/postgres/001_address.sql`.
-- **Validation contract → Stored verdict:** `App\Contract\Address\AddressValidated` populates
+- **Validation contract → Stored verdict:** `App\Contract\Message\Address\AddressValidated` populates
   `validation_*` columns defined in `sql/postgres/002_address_validation_verdict.sql`.
 - **Write path → Event emission:** CRUD and validation updates append JSON payloads into `address_outbox`
   (`sql/postgres/001_address.sql`), which are delivered by the outbox drainer as `{ name, version, payload }`.
