@@ -25,4 +25,19 @@ final class AddressValidatedTest extends TestCase
 
         self::assertSame($first->fingerprint(), $second->fingerprint());
     }
+
+    public function testInvalidPerimeterValuesAreSanitized(): void
+    {
+        $validated = AddressValidated::fromArray([
+            'sourceType' => 'strange-source',
+            'governanceStatus' => 'wild',
+            'revalidationPolicy' => 'sometimes',
+            'lastValidationStatus' => 'mystery',
+        ]);
+
+        self::assertNull($validated->sourceType);
+        self::assertSame('canonical', $validated->governanceStatus);
+        self::assertNull($validated->revalidationPolicy);
+        self::assertNull($validated->lastValidationStatus);
+    }
 }

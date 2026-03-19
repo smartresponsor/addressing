@@ -27,6 +27,25 @@ final readonly class AddressValidated implements \JsonSerializable
         /** @var array<string, mixed>|null */
         public ?array $raw = null,
         public ?AddressValidationVerdict $verdict = null,
+        public ?string $sourceSystem = null,
+        public ?string $sourceType = null,
+        public ?string $sourceReference = null,
+        public ?string $normalizationVersion = null,
+        /** @var array<string, mixed>|null */
+        public ?array $rawInput = null,
+        /** @var array<string, mixed>|null */
+        public ?array $normalizedSnapshot = null,
+        public ?string $providerDigest = null,
+        public ?string $governanceStatus = null,
+        public ?string $duplicateOfId = null,
+        public ?string $supersededById = null,
+        public ?string $aliasOfId = null,
+        public ?string $conflictWithId = null,
+        public ?\DateTimeImmutable $revalidationDueAt = null,
+        public ?string $revalidationPolicy = null,
+        public ?string $lastValidationProvider = null,
+        public ?string $lastValidationStatus = null,
+        public ?int $lastValidationScore = null,
     ) {
     }
 
@@ -63,6 +82,34 @@ final readonly class AddressValidated implements \JsonSerializable
 
         $verdict = AddressValidationVerdict::fromArray($verdictArr);
 
+        $sourceSystem = self::asNullableString($data['sourceSystem'] ?? null);
+        $sourceType = AddressRecordPolicy::normalizeSourceType(self::asNullableString($data['sourceType'] ?? null));
+        $sourceReference = self::asNullableString($data['sourceReference'] ?? null);
+        $normalizationVersion = self::asNullableString($data['normalizationVersion'] ?? null);
+        $providerDigest = self::asNullableString($data['providerDigest'] ?? null);
+        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus(self::asNullableString($data['governanceStatus'] ?? null));
+        $duplicateOfId = self::asNullableString($data['duplicateOfId'] ?? null);
+        $supersededById = self::asNullableString($data['supersededById'] ?? null);
+        $aliasOfId = self::asNullableString($data['aliasOfId'] ?? null);
+        $conflictWithId = self::asNullableString($data['conflictWithId'] ?? null);
+        $revalidationDueAt = self::asNullableDate($data['revalidationDueAt'] ?? null);
+        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy(self::asNullableString($data['revalidationPolicy'] ?? null));
+        $lastValidationProvider = self::asNullableString($data['lastValidationProvider'] ?? null);
+        $lastValidationStatus = AddressRecordPolicy::normalizeLastValidationStatus(self::asNullableString($data['lastValidationStatus'] ?? null));
+        $lastValidationScore = self::asNullableInt($data['lastValidationScore'] ?? null);
+
+        $rawInput = null;
+        if (array_key_exists('rawInput', $data) && is_array($data['rawInput'])) {
+            /** @var array<string, mixed> $rawInput */
+            $rawInput = $data['rawInput'];
+        }
+
+        $normalizedSnapshot = null;
+        if (array_key_exists('normalizedSnapshot', $data) && is_array($data['normalizedSnapshot'])) {
+            /** @var array<string, mixed> $normalizedSnapshot */
+            $normalizedSnapshot = $data['normalizedSnapshot'];
+        }
+
         return new self(
             $line1Norm,
             $cityNorm,
@@ -76,6 +123,23 @@ final readonly class AddressValidated implements \JsonSerializable
             $dedupeKey,
             $raw,
             $verdict,
+            $sourceSystem,
+            $sourceType,
+            $sourceReference,
+            $normalizationVersion,
+            $rawInput,
+            $normalizedSnapshot,
+            $providerDigest,
+            $governanceStatus,
+            $duplicateOfId,
+            $supersededById,
+            $aliasOfId,
+            $conflictWithId,
+            $revalidationDueAt,
+            $revalidationPolicy,
+            $lastValidationProvider,
+            $lastValidationStatus,
+            $lastValidationScore,
         );
     }
 
@@ -111,6 +175,23 @@ final readonly class AddressValidated implements \JsonSerializable
             'validation_deliverable' => $this->verdict?->deliverable,
             'validation_granularity' => $this->verdict?->granularity,
             'validation_quality' => $this->verdict?->quality,
+            'source_system' => $this->sourceSystem,
+            'source_type' => $this->sourceType,
+            'source_reference' => $this->sourceReference,
+            'normalization_version' => $this->normalizationVersion,
+            'raw_input_snapshot' => $this->encodeJsonNullable($this->rawInput),
+            'normalized_snapshot' => $this->encodeJsonNullable($this->normalizedSnapshot),
+            'provider_digest' => $this->providerDigest,
+            'governance_status' => $this->governanceStatus,
+            'duplicate_of_id' => $this->duplicateOfId,
+            'superseded_by_id' => $this->supersededById,
+            'alias_of_id' => $this->aliasOfId,
+            'conflict_with_id' => $this->conflictWithId,
+            'revalidation_due_at' => $this->revalidationDueAt?->format(DATE_ATOM),
+            'revalidation_policy' => $this->revalidationPolicy,
+            'last_validation_provider' => $this->lastValidationProvider,
+            'last_validation_status' => $this->lastValidationStatus,
+            'last_validation_score' => $this->lastValidationScore,
         ];
     }
 
@@ -130,6 +211,23 @@ final readonly class AddressValidated implements \JsonSerializable
             'dedupeKey' => $this->dedupeKey,
             'raw' => $this->raw,
             'verdict' => $this->verdict?->jsonSerialize(),
+            'sourceSystem' => $this->sourceSystem,
+            'sourceType' => $this->sourceType,
+            'sourceReference' => $this->sourceReference,
+            'normalizationVersion' => $this->normalizationVersion,
+            'rawInput' => $this->rawInput,
+            'normalizedSnapshot' => $this->normalizedSnapshot,
+            'providerDigest' => $this->providerDigest,
+            'governanceStatus' => $this->governanceStatus,
+            'duplicateOfId' => $this->duplicateOfId,
+            'supersededById' => $this->supersededById,
+            'aliasOfId' => $this->aliasOfId,
+            'conflictWithId' => $this->conflictWithId,
+            'revalidationDueAt' => $this->revalidationDueAt?->format(DATE_ATOM),
+            'revalidationPolicy' => $this->revalidationPolicy,
+            'lastValidationProvider' => $this->lastValidationProvider,
+            'lastValidationStatus' => $this->lastValidationStatus,
+            'lastValidationScore' => $this->lastValidationScore,
         ];
     }
 
@@ -179,6 +277,30 @@ final readonly class AddressValidated implements \JsonSerializable
         }
         if (is_string($v) && is_numeric($v)) {
             return (float) $v;
+        }
+
+        return null;
+    }
+
+    private static function asNullableInt(mixed $v): ?int
+    {
+        if (null === $v || '' === $v) {
+            return null;
+        }
+        if (is_int($v)) {
+            return $v;
+        }
+        if (is_float($v)) {
+            return (int) $v;
+        }
+        if (is_string($v)) {
+            $s = trim($v);
+            if ('' === $s) {
+                return null;
+            }
+            if (1 === preg_match('/^-?\d+$/', $s)) {
+                return (int) $s;
+            }
         }
 
         return null;

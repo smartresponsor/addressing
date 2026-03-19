@@ -69,6 +69,42 @@ interface AddressInterface
 
     public function validationQuality(): ?int;
 
+    public function sourceSystem(): ?string;
+
+    public function sourceType(): ?string;
+
+    public function sourceReference(): ?string;
+
+    public function normalizationVersion(): ?string;
+
+    /** @return array<string, mixed>|null */
+    public function rawInputSnapshot(): ?array;
+
+    /** @return array<string, mixed>|null */
+    public function normalizedSnapshot(): ?array;
+
+    public function providerDigest(): ?string;
+
+    public function governanceStatus(): string;
+
+    public function duplicateOfId(): ?string;
+
+    public function supersededById(): ?string;
+
+    public function aliasOfId(): ?string;
+
+    public function conflictWithId(): ?string;
+
+    public function revalidationDueAt(): ?string;
+
+    public function revalidationPolicy(): ?string;
+
+    public function lastValidationProvider(): ?string;
+
+    public function lastValidationStatus(): ?string;
+
+    public function lastValidationScore(): ?int;
+
     public function createdAt(): string;
 
     public function updatedAt(): ?string;

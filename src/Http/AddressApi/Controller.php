@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 namespace App\Http\AddressApi;
 
+use App\Contract\Message\Address\AddressRecordPolicy;
 use App\Contract\Message\Address\AddressValidated;
 use App\Entity\Record\Address\AddressData;
 use App\EntityInterface\Record\Address\AddressInterface;
@@ -51,13 +52,35 @@ final class Controller
             self::optFloat($in, 'latitude'),
             self::optFloat($in, 'longitude'),
             self::optStr($in, 'geohash'),
-            self::optStr($in, 'validationStatus') ?? 'pending',
+            AddressRecordPolicy::normalizeValidationStatus(self::optStr($in, 'validationStatus'), 'pending'),
             self::optStr($in, 'validationProvider'),
             self::optStr($in, 'validatedAt'),
             self::optStr($in, 'dedupeKey'),
             $now,
             null,
-            null
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            self::optStr($in, 'sourceSystem'),
+            AddressRecordPolicy::normalizeSourceType(self::optStr($in, 'sourceType')),
+            self::optStr($in, 'sourceReference'),
+            self::optStr($in, 'normalizationVersion'),
+            self::optArray($in, 'rawInputSnapshot'),
+            self::optArray($in, 'normalizedSnapshot'),
+            self::optStr($in, 'providerDigest'),
+            AddressRecordPolicy::normalizeGovernanceStatus(self::optStr($in, 'governanceStatus')),
+            self::optStr($in, 'duplicateOfId'),
+            self::optStr($in, 'supersededById'),
+            self::optStr($in, 'aliasOfId'),
+            self::optStr($in, 'conflictWithId'),
+            self::optStr($in, 'revalidationDueAt'),
+            AddressRecordPolicy::normalizeRevalidationPolicy(self::optStr($in, 'revalidationPolicy')),
+            self::optStr($in, 'lastValidationProvider'),
+            AddressRecordPolicy::normalizeLastValidationStatus(self::optStr($in, 'lastValidationStatus')),
+            self::optInt($in, 'lastValidationScore')
         );
 
         $this->repo->create($address);
@@ -100,14 +123,85 @@ final class Controller
         $countryCode = self::queryStringOrNull($req, 'countryCode');
         $countryCode = null !== $countryCode ? strtoupper($countryCode) : null;
         $q = self::queryStringOrNull($req, 'q');
+        $filters = [
+            'sourceType' => AddressRecordPolicy::normalizeSourceType(self::queryStringOrNull($req, 'sourceType')),
+            'governanceStatus' => null !== self::queryStringOrNull($req, 'governanceStatus')
+                ? AddressRecordPolicy::normalizeGovernanceStatus(self::queryStringOrNull($req, 'governanceStatus'))
+                : null,
+            'revalidationPolicy' => AddressRecordPolicy::normalizeRevalidationPolicy(self::queryStringOrNull($req, 'revalidationPolicy')),
+            'hasEvidence' => self::queryBoolOrNull($req, 'hasEvidence'),
+            'revalidationDueBefore' => self::queryStringOrNull($req, 'revalidationDueBefore'),
+        ];
 
-        $res = $this->repo->findPage($ownerId, $vendorId, $countryCode, $q, $limit, $cursor);
+        $res = $this->repo->findPage($ownerId, $vendorId, $countryCode, $q, $limit, $cursor, $filters);
 
         $items = array_map(fn (AddressInterface $address): array => self::toArray($address), $res['items']);
 
         return new JsonResponse([
             'items' => $items,
             'nextCursor' => $res['nextCursor'],
+        ]);
+    }
+
+    public function patchOperational(Request $req, string $id): JsonResponse
+    {
+        $in = self::json($req);
+        [$ownerId, $vendorId] = self::tenantFromQuery($req);
+
+        $ok = $this->repo->patchOperational($id, $ownerId, $vendorId, [
+            'governanceStatus' => self::optStr($in, 'governanceStatus'),
+            'duplicateOfId' => self::optStr($in, 'duplicateOfId'),
+            'supersededById' => self::optStr($in, 'supersededById'),
+            'aliasOfId' => self::optStr($in, 'aliasOfId'),
+            'conflictWithId' => self::optStr($in, 'conflictWithId'),
+            'revalidationDueAt' => self::optStr($in, 'revalidationDueAt'),
+            'revalidationPolicy' => self::optStr($in, 'revalidationPolicy'),
+            'lastValidationProvider' => self::optStr($in, 'lastValidationProvider'),
+            'lastValidationStatus' => self::optStr($in, 'lastValidationStatus'),
+            'lastValidationScore' => self::optInt($in, 'lastValidationScore'),
+        ]);
+
+        if (!$ok) {
+            return new JsonResponse(['error' => 'not_found_or_not_patched'], 404);
+        }
+
+        $address = $this->repo->get($id, $ownerId, $vendorId);
+        if (null === $address) {
+            return new JsonResponse(['error' => 'not_found'], 404);
+        }
+
+        return new JsonResponse(self::toArray($address));
+    }
+
+    public function patchOperationalBatch(Request $req): JsonResponse
+    {
+        $in = self::json($req);
+        [$ownerId, $vendorId] = self::tenantFromQuery($req);
+        $ids = self::reqStringList($in, 'ids');
+        $patch = [
+            'governanceStatus' => self::optStr($in, 'governanceStatus'),
+            'duplicateOfId' => self::optStr($in, 'duplicateOfId'),
+            'supersededById' => self::optStr($in, 'supersededById'),
+            'aliasOfId' => self::optStr($in, 'aliasOfId'),
+            'conflictWithId' => self::optStr($in, 'conflictWithId'),
+            'revalidationDueAt' => self::optStr($in, 'revalidationDueAt'),
+            'revalidationPolicy' => self::optStr($in, 'revalidationPolicy'),
+            'lastValidationProvider' => self::optStr($in, 'lastValidationProvider'),
+            'lastValidationStatus' => self::optStr($in, 'lastValidationStatus'),
+            'lastValidationScore' => self::optInt($in, 'lastValidationScore'),
+        ];
+
+        $patchedIds = [];
+        foreach ($ids as $id) {
+            if ($this->repo->patchOperational($id, $ownerId, $vendorId, $patch)) {
+                $patchedIds[] = $id;
+            }
+        }
+
+        return new JsonResponse([
+            'requestedCount' => count($ids),
+            'patchedCount' => count($patchedIds),
+            'patchedIds' => $patchedIds,
         ]);
     }
 
@@ -127,6 +221,23 @@ final class Controller
             'validationProvider' => self::optStr($in, 'provider') ?? self::optStr($in, 'validationProvider'),
             'validatedAt' => self::optStr($in, 'validatedAt'),
             'dedupeKey' => self::optStr($in, 'dedupeKey'),
+            'sourceSystem' => self::optStr($in, 'sourceSystem'),
+            'sourceType' => self::optStr($in, 'sourceType'),
+            'sourceReference' => self::optStr($in, 'sourceReference'),
+            'normalizationVersion' => self::optStr($in, 'normalizationVersion'),
+            'rawInput' => self::optArray($in, 'rawInput'),
+            'normalizedSnapshot' => self::optArray($in, 'normalizedSnapshot'),
+            'providerDigest' => self::optStr($in, 'providerDigest'),
+            'governanceStatus' => self::optStr($in, 'governanceStatus'),
+            'duplicateOfId' => self::optStr($in, 'duplicateOfId'),
+            'supersededById' => self::optStr($in, 'supersededById'),
+            'aliasOfId' => self::optStr($in, 'aliasOfId'),
+            'conflictWithId' => self::optStr($in, 'conflictWithId'),
+            'revalidationDueAt' => self::optStr($in, 'revalidationDueAt'),
+            'revalidationPolicy' => self::optStr($in, 'revalidationPolicy'),
+            'lastValidationProvider' => self::optStr($in, 'lastValidationProvider'),
+            'lastValidationStatus' => self::optStr($in, 'lastValidationStatus'),
+            'lastValidationScore' => self::optInt($in, 'lastValidationScore'),
         ]);
 
         $this->validatedApplier->apply($id, $validated, $ownerId, $vendorId);
@@ -180,6 +291,32 @@ final class Controller
     }
 
     /**
+     * @param array<string, mixed> $in
+     *
+     * @return list<string>
+     */
+    private static function reqStringList(array $in, string $key): array
+    {
+        if (!array_key_exists($key, $in) || !is_array($in[$key])) {
+            throw new \RuntimeException('missing_'.$key);
+        }
+
+        $values = [];
+        foreach ($in[$key] as $item) {
+            if (!is_string($item) || '' === trim($item)) {
+                throw new \RuntimeException('invalid_'.$key);
+            }
+            $values[] = trim($item);
+        }
+
+        if ([] === $values) {
+            throw new \RuntimeException('invalid_'.$key);
+        }
+
+        return array_values(array_unique($values));
+    }
+
+    /**
      * @return array{0: ?string, 1: ?string}
      */
     private static function tenantFromQuery(Request $req): array
@@ -195,6 +332,57 @@ final class Controller
         $value = $req->query->get($key);
 
         return is_string($value) && '' !== $value ? $value : null;
+    }
+
+    private static function queryBoolOrNull(Request $req, string $key): ?bool
+    {
+        $value = $req->query->get($key);
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (!is_string($value)) {
+            return null;
+        }
+
+        return match (strtolower(trim($value))) {
+            '1', 'true', 'yes' => true,
+            '0', 'false', 'no' => false,
+            default => null,
+        };
+    }
+
+    /**
+     * @param array<string, mixed> $in
+     *
+     * @return array<string, mixed>|null
+     */
+    private static function optArray(array $in, string $key): ?array
+    {
+        if (!array_key_exists($key, $in) || null === $in[$key]) {
+            return null;
+        }
+        if (!is_array($in[$key])) {
+            throw new \RuntimeException('invalid_'.$key);
+        }
+
+        return $in[$key];
+    }
+
+    /**
+     * @param array<string, mixed> $in
+     */
+    private static function optInt(array $in, string $key): ?int
+    {
+        if (!array_key_exists($key, $in) || null === $in[$key] || '' === $in[$key]) {
+            return null;
+        }
+        if (is_int($in[$key])) {
+            return $in[$key];
+        }
+        if (is_string($in[$key]) && is_numeric($in[$key])) {
+            return (int) $in[$key];
+        }
+        throw new \RuntimeException('invalid_'.$key);
     }
 
     /**
@@ -217,6 +405,14 @@ final class Controller
     /** @return array<string, mixed> */
     private static function toArray(AddressInterface $address): array
     {
+        $governanceLinkId = self::primaryGovernanceLinkId($address);
+        $hasEvidence = null !== $address->providerDigest()
+            || null !== $address->rawInputSnapshot()
+            || null !== $address->normalizedSnapshot();
+        $isRevalidationDue = null !== $address->revalidationDueAt()
+            && false !== strtotime($address->revalidationDueAt())
+            && strtotime($address->revalidationDueAt()) <= time();
+
         return [
             'id' => $address->id(),
             'ownerId' => $address->ownerId(),
@@ -238,9 +434,41 @@ final class Controller
             'validationProvider' => $address->validationProvider(),
             'validatedAt' => $address->validatedAt(),
             'dedupeKey' => $address->dedupeKey(),
+            'sourceSystem' => $address->sourceSystem(),
+            'sourceType' => $address->sourceType(),
+            'sourceReference' => $address->sourceReference(),
+            'normalizationVersion' => $address->normalizationVersion(),
+            'rawInputSnapshot' => $address->rawInputSnapshot(),
+            'normalizedSnapshot' => $address->normalizedSnapshot(),
+            'providerDigest' => $address->providerDigest(),
+            'hasEvidence' => $hasEvidence,
+            'governanceStatus' => $address->governanceStatus(),
+            'governanceLinkId' => $governanceLinkId,
+            'hasGovernanceLink' => null !== $governanceLinkId,
+            'duplicateOfId' => $address->duplicateOfId(),
+            'supersededById' => $address->supersededById(),
+            'aliasOfId' => $address->aliasOfId(),
+            'conflictWithId' => $address->conflictWithId(),
+            'revalidationDueAt' => $address->revalidationDueAt(),
+            'isRevalidationDue' => $isRevalidationDue,
+            'revalidationPolicy' => $address->revalidationPolicy(),
+            'lastValidationProvider' => $address->lastValidationProvider(),
+            'lastValidationStatus' => $address->lastValidationStatus(),
+            'lastValidationScore' => $address->lastValidationScore(),
             'createdAt' => $address->createdAt(),
             'updatedAt' => $address->updatedAt(),
             'deletedAt' => $address->deletedAt(),
         ];
+    }
+
+    private static function primaryGovernanceLinkId(AddressInterface $address): ?string
+    {
+        foreach ([$address->duplicateOfId(), $address->supersededById(), $address->aliasOfId(), $address->conflictWithId()] as $candidate) {
+            if (null !== $candidate && '' !== $candidate) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 }

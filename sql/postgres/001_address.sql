@@ -30,6 +30,18 @@ CREATE TABLE IF NOT EXISTS address_entity
     validation_status   VARCHAR(16)      NOT NULL DEFAULT 'unknown',
     validation_provider VARCHAR(64)      NULL,
     validated_at        TIMESTAMPTZ      NULL,
+    source_system       VARCHAR(64)      NULL,
+    source_type         VARCHAR(32)      NULL,
+    source_reference    VARCHAR(128)     NULL,
+    normalization_version VARCHAR(64)    NULL,
+    raw_input_snapshot  JSONB            NULL,
+    normalized_snapshot JSONB            NULL,
+    provider_digest     VARCHAR(64)      NULL,
+    governance_status   VARCHAR(16)      NOT NULL DEFAULT 'canonical',
+    duplicate_of_id     CHAR(26)         NULL,
+    superseded_by_id    CHAR(26)         NULL,
+    alias_of_id         CHAR(26)         NULL,
+    conflict_with_id    CHAR(26)         NULL,
 
     dedupe_key          VARCHAR(128)     NULL,
 
@@ -94,7 +106,19 @@ ALTER TABLE address_entity
     ADD CONSTRAINT address_country_len_chk CHECK (char_length(country_code) = 2);
 
 ALTER TABLE address_entity
-    ADD CONSTRAINT address_validation_status_chk CHECK (validation_status IN ('unknown', 'normalized', 'validated'));
+    ADD CONSTRAINT address_validation_status_chk CHECK (validation_status IN ('unknown', 'pending', 'normalized', 'validated', 'rejected', 'uncertain', 'overridden'));
+
+ALTER TABLE address_entity
+    ADD CONSTRAINT address_source_type_chk CHECK (source_type IS NULL OR source_type IN ('manual', 'import', 'partner', 'validator', 'override', 'migration'));
+
+ALTER TABLE address_entity
+    ADD CONSTRAINT address_governance_status_chk CHECK (governance_status IN ('canonical', 'duplicate', 'superseded', 'alias', 'conflict'));
+
+ALTER TABLE address_entity
+    ADD CONSTRAINT address_revalidation_policy_chk CHECK (revalidation_policy IS NULL OR revalidation_policy IN ('manual', 'on-change', 'daily', 'weekly', 'monthly', 'quarterly', 'semiannual', 'annual'));
+
+ALTER TABLE address_entity
+    ADD CONSTRAINT address_last_validation_status_chk CHECK (last_validation_status IS NULL OR last_validation_status IN ('normalized', 'validated', 'rejected', 'uncertain', 'overridden'));
 
 -- Canonical key generator: produce stable dedupe string from normalized fields if present
 CREATE OR REPLACE FUNCTION address_canonical_key(
@@ -219,3 +243,12 @@ ALTER TABLE IF EXISTS address_outbox
     ADD COLUMN IF NOT EXISTS locked_by        VARCHAR(64) NULL,
     ADD COLUMN IF NOT EXISTS published_attempt INT  NOT NULL DEFAULT 0,
     ADD COLUMN IF NOT EXISTS last_error        TEXT NULL;
+
+
+CREATE INDEX IF NOT EXISTS address_governance_status_idx ON address_entity (governance_status);
+CREATE INDEX IF NOT EXISTS address_revalidation_due_at_idx ON address_entity (revalidation_due_at);
+CREATE INDEX IF NOT EXISTS address_last_validation_status_idx ON address_entity (last_validation_status);
+CREATE INDEX IF NOT EXISTS address_duplicate_of_idx ON address_entity (duplicate_of_id) WHERE duplicate_of_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS address_superseded_by_idx ON address_entity (superseded_by_id) WHERE superseded_by_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS address_alias_of_idx ON address_entity (alias_of_id) WHERE alias_of_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS address_conflict_with_idx ON address_entity (conflict_with_id) WHERE conflict_with_id IS NOT NULL;

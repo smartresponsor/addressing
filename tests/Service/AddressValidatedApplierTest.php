@@ -30,15 +30,39 @@ final class AddressValidatedApplierTest extends TestCase
             'line1Norm' => 'main st',
             'cityNorm' => 'houston',
             'validationProvider' => 'unit',
+            'sourceSystem' => 'validator-suite',
+            'sourceType' => 'validator',
+            'sourceReference' => 'run-1',
+            'normalizationVersion' => 'canon-w08',
+            'rawInput' => ['line1' => '123 Main St', 'city' => 'Houston'],
+            'normalizedSnapshot' => ['line1Norm' => 'main st', 'cityNorm' => 'houston'],
+            'providerDigest' => 'digest-1',
+            'governanceStatus' => 'superseded',
+            'supersededById' => 'addr-2',
+            'revalidationDueAt' => '2025-03-01T00:00:00+00:00',
+            'revalidationPolicy' => 'quarterly',
+            'lastValidationProvider' => 'unit',
+            'lastValidationStatus' => 'validated',
+            'lastValidationScore' => 87,
         ]);
 
         $this->applier->apply('addr-1', $validated, 'owner-1', 'vendor-1');
 
-        $row = $this->pdo->query("SELECT validation_status, line1_norm FROM address_entity WHERE id = 'addr-1'")
+        $row = $this->pdo->query("SELECT validation_status, line1_norm, source_system, source_type, provider_digest, governance_status, superseded_by_id, revalidation_due_at, revalidation_policy, last_validation_provider, last_validation_status, last_validation_score FROM address_entity WHERE id = 'addr-1'")
             ->fetch(\PDO::FETCH_ASSOC);
         self::assertIsArray($row);
         self::assertSame('validated', $row['validation_status']);
         self::assertSame('main st', $row['line1_norm']);
+        self::assertSame('validator-suite', $row['source_system']);
+        self::assertSame('validator', $row['source_type']);
+        self::assertSame('digest-1', $row['provider_digest']);
+        self::assertSame('superseded', $row['governance_status']);
+        self::assertSame('addr-2', $row['superseded_by_id']);
+        self::assertStringStartsWith('2025-03-01', (string) $row['revalidation_due_at']);
+        self::assertSame('quarterly', $row['revalidation_policy']);
+        self::assertSame('unit', $row['last_validation_provider']);
+        self::assertSame('validated', $row['last_validation_status']);
+        self::assertSame(87, (int) $row['last_validation_score']);
     }
 
     public function testApplyRejectsWrongTenantScope(): void
@@ -48,6 +72,17 @@ final class AddressValidatedApplierTest extends TestCase
         $validated = AddressValidated::fromArray([
             'line1Norm' => 'changed',
             'validationProvider' => 'unit',
+            'sourceSystem' => 'validator-suite',
+            'sourceType' => 'validator',
+            'sourceReference' => 'run-1',
+            'normalizationVersion' => 'canon-w08',
+            'rawInput' => ['line1' => '123 Main St', 'city' => 'Houston'],
+            'normalizedSnapshot' => ['line1Norm' => 'main st', 'cityNorm' => 'houston'],
+            'providerDigest' => 'digest-1',
+            'governanceStatus' => 'superseded',
+            'supersededById' => 'addr-2',
+            'revalidationDueAt' => '2025-03-01T00:00:00+00:00',
+            'revalidationPolicy' => 'quarterly',
         ]);
 
         $this->expectException(\RuntimeException::class);
@@ -101,6 +136,23 @@ CREATE TABLE address_entity (
   validation_status TEXT NOT NULL,
   validation_provider TEXT NULL,
   validated_at TEXT NULL,
+  source_system TEXT NULL,
+  source_type TEXT NULL,
+  source_reference TEXT NULL,
+  normalization_version TEXT NULL,
+  raw_input_snapshot TEXT NULL,
+  normalized_snapshot TEXT NULL,
+  provider_digest TEXT NULL,
+  governance_status TEXT NOT NULL DEFAULT 'canonical',
+  duplicate_of_id TEXT NULL,
+  superseded_by_id TEXT NULL,
+  alias_of_id TEXT NULL,
+  conflict_with_id TEXT NULL,
+  revalidation_due_at TEXT NULL,
+  revalidation_policy TEXT NULL,
+  last_validation_provider TEXT NULL,
+  last_validation_status TEXT NULL,
+  last_validation_score INTEGER NULL,
   dedupe_key TEXT NULL,
   created_at TEXT NOT NULL,
   updated_at TEXT NULL,

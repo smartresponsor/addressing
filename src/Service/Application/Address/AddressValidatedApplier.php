@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 namespace App\Service\Application\Address;
 
+use App\Contract\Message\Address\AddressRecordPolicy;
 use App\Contract\Message\Address\AddressValidated;
 use App\ServiceInterface\Application\Address\AddressValidatedApplierInterface;
 
@@ -43,6 +44,12 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
             }
 
             $fields = [];
+
+            $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($validated->governanceStatus);
+            $duplicateOfId = $this->sanitizeGovernanceLink($validated->duplicateOfId, $id);
+            $supersededById = $this->sanitizeGovernanceLink($validated->supersededById, $id);
+            $aliasOfId = $this->sanitizeGovernanceLink($validated->aliasOfId, $id);
+            $conflictWithId = $this->sanitizeGovernanceLink($validated->conflictWithId, $id);
             $params = array_merge([
                 ':id' => $id,
                 ':updated_at' => $now->format('Y-m-d H:i:sP'),
@@ -106,6 +113,72 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
                 }
             }
 
+            if (null !== $validated->sourceSystem) {
+                $fields[] = 'source_system = :source_system';
+                $params[':source_system'] = $validated->sourceSystem;
+            }
+            if (null !== $validated->sourceType) {
+                $fields[] = 'source_type = :source_type';
+                $params[':source_type'] = AddressRecordPolicy::normalizeSourceType($validated->sourceType);
+            }
+            if (null !== $validated->sourceReference) {
+                $fields[] = 'source_reference = :source_reference';
+                $params[':source_reference'] = $validated->sourceReference;
+            }
+            if (null !== $validated->normalizationVersion) {
+                $fields[] = 'normalization_version = :normalization_version';
+                $params[':normalization_version'] = $validated->normalizationVersion;
+            }
+            if (null !== $validated->rawInput) {
+                $fields[] = $this->jsonAssignment('raw_input_snapshot', ':raw_input_snapshot');
+                $params[':raw_input_snapshot'] = $this->encodePayload($validated->rawInput);
+            }
+            $normalizedSnapshot = $validated->normalizedSnapshot ?? $this->buildNormalizedSnapshot($validated);
+            if (null !== $normalizedSnapshot) {
+                $fields[] = $this->jsonAssignment('normalized_snapshot', ':normalized_snapshot');
+                $params[':normalized_snapshot'] = $this->encodePayload($normalizedSnapshot);
+            }
+            $providerDigest = $validated->providerDigest ?? $this->buildProviderDigest($validated);
+            if (null !== $providerDigest) {
+                $fields[] = 'provider_digest = :provider_digest';
+                $params[':provider_digest'] = $providerDigest;
+            }
+
+            $lastValidationProvider = $validated->lastValidationProvider ?? $validated->validationProvider;
+            $lastValidationStatus = $validated->lastValidationStatus ?? 'validated';
+            $lastValidationScore = $validated->lastValidationScore ?? $validated->verdict?->quality;
+            if (null !== $validated->revalidationDueAt) {
+                $fields[] = 'revalidation_due_at = :revalidation_due_at';
+                $params[':revalidation_due_at'] = $validated->revalidationDueAt->format('Y-m-d H:i:sP');
+            }
+            if (null !== $validated->revalidationPolicy) {
+                $fields[] = 'revalidation_policy = :revalidation_policy';
+                $params[':revalidation_policy'] = AddressRecordPolicy::normalizeRevalidationPolicy($validated->revalidationPolicy);
+            }
+            if (null !== $lastValidationProvider) {
+                $fields[] = 'last_validation_provider = :last_validation_provider';
+                $params[':last_validation_provider'] = $lastValidationProvider;
+            }
+            if (null !== $lastValidationStatus) {
+                $fields[] = 'last_validation_status = :last_validation_status';
+                $params[':last_validation_status'] = $lastValidationStatus;
+            }
+            if (null !== $lastValidationScore) {
+                $fields[] = 'last_validation_score = :last_validation_score';
+                $params[':last_validation_score'] = $lastValidationScore;
+            }
+
+            $fields[] = 'governance_status = :governance_status';
+            $params[':governance_status'] = $governanceStatus;
+            $fields[] = 'duplicate_of_id = :duplicate_of_id';
+            $params[':duplicate_of_id'] = $duplicateOfId;
+            $fields[] = 'superseded_by_id = :superseded_by_id';
+            $params[':superseded_by_id'] = $supersededById;
+            $fields[] = 'alias_of_id = :alias_of_id';
+            $params[':alias_of_id'] = $aliasOfId;
+            $fields[] = 'conflict_with_id = :conflict_with_id';
+            $params[':conflict_with_id'] = $conflictWithId;
+
             $fields[] = 'validation_provider = :validation_provider';
             $fields[] = 'validation_status = :validation_status';
             $fields[] = 'validated_at = :validated_at';
@@ -137,6 +210,15 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
                 'granularity' => $validated->verdict?->granularity,
                 'quality' => $validated->verdict?->quality,
                 'rawSha256' => $params[':validation_raw_sha256'] ?? null,
+                'sourceType' => $validated->sourceType,
+                'providerDigest' => $params[':provider_digest'] ?? $validated->providerDigest,
+                'hasEvidence' => isset($params[':raw_input_snapshot']) || isset($params[':normalized_snapshot']) || isset($params[':provider_digest']),
+                'governanceStatus' => $governanceStatus,
+                'governanceLinkId' => $this->governanceLinkId($governanceStatus, $duplicateOfId, $supersededById, $aliasOfId, $conflictWithId),
+                'revalidationDueAt' => $params[':revalidation_due_at'] ?? null,
+                'revalidationPolicy' => $params[':revalidation_policy'] ?? null,
+                'lastValidationStatus' => $params[':last_validation_status'] ?? null,
+                'lastValidationScore' => $params[':last_validation_score'] ?? null,
             ]);
 
             $this->pdo->commit();
@@ -185,6 +267,70 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
         }
 
         return $field.' = '.$placeholder;
+    }
+
+    private function sanitizeGovernanceLink(?string $linkId, string $currentId): ?string
+    {
+        $linkId = is_string($linkId) ? trim($linkId) : '';
+        if ('' === $linkId || $linkId === $currentId) {
+            return null;
+        }
+
+        return $linkId;
+    }
+
+    private function governanceLinkId(
+        string $governanceStatus,
+        ?string $duplicateOfId,
+        ?string $supersededById,
+        ?string $aliasOfId,
+        ?string $conflictWithId,
+    ): ?string {
+        return match ($governanceStatus) {
+            'duplicate' => $duplicateOfId,
+            'superseded' => $supersededById,
+            'alias' => $aliasOfId,
+            'conflict' => $conflictWithId,
+            default => null,
+        };
+    }
+
+    /** @return array<string, mixed>|null */
+    private function buildNormalizedSnapshot(AddressValidated $validated): ?array
+    {
+        $snapshot = array_filter([
+            'line1Norm' => $validated->line1Norm,
+            'cityNorm' => $validated->cityNorm,
+            'regionNorm' => $validated->regionNorm,
+            'postalCodeNorm' => $validated->postalCodeNorm,
+            'latitude' => $validated->latitude,
+            'longitude' => $validated->longitude,
+            'geohash' => $validated->geohash,
+        ], static fn (mixed $value): bool => null !== $value);
+
+        if ([] === $snapshot) {
+            return null;
+        }
+
+        /* @var array<string, mixed> $snapshot */
+        return $snapshot;
+    }
+
+    private function buildProviderDigest(AddressValidated $validated): ?string
+    {
+        $payload = array_filter([
+            'provider' => $validated->validationProvider,
+            'validatedAt' => $validated->validatedAt?->format(DATE_ATOM),
+            'raw' => $validated->raw,
+            'verdict' => $validated->verdict?->jsonSerialize(),
+            'normalizedSnapshot' => $validated->normalizedSnapshot,
+        ], static fn (mixed $value): bool => null !== $value);
+
+        if ([] === $payload) {
+            return null;
+        }
+
+        return hash('sha256', $this->encodePayload($payload));
     }
 
     private function tenantWhereClause(?string $ownerId, ?string $vendorId): string

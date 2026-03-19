@@ -40,8 +40,15 @@ final class AddressService
         ?string $q,
         int $limit,
         ?string $cursor,
+        array $filters = [],
     ): array {
-        return $this->repo->findPage($ownerId, $vendorId, $countryCode, $q, $limit, $cursor);
+        return $this->repo->findPage($ownerId, $vendorId, $countryCode, $q, $limit, $cursor, $filters);
+    }
+
+    /** @param array<string, mixed> $patch */
+    public function patchOperational(string $id, ?string $ownerId, ?string $vendorId, array $patch): bool
+    {
+        return $this->repo->patchOperational($id, $ownerId, $vendorId, $patch);
     }
 
     public function dedupe(?string $dedupeKey): ?AddressInterface

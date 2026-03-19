@@ -25,6 +25,11 @@ interface AddressRepositoryInterface
     public function findByDedupeKey(string $dedupeKey): ?AddressInterface;
 
     /**
+     * @param array<string, mixed> $patch
+     */
+    public function patchOperational(string $id, ?string $ownerId, ?string $vendorId, array $patch): bool;
+
+    /**
      * @return array{items: list<AddressInterface>, nextCursor: ?string}
      */
     public function findPage(
@@ -34,5 +39,6 @@ interface AddressRepositoryInterface
         ?string $q,
         int $limit,
         ?string $cursor,
+        array $filters = [],
     ): array;
 }

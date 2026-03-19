@@ -45,6 +45,25 @@ final class AddressData implements AddressInterface
         public ?bool $validationDeliverable = null,
         public ?string $validationGranularity = null,
         public ?int $validationQuality = null,
+        public ?string $sourceSystem = null,
+        public ?string $sourceType = null,
+        public ?string $sourceReference = null,
+        public ?string $normalizationVersion = null,
+        /** @var array<string, mixed>|null */
+        public ?array $rawInputSnapshot = null,
+        /** @var array<string, mixed>|null */
+        public ?array $normalizedSnapshot = null,
+        public ?string $providerDigest = null,
+        public string $governanceStatus = 'canonical',
+        public ?string $duplicateOfId = null,
+        public ?string $supersededById = null,
+        public ?string $aliasOfId = null,
+        public ?string $conflictWithId = null,
+        public ?string $revalidationDueAt = null,
+        public ?string $revalidationPolicy = null,
+        public ?string $lastValidationProvider = null,
+        public ?string $lastValidationStatus = null,
+        public ?int $lastValidationScore = null,
     ) {
     }
 
@@ -182,6 +201,93 @@ final class AddressData implements AddressInterface
     public function validationQuality(): ?int
     {
         return $this->validationQuality;
+    }
+
+    public function sourceSystem(): ?string
+    {
+        return $this->sourceSystem;
+    }
+
+    public function sourceType(): ?string
+    {
+        return $this->sourceType;
+    }
+
+    public function sourceReference(): ?string
+    {
+        return $this->sourceReference;
+    }
+
+    public function normalizationVersion(): ?string
+    {
+        return $this->normalizationVersion;
+    }
+
+    /** @return array<string, mixed>|null */
+    public function rawInputSnapshot(): ?array
+    {
+        return $this->rawInputSnapshot;
+    }
+
+    /** @return array<string, mixed>|null */
+    public function normalizedSnapshot(): ?array
+    {
+        return $this->normalizedSnapshot;
+    }
+
+    public function providerDigest(): ?string
+    {
+        return $this->providerDigest;
+    }
+
+    public function governanceStatus(): string
+    {
+        return $this->governanceStatus;
+    }
+
+    public function duplicateOfId(): ?string
+    {
+        return $this->duplicateOfId;
+    }
+
+    public function supersededById(): ?string
+    {
+        return $this->supersededById;
+    }
+
+    public function aliasOfId(): ?string
+    {
+        return $this->aliasOfId;
+    }
+
+    public function conflictWithId(): ?string
+    {
+        return $this->conflictWithId;
+    }
+
+    public function revalidationDueAt(): ?string
+    {
+        return $this->revalidationDueAt;
+    }
+
+    public function revalidationPolicy(): ?string
+    {
+        return $this->revalidationPolicy;
+    }
+
+    public function lastValidationProvider(): ?string
+    {
+        return $this->lastValidationProvider;
+    }
+
+    public function lastValidationStatus(): ?string
+    {
+        return $this->lastValidationStatus;
+    }
+
+    public function lastValidationScore(): ?int
+    {
+        return $this->lastValidationScore;
     }
 
     public function createdAt(): string
