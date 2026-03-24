@@ -50,7 +50,7 @@
         ],
         "qa:phpstan": "php -d memory_limit=1G vendor/bin/phpstan analyse -c phpstan.neon.dist",
         "qa:rector": "php vendor/bin/rector process --dry-run",
-        "qa:deptrac": "php vendor/bin/deptrac analyse --config-file=deptrac.yaml",
+        "qa:deptrac": "php vendor/bin/deptrac analyse --config-file=config/address_deptrac.yaml",
         "qa:cs": "php vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php -cs-fixer.dist.php",
         "qa": [
             "@qa:phpstan",
