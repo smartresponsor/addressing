@@ -1,0 +1,5 @@
+framework:
+  secret: '%env(default:addressing_demo_secret:APP_SECRET)%'
+  http_method_override: false
+  handle_all_throwables: true
+  form: true

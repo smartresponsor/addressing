@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Http\Controller;
@@ -8,40 +9,70 @@ use App\Contract\Message\AddressRecordPolicy;
 use App\Contract\Message\AddressValidated;
 use App\Entity\Record\AddressData;
 use App\EntityInterface\Record\AddressInterface;
+use App\Http\Dto\AddressInputFactory;
+use App\Http\Dto\AddressManageDto;
+use App\Http\Form\AddressManageType;
 use App\Repository\Persistence\AddressRepository;
+use App\Service\Application\AddressService;
 use App\Service\Application\AddressValidatedApplierService;
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Uid\Ulid;
+use Twig\Environment;
 
 final class AddressController
 {
     public function __construct(
         private readonly AddressRepository $repo,
         private readonly AddressValidatedApplierService $validatedApplier,
+        private readonly AddressService $addressService,
+        private readonly FormFactoryInterface $formFactory,
+        private readonly Environment $twig,
+        private readonly AddressInputFactory $inputFactory,
     ) {
-    }
-
-    public static function fromPg(\PDO $pg): self
-    {
-        return new self(
-            new AddressRepository($pg),
-            new AddressValidatedApplierService($pg),
-        );
     }
 
     public function manage(Request $request): Response
     {
         $createdId = null;
-        if ('POST' === strtoupper($request->getMethod())) {
-            $payload = $request->request->all();
-            if (isset($payload['line1'], $payload['city'], $payload['countryCode'])) {
-                $createdId = $this->createFromFormPayload($payload);
+        $form = $this->formFactory->create(AddressManageType::class, new AddressManageDto());
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $dto = $form->getData();
+            if ($dto instanceof AddressManageDto) {
+                $createdId = $this->createFromManageDto($dto);
             }
         }
 
-        return new Response($this->renderManagePage($createdId));
+        $previewRows = [];
+        if ($form->getData() instanceof AddressManageDto) {
+            /** @var AddressManageDto $manageDto */
+            $manageDto = $form->getData();
+            $ownerId = self::nullableFormString(['ownerId' => $manageDto->ownerId], 'ownerId');
+            $vendorId = self::nullableFormString(['vendorId' => $manageDto->vendorId], 'vendorId');
+            if (null !== $ownerId || null !== $vendorId) {
+                $previewRows = array_map(
+                    static fn (AddressInterface $address): array => [
+                        'id' => $address->id(),
+                        'line1' => $address->line1(),
+                        'city' => $address->city(),
+                        'countryCode' => $address->countryCode(),
+                        'governanceStatus' => $address->governanceStatus(),
+                        'validationStatus' => $address->validationStatus(),
+                    ],
+                    $this->addressService->search($ownerId, $vendorId, null, null, 10, null)['items']
+                );
+            }
+        }
+
+        return new Response($this->twig->render('address/manage.html.twig', [
+            'manageForm' => $form->createView(),
+            'createdId' => $createdId,
+            'previewRows' => $previewRows,
+        ]));
     }
 
     public function create(Request $req): JsonResponse
@@ -398,86 +429,18 @@ final class AddressController
         return new JsonResponse(self::toArray($address, null));
     }
 
-    /** @param array<string, mixed> $payload */
-    private function createFromFormPayload(array $payload): string
+    private function createFromManageDto(AddressManageDto $dto): string
     {
-        $id = (string) new Ulid();
-        $now = (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
+        $address = $this->inputFactory->fromManageDto($dto, [
+            'id' => (string) new Ulid(),
+            'createdAt' => (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP'),
+            'sourceSystem' => 'symfony-manage',
+            'sourceType' => 'manual',
+            'sourceReference' => 'manage-form',
+        ]);
+        $this->addressService->create($address);
 
-        $address = new AddressData(
-            $id,
-            self::nullableFormString($payload, 'ownerId'),
-            self::nullableFormString($payload, 'vendorId'),
-            self::requiredFormString($payload, 'line1'),
-            self::nullableFormString($payload, 'line2'),
-            self::requiredFormString($payload, 'city'),
-            self::nullableFormString($payload, 'region'),
-            self::nullableFormString($payload, 'postalCode'),
-            strtoupper(self::requiredFormString($payload, 'countryCode')),
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            'pending',
-            null,
-            null,
-            null,
-            $now,
-            null,
-            null,
-        );
-        $this->repo->create($address);
-
-        return $id;
-    }
-
-    private function renderManagePage(?string $createdId): string
-    {
-        $notice = null === $createdId ? '' : '<div class="alert alert-success mt-3">Created address: '.htmlspecialchars($createdId, ENT_QUOTES).'</div>';
-
-        return <<<HTML
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Address manager</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; background: #f8fafc; color: #0f172a; }
-    .card { max-width: 48rem; margin: 0 auto; background: #fff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 1.5rem; box-shadow: 0 10px 30px rgba(15,23,42,0.08); }
-    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-    label { display: block; font-weight: 600; margin-bottom: 0.35rem; }
-    input { width: 100%; padding: 0.7rem 0.8rem; border: 1px solid #94a3b8; border-radius: 8px; box-sizing: border-box; }
-    .btn { display: inline-block; margin-top: 1rem; padding: 0.8rem 1rem; border: 0; border-radius: 8px; background: #0f172a; color: #fff; font-weight: 700; cursor: pointer; }
-    .alert { padding: 0.85rem 1rem; border-radius: 8px; background: #dcfce7; color: #166534; }
-    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
-  </style>
-</head>
-<body>
-  <main class="card">
-    <h1>Address manager</h1>
-    <p>Create an address record with the lightweight management form.</p>
-    {$notice}
-    <form method="post">
-      <div class="grid">
-        <div><label for="line1">Line 1</label><input id="line1" name="line1" required></div>
-        <div><label for="line2">Line 2</label><input id="line2" name="line2"></div>
-        <div><label for="city">City</label><input id="city" name="city" required></div>
-        <div><label for="region">Region</label><input id="region" name="region"></div>
-        <div><label for="postalCode">Postal code</label><input id="postalCode" name="postalCode"></div>
-        <div><label for="countryCode">Country code</label><input id="countryCode" name="countryCode" value="US" required></div>
-        <div><label for="ownerId">Owner ID</label><input id="ownerId" name="ownerId"></div>
-        <div><label for="vendorId">Vendor ID</label><input id="vendorId" name="vendorId"></div>
-      </div>
-      <button class="btn" type="submit">Create address</button>
-    </form>
-  </main>
-</body>
-</html>
-HTML;
+        return $address->id();
     }
 
     /** @param array<string, mixed> $payload */

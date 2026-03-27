@@ -5,19 +5,25 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
+        "ext-curl": "*",
+        "ext-pdo": "*",
         "doctrine/orm": "^2.15 || ^3.0",
+        "symfony/form": "^8.0",
         "symfony/framework-bundle": "^6.4 || ^7.0",
         "symfony/property-access": "^6.4 || ^7.0",
         "symfony/property-info": "^6.4 || ^7.0",
         "symfony/serializer": "^6.4 || ^7.0",
+        "symfony/twig-bundle": "^8.0",
         "symfony/uid": "^7.3",
         "symfony/validator": "^6.4 || ^7.0",
-        "ext-pdo": "*",
-        "ext-curl": "*"
+        "twig/twig": "^3.24"
     },
     "require-dev": {
         "behat/behat": "^3.14",
         "deptrac/deptrac": "^3.0",
+        "doctrine/data-fixtures": "2.2",
+        "doctrine/doctrine-fixtures-bundle": "^4.3",
+        "fakerphp/faker": "^1.23",
         "friends-of-behat/symfony-extension": "^2.1",
         "friendsofphp/php-cs-fixer": "^3.94",
         "phpstan/phpstan": "^1.11",
@@ -25,10 +31,9 @@
         "phpstan/phpstan-symfony": "^1.4",
         "phpunit/phpunit": "^10.5",
         "rector/rector": "^1.2",
-        "vimeo/psalm": "^7.0",
+        "symfony/dotenv": "^8.0",
         "symfony/panther": "^2.2",
-        "fakerphp/faker": "^1.23",
-        "doctrine/data-fixtures": "^1.7"
+        "vimeo/psalm": "^7.0"
     },
     "autoload": {
         "psr-4": {

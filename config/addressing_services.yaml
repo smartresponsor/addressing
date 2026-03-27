@@ -3,6 +3,13 @@ services:
     autowire: true
     autoconfigure: true
 
+  PDO:
+    factory: ['App\Integration\Persistence\AddressPdoFactory', 'createPrimary']
+
+  address.rate_limit_pdo:
+    class: PDO
+    factory: ['App\Integration\Persistence\AddressPdoFactory', 'createRateLimit']
+
   App\:
     resource: '../src/'
     exclude:
