@@ -13,10 +13,7 @@
         "symfony/uid": "^7.3",
         "symfony/validator": "^6.4 || ^7.0",
         "ext-pdo": "*",
-        "ext-curl": "*",
-        "symfony/form": "^6.4 || ^7.0",
-        "symfony/twig-bridge": "^6.4 || ^7.0",
-        "twig/twig": "^3.0"
+        "ext-curl": "*"
     },
     "require-dev": {
         "behat/behat": "^3.14",
@@ -44,7 +41,7 @@
         }
     },
     "scripts": {
-        "lint": "@php tools/php/php84.php tools/qa/CatalogPhpLint.php",
+        "lint": "@php tools/qa/AddressPhpLint.php",
         "phpstan": "vendor/bin/phpstan analyse src --level=max",
         "psalm": "vendor/bin/psalm",
         "test": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist",
@@ -57,7 +54,7 @@
         "qa:phpstan": "php -d memory_limit=1G vendor/bin/phpstan analyse -c phpstan.neon.dist",
         "qa:rector": "php vendor/bin/rector process --dry-run",
         "qa:deptrac": "php vendor/bin/deptrac analyse --config-file=config/addressing_deptrac.yaml",
-        "qa:cs": "php vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php -cs-fixer.dist.php",
+        "qa:cs": "php vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.dist.php",
         "qa": [
             "@qa:phpstan",
             "@qa:deptrac",
@@ -70,9 +67,9 @@
         "inspection:chat": "bash ./.commanding/sh/inspection.sh chat",
         "inspection:baseline": "bash ./.commanding/sh/inspection.sh baseline",
         "inspection:compare": "bash ./.commanding/sh/inspection.sh compare",
-        "cs:fix": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php -cs-fixer.php",
-        "cs:check": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php -cs-fixer.php  --dry-run --diff",
-        "cs:check-quiet": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php -cs-fixer.php  --dry-run",
+        "cs:fix": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php",
+        "cs:check": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run --diff",
+        "cs:check-quiet": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run",
         "stan:conservative": "tools/php/php82.php vendor/bin/phpstan analyse",
         "stan:runtime-target": "@php tools/php/php84.php vendor/bin/phpstan analyse",
         "md": "@php tools/php/php84.php vendor/bin/phpmd src,text phpmd.xml.dist",
@@ -106,25 +103,29 @@
         "smoke:doctrine": "@php tools/php/php84.php tools/smoke/category-doctrine-mapping-smoke.php",
         "smoke:fixture-load": "@php tools/php/php84.php tools/smoke/category-fixture-load-smoke.php",
         "smoke:graphql": "@php tools/php/php84.php tools/smoke/category-graphql-smoke.php",
-        "report:owner-overlap": "@php tools/php/php84.php tools/inspection/CatalogOwnerOverlapReport.php",
-        "report:route-inventory": "@php tools/php/php84.php tools/inspection/CatalogRouteInventoryReport.php",
-        "report:class-alias": "@php tools/php/php84.php tools/inspection/CatalogClassAliasReport.php",
-        "report:runtime-proof": "@php tools/php/php84.php tools/inspection/CatalogRuntimeProofReport.php",
+        "report:owner-overlap": "@php tools/php/php84.php tools/inspection/AddressOwnerOverlapReport.php",
+        "report:route-inventory": "@php tools/php/php84.php tools/inspection/AddressRouteInventoryReport.php",
+        "report:class-alias": "@php tools/php/php84.php tools/inspection/AddressClassAliasReport.php",
+        "report:runtime-proof": "@php tools/php/php84.php tools/inspection/AddressRuntimeProofReport.php",
         "test:security": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite security",
         "security:composer-audit": "composer audit --locked --no-interaction",
         "security:importmap-audit": "@php tools/qa/ImportmapAudit.php",
-        "security:gitleaks": "bash tools/qa/security-local-full.sh gitleaks",
-        "security:semgrep": "bash tools/qa/security-local-full.sh semgrep",
-        "pipeline:local:security": [
+        "security:gitleaks": "@php tools/qa/LocalSecurityRunner.php gitleaks",
+        "security:semgrep-ce": "@php tools/qa/LocalSecurityRunner.php semgrep-ce",
+        "security:semgrep": "@security:semgrep-ce",
+        "security:full": [
             "@security:composer-audit",
             "@security:importmap-audit",
             "@security:gitleaks",
-            "@security:semgrep",
+            "@security:semgrep-ce",
             "@test:security"
+        ],
+        "pipeline:local:security": [
+            "@security:full"
         ],
         "pipeline:local:full": [
             "@qa:full",
-            "@pipeline:local:security"
+            "@security:full"
         ],
         "test:functional": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite functional",
         "fixtures:demo": "php bin/address-demo-reset 50"
