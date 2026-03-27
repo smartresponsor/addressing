@@ -31,8 +31,17 @@ final class AddressPdoFactory
 
     public static function createRateLimit(): \PDO
     {
-        self::ensureVarDirectory();
-        $pdo = new \PDO('sqlite:'.self::projectDir().'/var/addressing-rate-limit.sqlite');
+        $dsn = self::env('ADDRESS_RATE_LIMIT_DSN');
+        if (null === $dsn) {
+            self::ensureVarDirectory();
+            $path = self::projectDir().'/var/addressing-rate-limit.sqlite';
+            if (!is_writable(dirname($path))) {
+                $path = sys_get_temp_dir().'/addressing-rate-limit.sqlite';
+            }
+            $dsn = 'sqlite:'.$path;
+        }
+
+        $pdo = new \PDO($dsn);
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
         return $pdo;

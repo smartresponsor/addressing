@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace Tests\Functional;
 
+use App\Integration\Persistence\AddressSchemaManager;
+use App\Kernel;
 use App\Http\Controller\AddressController;
 use PHPUnit\Framework\TestCase;
+use PDO;
 use Symfony\Component\HttpFoundation\Request;
-use Tests\Support\TestDatabase;
 
 final class AddressControllerFunctionalTest extends TestCase
 {
     public function testCreateAndGetAddressFlow(): void
     {
-        $pdo = TestDatabase::createPdo();
-        TestDatabase::resetAddressSchema($pdo);
-
-        $controller = AddressController::fromPg($pdo);
+        $controller = $this->bootController($this->freshSqlitePath(__FUNCTION__));
 
         $request = new Request([], [], [], [], [], [], json_encode([
             'ownerId' => 'owner-1',
@@ -47,14 +46,42 @@ final class AddressControllerFunctionalTest extends TestCase
 
     public function testManageFormRendersBootstrapLayout(): void
     {
-        $pdo = TestDatabase::createPdo();
-        TestDatabase::resetAddressSchema($pdo);
-
-        $controller = AddressController::fromPg($pdo);
+        $controller = $this->bootController($this->freshSqlitePath(__FUNCTION__));
         $response = $controller->manage(new Request());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertStringContainsString('Address manager', (string) $response->getContent());
         self::assertStringContainsString('btn', (string) $response->getContent());
+    }
+
+    private function bootController(string $sqlitePath): AddressController
+    {
+        $pdo = new PDO('sqlite:'.$sqlitePath);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        AddressSchemaManager::resetSchema($pdo, dirname(__DIR__, 2));
+
+        putenv('ADDRESS_DB_DSN=sqlite:'.$sqlitePath);
+        $_ENV['ADDRESS_DB_DSN'] = 'sqlite:'.$sqlitePath;
+        $_SERVER['ADDRESS_DB_DSN'] = 'sqlite:'.$sqlitePath;
+        $_SERVER['APP_ENV'] = 'test';
+        $_SERVER['APP_DEBUG'] = '0';
+
+        $kernel = new Kernel('test', false);
+        $kernel->boot();
+
+        /** @var AddressController $controller */
+        $controller = $kernel->getContainer()->get(AddressController::class);
+
+        return $controller;
+    }
+
+    private function freshSqlitePath(string $suffix): string
+    {
+        $path = dirname(__DIR__, 2).'/var/'.preg_replace('/[^A-Za-z0-9_-]/', '-', $suffix).'.sqlite';
+        if (is_file($path)) {
+            unlink($path);
+        }
+
+        return $path;
     }
 }

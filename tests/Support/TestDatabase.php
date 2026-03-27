@@ -32,6 +32,7 @@ final class TestDatabase
 
         if ($driver === 'pgsql') {
             $pdo->exec('DROP TABLE IF EXISTS address_outbox');
+            $pdo->exec('DROP TABLE IF EXISTS address_evidence_snapshot');
             $pdo->exec('DROP TABLE IF EXISTS address_entity');
 
             $pdo->exec('CREATE TABLE address_entity (
@@ -97,10 +98,31 @@ final class TestDatabase
                 last_error TEXT NULL
             )');
 
+            $pdo->exec('CREATE TABLE address_evidence_snapshot (
+                id TEXT PRIMARY KEY,
+                address_id TEXT NOT NULL,
+                owner_id TEXT NULL,
+                vendor_id TEXT NULL,
+                source_system TEXT NULL,
+                source_type TEXT NULL,
+                source_reference TEXT NULL,
+                validated_by TEXT NULL,
+                validated_at TEXT NULL,
+                normalization_version TEXT NULL,
+                raw_input_snapshot JSONB NULL,
+                normalized_snapshot JSONB NULL,
+                validation_status TEXT NOT NULL,
+                validation_score INTEGER NULL,
+                validation_issues JSONB NULL,
+                provider_digest TEXT NULL,
+                created_at TEXT NOT NULL
+            )');
+
             return;
         }
 
         $pdo->exec('DROP TABLE IF EXISTS address_outbox');
+        $pdo->exec('DROP TABLE IF EXISTS address_evidence_snapshot');
         $pdo->exec('DROP TABLE IF EXISTS address_entity');
 
         $pdo->exec('CREATE TABLE address_entity (
@@ -164,6 +186,26 @@ final class TestDatabase
             locked_by TEXT NULL,
             published_attempt INTEGER NOT NULL DEFAULT 0,
             last_error TEXT NULL
+        )');
+
+        $pdo->exec('CREATE TABLE address_evidence_snapshot (
+            id TEXT PRIMARY KEY,
+            address_id TEXT NOT NULL,
+            owner_id TEXT NULL,
+            vendor_id TEXT NULL,
+            source_system TEXT NULL,
+            source_type TEXT NULL,
+            source_reference TEXT NULL,
+            validated_by TEXT NULL,
+            validated_at TEXT NULL,
+            normalization_version TEXT NULL,
+            raw_input_snapshot TEXT NULL,
+            normalized_snapshot TEXT NULL,
+            validation_status TEXT NOT NULL,
+            validation_score INTEGER NULL,
+            validation_issues TEXT NULL,
+            provider_digest TEXT NULL,
+            created_at TEXT NOT NULL
         )');
     }
 }

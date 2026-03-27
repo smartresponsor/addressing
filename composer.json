@@ -9,17 +9,19 @@
         "ext-pdo": "*",
         "doctrine/orm": "^2.15 || ^3.0",
         "symfony/form": "^8.0",
-        "symfony/framework-bundle": "^6.4 || ^7.0",
-        "symfony/property-access": "^6.4 || ^7.0",
-        "symfony/property-info": "^6.4 || ^7.0",
-        "symfony/serializer": "^6.4 || ^7.0",
+        "symfony/framework-bundle": "^8.0",
+        "symfony/intl": "^8.0",
+        "symfony/property-access": "^8.0",
+        "symfony/property-info": "^8.0",
+        "symfony/serializer": "^8.0",
         "symfony/twig-bundle": "^8.0",
-        "symfony/uid": "^7.3",
-        "symfony/validator": "^6.4 || ^7.0",
+        "symfony/uid": "^8.0",
+        "symfony/validator": "^8.0",
         "twig/twig": "^3.24"
     },
     "require-dev": {
         "behat/behat": "^3.14",
+        "dbrekelmans/bdi": "^1.4",
         "deptrac/deptrac": "^3.0",
         "doctrine/data-fixtures": "2.2",
         "doctrine/doctrine-fixtures-bundle": "^4.3",
@@ -82,6 +84,15 @@
         "test:unit": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite unit",
         "test:integration": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite integration",
         "test:e2e": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite e2e",
+        "test:e2e:panther": [
+            "@app:server:wait",
+            "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite e2e"
+        ],
+        "test:e2e:playwright": "npm run test:e2e",
+        "test:e2e:full": [
+            "@test:e2e:panther",
+            "@test:e2e:playwright"
+        ],
         "qa:style": [
             "@lint",
             "@cs:check"
@@ -133,7 +144,10 @@
             "@security:full"
         ],
         "test:functional": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite functional",
-        "fixtures:demo": "php bin/address-demo-reset 50"
+        "fixtures:demo": "php bin/address-demo-reset 50",
+        "app:server": "php -S 127.0.0.1:8000 -t public public/router.php",
+        "app:server:wait": "@php tools/e2e/wait-for-url.php http://127.0.0.1:8000/address/manage",
+        "app:server:dry-run": "@php tools/e2e/dry-run-server.php"
     },
     "config": {
         "sort-packages": true,

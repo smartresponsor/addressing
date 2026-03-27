@@ -1,24 +1,23 @@
-version: '3.8'
-
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
     volumes:
-      - .:/app
-    depends_on:
-      - db
+      - .:/var/www/html
     environment:
-      TEST_DB_DSN: 'pgsql:host=db;port=5432;dbname=addressing_test'
-      TEST_DB_USER: 'addressing'
-      TEST_DB_PASS: 'addressing'
-    command: php vendor/bin/phpunit -c phpunit.xml.dist
-
-  db:
-    image: postgres:16-alpine
-    restart: always
-    environment:
-      POSTGRES_DB: addressing_test
-      POSTGRES_USER: addressing
-      POSTGRES_PASSWORD: addressing
+      APP_ENV: dev
+      APP_DEBUG: 1
+      APP_VAR_DIR: /tmp/addressing-var
+      ADDRESS_DB_DSN: sqlite:/tmp/addressing-docker.sqlite
+      ADDRESS_RATE_LIMIT_DSN: sqlite:/tmp/addressing-rate-limit.sqlite
+      RATE_LIMIT_DISABLED: 1
+      PANTHER_CHROME_BINARY: /usr/bin/chromium
+      PANTHER_NO_SANDBOX: 1
     ports:
-      - '5432:5432'
+      - '${APP_PORT:-8081}:80'
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit((int) !@file_get_contents('http://127.0.0.1/address/manage'));"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

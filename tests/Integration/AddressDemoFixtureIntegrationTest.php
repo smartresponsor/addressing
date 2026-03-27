@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Tests\Integration;
 
 use App\Fixture\AddressDemoFixtureService;
+use App\Http\Dto\AddressInputFactory;
+use App\Repository\Persistence\AddressRepository;
+use App\Service\Application\AddressService;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
 
@@ -15,7 +18,11 @@ final class AddressDemoFixtureIntegrationTest extends TestCase
         $pdo = TestDatabase::createPdo();
         TestDatabase::resetAddressSchema($pdo);
 
-        $fixture = new AddressDemoFixtureService($pdo);
+        $fixture = new AddressDemoFixtureService(
+            $pdo,
+            new AddressService(new AddressRepository($pdo)),
+            new AddressInputFactory(),
+        );
         $loaded = $fixture->resetAndLoad(5);
 
         self::assertSame(5, $loaded);
@@ -26,5 +33,4 @@ final class AddressDemoFixtureIntegrationTest extends TestCase
         $outboxCount = (int) $pdo->query('SELECT COUNT(*) FROM address_outbox')->fetchColumn();
         self::assertSame(5, $outboxCount);
     }
-
 }

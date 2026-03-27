@@ -39,7 +39,9 @@ if (!IpGuard::allowed($clientIp, $pathInfo)) {
 }
 
 $rateLimiter = new RateLimiter(AddressPdoFactory::createRateLimit());
-if (!$rateLimiter->check($clientIp, $method.' '.$pathInfo)) {
+if (!filter_var($_SERVER['RATE_LIMIT_DISABLED'] ?? getenv('RATE_LIMIT_DISABLED') ?? false, FILTER_VALIDATE_BOOL)
+    && !$rateLimiter->check($clientIp, $method.' '.$pathInfo)
+) {
     ErrorMap::emit(429, 'too_many_requests', 'rate_limit_exceeded');
     exit(0);
 }
