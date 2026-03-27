@@ -1,3 +1,29 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd" bootstrap="vendor/autoload.php" colors="true">
-    <testsuites><testsuite name="unit"><file>tests/ValueObjectsTest.php</file></testsuite><testsuite name="integration"><directory>tests/Service</directory><directory>tests/Projection</directory><file>tests/IndexProjectorTest.php</file></testsuite></testsuites></phpunit>
+    <php>
+        <env name="TEST_DB_DSN" value=""/>
+        <env name="TEST_DB_USER" value=""/>
+        <env name="TEST_DB_PASS" value=""/>
+    </php>
+    <testsuites>
+        <testsuite name="unit">
+            <directory>tests/Unit</directory>
+            <file>tests/ValueObjectsTest.php</file>
+        </testsuite>
+        <testsuite name="integration">
+            <directory>tests/Integration</directory>
+            <directory>tests/Service</directory>
+            <directory>tests/Projection</directory>
+            <file>tests/IndexProjectorTest.php</file>
+        </testsuite>
+        <testsuite name="functional">
+            <directory>tests/Functional</directory>
+        </testsuite>
+        <testsuite name="e2e">
+            <directory>tests/E2E</directory>
+        </testsuite>
+        <testsuite name="security">
+            <directory>tests/Security</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

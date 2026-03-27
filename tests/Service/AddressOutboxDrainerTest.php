@@ -1,13 +1,10 @@
 <?php
-
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- */
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace Tests\Service;
 
-use App\Service\Application\Address\AddressOutboxDrainer;
+use App\Service\Application\AddressOutboxDrainerService;
 use PHPUnit\Framework\TestCase;
 
 final class AddressOutboxDrainerTest extends TestCase
@@ -31,7 +28,7 @@ final class AddressOutboxDrainerTest extends TestCase
 
         $published = [];
 
-        $drainer2 = new AddressOutboxDrainer(
+        $drainer2 = new AddressOutboxDrainerService(
             $pdo2,
             function (
                 string $url,
@@ -47,7 +44,7 @@ final class AddressOutboxDrainerTest extends TestCase
             }
         );
 
-        $drainer1 = new AddressOutboxDrainer(
+        $drainer1 = new AddressOutboxDrainerService(
             $pdo1,
             function (
                 string $url,

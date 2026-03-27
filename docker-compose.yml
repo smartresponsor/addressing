@@ -7,15 +7,18 @@ services:
       - .:/app
     depends_on:
       - db
-    command: vendor/bin/phpunit --coverage-html build/coverage-html
+    environment:
+      TEST_DB_DSN: 'pgsql:host=db;port=5432;dbname=addressing_test'
+      TEST_DB_USER: 'addressing'
+      TEST_DB_PASS: 'addressing'
+    command: php vendor/bin/phpunit -c phpunit.xml.dist
 
   db:
-    image: mysql:8.0
+    image: postgres:16-alpine
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: testdb
-      MYSQL_USER: test
-      MYSQL_PASSWORD: test
+      POSTGRES_DB: addressing_test
+      POSTGRES_USER: addressing
+      POSTGRES_PASSWORD: addressing
     ports:
-      - "3306:3306"
+      - '5432:5432'
