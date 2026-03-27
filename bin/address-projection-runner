@@ -1,17 +1,13 @@
 #!/usr/bin/env php
 <?php
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
- * Owner: Marketing America Corp
- */
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use App\Entity\Record\Address\AddressData;
-use App\Service\Application\Address\AddressProjection;
+use App\Entity\Record\AddressData;
+use App\Service\Application\AddressProjectionService;
 
 /**
  * @param $v
@@ -53,7 +49,7 @@ function toBoolNullable(array $r, string $k): ?bool
 $pg = new PDO((string)getenv('PG_DSN'), (string)getenv('PG_USER'), (string)getenv('PG_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 $my = new PDO((string)getenv('MY_DSN'), (string)getenv('MY_USER'), (string)getenv('MY_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
-$proj = new AddressProjection($my);
+$proj = new AddressProjectionService($my);
 $stmt = $pg->query('SELECT * FROM address_entity ORDER BY id ASC');
 
 $cnt = 0;

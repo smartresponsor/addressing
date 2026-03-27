@@ -1,0 +1,57 @@
+#!/usr/bin/env php
+<?php
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+declare(strict_types=1);
+
+require __DIR__.'/../vendor/autoload.php';
+
+use App\Entity\Record\AddressData;
+use App\Repository\Persistence\AddressRepository;
+use App\Service\Application\AddressService;
+use Symfony\Component\Uid\Ulid;
+
+if (($argv[1] ?? null) === null) {
+    fwrite(STDERR, "Usage: address-create '<json-payload>'\n");
+    exit(2);
+}
+
+$payload = json_decode((string) $argv[1], true);
+if (!is_array($payload)) {
+    fwrite(STDERR, "Invalid JSON payload\n");
+    exit(2);
+}
+
+$pdo = new PDO((string) getenv('PG_DSN'), (string) getenv('PG_USER'), (string) getenv('PG_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$service = new AddressService(new AddressRepository($pdo));
+
+$now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
+$id = isset($payload['id']) && is_string($payload['id']) && $payload['id'] !== '' ? $payload['id'] : (string) new Ulid();
+
+$address = new AddressData(
+    $id,
+    isset($payload['ownerId']) && is_string($payload['ownerId']) ? $payload['ownerId'] : null,
+    isset($payload['vendorId']) && is_string($payload['vendorId']) ? $payload['vendorId'] : null,
+    (string) ($payload['line1'] ?? ''),
+    isset($payload['line2']) && is_string($payload['line2']) ? $payload['line2'] : null,
+    (string) ($payload['city'] ?? ''),
+    isset($payload['region']) && is_string($payload['region']) ? $payload['region'] : null,
+    isset($payload['postalCode']) && is_string($payload['postalCode']) ? $payload['postalCode'] : null,
+    strtoupper((string) ($payload['countryCode'] ?? '')),
+    isset($payload['line1Norm']) && is_string($payload['line1Norm']) ? $payload['line1Norm'] : null,
+    isset($payload['cityNorm']) && is_string($payload['cityNorm']) ? $payload['cityNorm'] : null,
+    isset($payload['regionNorm']) && is_string($payload['regionNorm']) ? $payload['regionNorm'] : null,
+    isset($payload['postalCodeNorm']) && is_string($payload['postalCodeNorm']) ? $payload['postalCodeNorm'] : null,
+    isset($payload['latitude']) && is_numeric($payload['latitude']) ? (float) $payload['latitude'] : null,
+    isset($payload['longitude']) && is_numeric($payload['longitude']) ? (float) $payload['longitude'] : null,
+    isset($payload['geohash']) && is_string($payload['geohash']) ? $payload['geohash'] : null,
+    isset($payload['validationStatus']) && is_string($payload['validationStatus']) ? $payload['validationStatus'] : 'pending',
+    isset($payload['validationProvider']) && is_string($payload['validationProvider']) ? $payload['validationProvider'] : null,
+    isset($payload['validatedAt']) && is_string($payload['validatedAt']) ? $payload['validatedAt'] : null,
+    isset($payload['dedupeKey']) && is_string($payload['dedupeKey']) ? $payload['dedupeKey'] : null,
+    $now,
+    null,
+    null,
+);
+
+$service->create($address);
+fwrite(STDOUT, json_encode(['id' => $id], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n");

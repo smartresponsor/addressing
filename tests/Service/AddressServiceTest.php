@@ -1,15 +1,12 @@
 <?php
-
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- */
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace Tests\Service;
 
-use App\Entity\Record\Address\AddressData;
-use App\Repository\Persistence\Address\AddressRepository;
-use App\Service\Application\Address\AddressService;
+use App\Entity\Record\AddressData;
+use App\Repository\Persistence\AddressRepository;
+use App\Service\Application\AddressService;
 use PHPUnit\Framework\TestCase;
 
 final class AddressServiceTest extends TestCase

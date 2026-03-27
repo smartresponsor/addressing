@@ -1,14 +1,11 @@
 <?php
-
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- */
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Projection\AddressIndex;
 
-use App\Service\Application\Address\Event\AddressCreatedEvent;
-use App\Service\Application\Address\Event\AddressUpdatedEvent;
+use App\Service\Application\Event\AddressCreatedEvent;
+use App\Service\Application\Event\AddressUpdatedEvent;
 
 final readonly class IndexProjector
 {

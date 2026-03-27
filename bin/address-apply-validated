@@ -5,8 +5,8 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use App\Contract\Message\Address\AddressValidated;
-use App\Service\Application\Address\AddressValidatedApplier;
+use App\Contract\Message\AddressValidated;
+use App\Service\Application\AddressValidatedApplierService;
 use JetBrains\PhpStorm\NoReturn;
 
 #[NoReturn] function usage(): void
@@ -23,7 +23,7 @@ if (!$arg) {
 $pdo = new PDO((string)getenv('PG_DSN'), (string)getenv('PG_USER'), (string)getenv('PG_PASS'), [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
 ]);
-$applier = new AddressValidatedApplier($pdo);
+$applier = new AddressValidatedApplierService($pdo);
 
 $handle = ($arg === '-') ? STDIN : fopen($arg, 'r');
 if (!$handle) {
