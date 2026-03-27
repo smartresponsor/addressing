@@ -96,7 +96,7 @@ final class Controller
             return new JsonResponse(['error' => 'not_found'], 404);
         }
 
-        return new JsonResponse(self::toArray($address));
+        return new JsonResponse(self::toArray($address, null));
     }
 
     public function markDeleted(Request $req, string $id): JsonResponse
@@ -123,6 +123,7 @@ final class Controller
         $countryCode = self::queryStringOrNull($req, 'countryCode');
         $countryCode = null !== $countryCode ? strtoupper($countryCode) : null;
         $q = self::queryStringOrNull($req, 'q');
+        $expectedNormalizationVersion = self::queryStringOrNull($req, 'expectedNormalizationVersion');
         $filters = [
             'sourceType' => AddressRecordPolicy::normalizeSourceType(self::queryStringOrNull($req, 'sourceType')),
             'governanceStatus' => null !== self::queryStringOrNull($req, 'governanceStatus')
@@ -131,11 +132,13 @@ final class Controller
             'revalidationPolicy' => AddressRecordPolicy::normalizeRevalidationPolicy(self::queryStringOrNull($req, 'revalidationPolicy')),
             'hasEvidence' => self::queryBoolOrNull($req, 'hasEvidence'),
             'revalidationDueBefore' => self::queryStringOrNull($req, 'revalidationDueBefore'),
+            'queue' => self::queryStringOrNull($req, 'queue'),
+            'expectedNormalizationVersion' => $expectedNormalizationVersion,
         ];
 
         $res = $this->repo->findPage($ownerId, $vendorId, $countryCode, $q, $limit, $cursor, $filters);
 
-        $items = array_map(fn (AddressInterface $address): array => self::toArray($address), $res['items']);
+        $items = array_map(fn (AddressInterface $address): array => self::toArray($address, $expectedNormalizationVersion), $res['items']);
 
         return new JsonResponse([
             'items' => $items,
@@ -143,23 +146,145 @@ final class Controller
         ]);
     }
 
+    public function queueSummary(Request $req): JsonResponse
+    {
+        $ownerId = self::queryStringOrNull($req, 'ownerId');
+        $vendorId = self::queryStringOrNull($req, 'vendorId');
+        $countryCode = self::queryStringOrNull($req, 'countryCode');
+        $countryCode = null !== $countryCode ? strtoupper($countryCode) : null;
+        $q = self::queryStringOrNull($req, 'q');
+        $summary = $this->repo->summarizeOperationalQueues($ownerId, $vendorId, $countryCode, $q, [
+            'sourceType' => AddressRecordPolicy::normalizeSourceType(self::queryStringOrNull($req, 'sourceType')),
+            'governanceStatus' => null !== self::queryStringOrNull($req, 'governanceStatus')
+                ? AddressRecordPolicy::normalizeGovernanceStatus(self::queryStringOrNull($req, 'governanceStatus'))
+                : null,
+            'revalidationPolicy' => AddressRecordPolicy::normalizeRevalidationPolicy(self::queryStringOrNull($req, 'revalidationPolicy')),
+            'hasEvidence' => self::queryBoolOrNull($req, 'hasEvidence'),
+            'revalidationDueBefore' => self::queryStringOrNull($req, 'revalidationDueBefore'),
+            'expectedNormalizationVersion' => self::queryStringOrNull($req, 'expectedNormalizationVersion'),
+        ]);
+
+        return new JsonResponse($summary);
+    }
+
+    public function countryPortfolioSummary(Request $req): JsonResponse
+    {
+        [$ownerId, $vendorId] = self::tenantFromQuery($req);
+        $q = self::queryStringOrNull($req, 'q');
+        $summary = $this->repo->summarizeCountryPortfolio($ownerId, $vendorId, $q, [
+            'sourceType' => AddressRecordPolicy::normalizeSourceType(self::queryStringOrNull($req, 'sourceType')),
+            'governanceStatus' => null !== self::queryStringOrNull($req, 'governanceStatus')
+                ? AddressRecordPolicy::normalizeGovernanceStatus(self::queryStringOrNull($req, 'governanceStatus'))
+                : null,
+            'revalidationPolicy' => AddressRecordPolicy::normalizeRevalidationPolicy(self::queryStringOrNull($req, 'revalidationPolicy')),
+            'hasEvidence' => self::queryBoolOrNull($req, 'hasEvidence'),
+            'revalidationDueBefore' => self::queryStringOrNull($req, 'revalidationDueBefore'),
+        ]);
+
+        return new JsonResponse(['items' => $summary]);
+    }
+
+    public function sourcePortfolioSummary(Request $req): JsonResponse
+    {
+        [$ownerId, $vendorId] = self::tenantFromQuery($req);
+        $countryCode = self::queryStringOrNull($req, 'countryCode');
+        $countryCode = null !== $countryCode ? strtoupper($countryCode) : null;
+        $q = self::queryStringOrNull($req, 'q');
+        $summary = $this->repo->summarizeSourcePortfolio($ownerId, $vendorId, $countryCode, $q, [
+            'sourceType' => AddressRecordPolicy::normalizeSourceType(self::queryStringOrNull($req, 'sourceType')),
+            'sourceSystem' => self::queryStringOrNull($req, 'sourceSystem'),
+            'governanceStatus' => null !== self::queryStringOrNull($req, 'governanceStatus')
+                ? AddressRecordPolicy::normalizeGovernanceStatus(self::queryStringOrNull($req, 'governanceStatus'))
+                : null,
+            'revalidationPolicy' => AddressRecordPolicy::normalizeRevalidationPolicy(self::queryStringOrNull($req, 'revalidationPolicy')),
+            'hasEvidence' => self::queryBoolOrNull($req, 'hasEvidence'),
+            'revalidationDueBefore' => self::queryStringOrNull($req, 'revalidationDueBefore'),
+        ]);
+
+        return new JsonResponse(['items' => $summary]);
+    }
+
+    public function validationPortfolioSummary(Request $req): JsonResponse
+    {
+        [$ownerId, $vendorId] = self::tenantFromQuery($req);
+        $countryCode = self::queryStringOrNull($req, 'countryCode');
+        $countryCode = null !== $countryCode ? strtoupper($countryCode) : null;
+        $q = self::queryStringOrNull($req, 'q');
+        $summary = $this->repo->summarizeValidationPortfolio($ownerId, $vendorId, $countryCode, $q, [
+            'sourceType' => AddressRecordPolicy::normalizeSourceType(self::queryStringOrNull($req, 'sourceType')),
+            'sourceSystem' => self::queryStringOrNull($req, 'sourceSystem'),
+            'validationProvider' => self::queryStringOrNull($req, 'validationProvider'),
+            'validationStatus' => null !== self::queryStringOrNull($req, 'validationStatus')
+                ? AddressRecordPolicy::normalizeValidationStatus(self::queryStringOrNull($req, 'validationStatus'))
+                : null,
+            'governanceStatus' => null !== self::queryStringOrNull($req, 'governanceStatus')
+                ? AddressRecordPolicy::normalizeGovernanceStatus(self::queryStringOrNull($req, 'governanceStatus'))
+                : null,
+            'revalidationPolicy' => AddressRecordPolicy::normalizeRevalidationPolicy(self::queryStringOrNull($req, 'revalidationPolicy')),
+            'hasEvidence' => self::queryBoolOrNull($req, 'hasEvidence'),
+            'revalidationDueBefore' => self::queryStringOrNull($req, 'revalidationDueBefore'),
+        ]);
+
+        return new JsonResponse(['items' => $summary]);
+    }
+
+    public function normalizationPortfolioSummary(Request $req): JsonResponse
+    {
+        [$ownerId, $vendorId] = self::tenantFromQuery($req);
+        $countryCode = self::queryStringOrNull($req, 'countryCode');
+        $countryCode = null !== $countryCode ? strtoupper($countryCode) : null;
+        $q = self::queryStringOrNull($req, 'q');
+        $summary = $this->repo->summarizeNormalizationPortfolio($ownerId, $vendorId, $countryCode, $q, [
+            'sourceType' => AddressRecordPolicy::normalizeSourceType(self::queryStringOrNull($req, 'sourceType')),
+            'sourceSystem' => self::queryStringOrNull($req, 'sourceSystem'),
+            'validationProvider' => self::queryStringOrNull($req, 'validationProvider'),
+            'validationStatus' => null !== self::queryStringOrNull($req, 'validationStatus')
+                ? AddressRecordPolicy::normalizeValidationStatus(self::queryStringOrNull($req, 'validationStatus'))
+                : null,
+            'governanceStatus' => null !== self::queryStringOrNull($req, 'governanceStatus')
+                ? AddressRecordPolicy::normalizeGovernanceStatus(self::queryStringOrNull($req, 'governanceStatus'))
+                : null,
+            'revalidationPolicy' => AddressRecordPolicy::normalizeRevalidationPolicy(self::queryStringOrNull($req, 'revalidationPolicy')),
+            'hasEvidence' => self::queryBoolOrNull($req, 'hasEvidence'),
+            'revalidationDueBefore' => self::queryStringOrNull($req, 'revalidationDueBefore'),
+            'expectedNormalizationVersion' => self::queryStringOrNull($req, 'expectedNormalizationVersion'),
+        ]);
+
+        return new JsonResponse(['items' => $summary]);
+    }
+
+    public function governanceClusterSummary(Request $req, string $id): JsonResponse
+    {
+        [$ownerId, $vendorId] = self::tenantFromQuery($req);
+        $summary = $this->repo->summarizeGovernanceCluster($id, $ownerId, $vendorId);
+        if (0 === $summary['clusterSize']) {
+            return new JsonResponse(['error' => 'not_found'], 404);
+        }
+
+        return new JsonResponse($summary);
+    }
+
     public function patchOperational(Request $req, string $id): JsonResponse
     {
         $in = self::json($req);
         [$ownerId, $vendorId] = self::tenantFromQuery($req);
 
-        $ok = $this->repo->patchOperational($id, $ownerId, $vendorId, [
-            'governanceStatus' => self::optStr($in, 'governanceStatus'),
-            'duplicateOfId' => self::optStr($in, 'duplicateOfId'),
-            'supersededById' => self::optStr($in, 'supersededById'),
-            'aliasOfId' => self::optStr($in, 'aliasOfId'),
-            'conflictWithId' => self::optStr($in, 'conflictWithId'),
-            'revalidationDueAt' => self::optStr($in, 'revalidationDueAt'),
-            'revalidationPolicy' => self::optStr($in, 'revalidationPolicy'),
-            'lastValidationProvider' => self::optStr($in, 'lastValidationProvider'),
-            'lastValidationStatus' => self::optStr($in, 'lastValidationStatus'),
-            'lastValidationScore' => self::optInt($in, 'lastValidationScore'),
-        ]);
+        try {
+            $ok = $this->repo->patchOperational($id, $ownerId, $vendorId, [
+                'governanceStatus' => self::optStr($in, 'governanceStatus'),
+                'duplicateOfId' => self::optStr($in, 'duplicateOfId'),
+                'supersededById' => self::optStr($in, 'supersededById'),
+                'aliasOfId' => self::optStr($in, 'aliasOfId'),
+                'conflictWithId' => self::optStr($in, 'conflictWithId'),
+                'revalidationDueAt' => self::optStr($in, 'revalidationDueAt'),
+                'revalidationPolicy' => self::optStr($in, 'revalidationPolicy'),
+                'lastValidationProvider' => self::optStr($in, 'lastValidationProvider'),
+                'lastValidationStatus' => self::optStr($in, 'lastValidationStatus'),
+                'lastValidationScore' => self::optInt($in, 'lastValidationScore'),
+            ]);
+        } catch (RuntimeException $exception) {
+            return new JsonResponse(['error' => 'invalid_governance_transition', 'message' => $exception->getMessage()], 422);
+        }
 
         if (!$ok) {
             return new JsonResponse(['error' => 'not_found_or_not_patched'], 404);
@@ -170,7 +295,7 @@ final class Controller
             return new JsonResponse(['error' => 'not_found'], 404);
         }
 
-        return new JsonResponse(self::toArray($address));
+        return new JsonResponse(self::toArray($address, null));
     }
 
     public function patchOperationalBatch(Request $req): JsonResponse
@@ -192,9 +317,14 @@ final class Controller
         ];
 
         $patchedIds = [];
+        $failed = [];
         foreach ($ids as $id) {
-            if ($this->repo->patchOperational($id, $ownerId, $vendorId, $patch)) {
-                $patchedIds[] = $id;
+            try {
+                if ($this->repo->patchOperational($id, $ownerId, $vendorId, $patch)) {
+                    $patchedIds[] = $id;
+                }
+            } catch (RuntimeException $exception) {
+                $failed[] = ['id' => $id, 'error' => $exception->getMessage()];
             }
         }
 
@@ -202,6 +332,7 @@ final class Controller
             'requestedCount' => count($ids),
             'patchedCount' => count($patchedIds),
             'patchedIds' => $patchedIds,
+            'failed' => $failed,
         ]);
     }
 
@@ -247,7 +378,7 @@ final class Controller
             return new JsonResponse(['error' => 'not_found'], 404);
         }
 
-        return new JsonResponse(self::toArray($address));
+        return new JsonResponse(self::toArray($address, null));
     }
 
     /** @return array<string, mixed> */
@@ -403,7 +534,7 @@ final class Controller
     }
 
     /** @return array<string, mixed> */
-    private static function toArray(AddressInterface $address): array
+    private static function toArray(AddressInterface $address, ?string $expectedNormalizationVersion): array
     {
         $governanceLinkId = self::primaryGovernanceLinkId($address);
         $hasEvidence = null !== $address->providerDigest()
@@ -412,6 +543,12 @@ final class Controller
         $isRevalidationDue = null !== $address->revalidationDueAt()
             && false !== strtotime($address->revalidationDueAt())
             && strtotime($address->revalidationDueAt()) <= time();
+        $isEvidenceMissing = !$hasEvidence;
+        $isValidationUncertain = 'uncertain' === $address->validationStatus() || 'uncertain' === $address->lastValidationStatus();
+        $isGovernanceConflict = 'conflict' === $address->governanceStatus();
+        $isNormalizationStale = null !== $expectedNormalizationVersion
+            && $address->normalizationVersion() !== $expectedNormalizationVersion;
+        $reviewReason = self::reviewReason($isGovernanceConflict, $isValidationUncertain, $isEvidenceMissing, $isRevalidationDue, $isNormalizationStale, $address->governanceStatus());
 
         return [
             'id' => $address->id(),
@@ -442,6 +579,12 @@ final class Controller
             'normalizedSnapshot' => $address->normalizedSnapshot(),
             'providerDigest' => $address->providerDigest(),
             'hasEvidence' => $hasEvidence,
+            'isEvidenceMissing' => $isEvidenceMissing,
+            'isValidationUncertain' => $isValidationUncertain,
+            'isGovernanceConflict' => $isGovernanceConflict,
+            'isNormalizationStale' => $isNormalizationStale,
+            'requiresReview' => null !== $reviewReason,
+            'reviewReason' => $reviewReason,
             'governanceStatus' => $address->governanceStatus(),
             'governanceLinkId' => $governanceLinkId,
             'hasGovernanceLink' => null !== $governanceLinkId,
@@ -459,6 +602,36 @@ final class Controller
             'updatedAt' => $address->updatedAt(),
             'deletedAt' => $address->deletedAt(),
         ];
+    }
+
+    private static function reviewReason(
+        bool $isGovernanceConflict,
+        bool $isValidationUncertain,
+        bool $isEvidenceMissing,
+        bool $isRevalidationDue,
+        bool $isNormalizationStale,
+        string $governanceStatus,
+    ): ?string {
+        if ($isGovernanceConflict) {
+            return 'governanceConflict';
+        }
+        if ('duplicate' === $governanceStatus) {
+            return 'duplicateReview';
+        }
+        if ($isValidationUncertain) {
+            return 'uncertainValidation';
+        }
+        if ($isEvidenceMissing) {
+            return 'evidenceMissing';
+        }
+        if ($isRevalidationDue) {
+            return 'dueForRevalidation';
+        }
+        if ($isNormalizationStale) {
+            return 'staleNormalizationVersion';
+        }
+
+        return null;
     }
 
     private static function primaryGovernanceLinkId(AddressInterface $address): ?string

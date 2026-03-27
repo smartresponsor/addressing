@@ -9,10 +9,14 @@ declare(strict_types=1);
 
 namespace App\Repository\Persistence\Address;
 
+use App\Contract\Message\Address\AddressOutboxEventContract;
 use App\Contract\Message\Address\AddressRecordPolicy;
 use App\Entity\Record\Address\AddressData;
+use App\Entity\Record\Address\AddressEvidenceSnapshotData;
+use App\EntityInterface\Record\Address\AddressEvidenceSnapshotInterface;
 use App\EntityInterface\Record\Address\AddressInterface;
 use App\RepositoryInterface\Persistence\Address\AddressRepositoryInterface;
+use App\Service\Application\Address\AddressGovernancePolicy;
 
 final readonly class AddressRepository implements AddressRepositoryInterface
 {
@@ -51,6 +55,8 @@ SQL;
             $this->bindForCreate($stmt, $address);
             $stmt->execute();
 
+            $evidenceSnapshot = $this->appendEvidenceSnapshot($address);
+
             $this->appendOutbox('AddressCreated', [
                 'id' => $address->id(),
                 'ownerId' => $address->ownerId(),
@@ -65,6 +71,7 @@ SQL;
                 'revalidationDueAt' => $address->revalidationDueAt(),
                 'revalidationPolicy' => $address->revalidationPolicy(),
                 'lastValidationStatus' => $address->lastValidationStatus(),
+                'evidenceSnapshotId' => $evidenceSnapshot?->id(),
             ]);
             $this->pdo->commit();
         } catch (\Throwable $exception) {
@@ -107,6 +114,8 @@ SQL;
                 return;
             }
 
+            $evidenceSnapshot = $this->appendEvidenceSnapshot($address);
+
             $this->appendOutbox('AddressUpdated', [
                 'id' => $address->id(),
                 'updatedAt' => $address->updatedAt() ?? (new \DateTimeImmutable())->format(DATE_ATOM),
@@ -118,6 +127,7 @@ SQL;
                 'revalidationDueAt' => $address->revalidationDueAt(),
                 'revalidationPolicy' => $address->revalidationPolicy(),
                 'lastValidationStatus' => $address->lastValidationStatus(),
+                'evidenceSnapshotId' => $evidenceSnapshot?->id(),
             ]);
             $this->pdo->commit();
         } catch (\Throwable $exception) {
@@ -126,6 +136,91 @@ SQL;
             }
             throw $exception;
         }
+    }
+
+    public function appendEvidenceSnapshot(AddressInterface $address): ?AddressEvidenceSnapshotInterface
+    {
+        if (!$this->hasEvidence($address)) {
+            return null;
+        }
+
+        $snapshot = $this->buildEvidenceSnapshot($address);
+        $stmt = $this->prepare(<<<'SQL'
+INSERT INTO address_evidence_snapshot
+    (id, address_id, owner_id, vendor_id, source_system, source_type, source_reference, validated_by, validated_at,
+     normalization_version, raw_input_snapshot, normalized_snapshot, validation_status, validation_score, validation_issues, provider_digest, created_at)
+VALUES
+    (:id, :address_id, :owner_id, :vendor_id, :source_system, :source_type, :source_reference, :validated_by, :validated_at,
+     :normalization_version, :raw_input_snapshot, :normalized_snapshot, :validation_status, :validation_score, :validation_issues, :provider_digest, :created_at)
+SQL
+        );
+        $this->bindEvidenceSnapshot($stmt, $snapshot);
+        $stmt->execute();
+
+        return $snapshot;
+    }
+
+    public function getLatestEvidenceSnapshot(string $addressId, ?string $ownerId, ?string $vendorId): ?AddressEvidenceSnapshotInterface
+    {
+        $this->ensureTenantScope($ownerId, $vendorId);
+        $params = array_merge([':address_id' => $addressId], $this->tenantParams($ownerId, $vendorId));
+        $stmt = $this->prepare(
+            'SELECT * FROM address_evidence_snapshot WHERE address_id = :address_id AND '.$this->tenantWhereClause($ownerId, $vendorId)
+            .' ORDER BY created_at DESC, id DESC LIMIT 1'
+        );
+        $stmt->execute($params);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $this->mapEvidenceSnapshot($row) : null;
+    }
+
+    /**
+     * @return array{items: list<AddressEvidenceSnapshotInterface>, nextCursor: ?string}
+     */
+    public function findEvidenceHistoryPage(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array
+    {
+        $this->ensureTenantScope($ownerId, $vendorId);
+        $limit = max(1, min(200, $limit));
+        $params = array_merge([':address_id' => $addressId], $this->tenantParams($ownerId, $vendorId));
+        $where = ['address_id = :address_id', $this->tenantWhereClause($ownerId, $vendorId)];
+
+        if (null !== $cursor) {
+            [$cursorCreatedAt, $cursorId] = $this->decodeEvidenceCursor($cursor);
+            $where[] = '(created_at < :cursor_created_at OR (created_at = :cursor_created_at AND id < :cursor_id))';
+            $params[':cursor_created_at'] = $cursorCreatedAt;
+            $params[':cursor_id'] = $cursorId;
+        }
+
+        $sql = 'SELECT * FROM address_evidence_snapshot WHERE '.implode(' AND ', $where)
+            .' ORDER BY created_at DESC, id DESC LIMIT :limit';
+        $stmt = $this->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $safeRows = [];
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                if (is_array($row)) {
+                    $safeRows[] = $row;
+                }
+            }
+        }
+
+        $items = array_map(fn (array $row): AddressEvidenceSnapshotInterface => $this->mapEvidenceSnapshot($row), $safeRows);
+
+        $nextCursor = null;
+        if (count($safeRows) === $limit && [] !== $safeRows) {
+            $last = end($safeRows);
+            if (is_array($last)) {
+                $nextCursor = $this->encodeEvidenceCursor((string) ($last['created_at'] ?? ''), (string) ($last['id'] ?? ''));
+            }
+        }
+
+        return ['items' => $items, 'nextCursor' => $nextCursor];
     }
 
     public function get(string $id, ?string $ownerId, ?string $vendorId): ?AddressInterface
@@ -207,10 +302,17 @@ SQL;
     public function patchOperational(string $id, ?string $ownerId, ?string $vendorId, array $patch): bool
     {
         $this->ensureTenantScope($ownerId, $vendorId);
-        $normalized = $this->normalizeOperationalPatch($id, $patch);
+        $current = $this->get($id, $ownerId, $vendorId);
+        if (null === $current) {
+            return false;
+        }
+
+        $normalized = $this->normalizeOperationalPatch($current->id(), $current->governanceStatus(), $patch);
         if ([] === $normalized) {
             return false;
         }
+
+        $this->assertOperationalGovernanceTargetsExist($normalized, $ownerId, $vendorId);
 
         $tenantWhere = $this->tenantWhereClause($ownerId, $vendorId);
         $params = array_merge([':id' => $id], $this->tenantParams($ownerId, $vendorId));
@@ -317,15 +419,49 @@ SQL;
 
         $hasEvidence = $this->boolFilter($filters, 'hasEvidence');
         if (true === $hasEvidence) {
-            $where[] = '(provider_digest IS NOT NULL OR raw_input_snapshot IS NOT NULL OR normalized_snapshot IS NOT NULL)';
+            $where[] = $this->evidencePresenceClause(true);
         } elseif (false === $hasEvidence) {
-            $where[] = '(provider_digest IS NULL AND raw_input_snapshot IS NULL AND normalized_snapshot IS NULL)';
+            $where[] = $this->evidencePresenceClause(false);
         }
 
         $revalidationDueBefore = $this->stringFilter($filters, 'revalidationDueBefore');
         if (null !== $revalidationDueBefore) {
             $where[] = 'revalidation_due_at IS NOT NULL AND revalidation_due_at <= :revalidation_due_before';
             $params[':revalidation_due_before'] = $revalidationDueBefore;
+        }
+
+        $queue = $this->stringFilter($filters, 'queue');
+        $expectedNormalizationVersion = $this->stringFilter($filters, 'expectedNormalizationVersion');
+        if (null !== $queue) {
+            switch ($queue) {
+                case 'dueForRevalidation':
+                    $dueAt = $revalidationDueBefore ?? $this->currentTimestampLiteral();
+                    $where[] = 'revalidation_due_at IS NOT NULL AND revalidation_due_at <= :queue_due_before';
+                    $params[':queue_due_before'] = $dueAt;
+                    break;
+                case 'evidenceMissing':
+                    $where[] = $this->evidencePresenceClause(false);
+                    break;
+                case 'uncertainValidation':
+                    $where[] = '(validation_status = :queue_validation_status OR last_validation_status = :queue_last_validation_status)';
+                    $params[':queue_validation_status'] = 'uncertain';
+                    $params[':queue_last_validation_status'] = 'uncertain';
+                    break;
+                case 'conflictReview':
+                    $where[] = 'governance_status = :queue_governance_conflict';
+                    $params[':queue_governance_conflict'] = 'conflict';
+                    break;
+                case 'duplicateReview':
+                    $where[] = 'governance_status = :queue_governance_duplicate';
+                    $params[':queue_governance_duplicate'] = 'duplicate';
+                    break;
+                case 'staleNormalizationVersion':
+                    if (null !== $expectedNormalizationVersion) {
+                        $where[] = '(normalization_version IS NULL OR normalization_version <> :expected_normalization_version)';
+                        $params[':expected_normalization_version'] = $expectedNormalizationVersion;
+                    }
+                    break;
+            }
         }
 
         $sql = 'SELECT * FROM address_entity WHERE '.implode(' AND ', $where).' ORDER BY id ASC LIMIT :limit';
@@ -358,6 +494,537 @@ SQL;
         }
 
         return ['items' => $items, 'nextCursor' => $nextCursor];
+    }
+
+    /**
+     * @return array{
+     *   addressId:string,
+     *   governanceStatus:?string,
+     *   primaryLinkId:?string,
+     *   linkedToAnother:bool,
+     *   duplicateChildren:int,
+     *   supersededChildren:int,
+     *   aliasChildren:int,
+     *   conflictPeers:int,
+     *   inboundLinkedTotal:int,
+     *   clusterSize:int,
+     *   relatedAddressIds:list<string>
+     * }
+     */
+    public function summarizeGovernanceCluster(string $addressId, ?string $ownerId, ?string $vendorId): array
+    {
+        $this->ensureTenantScope($ownerId, $vendorId);
+        $current = $this->get($addressId, $ownerId, $vendorId);
+        if (null === $current) {
+            return [
+                'addressId' => $addressId,
+                'governanceStatus' => null,
+                'primaryLinkId' => null,
+                'linkedToAnother' => false,
+                'duplicateChildren' => 0,
+                'supersededChildren' => 0,
+                'aliasChildren' => 0,
+                'conflictPeers' => 0,
+                'inboundLinkedTotal' => 0,
+                'clusterSize' => 0,
+                'relatedAddressIds' => [],
+            ];
+        }
+
+        $params = $this->tenantParams($ownerId, $vendorId);
+        $params[':address_id'] = $addressId;
+        $tenantWhere = $this->tenantWhereClause($ownerId, $vendorId);
+        $sql = 'SELECT '
+            .'SUM(CASE WHEN duplicate_of_id = :address_id THEN 1 ELSE 0 END) AS duplicate_children, '
+            .'SUM(CASE WHEN superseded_by_id = :address_id THEN 1 ELSE 0 END) AS superseded_children, '
+            .'SUM(CASE WHEN alias_of_id = :address_id THEN 1 ELSE 0 END) AS alias_children, '
+            .'SUM(CASE WHEN conflict_with_id = :address_id THEN 1 ELSE 0 END) AS conflict_peers '
+            .'FROM address_entity WHERE deleted_at IS NULL AND '.$tenantWhere;
+        $stmt = $this->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->execute();
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC) ?: [];
+
+        $relatedIds = [];
+        $primaryLinkId = $this->governanceLinkId($current);
+        if (null !== $primaryLinkId) {
+            $relatedIds[] = $primaryLinkId;
+        }
+
+        $listSql = 'SELECT id FROM address_entity WHERE deleted_at IS NULL AND '.$tenantWhere
+            .' AND (duplicate_of_id = :address_id OR superseded_by_id = :address_id OR alias_of_id = :address_id OR conflict_with_id = :address_id) ORDER BY id ASC';
+        $listStmt = $this->prepare($listSql);
+        foreach ($params as $k => $v) {
+            $listStmt->bindValue($k, $v);
+        }
+        $listStmt->execute();
+        while (($id = $listStmt->fetchColumn()) !== false) {
+            if (is_string($id) && '' !== $id) {
+                $relatedIds[] = $id;
+            }
+        }
+
+        $relatedIds = array_values(array_unique($relatedIds));
+        $duplicateChildren = (int) ($row['duplicate_children'] ?? 0);
+        $supersededChildren = (int) ($row['superseded_children'] ?? 0);
+        $aliasChildren = (int) ($row['alias_children'] ?? 0);
+        $conflictPeers = (int) ($row['conflict_peers'] ?? 0);
+        $inboundLinkedTotal = $duplicateChildren + $supersededChildren + $aliasChildren + $conflictPeers;
+
+        return [
+            'addressId' => $addressId,
+            'governanceStatus' => $current->governanceStatus(),
+            'primaryLinkId' => $primaryLinkId,
+            'linkedToAnother' => null !== $primaryLinkId,
+            'duplicateChildren' => $duplicateChildren,
+            'supersededChildren' => $supersededChildren,
+            'aliasChildren' => $aliasChildren,
+            'conflictPeers' => $conflictPeers,
+            'inboundLinkedTotal' => $inboundLinkedTotal,
+            'clusterSize' => 1 + $inboundLinkedTotal + (null !== $primaryLinkId ? 1 : 0),
+            'relatedAddressIds' => $relatedIds,
+        ];
+    }
+
+    /**
+     * @return array{
+     *   total:int,
+     *   dueForRevalidation:int,
+     *   evidenceMissing:int,
+     *   uncertainValidation:int,
+     *   conflictReview:int,
+     *   duplicateReview:int,
+     *   staleNormalizationVersion:int
+     * }
+     */
+    public function summarizeOperationalQueues(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
+    {
+        $this->ensureTenantScope($ownerId, $vendorId);
+        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $driver = is_string($driverAttr) ? $driverAttr : '';
+        $params = $this->tenantParams($ownerId, $vendorId);
+        $where = ['deleted_at IS NULL', $this->tenantWhereClause($ownerId, $vendorId)];
+        if ($countryCode) {
+            $where[] = 'country_code = :country_code';
+            $params[':country_code'] = $countryCode;
+        }
+        if ($q) {
+            $op = 'pgsql' === $driver ? 'ILIKE' : 'LIKE';
+            $where[] = "lower(line1 || ' ' || city || ' ' || coalesce(postal_code,'')) {$op} lower(:q)";
+            $params[':q'] = '%'.$q.'%';
+        }
+
+        $sourceType = AddressRecordPolicy::normalizeSourceType($this->stringFilter($filters, 'sourceType'));
+        if (null !== $sourceType) {
+            $where[] = 'source_type = :source_type';
+            $params[':source_type'] = $sourceType;
+        }
+
+        $governanceStatusRaw = $this->stringFilter($filters, 'governanceStatus');
+        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($governanceStatusRaw);
+        if (null !== $governanceStatusRaw) {
+            $where[] = 'governance_status = :governance_status';
+            $params[':governance_status'] = $governanceStatus;
+        }
+
+        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy($this->stringFilter($filters, 'revalidationPolicy'));
+        if (null !== $revalidationPolicy) {
+            $where[] = 'revalidation_policy = :revalidation_policy';
+            $params[':revalidation_policy'] = $revalidationPolicy;
+        }
+
+        $hasEvidence = $this->boolFilter($filters, 'hasEvidence');
+        if (true === $hasEvidence) {
+            $where[] = $this->evidencePresenceClause(true);
+        } elseif (false === $hasEvidence) {
+            $where[] = $this->evidencePresenceClause(false);
+        }
+
+        $revalidationDueBefore = $this->stringFilter($filters, 'revalidationDueBefore');
+        if (null !== $revalidationDueBefore) {
+            $where[] = 'revalidation_due_at IS NOT NULL AND revalidation_due_at <= :revalidation_due_before';
+            $params[':revalidation_due_before'] = $revalidationDueBefore;
+        }
+
+        $expectedNormalizationVersion = $this->stringFilter($filters, 'expectedNormalizationVersion');
+        $now = $revalidationDueBefore ?? $this->currentTimestampLiteral();
+        $baseWhere = implode(' AND ', $where);
+        $staleSql = null !== $expectedNormalizationVersion
+            ? 'SUM(CASE WHEN normalization_version IS NULL OR normalization_version <> :expected_normalization_version THEN 1 ELSE 0 END)'
+            : '0';
+        if (null !== $expectedNormalizationVersion) {
+            $params[':expected_normalization_version'] = $expectedNormalizationVersion;
+        }
+
+        $sql = 'SELECT '
+            .'COUNT(*) AS total, '
+            .'SUM(CASE WHEN revalidation_due_at IS NOT NULL AND revalidation_due_at <= :summary_due_before THEN 1 ELSE 0 END) AS due_for_revalidation, '
+            .'SUM(CASE WHEN '.$this->evidencePresenceClause(false).' THEN 1 ELSE 0 END) AS evidence_missing, '
+            ."SUM(CASE WHEN validation_status = 'uncertain' OR last_validation_status = 'uncertain' THEN 1 ELSE 0 END) AS uncertain_validation, "
+            ."SUM(CASE WHEN governance_status = 'conflict' THEN 1 ELSE 0 END) AS conflict_review, "
+            ."SUM(CASE WHEN governance_status = 'duplicate' THEN 1 ELSE 0 END) AS duplicate_review, "
+            .$staleSql.' AS stale_normalization_version '
+            .'FROM address_entity WHERE '.$baseWhere;
+
+        $params[':summary_due_before'] = $now;
+        $stmt = $this->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->execute();
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!is_array($row)) {
+            return [
+                'total' => 0,
+                'dueForRevalidation' => 0,
+                'evidenceMissing' => 0,
+                'uncertainValidation' => 0,
+                'conflictReview' => 0,
+                'duplicateReview' => 0,
+                'staleNormalizationVersion' => 0,
+            ];
+        }
+
+        return [
+            'total' => (int) ($row['total'] ?? 0),
+            'dueForRevalidation' => (int) ($row['due_for_revalidation'] ?? 0),
+            'evidenceMissing' => (int) ($row['evidence_missing'] ?? 0),
+            'uncertainValidation' => (int) ($row['uncertain_validation'] ?? 0),
+            'conflictReview' => (int) ($row['conflict_review'] ?? 0),
+            'duplicateReview' => (int) ($row['duplicate_review'] ?? 0),
+            'staleNormalizationVersion' => (int) ($row['stale_normalization_version'] ?? 0),
+        ];
+    }
+
+    /**
+     * @return list<array{
+     *   countryCode:string,
+     *   total:int,
+     *   canonical:int,
+     *   duplicate:int,
+     *   superseded:int,
+     *   alias:int,
+     *   conflict:int,
+     *   evidenceBacked:int,
+     *   evidenceMissing:int,
+     *   dueForRevalidation:int,
+     *   uncertainValidation:int
+     * }>
+     */
+    public function summarizeCountryPortfolio(?string $ownerId, ?string $vendorId, ?string $q, array $filters = []): array
+    {
+        $this->ensureTenantScope($ownerId, $vendorId);
+        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $driver = is_string($driverAttr) ? $driverAttr : '';
+        $params = $this->tenantParams($ownerId, $vendorId);
+        $where = ['deleted_at IS NULL', $this->tenantWhereClause($ownerId, $vendorId)];
+        if ($q) {
+            $op = 'pgsql' === $driver ? 'ILIKE' : 'LIKE';
+            $where[] = "lower(line1 || ' ' || city || ' ' || coalesce(postal_code,'')) {$op} lower(:q)";
+            $params[':q'] = '%'.$q.'%';
+        }
+
+        $sourceType = AddressRecordPolicy::normalizeSourceType($this->stringFilter($filters, 'sourceType'));
+        if (null !== $sourceType) {
+            $where[] = 'source_type = :source_type';
+            $params[':source_type'] = $sourceType;
+        }
+
+        $governanceStatusRaw = $this->stringFilter($filters, 'governanceStatus');
+        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($governanceStatusRaw);
+        if (null !== $governanceStatusRaw) {
+            $where[] = 'governance_status = :governance_status';
+            $params[':governance_status'] = $governanceStatus;
+        }
+
+        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy($this->stringFilter($filters, 'revalidationPolicy'));
+        if (null !== $revalidationPolicy) {
+            $where[] = 'revalidation_policy = :revalidation_policy';
+            $params[':revalidation_policy'] = $revalidationPolicy;
+        }
+
+        $hasEvidence = $this->boolFilter($filters, 'hasEvidence');
+        if (true === $hasEvidence) {
+            $where[] = $this->evidencePresenceClause(true);
+        } elseif (false === $hasEvidence) {
+            $where[] = $this->evidencePresenceClause(false);
+        }
+
+        $revalidationDueBefore = $this->stringFilter($filters, 'revalidationDueBefore');
+        $params[':summary_due_before'] = $revalidationDueBefore ?? $this->currentTimestampLiteral();
+
+        $sql = 'SELECT country_code AS country_code, '
+            .'COUNT(*) AS total, '
+            ."SUM(CASE WHEN governance_status = 'canonical' THEN 1 ELSE 0 END) AS canonical_count, "
+            ."SUM(CASE WHEN governance_status = 'duplicate' THEN 1 ELSE 0 END) AS duplicate_count, "
+            ."SUM(CASE WHEN governance_status = 'superseded' THEN 1 ELSE 0 END) AS superseded_count, "
+            ."SUM(CASE WHEN governance_status = 'alias' THEN 1 ELSE 0 END) AS alias_count, "
+            ."SUM(CASE WHEN governance_status = 'conflict' THEN 1 ELSE 0 END) AS conflict_count, "
+            .'SUM(CASE WHEN '.$this->evidencePresenceClause(true).' THEN 1 ELSE 0 END) AS evidence_backed_count, '
+            .'SUM(CASE WHEN '.$this->evidencePresenceClause(false).' THEN 1 ELSE 0 END) AS evidence_missing_count, '
+            .'SUM(CASE WHEN revalidation_due_at IS NOT NULL AND revalidation_due_at <= :summary_due_before THEN 1 ELSE 0 END) AS due_for_revalidation_count, '
+            ."SUM(CASE WHEN validation_status = 'uncertain' OR last_validation_status = 'uncertain' THEN 1 ELSE 0 END) AS uncertain_validation_count "
+            .'FROM address_entity WHERE '.implode(' AND ', $where)
+            .' GROUP BY country_code ORDER BY total DESC, country_code ASC';
+
+        $stmt = $this->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->execute();
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        return array_map(static fn (array $row): array => [
+            'countryCode' => (string) ($row['country_code'] ?? ''),
+            'total' => (int) ($row['total'] ?? 0),
+            'canonical' => (int) ($row['canonical_count'] ?? 0),
+            'duplicate' => (int) ($row['duplicate_count'] ?? 0),
+            'superseded' => (int) ($row['superseded_count'] ?? 0),
+            'alias' => (int) ($row['alias_count'] ?? 0),
+            'conflict' => (int) ($row['conflict_count'] ?? 0),
+            'evidenceBacked' => (int) ($row['evidence_backed_count'] ?? 0),
+            'evidenceMissing' => (int) ($row['evidence_missing_count'] ?? 0),
+            'dueForRevalidation' => (int) ($row['due_for_revalidation_count'] ?? 0),
+            'uncertainValidation' => (int) ($row['uncertain_validation_count'] ?? 0),
+        ], $rows);
+    }
+
+    /**
+     * @return list<array{
+     *   sourceSystem:string,
+     *   sourceType:string,
+     *   total:int,
+     *   canonical:int,
+     *   duplicate:int,
+     *   superseded:int,
+     *   alias:int,
+     *   conflict:int,
+     *   evidenceBacked:int,
+     *   evidenceMissing:int,
+     *   dueForRevalidation:int,
+     *   uncertainValidation:int
+     * }>
+     */
+    public function summarizeSourcePortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
+    {
+        $this->ensureTenantScope($ownerId, $vendorId);
+        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $driver = is_string($driverAttr) ? $driverAttr : '';
+        $params = $this->tenantParams($ownerId, $vendorId);
+        $where = ['deleted_at IS NULL', $this->tenantWhereClause($ownerId, $vendorId)];
+        if ($countryCode) {
+            $where[] = 'country_code = :country_code';
+            $params[':country_code'] = $countryCode;
+        }
+        if ($q) {
+            $op = 'pgsql' === $driver ? 'ILIKE' : 'LIKE';
+            $where[] = "lower(line1 || ' ' || city || ' ' || coalesce(postal_code,'')) {$op} lower(:q)";
+            $params[':q'] = '%'.$q.'%';
+        }
+
+        $sourceType = AddressRecordPolicy::normalizeSourceType($this->stringFilter($filters, 'sourceType'));
+        if (null !== $sourceType) {
+            $where[] = 'source_type = :source_type';
+            $params[':source_type'] = $sourceType;
+        }
+
+        $sourceSystem = $this->stringFilter($filters, 'sourceSystem');
+        if (null !== $sourceSystem) {
+            $where[] = 'source_system = :source_system';
+            $params[':source_system'] = $sourceSystem;
+        }
+
+        $governanceStatusRaw = $this->stringFilter($filters, 'governanceStatus');
+        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($governanceStatusRaw);
+        if (null !== $governanceStatusRaw) {
+            $where[] = 'governance_status = :governance_status';
+            $params[':governance_status'] = $governanceStatus;
+        }
+
+        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy($this->stringFilter($filters, 'revalidationPolicy'));
+        if (null !== $revalidationPolicy) {
+            $where[] = 'revalidation_policy = :revalidation_policy';
+            $params[':revalidation_policy'] = $revalidationPolicy;
+        }
+
+        $hasEvidence = $this->boolFilter($filters, 'hasEvidence');
+        if (true === $hasEvidence) {
+            $where[] = $this->evidencePresenceClause(true);
+        } elseif (false === $hasEvidence) {
+            $where[] = $this->evidencePresenceClause(false);
+        }
+
+        $revalidationDueBefore = $this->stringFilter($filters, 'revalidationDueBefore');
+        $params[':summary_due_before'] = $revalidationDueBefore ?? $this->currentTimestampLiteral();
+
+        $sql = 'SELECT COALESCE(source_system, "") AS source_system, COALESCE(source_type, "") AS source_type, '
+            .'COUNT(*) AS total, '
+            ."SUM(CASE WHEN governance_status = 'canonical' THEN 1 ELSE 0 END) AS canonical_count, "
+            ."SUM(CASE WHEN governance_status = 'duplicate' THEN 1 ELSE 0 END) AS duplicate_count, "
+            ."SUM(CASE WHEN governance_status = 'superseded' THEN 1 ELSE 0 END) AS superseded_count, "
+            ."SUM(CASE WHEN governance_status = 'alias' THEN 1 ELSE 0 END) AS alias_count, "
+            ."SUM(CASE WHEN governance_status = 'conflict' THEN 1 ELSE 0 END) AS conflict_count, "
+            .'SUM(CASE WHEN '.$this->evidencePresenceClause(true).' THEN 1 ELSE 0 END) AS evidence_backed_count, '
+            .'SUM(CASE WHEN '.$this->evidencePresenceClause(false).' THEN 1 ELSE 0 END) AS evidence_missing_count, '
+            .'SUM(CASE WHEN revalidation_due_at IS NOT NULL AND revalidation_due_at <= :summary_due_before THEN 1 ELSE 0 END) AS due_for_revalidation_count, '
+            ."SUM(CASE WHEN validation_status = 'uncertain' OR last_validation_status = 'uncertain' THEN 1 ELSE 0 END) AS uncertain_validation_count "
+            .'FROM address_entity WHERE '.implode(' AND ', $where)
+            .' GROUP BY COALESCE(source_system, ""), COALESCE(source_type, "")'
+            .' ORDER BY total DESC, source_system ASC, source_type ASC';
+
+        $stmt = $this->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->execute();
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        return array_map(static fn (array $row): array => [
+            'sourceSystem' => (string) ($row['source_system'] ?? ''),
+            'sourceType' => (string) ($row['source_type'] ?? ''),
+            'total' => (int) ($row['total'] ?? 0),
+            'canonical' => (int) ($row['canonical_count'] ?? 0),
+            'duplicate' => (int) ($row['duplicate_count'] ?? 0),
+            'superseded' => (int) ($row['superseded_count'] ?? 0),
+            'alias' => (int) ($row['alias_count'] ?? 0),
+            'conflict' => (int) ($row['conflict_count'] ?? 0),
+            'evidenceBacked' => (int) ($row['evidence_backed_count'] ?? 0),
+            'evidenceMissing' => (int) ($row['evidence_missing_count'] ?? 0),
+            'dueForRevalidation' => (int) ($row['due_for_revalidation_count'] ?? 0),
+            'uncertainValidation' => (int) ($row['uncertain_validation_count'] ?? 0),
+        ], $rows);
+    }
+
+    /**
+     * @return list<array{
+     *   validationProvider:string,
+     *   validationStatus:string,
+     *   total:int,
+     *   canonical:int,
+     *   duplicate:int,
+     *   superseded:int,
+     *   alias:int,
+     *   conflict:int,
+     *   evidenceBacked:int,
+     *   evidenceMissing:int,
+     *   dueForRevalidation:int,
+     *   uncertainValidation:int
+     * }>
+     */
+    public function summarizeValidationPortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
+    {
+        $this->ensureTenantScope($ownerId, $vendorId);
+        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $driver = is_string($driverAttr) ? $driverAttr : '';
+        $params = $this->tenantParams($ownerId, $vendorId);
+        $where = ['deleted_at IS NULL', $this->tenantWhereClause($ownerId, $vendorId)];
+        if ($countryCode) {
+            $where[] = 'country_code = :country_code';
+            $params[':country_code'] = $countryCode;
+        }
+        if ($q) {
+            $op = 'pgsql' === $driver ? 'ILIKE' : 'LIKE';
+            $where[] = "lower(line1 || ' ' || city || ' ' || coalesce(postal_code,'')) {$op} lower(:q)";
+            $params[':q'] = '%'.$q.'%';
+        }
+
+        $sourceType = AddressRecordPolicy::normalizeSourceType($this->stringFilter($filters, 'sourceType'));
+        if (null !== $sourceType) {
+            $where[] = 'source_type = :source_type';
+            $params[':source_type'] = $sourceType;
+        }
+
+        $sourceSystem = $this->stringFilter($filters, 'sourceSystem');
+        if (null !== $sourceSystem) {
+            $where[] = 'source_system = :source_system';
+            $params[':source_system'] = $sourceSystem;
+        }
+
+        $validationProvider = $this->stringFilter($filters, 'validationProvider');
+        if (null !== $validationProvider) {
+            $where[] = 'COALESCE(last_validation_provider, validation_provider, "") = :validation_provider';
+            $params[':validation_provider'] = $validationProvider;
+        }
+
+        $validationStatusRaw = $this->stringFilter($filters, 'validationStatus');
+        $validationStatus = AddressRecordPolicy::normalizeValidationStatus($validationStatusRaw);
+        if (null !== $validationStatusRaw) {
+            $where[] = 'COALESCE(last_validation_status, validation_status, "unknown") = :validation_status';
+            $params[':validation_status'] = $validationStatus;
+        }
+
+        $governanceStatusRaw = $this->stringFilter($filters, 'governanceStatus');
+        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($governanceStatusRaw);
+        if (null !== $governanceStatusRaw) {
+            $where[] = 'governance_status = :governance_status';
+            $params[':governance_status'] = $governanceStatus;
+        }
+
+        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy($this->stringFilter($filters, 'revalidationPolicy'));
+        if (null !== $revalidationPolicy) {
+            $where[] = 'revalidation_policy = :revalidation_policy';
+            $params[':revalidation_policy'] = $revalidationPolicy;
+        }
+
+        $hasEvidence = $this->boolFilter($filters, 'hasEvidence');
+        if (true === $hasEvidence) {
+            $where[] = $this->evidencePresenceClause(true);
+        } elseif (false === $hasEvidence) {
+            $where[] = $this->evidencePresenceClause(false);
+        }
+
+        $revalidationDueBefore = $this->stringFilter($filters, 'revalidationDueBefore');
+        $params[':summary_due_before'] = $revalidationDueBefore ?? $this->currentTimestampLiteral();
+
+        $providerExpr = 'COALESCE(last_validation_provider, validation_provider, "")';
+        $statusExpr = 'COALESCE(last_validation_status, validation_status, "unknown")';
+        $sql = 'SELECT '.$providerExpr.' AS validation_provider, '.$statusExpr.' AS validation_status, '
+            .'COUNT(*) AS total, '
+            ."SUM(CASE WHEN governance_status = 'canonical' THEN 1 ELSE 0 END) AS canonical_count, "
+            ."SUM(CASE WHEN governance_status = 'duplicate' THEN 1 ELSE 0 END) AS duplicate_count, "
+            ."SUM(CASE WHEN governance_status = 'superseded' THEN 1 ELSE 0 END) AS superseded_count, "
+            ."SUM(CASE WHEN governance_status = 'alias' THEN 1 ELSE 0 END) AS alias_count, "
+            ."SUM(CASE WHEN governance_status = 'conflict' THEN 1 ELSE 0 END) AS conflict_count, "
+            .'SUM(CASE WHEN '.$this->evidencePresenceClause(true).' THEN 1 ELSE 0 END) AS evidence_backed_count, '
+            .'SUM(CASE WHEN '.$this->evidencePresenceClause(false).' THEN 1 ELSE 0 END) AS evidence_missing_count, '
+            .'SUM(CASE WHEN revalidation_due_at IS NOT NULL AND revalidation_due_at <= :summary_due_before THEN 1 ELSE 0 END) AS due_for_revalidation_count, '
+            ."SUM(CASE WHEN validation_status = 'uncertain' OR last_validation_status = 'uncertain' THEN 1 ELSE 0 END) AS uncertain_validation_count "
+            .'FROM address_entity WHERE '.implode(' AND ', $where)
+            .' GROUP BY '.$providerExpr.', '.$statusExpr
+            .' ORDER BY total DESC, validation_provider ASC, validation_status ASC';
+
+        $stmt = $this->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->execute();
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        return array_map(static fn (array $row): array => [
+            'validationProvider' => (string) ($row['validation_provider'] ?? ''),
+            'validationStatus' => (string) ($row['validation_status'] ?? 'unknown'),
+            'total' => (int) ($row['total'] ?? 0),
+            'canonical' => (int) ($row['canonical_count'] ?? 0),
+            'duplicate' => (int) ($row['duplicate_count'] ?? 0),
+            'superseded' => (int) ($row['superseded_count'] ?? 0),
+            'alias' => (int) ($row['alias_count'] ?? 0),
+            'conflict' => (int) ($row['conflict_count'] ?? 0),
+            'evidenceBacked' => (int) ($row['evidence_backed_count'] ?? 0),
+            'evidenceMissing' => (int) ($row['evidence_missing_count'] ?? 0),
+            'dueForRevalidation' => (int) ($row['due_for_revalidation_count'] ?? 0),
+            'uncertainValidation' => (int) ($row['uncertain_validation_count'] ?? 0),
+        ], $rows);
     }
 
     private function bindForCreate(\PDOStatement $stmt, AddressInterface $a): void
@@ -491,6 +1158,117 @@ SQL;
         );
     }
 
+    private function hasEvidence(AddressInterface $address): bool
+    {
+        return null !== $address->rawInputSnapshot()
+            || null !== $address->normalizedSnapshot()
+            || null !== $address->providerDigest()
+            || null !== $address->validationRaw()
+            || null !== $address->validationVerdict();
+    }
+
+    private function buildEvidenceSnapshot(AddressInterface $address): AddressEvidenceSnapshotInterface
+    {
+        $createdAt = $address->validatedAt() ?? $address->updatedAt() ?? $address->createdAt();
+        $validatedBy = $address->validationProvider() ?? $address->lastValidationProvider();
+        $validationScore = $address->lastValidationScore() ?? $address->validationQuality();
+        $validationIssues = $address->validationVerdict();
+        if (null === $validationIssues && null !== $address->validationRaw() && isset($address->validationRaw()['issues']) && is_array($address->validationRaw()['issues'])) {
+            $validationIssues = $address->validationRaw()['issues'];
+        }
+
+        return new AddressEvidenceSnapshotData(
+            $this->newSnapshotId(),
+            $address->id(),
+            $address->ownerId(),
+            $address->vendorId(),
+            $address->sourceSystem(),
+            AddressRecordPolicy::normalizeSourceType($address->sourceType()),
+            $address->sourceReference(),
+            $validatedBy,
+            $address->validatedAt(),
+            $address->normalizationVersion(),
+            $address->rawInputSnapshot(),
+            $address->normalizedSnapshot(),
+            AddressRecordPolicy::normalizeValidationStatus($address->validationStatus()),
+            $validationScore,
+            $validationIssues,
+            $address->providerDigest(),
+            $createdAt,
+        );
+    }
+
+    private function bindEvidenceSnapshot(\PDOStatement $stmt, AddressEvidenceSnapshotInterface $snapshot): void
+    {
+        $stmt->bindValue(':id', $snapshot->id());
+        $stmt->bindValue(':address_id', $snapshot->addressId());
+        $stmt->bindValue(':owner_id', $snapshot->ownerId());
+        $stmt->bindValue(':vendor_id', $snapshot->vendorId());
+        $stmt->bindValue(':source_system', $snapshot->sourceSystem());
+        $stmt->bindValue(':source_type', AddressRecordPolicy::normalizeSourceType($snapshot->sourceType()));
+        $stmt->bindValue(':source_reference', $snapshot->sourceReference());
+        $stmt->bindValue(':validated_by', $snapshot->validatedBy());
+        $stmt->bindValue(':validated_at', $snapshot->validatedAt());
+        $stmt->bindValue(':normalization_version', $snapshot->normalizationVersion());
+        $stmt->bindValue(':raw_input_snapshot', $this->encodeJsonNullable($snapshot->rawInputSnapshot()));
+        $stmt->bindValue(':normalized_snapshot', $this->encodeJsonNullable($snapshot->normalizedSnapshot()));
+        $stmt->bindValue(':validation_status', AddressRecordPolicy::normalizeValidationStatus($snapshot->validationStatus()));
+        $stmt->bindValue(':validation_score', $snapshot->validationScore());
+        $stmt->bindValue(':validation_issues', $this->encodeJsonNullable($snapshot->validationIssues()));
+        $stmt->bindValue(':provider_digest', $snapshot->providerDigest());
+        $stmt->bindValue(':created_at', $snapshot->createdAt());
+    }
+
+    /** @param array<string, mixed> $row */
+    private function mapEvidenceSnapshot(array $row): AddressEvidenceSnapshotInterface
+    {
+        return new AddressEvidenceSnapshotData(
+            $this->asString($row['id'] ?? null, 'id'),
+            $this->asString($row['address_id'] ?? null, 'address_id'),
+            $this->asNullableString($row['owner_id'] ?? null),
+            $this->asNullableString($row['vendor_id'] ?? null),
+            $this->asNullableString($row['source_system'] ?? null),
+            AddressRecordPolicy::normalizeSourceType($this->asNullableString($row['source_type'] ?? null)),
+            $this->asNullableString($row['source_reference'] ?? null),
+            $this->asNullableString($row['validated_by'] ?? null),
+            $this->asNullableString($row['validated_at'] ?? null),
+            $this->asNullableString($row['normalization_version'] ?? null),
+            $this->decodeJsonNullable($row['raw_input_snapshot'] ?? null),
+            $this->decodeJsonNullable($row['normalized_snapshot'] ?? null),
+            AddressRecordPolicy::normalizeValidationStatus($this->asString($row['validation_status'] ?? null, 'validation_status')),
+            $this->asNullableInt($row['validation_score'] ?? null),
+            $this->decodeJsonNullable($row['validation_issues'] ?? null),
+            $this->asNullableString($row['provider_digest'] ?? null),
+            $this->asString($row['created_at'] ?? null, 'created_at'),
+        );
+    }
+
+    private function newSnapshotId(): string
+    {
+        return bin2hex(random_bytes(16));
+    }
+
+    private function encodeEvidenceCursor(string $createdAt, string $id): string
+    {
+        return base64_encode($createdAt.'
+'.$id);
+    }
+
+    /** @return array{0: string, 1: string} */
+    private function decodeEvidenceCursor(string $cursor): array
+    {
+        $decoded = base64_decode($cursor, true);
+        if (false === $decoded || !str_contains($decoded, '
+')) {
+            throw new \RuntimeException('invalid_evidence_cursor');
+        }
+
+        [$createdAt, $id] = explode('
+', $decoded, 2);
+
+        return [$createdAt, $id];
+    }
+
     /**
      * @return array{line1_norm: ?string, city_norm: ?string, region_norm: ?string, postal_code_norm: ?string}
      */
@@ -537,27 +1315,15 @@ SQL;
     /** @param array<string, mixed> $patch
      * @return array<string, mixed>
      */
-    private function normalizeOperationalPatch(string $id, array $patch): array
+    private function normalizeOperationalPatch(string $id, string $currentGovernanceStatus, array $patch): array
     {
         $normalized = [];
 
         if (array_key_exists('governanceStatus', $patch)) {
-            $status = AddressRecordPolicy::normalizeGovernanceStatus($this->asNullableString($patch['governanceStatus'] ?? null));
-            $normalized['governance_status'] = $status;
-            $normalized['duplicate_of_id'] = null;
-            $normalized['superseded_by_id'] = null;
-            $normalized['alias_of_id'] = null;
-            $normalized['conflict_with_id'] = null;
-
-            if ('duplicate' === $status) {
-                $normalized['duplicate_of_id'] = $this->sanitizeGovernanceLink($this->asNullableString($patch['duplicateOfId'] ?? null), $id);
-            } elseif ('superseded' === $status) {
-                $normalized['superseded_by_id'] = $this->sanitizeGovernanceLink($this->asNullableString($patch['supersededById'] ?? null), $id);
-            } elseif ('alias' === $status) {
-                $normalized['alias_of_id'] = $this->sanitizeGovernanceLink($this->asNullableString($patch['aliasOfId'] ?? null), $id);
-            } elseif ('conflict' === $status) {
-                $normalized['conflict_with_id'] = $this->sanitizeGovernanceLink($this->asNullableString($patch['conflictWithId'] ?? null), $id);
-            }
+            $normalized = array_merge(
+                $normalized,
+                AddressGovernancePolicy::normalizePatch($currentGovernanceStatus, $id, $patch)
+            );
         }
 
         if (array_key_exists('revalidationDueAt', $patch)) {
@@ -579,24 +1345,24 @@ SQL;
         return $normalized;
     }
 
-    private function normalizeGovernanceStatus(string $status): string
+    private function assertOperationalGovernanceTargetsExist(array $normalized, ?string $ownerId, ?string $vendorId): void
     {
-        $normalized = strtolower(trim($status));
+        $targets = [
+            $normalized['duplicate_of_id'] ?? null,
+            $normalized['superseded_by_id'] ?? null,
+            $normalized['alias_of_id'] ?? null,
+            $normalized['conflict_with_id'] ?? null,
+        ];
 
-        return match ($normalized) {
-            'canonical', 'duplicate', 'superseded', 'alias', 'conflict' => $normalized,
-            default => 'canonical',
-        };
-    }
+        foreach ($targets as $targetId) {
+            if (!is_string($targetId) || '' === trim($targetId)) {
+                continue;
+            }
 
-    private function sanitizeGovernanceLink(?string $linkId, string $currentId): ?string
-    {
-        $linkId = $this->normalizeOptionalScalar($linkId);
-        if (null === $linkId || $linkId === $this->normalizeOptionalScalar($currentId)) {
-            return null;
+            if (null === $this->get($targetId, $ownerId, $vendorId)) {
+                throw new \RuntimeException(sprintf('Governance link target "%s" was not found in the current tenant scope.', $targetId));
+            }
         }
-
-        return $linkId;
     }
 
     private function governanceLinkId(AddressInterface $address): ?string
@@ -764,6 +1530,7 @@ SQL;
      */
     private function appendOutbox(string $name, array $payload = []): void
     {
+        $payload = AddressOutboxEventContract::decoratePayload($name, $payload);
         $payloadJson = json_encode(
             $payload,
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
@@ -771,10 +1538,6 @@ SQL;
 
         if (false === $payloadJson) {
             throw new \RuntimeException('payload_encode_failed');
-        }
-
-        if (!$this->pdo instanceof \PDO) {
-            throw new LogicException('PDO not initialized');
         }
 
         $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
@@ -797,7 +1560,7 @@ SQL;
 
         $stmt->execute([
             ':name' => $name,
-            ':ver' => 1,
+            ':ver' => AddressOutboxEventContract::eventVersion($name),
             ':payload' => $payloadJson,
         ]);
     }
@@ -878,5 +1641,138 @@ SQL;
         }
 
         return $params;
+    }
+
+    /**
+     * @return list<array{
+     *   normalizationVersion:string,
+     *   validationStatus:string,
+     *   total:int,
+     *   canonical:int,
+     *   duplicate:int,
+     *   superseded:int,
+     *   alias:int,
+     *   conflict:int,
+     *   evidenceBacked:int,
+     *   evidenceMissing:int,
+     *   dueForRevalidation:int,
+     *   uncertainValidation:int,
+     *   staleNormalization:int
+     * }>
+     */
+    public function summarizeNormalizationPortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
+    {
+        $this->ensureTenantScope($ownerId, $vendorId);
+        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $driver = is_string($driverAttr) ? $driverAttr : '';
+        $params = $this->tenantParams($ownerId, $vendorId);
+        $where = ['deleted_at IS NULL', $this->tenantWhereClause($ownerId, $vendorId)];
+        if ($countryCode) {
+            $where[] = 'country_code = :country_code';
+            $params[':country_code'] = $countryCode;
+        }
+        if ($q) {
+            $op = 'pgsql' === $driver ? 'ILIKE' : 'LIKE';
+            $where[] = "lower(line1 || ' ' || city || ' ' || coalesce(postal_code,'')) {$op} lower(:q)";
+            $params[':q'] = '%'.$q.'%';
+        }
+
+        $sourceType = AddressRecordPolicy::normalizeSourceType($this->stringFilter($filters, 'sourceType'));
+        if (null !== $sourceType) {
+            $where[] = 'source_type = :source_type';
+            $params[':source_type'] = $sourceType;
+        }
+
+        $sourceSystem = $this->stringFilter($filters, 'sourceSystem');
+        if (null !== $sourceSystem) {
+            $where[] = 'source_system = :source_system';
+            $params[':source_system'] = $sourceSystem;
+        }
+
+        $validationProvider = $this->stringFilter($filters, 'validationProvider');
+        if (null !== $validationProvider) {
+            $where[] = 'COALESCE(last_validation_provider, validation_provider, "") = :validation_provider';
+            $params[':validation_provider'] = $validationProvider;
+        }
+
+        $validationStatusRaw = $this->stringFilter($filters, 'validationStatus');
+        $validationStatus = AddressRecordPolicy::normalizeValidationStatus($validationStatusRaw);
+        if (null !== $validationStatusRaw) {
+            $where[] = 'COALESCE(last_validation_status, validation_status, "unknown") = :validation_status';
+            $params[':validation_status'] = $validationStatus;
+        }
+
+        $governanceStatusRaw = $this->stringFilter($filters, 'governanceStatus');
+        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($governanceStatusRaw);
+        if (null !== $governanceStatusRaw) {
+            $where[] = 'governance_status = :governance_status';
+            $params[':governance_status'] = $governanceStatus;
+        }
+
+        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy($this->stringFilter($filters, 'revalidationPolicy'));
+        if (null !== $revalidationPolicy) {
+            $where[] = 'revalidation_policy = :revalidation_policy';
+            $params[':revalidation_policy'] = $revalidationPolicy;
+        }
+
+        $hasEvidence = $this->boolFilter($filters, 'hasEvidence');
+        if (true === $hasEvidence) {
+            $where[] = $this->evidencePresenceClause(true);
+        } elseif (false === $hasEvidence) {
+            $where[] = $this->evidencePresenceClause(false);
+        }
+
+        $expectedNormalizationVersion = $this->stringFilter($filters, 'expectedNormalizationVersion');
+        $revalidationDueBefore = $this->stringFilter($filters, 'revalidationDueBefore');
+        $params[':summary_due_before'] = $revalidationDueBefore ?? $this->currentTimestampLiteral();
+        if (null !== $expectedNormalizationVersion) {
+            $params[':expected_normalization_version'] = $expectedNormalizationVersion;
+        }
+
+        $sql = 'SELECT COALESCE(normalization_version, "") AS normalization_version, '
+            .'COALESCE(last_validation_status, validation_status, "unknown") AS validation_status, '
+            .'COUNT(*) AS total, '
+            ."SUM(CASE WHEN governance_status = 'canonical' THEN 1 ELSE 0 END) AS canonical_count, "
+            ."SUM(CASE WHEN governance_status = 'duplicate' THEN 1 ELSE 0 END) AS duplicate_count, "
+            ."SUM(CASE WHEN governance_status = 'superseded' THEN 1 ELSE 0 END) AS superseded_count, "
+            ."SUM(CASE WHEN governance_status = 'alias' THEN 1 ELSE 0 END) AS alias_count, "
+            ."SUM(CASE WHEN governance_status = 'conflict' THEN 1 ELSE 0 END) AS conflict_count, "
+            .'SUM(CASE WHEN '.$this->evidencePresenceClause(true).' THEN 1 ELSE 0 END) AS evidence_backed_count, '
+            .'SUM(CASE WHEN '.$this->evidencePresenceClause(false).' THEN 1 ELSE 0 END) AS evidence_missing_count, '
+            .'SUM(CASE WHEN revalidation_due_at IS NOT NULL AND revalidation_due_at <= :summary_due_before THEN 1 ELSE 0 END) AS due_for_revalidation_count, '
+            ."SUM(CASE WHEN validation_status = 'uncertain' OR last_validation_status = 'uncertain' THEN 1 ELSE 0 END) AS uncertain_validation_count, "
+            .'SUM(CASE WHEN :expected_normalization_version IS NOT NULL AND COALESCE(normalization_version, "") <> :expected_normalization_version THEN 1 ELSE 0 END) AS stale_normalization_count '
+            .'FROM address_entity WHERE '.implode(' AND ', $where)
+            .' GROUP BY COALESCE(normalization_version, ""), COALESCE(last_validation_status, validation_status, "unknown")'
+            .' ORDER BY total DESC, normalization_version ASC, validation_status ASC';
+
+        $stmt = $this->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        if (null === $expectedNormalizationVersion) {
+            $stmt->bindValue(':expected_normalization_version', null, \PDO::PARAM_NULL);
+        }
+        $stmt->execute();
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        return array_map(static fn (array $row): array => [
+            'normalizationVersion' => (string) ($row['normalization_version'] ?? ''),
+            'validationStatus' => (string) ($row['validation_status'] ?? 'unknown'),
+            'total' => (int) ($row['total'] ?? 0),
+            'canonical' => (int) ($row['canonical_count'] ?? 0),
+            'duplicate' => (int) ($row['duplicate_count'] ?? 0),
+            'superseded' => (int) ($row['superseded_count'] ?? 0),
+            'alias' => (int) ($row['alias_count'] ?? 0),
+            'conflict' => (int) ($row['conflict_count'] ?? 0),
+            'evidenceBacked' => (int) ($row['evidence_backed_count'] ?? 0),
+            'evidenceMissing' => (int) ($row['evidence_missing_count'] ?? 0),
+            'dueForRevalidation' => (int) ($row['due_for_revalidation_count'] ?? 0),
+            'uncertainValidation' => (int) ($row['uncertain_validation_count'] ?? 0),
+            'staleNormalization' => (int) ($row['stale_normalization_count'] ?? 0),
+        ], $rows);
     }
 }

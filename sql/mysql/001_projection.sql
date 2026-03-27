@@ -54,5 +54,10 @@ CREATE TABLE IF NOT EXISTS address_projection (
   KEY address_projection_duplicate_of_idx (duplicate_of_id),
   KEY address_projection_superseded_by_idx (superseded_by_id),
   KEY address_projection_alias_of_idx (alias_of_id),
-  KEY address_projection_conflict_with_idx (conflict_with_id)
+  KEY address_projection_conflict_with_idx (conflict_with_id),
+
+  KEY address_projection_validation_status_last_idx (validation_status, last_validation_status),
+  KEY address_projection_revalidation_due_idx (revalidation_due_at),
+  KEY address_projection_normalization_version_idx (normalization_version),
+  KEY address_projection_source_type_idx (source_type),
 );

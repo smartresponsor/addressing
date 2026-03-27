@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 namespace App\Service\Application\Address;
 
+use App\Contract\Message\Address\AddressOutboxEventContract;
 use App\Contract\Message\Address\AddressRecordPolicy;
 use App\Contract\Message\Address\AddressValidated;
 use App\ServiceInterface\Application\Address\AddressValidatedApplierInterface;
@@ -199,6 +200,8 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
                 throw new \RuntimeException('not_found');
             }
 
+            $evidenceSnapshotId = $this->appendEvidenceSnapshot($id, $ownerId, $vendorId, $validated, $params[':last_validation_status'] ?? 'validated', $params[':last_validation_score'] ?? null);
+
             $this->appendOutbox([
                 'id' => $id,
                 'ownerId' => $ownerId,
@@ -219,6 +222,7 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
                 'revalidationPolicy' => $params[':revalidation_policy'] ?? null,
                 'lastValidationStatus' => $params[':last_validation_status'] ?? null,
                 'lastValidationScore' => $params[':last_validation_score'] ?? null,
+                'evidenceSnapshotId' => $evidenceSnapshotId,
             ]);
 
             $this->pdo->commit();
@@ -231,10 +235,69 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
         }
     }
 
+    private function appendEvidenceSnapshot(
+        string $addressId,
+        ?string $ownerId,
+        ?string $vendorId,
+        AddressValidated $validated,
+        string $validationStatus,
+        ?int $validationScore,
+    ): ?string {
+        if (!$this->hasEvidence($validated)) {
+            return null;
+        }
+
+        $snapshotId = bin2hex(random_bytes(16));
+        $createdAt = ($validated->validatedAt ?? new \DateTimeImmutable())->format('Y-m-d H:i:sP');
+        $validationIssues = $validated->verdict?->jsonSerialize();
+
+        $stmt = $this->prepare(
+            'INSERT INTO address_evidence_snapshot (
+                id, address_id, owner_id, vendor_id, source_system, source_type, source_reference, validated_by, validated_at,
+                normalization_version, raw_input_snapshot, normalized_snapshot, validation_status, validation_score, validation_issues, provider_digest, created_at
+            ) VALUES (
+                :id, :address_id, :owner_id, :vendor_id, :source_system, :source_type, :source_reference, :validated_by, :validated_at,
+                :normalization_version, :raw_input_snapshot, :normalized_snapshot, :validation_status, :validation_score, :validation_issues, :provider_digest, :created_at
+            )'
+        );
+
+        $stmt->execute([
+            ':id' => $snapshotId,
+            ':address_id' => $addressId,
+            ':owner_id' => $ownerId,
+            ':vendor_id' => $vendorId,
+            ':source_system' => $validated->sourceSystem,
+            ':source_type' => AddressRecordPolicy::normalizeSourceType($validated->sourceType),
+            ':source_reference' => $validated->sourceReference,
+            ':validated_by' => $validated->validationProvider ?? $validated->lastValidationProvider,
+            ':validated_at' => $validated->validatedAt?->format('Y-m-d H:i:sP'),
+            ':normalization_version' => $validated->normalizationVersion,
+            ':raw_input_snapshot' => $this->encodePayloadNullable($validated->rawInput),
+            ':normalized_snapshot' => $this->encodePayloadNullable($validated->normalizedSnapshot ?? $this->buildNormalizedSnapshot($validated)),
+            ':validation_status' => AddressRecordPolicy::normalizeValidationStatus($validationStatus),
+            ':validation_score' => $validationScore,
+            ':validation_issues' => $this->encodePayloadNullable($validationIssues),
+            ':provider_digest' => $validated->providerDigest ?? $this->buildProviderDigest($validated),
+            ':created_at' => $createdAt,
+        ]);
+
+        return $snapshotId;
+    }
+
+    private function hasEvidence(AddressValidated $validated): bool
+    {
+        return null !== $validated->rawInput
+            || null !== $validated->normalizedSnapshot
+            || null !== $validated->providerDigest
+            || null !== $validated->raw
+            || null !== $validated->verdict;
+    }
+
     /** @param array<string, mixed> $payload */
     private function appendOutbox(array $payload): void
     {
-        $payloadJson = $this->encodePayload($payload);
+        $eventName = 'AddressValidatedApplied';
+        $payloadJson = $this->encodePayload(AddressOutboxEventContract::decoratePayload($eventName, $payload));
         $payloadExpr = $this->isPgsql() ? ':payload::jsonb' : ':payload';
 
         $stmt = $this->prepare(
@@ -243,10 +306,20 @@ final class AddressValidatedApplier implements AddressValidatedApplierInterface
         );
 
         $stmt->execute([
-            ':name' => 'AddressValidatedApplied',
-            ':ver' => 1,
+            ':name' => $eventName,
+            ':ver' => AddressOutboxEventContract::eventVersion($eventName),
             ':payload' => $payloadJson,
         ]);
+    }
+
+    /** @param array<string, mixed>|null $payload */
+    private function encodePayloadNullable(?array $payload): ?string
+    {
+        if (null === $payload) {
+            return null;
+        }
+
+        return $this->encodePayload($payload);
     }
 
     /** @param array<string, mixed> $payload */

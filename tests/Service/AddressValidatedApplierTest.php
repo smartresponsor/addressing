@@ -63,6 +63,27 @@ final class AddressValidatedApplierTest extends TestCase
         self::assertSame('unit', $row['last_validation_provider']);
         self::assertSame('validated', $row['last_validation_status']);
         self::assertSame(87, (int) $row['last_validation_score']);
+
+        $snapshot = $this->pdo->query("SELECT source_system, source_type, source_reference, validated_by, validation_status, validation_score, provider_digest FROM address_evidence_snapshot WHERE address_id = 'addr-1' ORDER BY created_at DESC, id DESC LIMIT 1")
+            ->fetch(\PDO::FETCH_ASSOC);
+        self::assertIsArray($snapshot);
+        self::assertSame('validator-suite', $snapshot['source_system']);
+        self::assertSame('validator', $snapshot['source_type']);
+        self::assertSame('run-1', $snapshot['source_reference']);
+        self::assertSame('unit', $snapshot['validated_by']);
+        self::assertSame('validated', $snapshot['validation_status']);
+        self::assertSame(87, (int) $snapshot['validation_score']);
+        self::assertSame('digest-1', $snapshot['provider_digest']);
+
+        $outbox = $this->pdo->query('SELECT event_name, event_version, payload FROM address_outbox ORDER BY id DESC LIMIT 1')
+            ->fetch(\PDO::FETCH_ASSOC);
+        self::assertIsArray($outbox);
+        self::assertSame('AddressValidatedApplied', $outbox['event_name']);
+        self::assertSame(1, (int) $outbox['event_version']);
+        $payload = json_decode((string) $outbox['payload'], true);
+        self::assertSame('AddressValidatedApplied', $payload['eventName'] ?? null);
+        self::assertSame('address-outbox.v1', $payload['schemaVersion'] ?? null);
+        self::assertSame(1, $payload['eventVersion'] ?? null);
     }
 
     public function testApplyRejectsWrongTenantScope(): void
@@ -164,6 +185,29 @@ CREATE TABLE address_entity (
   validation_granularity TEXT NULL,
   validation_quality INTEGER NULL
 );
+
+CREATE TABLE address_evidence_snapshot (
+  id TEXT PRIMARY KEY,
+  address_id TEXT NOT NULL,
+  owner_id TEXT NULL,
+  vendor_id TEXT NULL,
+  source_system TEXT NULL,
+  source_type TEXT NULL,
+  source_reference TEXT NULL,
+  validated_by TEXT NULL,
+  validated_at TEXT NULL,
+  normalization_version TEXT NULL,
+  raw_input_snapshot TEXT NULL,
+  normalized_snapshot TEXT NULL,
+  validation_status TEXT NOT NULL,
+  validation_score INTEGER NULL,
+  validation_issues TEXT NULL,
+  provider_digest TEXT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX address_evidence_snapshot_address_idx
+  ON address_evidence_snapshot (address_id, created_at DESC, id DESC);
 
 CREATE TABLE address_outbox (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

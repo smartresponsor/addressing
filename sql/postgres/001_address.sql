@@ -101,6 +101,39 @@ CREATE TABLE IF NOT EXISTS address_outbox
 CREATE INDEX IF NOT EXISTS address_outbox_pub_idx ON address_outbox (published_at);
 
 
+CREATE TABLE IF NOT EXISTS address_evidence_snapshot
+(
+    id                    CHAR(32) PRIMARY KEY,
+    address_id            CHAR(26)         NOT NULL REFERENCES address_entity (id) ON DELETE CASCADE,
+    owner_id              VARCHAR(64)      NULL,
+    vendor_id             VARCHAR(64)      NULL,
+    source_system         VARCHAR(64)      NULL,
+    source_type           VARCHAR(32)      NULL,
+    source_reference      VARCHAR(128)     NULL,
+    validated_by          VARCHAR(64)      NULL,
+    validated_at          TIMESTAMPTZ      NULL,
+    normalization_version VARCHAR(64)      NULL,
+    raw_input_snapshot    JSONB            NULL,
+    normalized_snapshot   JSONB            NULL,
+    validation_status     VARCHAR(16)      NOT NULL DEFAULT 'unknown',
+    validation_score      INT              NULL,
+    validation_issues     JSONB            NULL,
+    provider_digest       VARCHAR(64)      NULL,
+    created_at            TIMESTAMPTZ      NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS address_evidence_snapshot_address_idx
+    ON address_evidence_snapshot (address_id, created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS address_evidence_snapshot_owner_idx ON address_evidence_snapshot (owner_id);
+CREATE INDEX IF NOT EXISTS address_evidence_snapshot_vendor_idx ON address_evidence_snapshot (vendor_id);
+
+ALTER TABLE address_evidence_snapshot
+    ADD CONSTRAINT address_evidence_source_type_chk CHECK (source_type IS NULL OR source_type IN ('manual', 'import', 'partner', 'validator', 'override', 'migration'));
+
+ALTER TABLE address_evidence_snapshot
+    ADD CONSTRAINT address_evidence_validation_status_chk CHECK (validation_status IN ('unknown', 'pending', 'normalized', 'validated', 'rejected', 'uncertain', 'overridden'));
+
+
 -- Checks for validation_status and country_code
 ALTER TABLE address_entity
     ADD CONSTRAINT address_country_len_chk CHECK (char_length(country_code) = 2);
@@ -247,6 +280,17 @@ ALTER TABLE IF EXISTS address_outbox
 
 CREATE INDEX IF NOT EXISTS address_governance_status_idx ON address_entity (governance_status);
 CREATE INDEX IF NOT EXISTS address_revalidation_due_at_idx ON address_entity (revalidation_due_at);
+
+CREATE INDEX IF NOT EXISTS address_evidence_snapshot_validation_status_created_idx
+    ON address_evidence_snapshot (validation_status, created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS address_evidence_snapshot_address_validation_status_idx
+    ON address_evidence_snapshot (address_id, validation_status, created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS address_entity_review_queue_idx
+    ON address_entity (deleted_at, governance_status, revalidation_due_at, id);
+CREATE INDEX IF NOT EXISTS address_entity_validation_review_idx
+    ON address_entity (deleted_at, validation_status, last_validation_status, id);
+CREATE INDEX IF NOT EXISTS address_entity_normalization_version_idx
+    ON address_entity (deleted_at, normalization_version, id);
 CREATE INDEX IF NOT EXISTS address_last_validation_status_idx ON address_entity (last_validation_status);
 CREATE INDEX IF NOT EXISTS address_duplicate_of_idx ON address_entity (duplicate_of_id) WHERE duplicate_of_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS address_superseded_by_idx ON address_entity (superseded_by_id) WHERE superseded_by_id IS NOT NULL;

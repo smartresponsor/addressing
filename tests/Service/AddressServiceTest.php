@@ -129,6 +129,362 @@ final class AddressServiceTest extends TestCase
         static::assertSame('monthly', $result['items'][0]->revalidationPolicy());
     }
 
+    public function testEvidenceHistoryTracksCreateAndUpdate(): void
+    {
+        $address = $this->makeAddress('addr-history-1');
+        $this->service->create($address);
+
+        $updated = new AddressData(
+            'addr-history-1',
+            'owner-1',
+            'vendor-1',
+            '123 Main St',
+            null,
+            'Houston',
+            'TX',
+            '77002',
+            'US',
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            'validated',
+            'validator-suite',
+            '2025-02-02 00:00:00+00:00',
+            null,
+            (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP'),
+            (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP'),
+            null,
+            'fingerprint-history-1',
+            ['provider' => 'validator-suite', 'issues' => ['postal']],
+            ['quality' => 98],
+            true,
+            'premise',
+            98,
+            'validator-suite',
+            'validator',
+            'run-history-1',
+            'canon-w15',
+            ['line1' => '123 Main St'],
+            ['line1Norm' => '123mainst'],
+            'digest-history-1',
+            'canonical',
+            null,
+            null,
+            null,
+            null,
+            '2025-06-01 00:00:00+00:00',
+            'quarterly',
+            'validator-suite',
+            'validated',
+            98
+        );
+        $this->service->update($updated);
+
+        $latest = $this->service->getLatestEvidenceSnapshot('addr-history-1', 'owner-1', 'vendor-1');
+        self::assertNotNull($latest);
+        self::assertSame('run-history-1', $latest->sourceReference());
+        self::assertSame('validated', $latest->validationStatus());
+        self::assertSame(98, $latest->validationScore());
+
+        $history = $this->service->evidenceHistory('addr-history-1', 'owner-1', 'vendor-1', 10, null);
+        self::assertCount(2, $history['items']);
+        self::assertSame('run-history-1', $history['items'][0]->sourceReference());
+        self::assertSame('fixture:addr-history-1', $history['items'][1]->sourceReference());
+        self::assertNull($history['nextCursor']);
+    }
+
+    public function testEvidenceHistorySummaryAggregatesSnapshots(): void
+    {
+        $this->service->create($this->makeAddress('addr-history-summary'));
+
+        $updated = new AddressData(
+            'addr-history-summary',
+            'owner-1',
+            'vendor-1',
+            '123 Main St',
+            null,
+            'Houston',
+            'TX',
+            '77002',
+            'US',
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            'validated',
+            'validator-suite',
+            '2025-02-02 00:00:00+00:00',
+            null,
+            (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP'),
+            (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP'),
+            null,
+            'fingerprint-history-summary',
+            ['provider' => 'validator-suite'],
+            ['quality' => 99],
+            true,
+            'premise',
+            99,
+            'validator-suite',
+            'validator',
+            'run-history-summary',
+            'canon-w21',
+            ['line1' => '123 Main St'],
+            ['line1Norm' => '123mainst'],
+            'digest-history-summary',
+            'canonical',
+            null,
+            null,
+            null,
+            null,
+            '2025-06-01 00:00:00+00:00',
+            'quarterly',
+            'validator-suite',
+            'validated',
+            99
+        );
+        $this->service->update($updated);
+
+        $summary = $this->service->evidenceHistorySummary('addr-history-summary', 'owner-1', 'vendor-1');
+        self::assertSame(2, $summary['totalSnapshots']);
+        self::assertSame(1, $summary['statusPending']);
+        self::assertSame(1, $summary['statusValidated']);
+        self::assertSame(0, $summary['statusRejected']);
+        self::assertSame(2, $summary['distinctProviders']);
+        self::assertSame('2025-02-02 00:00:00+00:00', $summary['latestValidatedAt']);
+        self::assertNotNull($summary['latestCreatedAt']);
+    }
+
+    public function testSearchSupportsOperationalQueues(): void
+    {
+        $this->service->create($this->makeAddress('addr-queue-evidence', sourceType: 'manual', rawInputSnapshot: null, normalizedSnapshot: null, providerDigest: null, sourceReference: null));
+        $this->service->create($this->makeAddress('addr-queue-uncertain', validationStatus: 'uncertain', lastValidationStatus: 'uncertain'));
+        $this->service->create($this->makeAddress('addr-queue-conflict', governanceStatus: 'conflict', conflictWithId: 'addr-master-conflict'));
+        $this->service->create($this->makeAddress('addr-queue-duplicate', governanceStatus: 'duplicate', duplicateOfId: 'addr-master-duplicate'));
+        $this->service->create($this->makeAddress('addr-queue-revalidation', revalidationDueAt: '2025-01-01 00:00:00+00:00'));
+        $this->service->create($this->makeAddress('addr-queue-stale', normalizationVersion: 'canon-old'));
+
+        $due = $this->service->search('owner-1', 'vendor-1', null, null, 20, null, ['queue' => 'dueForRevalidation']);
+        self::assertSame('addr-queue-revalidation', $due['items'][0]->id());
+
+        $missingEvidence = $this->service->search('owner-1', 'vendor-1', null, null, 20, null, ['queue' => 'evidenceMissing']);
+        self::assertSame('addr-queue-evidence', $missingEvidence['items'][0]->id());
+
+        $uncertain = $this->service->search('owner-1', 'vendor-1', null, null, 20, null, ['queue' => 'uncertainValidation']);
+        self::assertSame('addr-queue-uncertain', $uncertain['items'][0]->id());
+
+        $conflict = $this->service->search('owner-1', 'vendor-1', null, null, 20, null, ['queue' => 'conflictReview']);
+        self::assertSame('addr-queue-conflict', $conflict['items'][0]->id());
+
+        $duplicate = $this->service->search('owner-1', 'vendor-1', null, null, 20, null, ['queue' => 'duplicateReview']);
+        self::assertSame('addr-queue-duplicate', $duplicate['items'][0]->id());
+
+        $stale = $this->service->search('owner-1', 'vendor-1', null, null, 20, null, ['queue' => 'staleNormalizationVersion', 'expectedNormalizationVersion' => 'canon-w15']);
+        self::assertSame('addr-queue-stale', $stale['items'][0]->id());
+    }
+
+    public function testGovernanceClusterSummaryAggregatesLinkedRecords(): void
+    {
+        $this->service->create($this->makeAddress('addr-cluster-root'));
+        $this->service->create($this->makeAddress('addr-cluster-dup', dedupeKey: 'dedupe-dup'));
+        $this->service->create($this->makeAddress('addr-cluster-sup', dedupeKey: 'dedupe-sup'));
+        $this->service->create($this->makeAddress('addr-cluster-alias', dedupeKey: 'dedupe-alias'));
+        $this->service->create($this->makeAddress('addr-cluster-conflict', dedupeKey: 'dedupe-conflict'));
+
+        $this->service->patchOperational('addr-cluster-dup', 'owner-1', 'vendor-1', [
+            'governanceStatus' => 'duplicate',
+            'duplicateOfId' => 'addr-cluster-root',
+        ]);
+        $this->service->patchOperational('addr-cluster-sup', 'owner-1', 'vendor-1', [
+            'governanceStatus' => 'superseded',
+            'supersededById' => 'addr-cluster-root',
+        ]);
+        $this->service->patchOperational('addr-cluster-alias', 'owner-1', 'vendor-1', [
+            'governanceStatus' => 'alias',
+            'aliasOfId' => 'addr-cluster-root',
+        ]);
+        $this->service->patchOperational('addr-cluster-conflict', 'owner-1', 'vendor-1', [
+            'governanceStatus' => 'conflict',
+            'conflictWithId' => 'addr-cluster-root',
+        ]);
+
+        $summary = $this->service->governanceClusterSummary('addr-cluster-root', 'owner-1', 'vendor-1');
+        self::assertSame('addr-cluster-root', $summary['addressId']);
+        self::assertSame('canonical', $summary['governanceStatus']);
+        self::assertNull($summary['primaryLinkId']);
+        self::assertFalse($summary['linkedToAnother']);
+        self::assertSame(1, $summary['duplicateChildren']);
+        self::assertSame(1, $summary['supersededChildren']);
+        self::assertSame(1, $summary['aliasChildren']);
+        self::assertSame(1, $summary['conflictPeers']);
+        self::assertSame(4, $summary['inboundLinkedTotal']);
+        self::assertSame(5, $summary['clusterSize']);
+        self::assertSame([
+            'addr-cluster-alias',
+            'addr-cluster-conflict',
+            'addr-cluster-dup',
+            'addr-cluster-sup',
+        ], $summary['relatedAddressIds']);
+    }
+
+    public function testOperationalQueueSummaryAggregatesCurrentSlice(): void
+    {
+        $this->service->create($this->makeAddress('addr-sum-evidence', sourceType: 'manual', rawInputSnapshot: null, normalizedSnapshot: null, providerDigest: null, sourceReference: null));
+        $this->service->create($this->makeAddress('addr-sum-uncertain', validationStatus: 'uncertain', lastValidationStatus: 'uncertain'));
+        $this->service->create($this->makeAddress('addr-sum-conflict', governanceStatus: 'conflict', conflictWithId: 'addr-master-conflict'));
+        $this->service->create($this->makeAddress('addr-sum-duplicate', governanceStatus: 'duplicate', duplicateOfId: 'addr-master-duplicate'));
+        $this->service->create($this->makeAddress('addr-sum-revalidation', revalidationDueAt: '2025-01-01 00:00:00+00:00'));
+        $this->service->create($this->makeAddress('addr-sum-stale', normalizationVersion: 'canon-old'));
+
+        $summary = $this->service->operationalQueueSummary('owner-1', 'vendor-1', null, null, [
+            'expectedNormalizationVersion' => 'canon-w15',
+        ]);
+
+        self::assertSame(6, $summary['total']);
+        self::assertSame(1, $summary['dueForRevalidation']);
+        self::assertSame(1, $summary['evidenceMissing']);
+        self::assertSame(1, $summary['uncertainValidation']);
+        self::assertSame(1, $summary['conflictReview']);
+        self::assertSame(1, $summary['duplicateReview']);
+        self::assertSame(1, $summary['staleNormalizationVersion']);
+    }
+
+    public function testCountryPortfolioSummaryAggregatesByCountry(): void
+    {
+        $this->service->create($this->makeAddress('addr-country-us-1'));
+        $this->service->create($this->makeAddress('addr-country-us-2', governanceStatus: 'duplicate', duplicateOfId: 'addr-country-us-1', validationStatus: 'uncertain', lastValidationStatus: 'uncertain'));
+        $this->service->create($this->makeAddress('addr-country-ca-1', countryCode: 'CA', sourceType: 'partner', rawInputSnapshot: null, normalizedSnapshot: null, providerDigest: null, sourceReference: null, revalidationDueAt: '2025-01-01 00:00:00+00:00'));
+
+        $summary = $this->service->countryPortfolioSummary('owner-1', 'vendor-1');
+
+        self::assertCount(2, $summary);
+        self::assertSame('US', $summary[0]['countryCode']);
+        self::assertSame(2, $summary[0]['total']);
+        self::assertSame(1, $summary[0]['canonical']);
+        self::assertSame(1, $summary[0]['duplicate']);
+        self::assertSame(1, $summary[0]['uncertainValidation']);
+        self::assertSame('CA', $summary[1]['countryCode']);
+        self::assertSame(1, $summary[1]['total']);
+        self::assertSame(1, $summary[1]['dueForRevalidation']);
+        self::assertSame(1, $summary[1]['evidenceMissing']);
+    }
+
+    public function testSourcePortfolioSummaryAggregatesBySource(): void
+    {
+        $this->service->create($this->makeAddress('addr-source-1', sourceSystem: 'unit-test', sourceType: 'manual'));
+        $this->service->create($this->makeAddress('addr-source-2', sourceSystem: 'validator-suite', sourceType: 'validator', governanceStatus: 'duplicate', duplicateOfId: 'addr-source-1', validationStatus: 'uncertain', lastValidationStatus: 'uncertain'));
+        $this->service->create($this->makeAddress('addr-source-3', sourceSystem: 'validator-suite', sourceType: 'validator', countryCode: 'CA', rawInputSnapshot: null, normalizedSnapshot: null, providerDigest: null, sourceReference: null, revalidationDueAt: '2025-01-01 00:00:00+00:00'));
+
+        $summary = $this->service->sourcePortfolioSummary('owner-1', 'vendor-1', null, null);
+
+        self::assertCount(2, $summary);
+        self::assertSame('validator-suite', $summary[0]['sourceSystem']);
+        self::assertSame('validator', $summary[0]['sourceType']);
+        self::assertSame(2, $summary[0]['total']);
+        self::assertSame(1, $summary[0]['duplicate']);
+        self::assertSame(1, $summary[0]['uncertainValidation']);
+        self::assertSame(1, $summary[0]['dueForRevalidation']);
+        self::assertSame(1, $summary[0]['evidenceMissing']);
+        self::assertSame('unit-test', $summary[1]['sourceSystem']);
+        self::assertSame('manual', $summary[1]['sourceType']);
+        self::assertSame(1, $summary[1]['total']);
+    }
+
+    public function testValidationPortfolioSummaryAggregatesByProviderAndStatus(): void
+    {
+        $this->service->create($this->makeAddress('addr-validation-1', validationProvider: 'provider-a', validationStatus: 'validated', lastValidationProvider: 'provider-a', lastValidationStatus: 'validated'));
+        $this->service->create($this->makeAddress('addr-validation-2', validationProvider: 'provider-a', validationStatus: 'uncertain', lastValidationProvider: 'provider-a', lastValidationStatus: 'uncertain', governanceStatus: 'duplicate', duplicateOfId: 'addr-validation-1'));
+        $this->service->create($this->makeAddress('addr-validation-3', validationProvider: 'provider-b', validationStatus: 'pending', lastValidationProvider: 'provider-b', lastValidationStatus: 'rejected', rawInputSnapshot: null, normalizedSnapshot: null, providerDigest: null, sourceReference: null, revalidationDueAt: '2025-01-01 00:00:00+00:00'));
+
+        $summary = $this->service->validationPortfolioSummary('owner-1', 'vendor-1', null, null);
+
+        self::assertCount(3, $summary);
+        self::assertSame('provider-a', $summary[0]['validationProvider']);
+        self::assertSame('uncertain', $summary[0]['validationStatus']);
+        self::assertSame(1, $summary[0]['duplicate']);
+        self::assertSame(1, $summary[0]['uncertainValidation']);
+        self::assertSame('provider-a', $summary[1]['validationProvider']);
+        self::assertSame('validated', $summary[1]['validationStatus']);
+        self::assertSame(1, $summary[1]['canonical']);
+        self::assertSame('provider-b', $summary[2]['validationProvider']);
+        self::assertSame('rejected', $summary[2]['validationStatus']);
+        self::assertSame(1, $summary[2]['dueForRevalidation']);
+        self::assertSame(1, $summary[2]['evidenceMissing']);
+    }
+
+    public function testNormalizationPortfolioSummaryAggregatesByVersionAndStatus(): void
+    {
+        $this->service->create($this->makeAddress('addr-normalization-1', normalizationVersion: 'canon-w15', validationStatus: 'validated', lastValidationStatus: 'validated'));
+        $this->service->create($this->makeAddress('addr-normalization-2', normalizationVersion: 'canon-w15', validationStatus: 'uncertain', lastValidationStatus: 'uncertain', governanceStatus: 'duplicate', duplicateOfId: 'addr-normalization-1'));
+        $this->service->create($this->makeAddress('addr-normalization-3', normalizationVersion: 'canon-old', validationStatus: 'rejected', lastValidationStatus: 'rejected', rawInputSnapshot: null, normalizedSnapshot: null, providerDigest: null, sourceReference: null, revalidationDueAt: '2025-01-01 00:00:00+00:00'));
+
+        $summary = $this->service->normalizationPortfolioSummary('owner-1', 'vendor-1', null, null, [
+            'expectedNormalizationVersion' => 'canon-w15',
+        ]);
+
+        self::assertCount(3, $summary);
+        self::assertSame('canon-w15', $summary[0]['normalizationVersion']);
+        self::assertSame('uncertain', $summary[0]['validationStatus']);
+        self::assertSame(1, $summary[0]['duplicate']);
+        self::assertSame(1, $summary[0]['uncertainValidation']);
+        self::assertSame(0, $summary[0]['staleNormalization']);
+        self::assertSame('canon-old', $summary[2]['normalizationVersion']);
+        self::assertSame('rejected', $summary[2]['validationStatus']);
+        self::assertSame(1, $summary[2]['dueForRevalidation']);
+        self::assertSame(1, $summary[2]['evidenceMissing']);
+        self::assertSame(1, $summary[2]['staleNormalization']);
+    }
+
+    public function testPatchOperationalRejectsMissingGovernanceLink(): void
+    {
+        $this->service->create($this->makeAddress('addr-policy-1'));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('requires a non-self link id');
+
+        $this->service->patchOperational('addr-policy-1', 'owner-1', 'vendor-1', [
+            'governanceStatus' => 'duplicate',
+        ]);
+    }
+
+    public function testPatchOperationalRejectsDirectTransitionToCanonicalFromSuperseded(): void
+    {
+        $this->service->create($this->makeAddress('addr-policy-2'));
+        $this->service->create($this->makeAddress('addr-policy-master'));
+
+        $ok = $this->service->patchOperational('addr-policy-2', 'owner-1', 'vendor-1', [
+            'governanceStatus' => 'superseded',
+            'supersededById' => 'addr-policy-master',
+        ]);
+        self::assertTrue($ok);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Invalid governance transition from "superseded" to "canonical"');
+
+        $this->service->patchOperational('addr-policy-2', 'owner-1', 'vendor-1', [
+            'governanceStatus' => 'canonical',
+        ]);
+    }
+
+    public function testPatchOperationalRejectsMissingGovernanceTargetInTenantScope(): void
+    {
+        $this->service->create($this->makeAddress('addr-policy-3'));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('was not found in the current tenant scope');
+
+        $this->service->patchOperational('addr-policy-3', 'owner-1', 'vendor-1', [
+            'governanceStatus' => 'alias',
+            'aliasOfId' => 'missing-master',
+        ]);
+    }
+
     public function testPatchOperationalUpdatesGovernanceAndRevalidation(): void
     {
         $this->service->create($this->makeAddress('addr-patch-1'));
@@ -161,6 +517,9 @@ final class AddressServiceTest extends TestCase
         self::assertSame('superseded', $payload['governanceStatus'] ?? null);
         self::assertSame('addr-master-1', $payload['governanceLinkId'] ?? null);
         self::assertSame('quarterly', $payload['revalidationPolicy'] ?? null);
+        self::assertSame('AddressOperationalPatched', $payload['eventName'] ?? null);
+        self::assertSame('address-outbox.v1', $payload['schemaVersion'] ?? null);
+        self::assertSame(1, $payload['eventVersion'] ?? null);
     }
 
     public function testDedupeFindsExistingAddress(): void
@@ -184,6 +543,9 @@ final class AddressServiceTest extends TestCase
         static::assertSame(1, (int) $row['event_version']);
         $payload = json_decode((string) $row['payload'], true);
         static::assertSame('addr-6', $payload['id'] ?? null);
+        static::assertSame('AddressCreated', $payload['eventName'] ?? null);
+        static::assertSame('address-outbox.v1', $payload['schemaVersion'] ?? null);
+        static::assertSame(1, $payload['eventVersion'] ?? null);
     }
 
     public function testUpdateMissingRowDoesNotWriteOutbox(): void
@@ -598,6 +960,31 @@ BEGIN
       END
     WHERE id = NEW.id AND NEW.dedupe_key IS NULL;
 END;
+
+CREATE TABLE address_evidence_snapshot (
+  id TEXT PRIMARY KEY,
+  address_id TEXT NOT NULL,
+  owner_id TEXT NULL,
+  vendor_id TEXT NULL,
+  source_system TEXT NULL,
+  source_type TEXT NULL,
+  source_reference TEXT NULL,
+  validated_by TEXT NULL,
+  validated_at TEXT NULL,
+  normalization_version TEXT NULL,
+  raw_input_snapshot TEXT NULL,
+  normalized_snapshot TEXT NULL,
+  validation_status TEXT NOT NULL
+    CHECK (validation_status IN ('unknown', 'pending', 'normalized', 'validated', 'rejected', 'uncertain', 'overridden')),
+  validation_score INTEGER NULL,
+  validation_issues TEXT NULL,
+  provider_digest TEXT NULL,
+  created_at TEXT NOT NULL,
+  CONSTRAINT address_evidence_snapshot_scope_chk CHECK (owner_id IS NOT NULL OR vendor_id IS NOT NULL)
+);
+
+CREATE INDEX address_evidence_snapshot_address_idx
+  ON address_evidence_snapshot (address_id, created_at DESC, id DESC);
 
 CREATE TABLE address_outbox (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
