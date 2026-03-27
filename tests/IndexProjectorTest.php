@@ -1,14 +1,11 @@
 <?php
-
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- */
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 use App\Projection\AddressIndex\IndexProjector;
 use App\Projection\AddressIndex\Normalizer;
 use App\Projection\AddressIndex\PdoRepository;
-use App\Service\Application\Address\Event\AddressCreatedEvent;
+use App\Service\Application\Event\AddressCreatedEvent;
 use PHPUnit\Framework\TestCase;
 
 final class IndexProjectorTest extends TestCase

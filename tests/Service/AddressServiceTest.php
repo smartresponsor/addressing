@@ -1,15 +1,12 @@
 <?php
-
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- */
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace Tests\Service;
 
-use App\Entity\Record\Address\AddressData;
-use App\Repository\Persistence\Address\AddressRepository;
-use App\Service\Application\Address\AddressService;
+use App\Entity\Record\AddressData;
+use App\Repository\Persistence\AddressRepository;
+use App\Service\Application\AddressService;
 use PHPUnit\Framework\TestCase;
 
 final class AddressServiceTest extends TestCase
@@ -487,6 +484,7 @@ final class AddressServiceTest extends TestCase
 
     public function testPatchOperationalUpdatesGovernanceAndRevalidation(): void
     {
+        $this->service->create($this->makeAddress('addr-master-1'));
         $this->service->create($this->makeAddress('addr-patch-1'));
 
         $ok = $this->service->patchOperational('addr-patch-1', 'owner-1', 'vendor-1', [
@@ -795,56 +793,112 @@ final class AddressServiceTest extends TestCase
         string $line1 = '123 Main St',
         ?string $dedupeKey = null,
         ?string $updatedAt = null,
+        ?string $line2 = null,
+        string $city = 'Houston',
+        ?string $region = 'TX',
+        ?string $postalCode = '77002',
+        string $countryCode = 'US',
+        ?string $line1Norm = null,
+        ?string $cityNorm = null,
+        ?string $regionNorm = null,
+        ?string $postalCodeNorm = null,
+        ?float $latitude = null,
+        ?float $longitude = null,
+        ?string $geohash = null,
+        string $validationStatus = 'pending',
+        ?string $validationProvider = null,
+        ?string $validatedAt = null,
+        ?string $validationFingerprint = null,
+        ?array $validationRaw = null,
+        ?array $validationVerdict = null,
+        ?bool $validationDeliverable = null,
+        ?string $validationGranularity = null,
+        ?int $validationQuality = null,
+        ?string $sourceSystem = 'unit-test',
+        ?string $sourceType = 'manual',
+        mixed $sourceReference = '__DEFAULT__',
+        ?string $normalizationVersion = 'canon-w15',
+        mixed $rawInputSnapshot = '__DEFAULT__',
+        mixed $normalizedSnapshot = '__DEFAULT__',
+        mixed $providerDigest = '__DEFAULT__',
+        string $governanceStatus = 'canonical',
+        ?string $duplicateOfId = null,
+        ?string $supersededById = null,
+        ?string $aliasOfId = null,
+        ?string $conflictWithId = null,
+        ?string $revalidationDueAt = null,
+        ?string $revalidationPolicy = null,
+        ?string $lastValidationProvider = null,
+        ?string $lastValidationStatus = null,
+        ?int $lastValidationScore = null,
     ): AddressData {
         $now = (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
+        $line1Norm ??= strtolower(str_replace(' ', '', $line1)).'-'.strtolower($id);
+        $cityNorm ??= strtolower(str_replace(' ', '', $city));
+        $regionNorm ??= null === $region ? null : strtolower(str_replace(' ', '', $region));
+        $postalCodeNorm ??= null === $postalCode ? null : strtolower(str_replace(' ', '', $postalCode));
+        $validationProvider ??= 'unit-test';
+        $lastValidationProvider ??= $validationProvider;
+        if ('__DEFAULT__' === $sourceReference) {
+            $sourceReference = 'fixture:'.$id;
+        }
+        if ('__DEFAULT__' === $rawInputSnapshot) {
+            $rawInputSnapshot = ['line1' => $line1, 'city' => $city, 'region' => $region, 'postalCode' => $postalCode, 'countryCode' => $countryCode];
+        }
+        if ('__DEFAULT__' === $normalizedSnapshot) {
+            $normalizedSnapshot = ['line1Norm' => $line1Norm, 'cityNorm' => $cityNorm, 'regionNorm' => $regionNorm, 'postalCodeNorm' => $postalCodeNorm];
+        }
+        if ('__DEFAULT__' === $providerDigest) {
+            $providerDigest = 'sha256:'.$id;
+        }
 
         return new AddressData(
             $id,
             $ownerId,
             $vendorId,
             $line1,
-            null,
-            'Houston',
-            'TX',
-            '77002',
-            'US',
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            'unknown',
-            null,
-            null,
+            $line2,
+            $city,
+            $region,
+            $postalCode,
+            $countryCode,
+            $line1Norm,
+            $cityNorm,
+            $regionNorm,
+            $postalCodeNorm,
+            $latitude,
+            $longitude,
+            $geohash,
+            $validationStatus,
+            $validationProvider,
+            $validatedAt,
             $dedupeKey,
             $now,
             $updatedAt,
             null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            'unit-test',
-            'manual',
-            'fixture:'.$id,
-            'canon-w08',
-            ['line1' => $line1, 'city' => 'Houston', 'region' => 'TX', 'postalCode' => '77002', 'countryCode' => 'US'],
-            ['line1Norm' => '123mainst', 'cityNorm' => 'houston', 'regionNorm' => 'tx', 'postalCodeNorm' => '77002'],
-            'sha256:'.$id,
-            'canonical',
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
+            $validationFingerprint,
+            $validationRaw,
+            $validationVerdict,
+            $validationDeliverable,
+            $validationGranularity,
+            $validationQuality,
+            $sourceSystem,
+            $sourceType,
+            $sourceReference,
+            $normalizationVersion,
+            $rawInputSnapshot,
+            $normalizedSnapshot,
+            $providerDigest,
+            $governanceStatus,
+            $duplicateOfId,
+            $supersededById,
+            $aliasOfId,
+            $conflictWithId,
+            $revalidationDueAt,
+            $revalidationPolicy,
+            $lastValidationProvider,
+            $lastValidationStatus,
+            $lastValidationScore
         );
     }
 

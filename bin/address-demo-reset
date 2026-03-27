@@ -1,56 +1,24 @@
 #!/usr/bin/env php
 <?php
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
- * Owner: Marketing America Corp
- */
 
-/**
- * @param string $k
- * @param string|null $d
- * @return string|null
- */
-function env(string $k, ?string $d = null): ?string
-{
-    $v = getenv($k);
-    return $v === false ? $d : $v;
-}
+require __DIR__ . '/../vendor/autoload.php';
 
-$dsn = env('PG_DSN');
-$user = env('PG_USER');
-$pass = env('PG_PASS');
-if (!$dsn || !$user) {
+use App\Fixture\AddressDemoFixtureService;
+
+$dsn = getenv('PG_DSN');
+$user = getenv('PG_USER');
+$pass = getenv('PG_PASS');
+$count = isset($argv[1]) && is_numeric($argv[1]) ? max(1, (int) $argv[1]) : 50;
+
+if (!is_string($dsn) || $dsn === '' || !is_string($user) || $user === '') {
     fwrite(STDERR, "PG_DSN/PG_USER are required\n");
     exit(2);
 }
 
-$seedFile = __DIR__ . '/../sql/postgres/seed_demo.sql';
-if (!is_file($seedFile)) {
-    fwrite(STDERR, "missing seed file: {$seedFile}\n");
-    exit(2);
-}
+$pdo = new PDO($dsn, $user, is_string($pass) ? $pass : '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$fixture = new AddressDemoFixtureService($pdo);
+$loaded = $fixture->resetAndLoad($count);
 
-$pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-
-$pdo->beginTransaction();
-try {
-    $pdo->exec('TRUNCATE TABLE address_outbox, address_entity RESTART IDENTITY CASCADE');
-
-    $seedSql = file_get_contents($seedFile);
-    if ($seedSql === false) {
-        throw new RuntimeException("failed to read seed file: {$seedFile}");
-    }
-
-    $pdo->exec($seedSql);
-    $pdo->commit();
-} catch (Throwable $e) {
-    if ($pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
-    fwrite(STDERR, $e->getMessage() . "\n");
-    exit(2);
-}
-
-echo "Demo address data reset complete.\n";
+fwrite(STDOUT, "Demo address data reset complete. Loaded: {$loaded}\n");

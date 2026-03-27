@@ -1,8 +1,5 @@
 <?php
-
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- */
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Projection\AddressIndex;
@@ -10,7 +7,7 @@ namespace App\Projection\AddressIndex;
 use App\Integration\Geocode\GeocodeResult;
 use App\Value\CountryCode;
 use App\Value\PostalCode;
-use App\Value\Primitive\Address\Region;
+use App\Value\Primitive\Region;
 use App\Value\StreetLine;
 
 final readonly class IndexRecord

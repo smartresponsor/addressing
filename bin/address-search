@@ -1,0 +1,40 @@
+#!/usr/bin/env php
+<?php
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+declare(strict_types=1);
+
+require __DIR__.'/../vendor/autoload.php';
+
+use App\Repository\Persistence\AddressRepository;
+use App\Service\Application\AddressService;
+
+$ownerId = $argv[1] ?? null;
+$vendorId = $argv[2] ?? null;
+$countryCode = $argv[3] ?? null;
+$q = $argv[4] ?? null;
+$limit = isset($argv[5]) && is_numeric($argv[5]) ? (int) $argv[5] : 25;
+$cursor = $argv[6] ?? null;
+
+$pdo = new PDO((string) getenv('PG_DSN'), (string) getenv('PG_USER'), (string) getenv('PG_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$service = new AddressService(new AddressRepository($pdo));
+
+$result = $service->search(
+    $ownerId === 'null' ? null : $ownerId,
+    $vendorId === 'null' ? null : $vendorId,
+    $countryCode === 'null' ? null : $countryCode,
+    $q === 'null' ? null : $q,
+    $limit,
+    $cursor === 'null' ? null : $cursor,
+);
+
+$out = [
+    'nextCursor' => $result['nextCursor'],
+    'items' => array_map(static fn($address): array => [
+        'id' => $address->id(),
+        'countryCode' => $address->countryCode(),
+        'line1' => $address->line1(),
+        'city' => $address->city(),
+    ], $result['items']),
+];
+
+fwrite(STDOUT, json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n");

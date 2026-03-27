@@ -1,16 +1,12 @@
 #!/usr/bin/env php
 <?php
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
- * Owner: Marketing America Corp
- */
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use App\Service\Application\Address\AddressOutboxDrainer;
+use App\Service\Application\AddressOutboxDrainerService;
 use JetBrains\PhpStorm\NoReturn;
 
 /**
@@ -55,7 +51,7 @@ $pdo = new PDO((string)getenv('PG_DSN'), (string)getenv('PG_USER'), (string)gete
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
 ]);
 
-$drainer = new AddressOutboxDrainer($pdo);
+$drainer = new AddressOutboxDrainerService($pdo);
 $count = $drainer->drain($url, $limit, $retry, $timeout, $backoff);
 
 fwrite(STDOUT, "Drained: {$count}\n");

@@ -1,25 +1,24 @@
 <?php
-
-// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace Tests\Service;
 
-use App\Contract\Message\Address\AddressValidated;
-use App\Service\Application\Address\AddressValidatedApplier;
+use App\Contract\Message\AddressValidated;
+use App\Service\Application\AddressValidatedApplierService;
 use PHPUnit\Framework\TestCase;
 
 final class AddressValidatedApplierTest extends TestCase
 {
     private \PDO $pdo;
-    private AddressValidatedApplier $applier;
+    private AddressValidatedApplierService $applier;
 
     protected function setUp(): void
     {
         $this->pdo = new \PDO('sqlite::memory:');
         $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $this->pdo->exec($this->schemaSql());
-        $this->applier = new AddressValidatedApplier($this->pdo);
+        $this->applier = new AddressValidatedApplierService($this->pdo);
     }
 
     public function testApplyWorksOnSqliteWithoutPgsqlLockSyntax(): void
