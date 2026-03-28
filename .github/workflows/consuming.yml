@@ -28,8 +28,24 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
+      - name: Check automater credentials
+        id: creds
+        shell: bash
+        env:
+          APP_ID: ${{ vars.AUTOMATER_APP_ID }}
+          PEM: ${{ secrets.AUTOMATER_APP_PRIVATE_KEY }}
+          B64: ${{ secrets.AUTOMATER_APP_PRIVATE_KEY_B64 }}
+        run: |
+          if [ -n "$APP_ID" ] && { [ -n "$PEM" ] || [ -n "$B64" ]; }; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping consuming: AUTOMATER_APP_ID/private key are not configured."
+          fi
+
       - name: Normalize GitHub App private key
         id: key
+        if: steps.creds.outputs.configured == 'true'
         shell: pwsh
         env:
           PEM: ${{ secrets.AUTOMATER_APP_PRIVATE_KEY }}
@@ -55,23 +71,27 @@ jobs:
 
       - name: Create GitHub App token (Automater)
         id: app
+        if: steps.creds.outputs.configured == 'true'
         uses: actions/create-github-app-token@v2
         with:
           app-id: ${{ vars.AUTOMATER_APP_ID }}
           private-key: ${{ steps.key.outputs.private-key }}
 
       - name: Checkout (with App token)
+        if: steps.creds.outputs.configured == 'true'
         uses: actions/checkout@v4
         with:
           token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
 
       - name: Git safe.directory
+        if: steps.creds.outputs.configured == 'true'
         shell: bash
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Run consuming engine
+        if: steps.creds.outputs.configured == 'true'
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ steps.app.outputs.token }}

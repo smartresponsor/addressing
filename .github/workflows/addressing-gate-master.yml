@@ -76,6 +76,9 @@ jobs:
     env:
       SR_DOMAIN: "addressing"
       MIN_COVERAGE: "80"
+      PANTHER_EXTERNAL_BASE_URI: "http://127.0.0.1:8000"
+      APP_ENV: "test"
+      APP_VAR_DIR: "${{ runner.temp }}/symfony-var"
 
       PG_DSN: pgsql:host=127.0.0.1;port=5432;dbname=smartresponsor
       PG_USER: smartresponsor
@@ -133,6 +136,12 @@ jobs:
 
       - name: Unit tests with coverage threshold
         run: |
+          mkdir -p "$APP_VAR_DIR" build/logs
+          php -S 127.0.0.1:8000 -t public > build/logs/php-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID' EXIT
+          sleep 2
+
           vendor/bin/phpunit --coverage-clover build/logs/clover.xml --coverage-text | tee build/logs/coverage.txt
 
           COVERAGE=$(grep -Eo 'Lines:\s+[0-9]+(\.[0-9]+)?%' build/logs/coverage.txt | awk '{print $2}' | tr -d '%')
@@ -142,6 +151,9 @@ jobs:
             echo "Coverage below ${MIN_COVERAGE}%"
             exit 1
           fi
+
+          kill $SERVER_PID
+          trap - EXIT
 
       - name: Migration smoke check
         run: |
