@@ -12,16 +12,16 @@ use App\Service\Application\AddressService;
 use Faker\Factory;
 use Faker\Generator;
 
-final class AddressDemoFixtureService
+final readonly class AddressDemoFixtureService
 {
-    private Generator $faker;
+    private Generator $generator;
 
     public function __construct(
-        private readonly \PDO $pdo,
-        private readonly AddressService $service,
-        private readonly AddressInputFactory $inputFactory,
+        private \PDO $pdo,
+        private AddressService $addressService,
+        private AddressInputFactory $addressInputFactory,
     ) {
-        $this->faker = Factory::create('en_US');
+        $this->generator = Factory::create('en_US');
     }
 
     public function resetAndLoad(int $count = 50): int
@@ -39,37 +39,37 @@ final class AddressDemoFixtureService
             $validationStatus = 0 === $index % 4 ? 'validated' : 'pending';
             $lastValidationStatus = 'validated' === $validationStatus ? 'validated' : 'uncertain';
 
-            $address = $this->inputFactory->fromManageDto($dto, [
+            $address = $this->addressInputFactory->fromManageDto($dto, [
                 'id' => sprintf('demo-%04d', $index),
-                'createdAt' => $this->faker->dateTimeBetween('-120 days', '-3 days')->format('Y-m-d H:i:sP'),
-                'latitude' => (float) $this->faker->latitude(25, 49),
-                'longitude' => (float) $this->faker->longitude(-124, -67),
+                'createdAt' => $this->generator->dateTimeBetween('-120 days', '-3 days')->format('Y-m-d H:i:sP'),
+                'latitude' => (float) $this->generator->latitude(25, 49),
+                'longitude' => (float) $this->generator->longitude(-124, -67),
                 'validationStatus' => $validationStatus,
                 'validationProvider' => 'validated' === $validationStatus ? 'faker-validator' : null,
-                'validatedAt' => 'validated' === $validationStatus ? $this->faker->dateTimeBetween('-60 days', 'now')->format('Y-m-d H:i:sP') : null,
+                'validatedAt' => 'validated' === $validationStatus ? $this->generator->dateTimeBetween('-60 days', 'now')->format('Y-m-d H:i:sP') : null,
                 'sourceSystem' => 'symfony-fixture',
                 'sourceType' => 0 === $index % 3 ? 'import' : 'manual',
                 'sourceReference' => 'fixture-run-'.$index,
                 'normalizationVersion' => 0 === $index % 2 ? 'canon-v2' : 'canon-v1',
                 'validationFingerprint' => hash('sha256', 'demo-'.$index),
                 'validationRaw' => ['provider' => 'faker-validator', 'input' => $dto->line1],
-                'validationVerdict' => ['quality' => $this->faker->numberBetween(70, 99)],
+                'validationVerdict' => ['quality' => $this->generator->numberBetween(70, 99)],
                 'validationDeliverable' => true,
                 'validationGranularity' => 'premise',
-                'validationQuality' => $this->faker->numberBetween(70, 99),
+                'validationQuality' => $this->generator->numberBetween(70, 99),
                 'providerDigest' => 'sha256:'.hash('sha256', 'provider-'.$index),
                 'governanceStatus' => $governanceStatus,
                 'duplicateOfId' => 'duplicate' === $governanceStatus ? 'demo-0001' : null,
                 'aliasOfId' => 'alias' === $governanceStatus ? 'demo-0002' : null,
                 'conflictWithId' => 'conflict' === $governanceStatus ? 'demo-0003' : null,
-                'revalidationDueAt' => $this->faker->dateTimeBetween('-2 days', '+90 days')->format('Y-m-d H:i:sP'),
+                'revalidationDueAt' => $this->generator->dateTimeBetween('-2 days', '+90 days')->format('Y-m-d H:i:sP'),
                 'revalidationPolicy' => 0 === $index % 2 ? 'quarterly' : 'monthly',
                 'lastValidationProvider' => 'faker-validator',
                 'lastValidationStatus' => $lastValidationStatus,
-                'lastValidationScore' => $this->faker->numberBetween(70, 99),
+                'lastValidationScore' => $this->generator->numberBetween(70, 99),
             ]);
 
-            $this->service->create($address);
+            $this->addressService->create($address);
         }
 
         return $count;
@@ -77,22 +77,22 @@ final class AddressDemoFixtureService
 
     private function buildDto(): AddressManageDto
     {
-        $dto = new AddressManageDto();
-        $dto->line1 = $this->faker->streetAddress();
-        $line2 = $this->faker->optional(0.35, null)->randomElement([
-            'Suite '.$this->faker->buildingNumber(),
-            'Apt '.$this->faker->buildingNumber(),
-            'Unit '.$this->faker->buildingNumber(),
+        $addressManageDto = new AddressManageDto();
+        $addressManageDto->line1 = $this->generator->streetAddress();
+        $line2 = $this->generator->optional(0.35, null)->randomElement([
+            'Suite '.$this->generator->buildingNumber(),
+            'Apt '.$this->generator->buildingNumber(),
+            'Unit '.$this->generator->buildingNumber(),
         ]);
-        $dto->line2 = is_string($line2) ? $line2 : null;
-        $dto->city = $this->faker->city();
-        $region = $this->faker->randomElement(['CA', 'FL', 'IL', 'NY', 'TX', 'WA']);
-        $dto->region = is_string($region) ? $region : null;
-        $dto->postalCode = $this->faker->postcode();
-        $dto->countryCode = 'US';
-        $dto->ownerId = 'owner-'.$this->faker->numberBetween(1, 4);
-        $dto->vendorId = 'vendor-'.$this->faker->numberBetween(1, 3);
+        $addressManageDto->line2 = is_string($line2) ? $line2 : null;
+        $addressManageDto->city = $this->generator->city();
+        $region = $this->generator->randomElement(['CA', 'FL', 'IL', 'NY', 'TX', 'WA']);
+        $addressManageDto->region = is_string($region) ? $region : null;
+        $addressManageDto->postalCode = $this->generator->postcode();
+        $addressManageDto->countryCode = 'US';
+        $addressManageDto->ownerId = 'owner-'.$this->generator->numberBetween(1, 4);
+        $addressManageDto->vendorId = 'vendor-'.$this->generator->numberBetween(1, 3);
 
-        return $dto;
+        return $addressManageDto;
     }
 }

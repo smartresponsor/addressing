@@ -22,6 +22,7 @@ final class AddressPortfolioSummaryCommand extends Command
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
@@ -32,14 +33,15 @@ final class AddressPortfolioSummaryCommand extends Command
             ->addOption('query', 'q', InputOption::VALUE_OPTIONAL);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
-        $kind = self::requiredArgument($input, 'kind');
-        $ownerId = self::nullable($input->getOption('owner-id'));
-        $vendorId = self::nullable($input->getOption('vendor-id'));
-        $countryCode = self::nullable($input->getOption('country-code'));
-        $query = self::nullable($input->getOption('query'));
+        $symfonyStyle = new SymfonyStyle($input, $output);
+        $kind = $this->requiredArgument($input, 'kind');
+        $ownerId = $this->nullable($input->getOption('owner-id'));
+        $vendorId = $this->nullable($input->getOption('vendor-id'));
+        $countryCode = $this->nullable($input->getOption('country-code'));
+        $query = $this->nullable($input->getOption('query'));
 
         $summary = match ($kind) {
             'country' => $this->addressService->countryPortfolioSummary($ownerId, $vendorId, $query),
@@ -54,12 +56,12 @@ final class AddressPortfolioSummaryCommand extends Command
             throw new \RuntimeException('invalid_summary_payload');
         }
 
-        $io->writeln($payload);
+        $symfonyStyle->writeln($payload);
 
         return Command::SUCCESS;
     }
 
-    private static function requiredArgument(InputInterface $input, string $name): string
+    private function requiredArgument(InputInterface $input, string $name): string
     {
         $value = $input->getArgument($name);
 
@@ -70,7 +72,7 @@ final class AddressPortfolioSummaryCommand extends Command
         return $value;
     }
 
-    private static function nullable(mixed $value): ?string
+    private function nullable(mixed $value): ?string
     {
         if (!is_string($value)) {
             return null;

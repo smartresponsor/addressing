@@ -19,14 +19,15 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
         $this->sender = $sender;
     }
 
+    #[\Override]
     public function drain(string $url, int $limit, int $retryLimit, int $timeoutSec, int $backoffMs): int
     {
         $lockId = bin2hex(random_bytes(16));
         $rows = $this->reserveRows($lockId, $limit);
         $count = 0;
 
-        foreach ($rows as $r) {
-            $payload = json_decode(self::rowString($r, 'payload') ?? '', true);
+        foreach ($rows as $row) {
+            $payload = json_decode($this->rowString($row, 'payload') ?? '', true);
             if (!is_array($payload)) {
                 $payload = null;
             }
@@ -35,8 +36,8 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
             $ok = $this->send(
                 $url,
                 [
-                    'name' => self::rowString($r, 'event_name') ?? '',
-                    'version' => self::rowInt($r, 'event_version'),
+                    'name' => $this->rowString($row, 'event_name') ?? '',
+                    'version' => $this->rowInt($row, 'event_version'),
                     'payload' => $payload,
                 ],
                 $retryLimit,
@@ -52,7 +53,7 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
                     .'published_attempt = published_attempt + 1, last_error = NULL '
                     .'WHERE id = :id'
                 );
-                $upd->execute([':id' => self::rowInt($r, 'id')]);
+                $upd->execute([':id' => $this->rowInt($row, 'id')]);
             } else {
                 $upd = $this->pdo->prepare(
                     'UPDATE address_outbox '
@@ -60,7 +61,7 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
                     .'published_attempt = published_attempt + 1, last_error = :err '
                     .'WHERE id = :id'
                 );
-                $upd->execute([':id' => self::rowInt($r, 'id'), ':err' => $err]);
+                $upd->execute([':id' => $this->rowInt($row, 'id'), ':err' => $err]);
             }
 
             ++$count;
@@ -152,13 +153,13 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
     }
 
     /** @param array<string, mixed> $row */
-    private static function rowString(array $row, string $key): ?string
+    private function rowString(array $row, string $key): ?string
     {
         return isset($row[$key]) && is_string($row[$key]) ? $row[$key] : null;
     }
 
     /** @param array<string, mixed> $row */
-    private static function rowInt(array $row, string $key): int
+    private function rowInt(array $row, string $key): int
     {
         $value = $row[$key] ?? null;
         if (is_int($value)) {

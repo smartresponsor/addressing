@@ -18,11 +18,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'address:validated:apply', description: 'Apply a validated payload to an existing address.')]
 final class AddressValidatedApplyCommand extends Command
 {
-    public function __construct(private readonly AddressValidatedApplierService $validatedApplier)
+    public function __construct(private readonly AddressValidatedApplierService $addressValidatedApplierService)
     {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
@@ -32,28 +33,29 @@ final class AddressValidatedApplyCommand extends Command
             ->addOption('vendor-id', null, InputOption::VALUE_OPTIONAL);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
-        $payload = json_decode(self::requiredArgument($input, 'payload-json'), true);
+        $symfonyStyle = new SymfonyStyle($input, $output);
+        $payload = json_decode($this->requiredArgument($input, 'payload-json'), true);
         if (!is_array($payload)) {
             throw new \RuntimeException('invalid_json');
         }
 
-        $validated = AddressValidated::fromArray($payload);
-        $this->validatedApplier->apply(
-            self::requiredArgument($input, 'address-id'),
-            $validated,
-            self::nullable($input->getOption('owner-id')),
-            self::nullable($input->getOption('vendor-id')),
+        $addressValidated = AddressValidated::fromArray($payload);
+        $this->addressValidatedApplierService->apply(
+            $this->requiredArgument($input, 'address-id'),
+            $addressValidated,
+            $this->nullable($input->getOption('owner-id')),
+            $this->nullable($input->getOption('vendor-id')),
         );
 
-        $io->success('Validated payload applied.');
+        $symfonyStyle->success('Validated payload applied.');
 
         return Command::SUCCESS;
     }
 
-    private static function requiredArgument(InputInterface $input, string $name): string
+    private function requiredArgument(InputInterface $input, string $name): string
     {
         $value = $input->getArgument($name);
 
@@ -64,7 +66,7 @@ final class AddressValidatedApplyCommand extends Command
         return $value;
     }
 
-    private static function nullable(mixed $value): ?string
+    private function nullable(mixed $value): ?string
     {
         if (!is_string($value)) {
             return null;

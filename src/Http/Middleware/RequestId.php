@@ -14,7 +14,6 @@ namespace App\Http\Middleware;
 final class RequestId
 {
     /**
-     * @return string
      * @throws \Exception
      */
     public static function ensure(): string

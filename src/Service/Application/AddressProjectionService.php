@@ -8,13 +8,14 @@ namespace App\Service\Application;
 use App\EntityInterface\Record\AddressInterface;
 use App\ServiceInterface\Application\AddressProjectionServiceInterface;
 
-final class AddressProjectionService implements AddressProjectionServiceInterface
+final readonly class AddressProjectionService implements AddressProjectionServiceInterface
 {
-    public function __construct(private readonly \PDO $pdo)
+    public function __construct(private \PDO $pdo)
     {
     }
 
-    public function upsert(AddressInterface $a): void
+    #[\Override]
+    public function upsert(AddressInterface $address): void
     {
         $sql = <<<'SQL'
 INSERT INTO address_projection
@@ -88,57 +89,57 @@ ON DUPLICATE KEY UPDATE
 SQL;
 
         $stmt = $this->pdo->prepare($sql);
-        $raw = $a->validationRaw();
-        $verdict = $a->validationVerdict();
-        $deliverable = $a->validationDeliverable();
+        $raw = $address->validationRaw();
+        $verdict = $address->validationVerdict();
+        $deliverable = $address->validationDeliverable();
 
         $stmt->execute([
-            ':id' => $a->id(),
-            ':owner_id' => $a->ownerId(),
-            ':vendor_id' => $a->vendorId(),
-            ':line1' => $a->line1(),
-            ':line2' => $a->line2(),
-            ':city' => $a->city(),
-            ':region' => $a->region(),
-            ':postal_code' => $a->postalCode(),
-            ':country_code' => $a->countryCode(),
-            ':line1_norm' => $a->line1Norm(),
-            ':city_norm' => $a->cityNorm(),
-            ':region_norm' => $a->regionNorm(),
-            ':postal_code_norm' => $a->postalCodeNorm(),
-            ':latitude' => $a->latitude(),
-            ':longitude' => $a->longitude(),
-            ':geohash' => $a->geohash(),
-            ':validation_status' => $a->validationStatus(),
-            ':validation_provider' => $a->validationProvider(),
-            ':validated_at' => $a->validatedAt(),
-            ':dedupe_key' => $a->dedupeKey(),
-            ':validation_fingerprint' => $a->validationFingerprint(),
+            ':id' => $address->id(),
+            ':owner_id' => $address->ownerId(),
+            ':vendor_id' => $address->vendorId(),
+            ':line1' => $address->line1(),
+            ':line2' => $address->line2(),
+            ':city' => $address->city(),
+            ':region' => $address->region(),
+            ':postal_code' => $address->postalCode(),
+            ':country_code' => $address->countryCode(),
+            ':line1_norm' => $address->line1Norm(),
+            ':city_norm' => $address->cityNorm(),
+            ':region_norm' => $address->regionNorm(),
+            ':postal_code_norm' => $address->postalCodeNorm(),
+            ':latitude' => $address->latitude(),
+            ':longitude' => $address->longitude(),
+            ':geohash' => $address->geohash(),
+            ':validation_status' => $address->validationStatus(),
+            ':validation_provider' => $address->validationProvider(),
+            ':validated_at' => $address->validatedAt(),
+            ':dedupe_key' => $address->dedupeKey(),
+            ':validation_fingerprint' => $address->validationFingerprint(),
             ':validation_deliverable' => null === $deliverable ? null : (int) $deliverable,
-            ':validation_granularity' => $a->validationGranularity(),
-            ':validation_quality' => $a->validationQuality(),
+            ':validation_granularity' => $address->validationGranularity(),
+            ':validation_quality' => $address->validationQuality(),
             ':validation_raw' => null === $raw ? null : json_encode($raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             ':validation_verdict' => null === $verdict ? null : json_encode($verdict, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            ':source_system' => $a->sourceSystem(),
-            ':source_type' => $a->sourceType(),
-            ':source_reference' => $a->sourceReference(),
-            ':normalization_version' => $a->normalizationVersion(),
-            ':raw_input_snapshot' => ($v = $a->rawInputSnapshot()) === null ? null : json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            ':normalized_snapshot' => ($v = $a->normalizedSnapshot()) === null ? null : json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            ':provider_digest' => $a->providerDigest(),
-            ':governance_status' => $a->governanceStatus(),
-            ':duplicate_of_id' => $a->duplicateOfId(),
-            ':superseded_by_id' => $a->supersededById(),
-            ':alias_of_id' => $a->aliasOfId(),
-            ':conflict_with_id' => $a->conflictWithId(),
-            ':revalidation_due_at' => $a->revalidationDueAt(),
-            ':revalidation_policy' => $a->revalidationPolicy(),
-            ':last_validation_provider' => $a->lastValidationProvider(),
-            ':last_validation_status' => $a->lastValidationStatus(),
-            ':last_validation_score' => $a->lastValidationScore(),
-            ':created_at' => $a->createdAt(),
-            ':updated_at' => $a->updatedAt(),
-            ':deleted_at' => $a->deletedAt(),
+            ':source_system' => $address->sourceSystem(),
+            ':source_type' => $address->sourceType(),
+            ':source_reference' => $address->sourceReference(),
+            ':normalization_version' => $address->normalizationVersion(),
+            ':raw_input_snapshot' => ($v = $address->rawInputSnapshot()) === null ? null : json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ':normalized_snapshot' => ($v = $address->normalizedSnapshot()) === null ? null : json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ':provider_digest' => $address->providerDigest(),
+            ':governance_status' => $address->governanceStatus(),
+            ':duplicate_of_id' => $address->duplicateOfId(),
+            ':superseded_by_id' => $address->supersededById(),
+            ':alias_of_id' => $address->aliasOfId(),
+            ':conflict_with_id' => $address->conflictWithId(),
+            ':revalidation_due_at' => $address->revalidationDueAt(),
+            ':revalidation_policy' => $address->revalidationPolicy(),
+            ':last_validation_provider' => $address->lastValidationProvider(),
+            ':last_validation_status' => $address->lastValidationStatus(),
+            ':last_validation_score' => $address->lastValidationScore(),
+            ':created_at' => $address->createdAt(),
+            ':updated_at' => $address->updatedAt(),
+            ':deleted_at' => $address->deletedAt(),
         ]);
     }
 }

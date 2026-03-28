@@ -22,6 +22,7 @@ final class AddressSearchCommand extends Command
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
@@ -39,25 +40,26 @@ final class AddressSearchCommand extends Command
             ->addOption('expected-normalization-version', null, InputOption::VALUE_OPTIONAL);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
+        $symfonyStyle = new SymfonyStyle($input, $output);
         $result = $this->addressService->search(
-            self::nullable($input->getOption('owner-id')),
-            self::nullable($input->getOption('vendor-id')),
-            self::nullableUpper($input->getOption('country-code')),
-            self::nullable($input->getOption('query')),
-            max(1, self::intOption($input, 'limit', 25)),
-            self::nullable($input->getOption('cursor')),
+            $this->nullable($input->getOption('owner-id')),
+            $this->nullable($input->getOption('vendor-id')),
+            $this->nullableUpper($input->getOption('country-code')),
+            $this->nullable($input->getOption('query')),
+            max(1, $this->intOption($input, 'limit', 25)),
+            $this->nullable($input->getOption('cursor')),
             [
-                'sourceType' => AddressRecordPolicy::normalizeSourceType(self::nullable($input->getOption('source-type'))),
-                'governanceStatus' => null !== self::nullable($input->getOption('governance-status'))
-                    ? AddressRecordPolicy::normalizeGovernanceStatus(self::nullable($input->getOption('governance-status')))
+                'sourceType' => AddressRecordPolicy::normalizeSourceType($this->nullable($input->getOption('source-type'))),
+                'governanceStatus' => null !== $this->nullable($input->getOption('governance-status'))
+                    ? AddressRecordPolicy::normalizeGovernanceStatus($this->nullable($input->getOption('governance-status')))
                     : null,
-                'revalidationPolicy' => AddressRecordPolicy::normalizeRevalidationPolicy(self::nullable($input->getOption('revalidation-policy'))),
-                'hasEvidence' => self::nullableBool($input->getOption('has-evidence')),
-                'revalidationDueBefore' => self::nullable($input->getOption('revalidation-due-before')),
-                'expectedNormalizationVersion' => self::nullable($input->getOption('expected-normalization-version')),
+                'revalidationPolicy' => AddressRecordPolicy::normalizeRevalidationPolicy($this->nullable($input->getOption('revalidation-policy'))),
+                'hasEvidence' => $this->nullableBool($input->getOption('has-evidence')),
+                'revalidationDueBefore' => $this->nullable($input->getOption('revalidation-due-before')),
+                'expectedNormalizationVersion' => $this->nullable($input->getOption('expected-normalization-version')),
             ],
         );
 
@@ -79,12 +81,12 @@ final class AddressSearchCommand extends Command
             throw new \RuntimeException('invalid_search_payload');
         }
 
-        $io->writeln($payload);
+        $symfonyStyle->writeln($payload);
 
         return Command::SUCCESS;
     }
 
-    private static function intOption(InputInterface $input, string $name, int $default): int
+    private function intOption(InputInterface $input, string $name, int $default): int
     {
         $value = $input->getOption($name);
         if (is_int($value)) {
@@ -97,7 +99,7 @@ final class AddressSearchCommand extends Command
         return $default;
     }
 
-    private static function nullable(mixed $value): ?string
+    private function nullable(mixed $value): ?string
     {
         if (!is_string($value)) {
             return null;
@@ -107,14 +109,14 @@ final class AddressSearchCommand extends Command
         return '' === $value ? null : $value;
     }
 
-    private static function nullableUpper(mixed $value): ?string
+    private function nullableUpper(mixed $value): ?string
     {
-        $value = self::nullable($value);
+        $value = $this->nullable($value);
 
         return null === $value ? null : strtoupper($value);
     }
 
-    private static function nullableBool(mixed $value): ?bool
+    private function nullableBool(mixed $value): ?bool
     {
         if (!is_string($value)) {
             return null;

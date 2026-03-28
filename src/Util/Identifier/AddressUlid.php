@@ -8,6 +8,7 @@ use App\UtilInterface\Identifier\AddressUlidInterface;
 
 final class AddressUlid implements AddressUlidInterface
 {
+    #[\Override]
     public static function generate(): string
     {
         $milliseconds = (int) round(microtime(true) * 1000);

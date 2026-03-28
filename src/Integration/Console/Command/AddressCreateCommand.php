@@ -20,11 +20,12 @@ final class AddressCreateCommand extends Command
 {
     public function __construct(
         private readonly AddressService $addressService,
-        private readonly AddressInputFactory $inputFactory,
+        private readonly AddressInputFactory $addressInputFactory,
     ) {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
@@ -40,46 +41,47 @@ final class AddressCreateCommand extends Command
             ->addOption('source-reference', null, InputOption::VALUE_OPTIONAL, default: 'address:create');
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
-        $dto = new AddressManageDto();
-        $dto->line1 = self::requiredOption($input, 'line1');
-        $dto->line2 = self::nullable($input->getOption('line2'));
-        $dto->city = self::requiredOption($input, 'city');
-        $dto->region = self::nullable($input->getOption('region'));
-        $dto->postalCode = self::nullable($input->getOption('postal-code'));
-        $dto->countryCode = self::requiredOption($input, 'country-code');
-        $dto->ownerId = self::nullable($input->getOption('owner-id'));
-        $dto->vendorId = self::nullable($input->getOption('vendor-id'));
+        $symfonyStyle = new SymfonyStyle($input, $output);
+        $addressManageDto = new AddressManageDto();
+        $addressManageDto->line1 = $this->requiredOption($input, 'line1');
+        $addressManageDto->line2 = $this->nullable($input->getOption('line2'));
+        $addressManageDto->city = $this->requiredOption($input, 'city');
+        $addressManageDto->region = $this->nullable($input->getOption('region'));
+        $addressManageDto->postalCode = $this->nullable($input->getOption('postal-code'));
+        $addressManageDto->countryCode = $this->requiredOption($input, 'country-code');
+        $addressManageDto->ownerId = $this->nullable($input->getOption('owner-id'));
+        $addressManageDto->vendorId = $this->nullable($input->getOption('vendor-id'));
 
-        $address = $this->inputFactory->fromManageDto($dto, [
-            'sourceSystem' => self::requiredOption($input, 'source-system'),
+        $addressData = $this->addressInputFactory->fromManageDto($addressManageDto, [
+            'sourceSystem' => $this->requiredOption($input, 'source-system'),
             'sourceType' => 'manual',
-            'sourceReference' => self::requiredOption($input, 'source-reference'),
+            'sourceReference' => $this->requiredOption($input, 'source-reference'),
         ]);
-        $this->addressService->create($address);
+        $this->addressService->create($addressData);
 
         $message = json_encode([
-            'id' => $address->id(),
-            'ownerId' => $address->ownerId(),
-            'vendorId' => $address->vendorId(),
-            'line1' => $address->line1(),
-            'city' => $address->city(),
-            'countryCode' => $address->countryCode(),
+            'id' => $addressData->id(),
+            'ownerId' => $addressData->ownerId(),
+            'vendorId' => $addressData->vendorId(),
+            'line1' => $addressData->line1(),
+            'city' => $addressData->city(),
+            'countryCode' => $addressData->countryCode(),
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         if (false === $message) {
-            $io->error('Failed to encode command output.');
+            $symfonyStyle->error('Failed to encode command output.');
 
             return Command::FAILURE;
         }
 
-        $io->writeln($message);
+        $symfonyStyle->writeln($message);
 
         return Command::SUCCESS;
     }
 
-    private static function requiredOption(InputInterface $input, string $name): string
+    private function requiredOption(InputInterface $input, string $name): string
     {
         $value = $input->getOption($name);
         if (!is_string($value)) {
@@ -89,7 +91,7 @@ final class AddressCreateCommand extends Command
         return $value;
     }
 
-    private static function nullable(mixed $value): ?string
+    private function nullable(mixed $value): ?string
     {
         if (!is_string($value)) {
             return null;

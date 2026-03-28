@@ -13,21 +13,15 @@ use PDO;
 /**
  *
  */
-final class PdoRepository implements RepositoryInterface
+final readonly class PdoRepository implements RepositoryInterface
 {
-    /**
-     * @param \PDO $pdo
-     */
-    public function __construct(private readonly PDO $pdo)
+    public function __construct(private PDO $pdo)
     {
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
-    /**
-     * @param \App\Projection\AddressIndex\IndexRecord $r
-     * @return void
-     */
-    public function upsert(IndexRecord $r): void
+    #[\Override]
+    public function upsert(IndexRecord $indexRecord): void
     {
         $sql = 'INSERT INTO address_index
             (digest,line1,line2,city,region,postal,country,lat,lon,display,provider,confidence,geo_key,created_at,updated_at)
@@ -37,9 +31,9 @@ final class PdoRepository implements RepositoryInterface
                 lat=excluded.lat,lon=excluded.lon,display=excluded.display,provider=excluded.provider,confidence=excluded.confidence,geo_key=excluded.geo_key,
                 updated_at=excluded.updated_at';
         // Note: For MySQL replace ON CONFLICT with ON DUPLICATE KEY UPDATE and placeholders accordingly.
-        $stmt = $this->prepare($sql);
-        $arr = $r->toArray();
-        $stmt->execute([
+        $pdoStatement = $this->prepare($sql);
+        $arr = $indexRecord->toArray();
+        $pdoStatement->execute([
             ':digest' => $arr['digest'], ':line1' => $arr['line1'], ':line2' => $arr['line2'], ':city' => $arr['city'],
             ':region' => $arr['region'], ':postal' => $arr['postal'], ':country' => $arr['country'],
             ':lat' => $arr['lat'], ':lon' => $arr['lon'], ':display' => $arr['display'], ':provider' => $arr['provider'],
@@ -47,15 +41,12 @@ final class PdoRepository implements RepositoryInterface
         ]);
     }
 
-    /**
-     * @param string $digest
-     * @return \App\Projection\AddressIndex\IndexRecord|null
-     */
+    #[\Override]
     public function getByDigest(string $digest): ?IndexRecord
     {
-        $stmt = $this->prepare('SELECT * FROM address_index WHERE digest = :d LIMIT 1');
-        $stmt->execute([':d' => $digest]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $pdoStatement = $this->prepare('SELECT * FROM address_index WHERE digest = :d LIMIT 1');
+        $pdoStatement->execute([':d' => $digest]);
+        $row = $pdoStatement->fetch(PDO::FETCH_ASSOC);
         if (!is_array($row)) {
             return null;
         }
@@ -64,11 +55,9 @@ final class PdoRepository implements RepositoryInterface
     }
 
     /**
-     * @param string $prefix
-     * @param string|null $country
-     * @param int $limit
      * @return array<\App\Projection\AddressIndex\IndexRecord>
      */
+    #[\Override]
     public function search(string $prefix, ?string $country = null, int $limit = 20): array
     {
         $like = $prefix . '%';
@@ -95,7 +84,6 @@ final class PdoRepository implements RepositoryInterface
 
     /**
      * @param array<string, mixed> $row
-     * @return \App\Projection\AddressIndex\IndexRecord
      */
     private function hydrate(array $row): IndexRecord
     {

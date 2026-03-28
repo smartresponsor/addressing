@@ -39,86 +39,103 @@ final class AddressEvidenceSnapshotData implements AddressEvidenceSnapshotInterf
     ) {
     }
 
+    #[\Override]
     public function id(): string
     {
         return $this->id;
     }
 
+    #[\Override]
     public function addressId(): string
     {
         return $this->addressId;
     }
 
+    #[\Override]
     public function ownerId(): ?string
     {
         return $this->ownerId;
     }
 
+    #[\Override]
     public function vendorId(): ?string
     {
         return $this->vendorId;
     }
 
+    #[\Override]
     public function sourceSystem(): ?string
     {
         return $this->sourceSystem;
     }
 
+    #[\Override]
     public function sourceType(): ?string
     {
         return $this->sourceType;
     }
 
+    #[\Override]
     public function sourceReference(): ?string
     {
         return $this->sourceReference;
     }
 
+    #[\Override]
     public function validatedBy(): ?string
     {
         return $this->validatedBy;
     }
 
+    #[\Override]
     public function validatedAt(): ?string
     {
         return $this->validatedAt;
     }
 
+    #[\Override]
     public function normalizationVersion(): ?string
     {
         return $this->normalizationVersion;
     }
 
+    #[\Override]
     public function rawInputSnapshot(): ?array
     {
         return $this->rawInputSnapshot;
     }
 
+    #[\Override]
     public function normalizedSnapshot(): ?array
     {
         return $this->normalizedSnapshot;
     }
 
+    #[\Override]
     public function validationStatus(): string
     {
         return $this->validationStatus;
     }
 
+    #[\Override]
     public function validationScore(): ?int
     {
         return $this->validationScore;
     }
 
+    #[\Override]
     public function validationIssues(): ?array
     {
         return $this->validationIssues;
     }
 
+    #[\Override]
     public function providerDigest(): ?string
     {
         return $this->providerDigest;
     }
 
+    #[\Override]
     public function createdAt(): string
     {
         return $this->createdAt;

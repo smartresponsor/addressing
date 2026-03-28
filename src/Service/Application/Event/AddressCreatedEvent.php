@@ -6,26 +6,28 @@ namespace App\Service\Application\Event;
 
 use App\ServiceInterface\Application\Event\AddressEventInterface;
 
-final class AddressCreatedEvent implements AddressEventInterface
+final readonly class AddressCreatedEvent implements AddressEventInterface
 {
-    private \DateTimeImmutable $at;
+    private \DateTimeImmutable $dateTimeImmutable;
 
     public function __construct(
-        public readonly string $line1,
-        public readonly ?string $line2,
-        public readonly string $city,
-        public readonly string $region,
-        public readonly string $postal,
-        public readonly string $country,
+        public string $line1,
+        public ?string $line2,
+        public string $city,
+        public string $region,
+        public string $postal,
+        public string $country,
     ) {
-        $this->at = new \DateTimeImmutable('now');
+        $this->dateTimeImmutable = new \DateTimeImmutable('now');
     }
 
+    #[\Override]
     public function occurredAt(): \DateTimeImmutable
     {
-        return $this->at;
+        return $this->dateTimeImmutable;
     }
 
+    #[\Override]
     public function name(): string
     {
         return 'address.created';

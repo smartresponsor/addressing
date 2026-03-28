@@ -19,7 +19,7 @@ final readonly class AddressValidated implements \JsonSerializable
         public ?string $dedupeKey,
         /** @var array<string, mixed>|null */
         public ?array $raw = null,
-        public ?AddressValidationVerdict $verdict = null,
+        public ?AddressValidationVerdict $addressValidationVerdict = null,
         public ?string $sourceSystem = null,
         public ?string $sourceType = null,
         public ?string $sourceReference = null,
@@ -150,7 +150,7 @@ final readonly class AddressValidated implements \JsonSerializable
     /** @return array<string, mixed> */
     public function toDbArray(): array
     {
-        $verdictArr = $this->verdict?->jsonSerialize();
+        $verdictArr = $this->addressValidationVerdict?->jsonSerialize();
 
         return [
             'line1_norm' => $this->line1Norm,
@@ -165,9 +165,9 @@ final readonly class AddressValidated implements \JsonSerializable
             'dedupe_key' => $this->dedupeKey,
             'validation_raw' => $this->encodeJsonNullable($this->raw),
             'validation_verdict' => $this->encodeJsonNullable($verdictArr),
-            'validation_deliverable' => $this->verdict?->deliverable,
-            'validation_granularity' => $this->verdict?->granularity,
-            'validation_quality' => $this->verdict?->quality,
+            'validation_deliverable' => $this->addressValidationVerdict?->deliverable,
+            'validation_granularity' => $this->addressValidationVerdict?->granularity,
+            'validation_quality' => $this->addressValidationVerdict?->quality,
             'source_system' => $this->sourceSystem,
             'source_type' => $this->sourceType,
             'source_reference' => $this->sourceReference,
@@ -189,6 +189,7 @@ final readonly class AddressValidated implements \JsonSerializable
     }
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function jsonSerialize(): array
     {
         return [
@@ -203,7 +204,7 @@ final readonly class AddressValidated implements \JsonSerializable
             'validatedAt' => $this->validatedAt?->format(DATE_ATOM),
             'dedupeKey' => $this->dedupeKey,
             'raw' => $this->raw,
-            'verdict' => $this->verdict?->jsonSerialize(),
+            'verdict' => $this->addressValidationVerdict?->jsonSerialize(),
             'sourceSystem' => $this->sourceSystem,
             'sourceType' => $this->sourceType,
             'sourceReference' => $this->sourceReference,

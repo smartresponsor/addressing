@@ -8,5 +8,5 @@ use App\Contract\Message\AddressValidated;
 
 interface AddressValidatedApplierServiceInterface
 {
-    public function apply(string $id, AddressValidated $validated, ?string $ownerId = null, ?string $vendorId = null): void;
+    public function apply(string $id, AddressValidated $addressValidated, ?string $ownerId = null, ?string $vendorId = null): void;
 }

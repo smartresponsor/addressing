@@ -9,20 +9,20 @@ use App\EntityInterface\Record\AddressEvidenceSnapshotInterface;
 use App\EntityInterface\Record\AddressInterface;
 use App\RepositoryInterface\Persistence\AddressRepositoryInterface;
 
-final class AddressService
+final readonly class AddressService
 {
-    public function __construct(private readonly AddressRepositoryInterface $repo)
+    public function __construct(private AddressRepositoryInterface $addressRepository)
     {
     }
 
     public function create(AddressInterface $address): void
     {
-        $this->repo->create($address);
+        $this->addressRepository->create($address);
     }
 
     public function update(AddressInterface $address): void
     {
-        $this->repo->update($address);
+        $this->addressRepository->update($address);
     }
 
     /**
@@ -39,23 +39,23 @@ final class AddressService
         ?string $cursor,
         array $filters = [],
     ): array {
-        return $this->repo->findPage($ownerId, $vendorId, $countryCode, $q, $limit, $cursor, $filters);
+        return $this->addressRepository->findPage($ownerId, $vendorId, $countryCode, $q, $limit, $cursor, $filters);
     }
 
     /** @param array<string, mixed> $patch */
     public function patchOperational(string $id, ?string $ownerId, ?string $vendorId, array $patch): bool
     {
-        return $this->repo->patchOperational($id, $ownerId, $vendorId, $patch);
+        return $this->addressRepository->patchOperational($id, $ownerId, $vendorId, $patch);
     }
 
     public function appendEvidenceSnapshot(AddressInterface $address): ?AddressEvidenceSnapshotInterface
     {
-        return $this->repo->appendEvidenceSnapshot($address);
+        return $this->addressRepository->appendEvidenceSnapshot($address);
     }
 
     public function getLatestEvidenceSnapshot(string $addressId, ?string $ownerId, ?string $vendorId): ?AddressEvidenceSnapshotInterface
     {
-        return $this->repo->getLatestEvidenceSnapshot($addressId, $ownerId, $vendorId);
+        return $this->addressRepository->getLatestEvidenceSnapshot($addressId, $ownerId, $vendorId);
     }
 
     /**
@@ -63,7 +63,7 @@ final class AddressService
      */
     public function evidenceHistory(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array
     {
-        return $this->repo->findEvidenceHistoryPage($addressId, $ownerId, $vendorId, $limit, $cursor);
+        return $this->addressRepository->findEvidenceHistoryPage($addressId, $ownerId, $vendorId, $limit, $cursor);
     }
 
     /**
@@ -83,7 +83,7 @@ final class AddressService
         $items = [];
 
         do {
-            $page = $this->repo->findEvidenceHistoryPage($addressId, $ownerId, $vendorId, 200, $cursor);
+            $page = $this->addressRepository->findEvidenceHistoryPage($addressId, $ownerId, $vendorId, 200, $cursor);
             foreach ($page['items'] as $item) {
                 $items[] = $item;
             }
@@ -140,12 +140,12 @@ final class AddressService
             return null;
         }
 
-        return $this->repo->findByDedupeKey($dedupeKey);
+        return $this->addressRepository->findByDedupeKey($dedupeKey);
     }
 
     public function get(string $id, ?string $ownerId, ?string $vendorId): ?AddressInterface
     {
-        return $this->repo->get($id, $ownerId, $vendorId);
+        return $this->addressRepository->get($id, $ownerId, $vendorId);
     }
 
     /**
@@ -165,7 +165,7 @@ final class AddressService
      */
     public function governanceClusterSummary(string $addressId, ?string $ownerId, ?string $vendorId): array
     {
-        return $this->repo->summarizeGovernanceCluster($addressId, $ownerId, $vendorId);
+        return $this->addressRepository->summarizeGovernanceCluster($addressId, $ownerId, $vendorId);
     }
 
     /**
@@ -198,7 +198,7 @@ final class AddressService
          *   staleNormalizationVersion:int
          * } $summary
          */
-        $summary = $this->repo->summarizeOperationalQueues($ownerId, $vendorId, $countryCode, $q, $filters);
+        $summary = $this->addressRepository->summarizeOperationalQueues($ownerId, $vendorId, $countryCode, $q, $filters);
 
         return $summary;
     }
@@ -226,7 +226,7 @@ final class AddressService
         ?string $q = null,
         array $filters = [],
     ): array {
-        return $this->repo->summarizeCountryPortfolio($ownerId, $vendorId, $q, $filters);
+        return $this->addressRepository->summarizeCountryPortfolio($ownerId, $vendorId, $q, $filters);
     }
 
     /**
@@ -254,7 +254,7 @@ final class AddressService
         ?string $q,
         array $filters = [],
     ): array {
-        return $this->repo->summarizeSourcePortfolio($ownerId, $vendorId, $countryCode, $q, $filters);
+        return $this->addressRepository->summarizeSourcePortfolio($ownerId, $vendorId, $countryCode, $q, $filters);
     }
 
     /**
@@ -282,7 +282,7 @@ final class AddressService
         ?string $q,
         array $filters = [],
     ): array {
-        return $this->repo->summarizeValidationPortfolio($ownerId, $vendorId, $countryCode, $q, $filters);
+        return $this->addressRepository->summarizeValidationPortfolio($ownerId, $vendorId, $countryCode, $q, $filters);
     }
 
     /**
@@ -311,6 +311,6 @@ final class AddressService
         ?string $q,
         array $filters = [],
     ): array {
-        return $this->repo->summarizeNormalizationPortfolio($ownerId, $vendorId, $countryCode, $q, $filters);
+        return $this->addressRepository->summarizeNormalizationPortfolio($ownerId, $vendorId, $countryCode, $q, $filters);
     }
 }

@@ -13,13 +13,6 @@ namespace App\Integration\Geocode;
  */
 final readonly class GeocodeResult
 {
-    /**
-     * @param float|null $lat
-     * @param float|null $lon
-     * @param string|null $displayName
-     * @param string|null $provider
-     * @param float|null $confidence
-     */
     public function __construct(
         public ?float  $lat,
         public ?float  $lon,

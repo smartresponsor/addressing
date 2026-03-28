@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Util\Log;
 
-final class StructuredLogger
+final readonly class StructuredLogger
 {
     private string $path;
 
@@ -18,7 +18,7 @@ final class StructuredLogger
      */
     public function log(array $event): void
     {
-        $event['ts'] = $event['ts'] ?? (new \DateTimeImmutable('now'))->format(DATE_ATOM);
+        $event['ts'] ??= (new \DateTimeImmutable('now'))->format(DATE_ATOM);
         $line = json_encode($event, JSON_UNESCAPED_UNICODE);
         if (false === $line) {
             $line = json_encode(

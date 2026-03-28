@@ -17,6 +17,7 @@ final class Kernel extends BaseKernel implements KernelInterface
 {
     use MicroKernelTrait;
 
+    #[\Override]
     public function registerBundles(): iterable
     {
         yield new FrameworkBundle();
@@ -25,11 +26,16 @@ final class Kernel extends BaseKernel implements KernelInterface
 
     protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader): void
     {
+        if (!$container->hasParameter('kernel.project_dir')) {
+            $container->setParameter('kernel.project_dir', $this->getProjectDir());
+        }
+
         $configDir = $this->getProjectDir().'/config';
         $loader->load($configDir.'/packages/*.yaml', 'glob');
         $loader->load($configDir.'/addressing_services.yaml');
     }
 
+    #[\Override]
     public function getCacheDir(): string
     {
         $baseDir = $this->runtimeVarDir();
@@ -37,6 +43,7 @@ final class Kernel extends BaseKernel implements KernelInterface
         return $baseDir.'/cache/'.$this->environment;
     }
 
+    #[\Override]
     public function getLogDir(): string
     {
         return $this->runtimeVarDir().'/log';

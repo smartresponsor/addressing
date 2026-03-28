@@ -13,16 +13,8 @@ namespace App\Projection\AddressIndex;
  */
 interface RepositoryInterface
 {
-    /**
-     * @param \App\Projection\AddressIndex\IndexRecord $r
-     * @return void
-     */
-    public function upsert(IndexRecord $r): void;
+    public function upsert(IndexRecord $indexRecord): void;
 
-    /**
-     * @param string $digest
-     * @return \App\Projection\AddressIndex\IndexRecord|null
-     */
     public function getByDigest(string $digest): ?IndexRecord;
 
     /** @return IndexRecord[] */

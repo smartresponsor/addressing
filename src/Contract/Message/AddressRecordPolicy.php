@@ -14,19 +14,19 @@ namespace App\Contract\Message;
 final class AddressRecordPolicy
 {
     /** @var list<string> */
-    public const VALIDATION_STATUSES = ['unknown', 'pending', 'normalized', 'validated', 'rejected', 'uncertain', 'overridden'];
+    public const array VALIDATION_STATUSES = ['unknown', 'pending', 'normalized', 'validated', 'rejected', 'uncertain', 'overridden'];
 
     /** @var list<string> */
-    public const SOURCE_TYPES = ['manual', 'import', 'partner', 'validator', 'override', 'migration'];
+    public const array SOURCE_TYPES = ['manual', 'import', 'partner', 'validator', 'override', 'migration'];
 
     /** @var list<string> */
-    public const GOVERNANCE_STATUSES = ['canonical', 'duplicate', 'superseded', 'alias', 'conflict'];
+    public const array GOVERNANCE_STATUSES = ['canonical', 'duplicate', 'superseded', 'alias', 'conflict'];
 
     /** @var list<string> */
-    public const REVALIDATION_POLICIES = ['manual', 'on-change', 'daily', 'weekly', 'monthly', 'quarterly', 'semiannual', 'annual'];
+    public const array REVALIDATION_POLICIES = ['manual', 'on-change', 'daily', 'weekly', 'monthly', 'quarterly', 'semiannual', 'annual'];
 
     /** @var list<string> */
-    public const LAST_VALIDATION_STATUSES = ['normalized', 'validated', 'rejected', 'uncertain', 'overridden'];
+    public const array LAST_VALIDATION_STATUSES = ['normalized', 'validated', 'rejected', 'uncertain', 'overridden'];
 
     public static function normalizeValidationStatus(?string $status, string $default = 'unknown'): string
     {

@@ -19,6 +19,7 @@ final readonly class AddressRepository implements AddressRepositoryInterface
     {
     }
 
+    #[\Override]
     public function create(AddressInterface $address): void
     {
         $this->pdo->beginTransaction();
@@ -77,6 +78,7 @@ SQL;
         }
     }
 
+    #[\Override]
     public function update(AddressInterface $address): void
     {
         $this->ensureTenantScope($address->ownerId(), $address->vendorId());
@@ -133,14 +135,15 @@ SQL;
         }
     }
 
+    #[\Override]
     public function appendEvidenceSnapshot(AddressInterface $address): ?AddressEvidenceSnapshotInterface
     {
         if (!$this->hasEvidence($address)) {
             return null;
         }
 
-        $snapshot = $this->buildEvidenceSnapshot($address);
-        $stmt = $this->prepare(<<<'SQL'
+        $addressEvidenceSnapshot = $this->buildEvidenceSnapshot($address);
+        $pdoStatement = $this->prepare(<<<'SQL'
 INSERT INTO address_evidence_snapshot
     (id, address_id, owner_id, vendor_id, source_system, source_type, source_reference, validated_by, validated_at,
      normalization_version, raw_input_snapshot, normalized_snapshot, validation_status, validation_score, validation_issues, provider_digest, created_at)
@@ -149,22 +152,23 @@ VALUES
      :normalization_version, :raw_input_snapshot, :normalized_snapshot, :validation_status, :validation_score, :validation_issues, :provider_digest, :created_at)
 SQL
         );
-        $this->bindEvidenceSnapshot($stmt, $snapshot);
-        $stmt->execute();
+        $this->bindEvidenceSnapshot($pdoStatement, $addressEvidenceSnapshot);
+        $pdoStatement->execute();
 
-        return $snapshot;
+        return $addressEvidenceSnapshot;
     }
 
+    #[\Override]
     public function getLatestEvidenceSnapshot(string $addressId, ?string $ownerId, ?string $vendorId): ?AddressEvidenceSnapshotInterface
     {
         $this->ensureTenantScope($ownerId, $vendorId);
         $params = array_merge([':address_id' => $addressId], $this->tenantParams($ownerId, $vendorId));
-        $stmt = $this->prepare(
+        $pdoStatement = $this->prepare(
             'SELECT * FROM address_evidence_snapshot WHERE address_id = :address_id AND '.$this->tenantWhereClause($ownerId, $vendorId)
             .' ORDER BY (validated_at IS NOT NULL) DESC, COALESCE(validated_at, created_at) DESC, created_at DESC, id DESC LIMIT 1'
         );
-        $stmt->execute($params);
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $pdoStatement->execute($params);
+        $row = $pdoStatement->fetch(\PDO::FETCH_ASSOC);
 
         return is_array($row) ? $this->mapEvidenceSnapshot($row) : null;
     }
@@ -172,6 +176,7 @@ SQL
     /**
      * @return array{items: list<AddressEvidenceSnapshotInterface>, nextCursor: ?string}
      */
+    #[\Override]
     public function findEvidenceHistoryPage(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -188,13 +193,13 @@ SQL
 
         $sql = 'SELECT * FROM address_evidence_snapshot WHERE '.implode(' AND ', $where)
             .' ORDER BY (validated_at IS NOT NULL) DESC, COALESCE(validated_at, created_at) DESC, created_at DESC, id DESC LIMIT :limit';
-        $stmt = $this->prepare($sql);
+        $pdoStatement = $this->prepare($sql);
         foreach ($params as $k => $v) {
-            $stmt->bindValue($k, $v);
+            $pdoStatement->bindValue($k, $v);
         }
-        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
-        $stmt->execute();
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $pdoStatement->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $pdoStatement->execute();
+        $rows = $pdoStatement->fetchAll(\PDO::FETCH_ASSOC);
 
         $safeRows = [];
         if (is_array($rows)) {
@@ -210,24 +215,23 @@ SQL
         $nextCursor = null;
         if (count($safeRows) === $limit && [] !== $safeRows) {
             $last = end($safeRows);
-            if (is_array($last)) {
-                $nextCursor = $this->encodeEvidenceCursor((string) ($last['created_at'] ?? ''), (string) ($last['id'] ?? ''));
-            }
+            $nextCursor = $this->encodeEvidenceCursor((string) ($last['created_at'] ?? ''), (string) ($last['id'] ?? ''));
         }
 
         return ['items' => $items, 'nextCursor' => $nextCursor];
     }
 
+    #[\Override]
     public function get(string $id, ?string $ownerId, ?string $vendorId): ?AddressInterface
     {
         $this->ensureTenantScope($ownerId, $vendorId);
         $params = array_merge([':id' => $id], $this->tenantParams($ownerId, $vendorId));
-        $stmt = $this->prepare(
+        $pdoStatement = $this->prepare(
             'SELECT * FROM address_entity WHERE id=:id AND deleted_at IS NULL AND '
             .$this->tenantWhereClause($ownerId, $vendorId)
         );
-        $stmt->execute($params);
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $pdoStatement->execute($params);
+        $row = $pdoStatement->fetch(\PDO::FETCH_ASSOC);
 
         if (!is_array($row)) {
             return null;
@@ -237,6 +241,7 @@ SQL
         return $this->map($row);
     }
 
+    #[\Override]
     public function delete(string $id, ?string $ownerId, ?string $vendorId): void
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -267,6 +272,7 @@ SQL
         }
     }
 
+    #[\Override]
     public function findByDedupeKey(string $dedupeKey): ?AddressInterface
     {
         $dedupeKey = trim($dedupeKey);
@@ -274,9 +280,9 @@ SQL
             return null;
         }
 
-        $stmt = $this->prepare('SELECT * FROM address_entity WHERE dedupe_key = :dedupe AND deleted_at IS NULL');
-        $stmt->execute([':dedupe' => $dedupeKey]);
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $pdoStatement = $this->prepare('SELECT * FROM address_entity WHERE dedupe_key = :dedupe AND deleted_at IS NULL');
+        $pdoStatement->execute([':dedupe' => $dedupeKey]);
+        $row = $pdoStatement->fetch(\PDO::FETCH_ASSOC);
 
         if (!is_array($row)) {
             return null;
@@ -294,11 +300,12 @@ SQL
     /**
      * @param array<string, mixed> $patch
      */
+    #[\Override]
     public function patchOperational(string $id, ?string $ownerId, ?string $vendorId, array $patch): bool
     {
         $this->ensureTenantScope($ownerId, $vendorId);
         $current = $this->get($id, $ownerId, $vendorId);
-        if (null === $current) {
+        if (!$current instanceof \App\EntityInterface\Record\AddressInterface) {
             return false;
         }
 
@@ -372,6 +379,7 @@ SQL
      *
      * @return array{items: AddressInterface[], nextCursor: ?string}
      */
+    #[\Override]
     public function findPage(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, int $limit, ?string $cursor, array $filters = []): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -401,11 +409,9 @@ SQL
         }
 
         $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($this->stringFilter($filters, 'governanceStatus'));
-        if ('canonical' !== $governanceStatus || null !== $this->stringFilter($filters, 'governanceStatus')) {
-            if (null !== $this->stringFilter($filters, 'governanceStatus')) {
-                $where[] = 'governance_status = :governance_status';
-                $params[':governance_status'] = $governanceStatus;
-            }
+        if (('canonical' !== $governanceStatus || null !== $this->stringFilter($filters, 'governanceStatus')) && null !== $this->stringFilter($filters, 'governanceStatus')) {
+            $where[] = 'governance_status = :governance_status';
+            $params[':governance_status'] = $governanceStatus;
         }
 
         $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy($this->stringFilter($filters, 'revalidationPolicy'));
@@ -462,14 +468,14 @@ SQL
         }
 
         $sql = 'SELECT * FROM address_entity WHERE '.implode(' AND ', $where).' ORDER BY id ASC LIMIT :limit';
-        $stmt = $this->prepare($sql);
+        $pdoStatement = $this->prepare($sql);
         foreach ($params as $k => $v) {
-            $stmt->bindValue($k, $v);
+            $pdoStatement->bindValue($k, $v);
         }
-        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
-        $stmt->execute();
+        $pdoStatement->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $pdoStatement->execute();
 
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $rows = $pdoStatement->fetchAll(\PDO::FETCH_ASSOC);
         /** @var array<int, array<string, mixed>> $safeRows */
         $safeRows = [];
         if (is_array($rows)) {
@@ -485,7 +491,7 @@ SQL
         $nextCursor = null;
         if (count($safeRows) === $limit && [] !== $safeRows) {
             $last = end($safeRows);
-            if (is_array($last) && isset($last['id'])) {
+            if (isset($last['id'])) {
                 $nextCursor = (string) $last['id'];
             }
         }
@@ -508,11 +514,12 @@ SQL
      *   relatedAddressIds:list<string>
      * }
      */
+    #[\Override]
     public function summarizeGovernanceCluster(string $addressId, ?string $ownerId, ?string $vendorId): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
         $current = $this->get($addressId, $ownerId, $vendorId);
-        if (null === $current) {
+        if (!$current instanceof \App\EntityInterface\Record\AddressInterface) {
             return [
                 'addressId' => $addressId,
                 'governanceStatus' => null,
@@ -537,12 +544,12 @@ SQL
             .'SUM(CASE WHEN alias_of_id = :address_id THEN 1 ELSE 0 END) AS alias_children, '
             .'SUM(CASE WHEN conflict_with_id = :address_id THEN 1 ELSE 0 END) AS conflict_peers '
             .'FROM address_entity WHERE deleted_at IS NULL AND '.$tenantWhere;
-        $stmt = $this->prepare($sql);
+        $pdoStatement = $this->prepare($sql);
         foreach ($params as $k => $v) {
-            $stmt->bindValue($k, $v);
+            $pdoStatement->bindValue($k, $v);
         }
-        $stmt->execute();
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $pdoStatement->execute();
+        $row = $pdoStatement->fetch(\PDO::FETCH_ASSOC);
         /** @var array<string, mixed> $summaryRow */
         $summaryRow = is_array($row) ? $row : [];
 
@@ -600,6 +607,7 @@ SQL
      *   staleNormalizationVersion:int
      * }
      */
+    #[\Override]
     public function summarizeOperationalQueues(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -670,12 +678,12 @@ SQL
             .'FROM address_entity WHERE '.$baseWhere;
 
         $params[':summary_due_before'] = $now;
-        $stmt = $this->prepare($sql);
+        $pdoStatement = $this->prepare($sql);
         foreach ($params as $k => $v) {
-            $stmt->bindValue($k, $v);
+            $pdoStatement->bindValue($k, $v);
         }
-        $stmt->execute();
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $pdoStatement->execute();
+        $row = $pdoStatement->fetch(\PDO::FETCH_ASSOC);
         if (!is_array($row)) {
             return [
                 'total' => 0,
@@ -716,6 +724,7 @@ SQL
      *   uncertainValidation:int
      * }>
      */
+    #[\Override]
     public function summarizeCountryPortfolio(?string $ownerId, ?string $vendorId, ?string $q, array $filters = []): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -772,12 +781,12 @@ SQL
             .'FROM address_entity WHERE '.implode(' AND ', $where)
             .' GROUP BY country_code ORDER BY total DESC, country_code ASC';
 
-        $stmt = $this->prepare($sql);
+        $pdoStatement = $this->prepare($sql);
         foreach ($params as $k => $v) {
-            $stmt->bindValue($k, $v);
+            $pdoStatement->bindValue($k, $v);
         }
-        $stmt->execute();
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $pdoStatement->execute();
+        $rows = $pdoStatement->fetchAll(\PDO::FETCH_ASSOC);
         if (!is_array($rows)) {
             return [];
         }
@@ -815,6 +824,7 @@ SQL
      *   uncertainValidation:int
      * }>
      */
+    #[\Override]
     public function summarizeSourcePortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -882,12 +892,12 @@ SQL
             .' GROUP BY COALESCE(source_system, ""), COALESCE(source_type, "")'
             .' ORDER BY total DESC, source_system ASC, source_type ASC';
 
-        $stmt = $this->prepare($sql);
+        $pdoStatement = $this->prepare($sql);
         foreach ($params as $k => $v) {
-            $stmt->bindValue($k, $v);
+            $pdoStatement->bindValue($k, $v);
         }
-        $stmt->execute();
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $pdoStatement->execute();
+        $rows = $pdoStatement->fetchAll(\PDO::FETCH_ASSOC);
         if (!is_array($rows)) {
             return [];
         }
@@ -926,6 +936,7 @@ SQL
      *   uncertainValidation:int
      * }>
      */
+    #[\Override]
     public function summarizeValidationPortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -1008,12 +1019,12 @@ SQL
             .' GROUP BY '.$providerExpr.', '.$statusExpr
             .' ORDER BY total DESC, validation_provider ASC, validation_status ASC';
 
-        $stmt = $this->prepare($sql);
+        $pdoStatement = $this->prepare($sql);
         foreach ($params as $k => $v) {
-            $stmt->bindValue($k, $v);
+            $pdoStatement->bindValue($k, $v);
         }
-        $stmt->execute();
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $pdoStatement->execute();
+        $rows = $pdoStatement->fetchAll(\PDO::FETCH_ASSOC);
         if (!is_array($rows)) {
             return [];
         }
@@ -1034,72 +1045,72 @@ SQL
         ], $rows);
     }
 
-    private function bindForCreate(\PDOStatement $stmt, AddressInterface $a): void
+    private function bindForCreate(\PDOStatement $pdoStatement, AddressInterface $address): void
     {
-        $normalized = $this->normalizedFields($a);
-        $this->bindCommonValues($stmt, $a, $normalized);
-        $stmt->bindValue(':created_at', $a->createdAt());
-        $stmt->bindValue(':updated_at', $a->updatedAt());
-        $stmt->bindValue(':deleted_at', $a->deletedAt());
+        $normalized = $this->normalizedFields($address);
+        $this->bindCommonValues($pdoStatement, $address, $normalized);
+        $pdoStatement->bindValue(':created_at', $address->createdAt());
+        $pdoStatement->bindValue(':updated_at', $address->updatedAt());
+        $pdoStatement->bindValue(':deleted_at', $address->deletedAt());
     }
 
-    private function bindForUpdate(\PDOStatement $stmt, AddressInterface $a): void
+    private function bindForUpdate(\PDOStatement $pdoStatement, AddressInterface $address): void
     {
-        $normalized = $this->normalizedFields($a);
-        $this->bindCommonValues($stmt, $a, $normalized);
-        $stmt->bindValue(':updated_at', $a->updatedAt());
-        $stmt->bindValue(':deleted_at', $a->deletedAt());
+        $normalized = $this->normalizedFields($address);
+        $this->bindCommonValues($pdoStatement, $address, $normalized);
+        $pdoStatement->bindValue(':updated_at', $address->updatedAt());
+        $pdoStatement->bindValue(':deleted_at', $address->deletedAt());
     }
 
     /**
      * @param array{line1_norm: ?string, city_norm: ?string, region_norm: ?string, postal_code_norm: ?string} $normalized
      */
-    private function bindCommonValues(\PDOStatement $stmt, AddressInterface $a, array $normalized): void
+    private function bindCommonValues(\PDOStatement $pdoStatement, AddressInterface $address, array $normalized): void
     {
-        $stmt->bindValue(':id', $a->id());
-        $stmt->bindValue(':owner_id', $a->ownerId());
-        $stmt->bindValue(':vendor_id', $a->vendorId());
-        $stmt->bindValue(':line1', $a->line1());
-        $stmt->bindValue(':line2', $a->line2());
-        $stmt->bindValue(':city', $a->city());
-        $stmt->bindValue(':region', $a->region());
-        $stmt->bindValue(':postal_code', $a->postalCode());
-        $stmt->bindValue(':country_code', $a->countryCode());
-        $stmt->bindValue(':line1_norm', $normalized['line1_norm']);
-        $stmt->bindValue(':city_norm', $normalized['city_norm']);
-        $stmt->bindValue(':region_norm', $normalized['region_norm']);
-        $stmt->bindValue(':postal_code_norm', $normalized['postal_code_norm']);
-        $stmt->bindValue(':latitude', $a->latitude());
-        $stmt->bindValue(':longitude', $a->longitude());
-        $stmt->bindValue(':geohash', $a->geohash());
-        $stmt->bindValue(':validation_status', AddressRecordPolicy::normalizeValidationStatus($a->validationStatus()));
-        $stmt->bindValue(':validation_provider', $a->validationProvider());
-        $stmt->bindValue(':validated_at', $a->validatedAt());
-        $stmt->bindValue(':dedupe_key', $this->effectiveDedupeKey($a, $normalized));
-        $stmt->bindValue(':validation_fingerprint', $a->validationFingerprint());
-        $stmt->bindValue(':validation_raw', $this->encodeJsonNullable($a->validationRaw()));
-        $stmt->bindValue(':validation_verdict', $this->encodeJsonNullable($a->validationVerdict()));
-        $deliverable = $a->validationDeliverable();
-        $stmt->bindValue(':validation_deliverable', null === $deliverable ? null : (int) $deliverable);
-        $stmt->bindValue(':validation_granularity', $a->validationGranularity());
-        $stmt->bindValue(':validation_quality', $a->validationQuality());
-        $stmt->bindValue(':source_system', $a->sourceSystem());
-        $stmt->bindValue(':source_type', AddressRecordPolicy::normalizeSourceType($a->sourceType()));
-        $stmt->bindValue(':source_reference', $a->sourceReference());
-        $stmt->bindValue(':normalization_version', $a->normalizationVersion());
-        $stmt->bindValue(':raw_input_snapshot', $this->encodeJsonNullable($a->rawInputSnapshot()));
-        $stmt->bindValue(':normalized_snapshot', $this->encodeJsonNullable($a->normalizedSnapshot()));
-        $stmt->bindValue(':provider_digest', $a->providerDigest());
-        $stmt->bindValue(':governance_status', AddressRecordPolicy::normalizeGovernanceStatus($a->governanceStatus()));
-        $stmt->bindValue(':duplicate_of_id', $this->sanitizeGovernanceLink($a->duplicateOfId(), $a->id()));
-        $stmt->bindValue(':superseded_by_id', $this->sanitizeGovernanceLink($a->supersededById(), $a->id()));
-        $stmt->bindValue(':alias_of_id', $this->sanitizeGovernanceLink($a->aliasOfId(), $a->id()));
-        $stmt->bindValue(':conflict_with_id', $this->sanitizeGovernanceLink($a->conflictWithId(), $a->id()));
-        $stmt->bindValue(':revalidation_due_at', $a->revalidationDueAt());
-        $stmt->bindValue(':revalidation_policy', AddressRecordPolicy::normalizeRevalidationPolicy($a->revalidationPolicy()));
-        $stmt->bindValue(':last_validation_provider', $a->lastValidationProvider());
-        $stmt->bindValue(':last_validation_status', AddressRecordPolicy::normalizeLastValidationStatus($a->lastValidationStatus()));
-        $stmt->bindValue(':last_validation_score', $a->lastValidationScore());
+        $pdoStatement->bindValue(':id', $address->id());
+        $pdoStatement->bindValue(':owner_id', $address->ownerId());
+        $pdoStatement->bindValue(':vendor_id', $address->vendorId());
+        $pdoStatement->bindValue(':line1', $address->line1());
+        $pdoStatement->bindValue(':line2', $address->line2());
+        $pdoStatement->bindValue(':city', $address->city());
+        $pdoStatement->bindValue(':region', $address->region());
+        $pdoStatement->bindValue(':postal_code', $address->postalCode());
+        $pdoStatement->bindValue(':country_code', $address->countryCode());
+        $pdoStatement->bindValue(':line1_norm', $normalized['line1_norm']);
+        $pdoStatement->bindValue(':city_norm', $normalized['city_norm']);
+        $pdoStatement->bindValue(':region_norm', $normalized['region_norm']);
+        $pdoStatement->bindValue(':postal_code_norm', $normalized['postal_code_norm']);
+        $pdoStatement->bindValue(':latitude', $address->latitude());
+        $pdoStatement->bindValue(':longitude', $address->longitude());
+        $pdoStatement->bindValue(':geohash', $address->geohash());
+        $pdoStatement->bindValue(':validation_status', AddressRecordPolicy::normalizeValidationStatus($address->validationStatus()));
+        $pdoStatement->bindValue(':validation_provider', $address->validationProvider());
+        $pdoStatement->bindValue(':validated_at', $address->validatedAt());
+        $pdoStatement->bindValue(':dedupe_key', $this->effectiveDedupeKey($address, $normalized));
+        $pdoStatement->bindValue(':validation_fingerprint', $address->validationFingerprint());
+        $pdoStatement->bindValue(':validation_raw', $this->encodeJsonNullable($address->validationRaw()));
+        $pdoStatement->bindValue(':validation_verdict', $this->encodeJsonNullable($address->validationVerdict()));
+        $deliverable = $address->validationDeliverable();
+        $pdoStatement->bindValue(':validation_deliverable', null === $deliverable ? null : (int) $deliverable);
+        $pdoStatement->bindValue(':validation_granularity', $address->validationGranularity());
+        $pdoStatement->bindValue(':validation_quality', $address->validationQuality());
+        $pdoStatement->bindValue(':source_system', $address->sourceSystem());
+        $pdoStatement->bindValue(':source_type', AddressRecordPolicy::normalizeSourceType($address->sourceType()));
+        $pdoStatement->bindValue(':source_reference', $address->sourceReference());
+        $pdoStatement->bindValue(':normalization_version', $address->normalizationVersion());
+        $pdoStatement->bindValue(':raw_input_snapshot', $this->encodeJsonNullable($address->rawInputSnapshot()));
+        $pdoStatement->bindValue(':normalized_snapshot', $this->encodeJsonNullable($address->normalizedSnapshot()));
+        $pdoStatement->bindValue(':provider_digest', $address->providerDigest());
+        $pdoStatement->bindValue(':governance_status', AddressRecordPolicy::normalizeGovernanceStatus($address->governanceStatus()));
+        $pdoStatement->bindValue(':duplicate_of_id', $this->sanitizeGovernanceLink($address->duplicateOfId(), $address->id()));
+        $pdoStatement->bindValue(':superseded_by_id', $this->sanitizeGovernanceLink($address->supersededById(), $address->id()));
+        $pdoStatement->bindValue(':alias_of_id', $this->sanitizeGovernanceLink($address->aliasOfId(), $address->id()));
+        $pdoStatement->bindValue(':conflict_with_id', $this->sanitizeGovernanceLink($address->conflictWithId(), $address->id()));
+        $pdoStatement->bindValue(':revalidation_due_at', $address->revalidationDueAt());
+        $pdoStatement->bindValue(':revalidation_policy', AddressRecordPolicy::normalizeRevalidationPolicy($address->revalidationPolicy()));
+        $pdoStatement->bindValue(':last_validation_provider', $address->lastValidationProvider());
+        $pdoStatement->bindValue(':last_validation_status', AddressRecordPolicy::normalizeLastValidationStatus($address->lastValidationStatus()));
+        $pdoStatement->bindValue(':last_validation_score', $address->lastValidationScore());
     }
 
     /**
@@ -1167,11 +1178,19 @@ SQL
 
     private function hasEvidence(AddressInterface $address): bool
     {
-        return null !== $address->rawInputSnapshot()
-            || null !== $address->normalizedSnapshot()
-            || null !== $address->providerDigest()
-            || null !== $address->validationRaw()
-            || null !== $address->validationVerdict();
+        if (null !== $address->rawInputSnapshot()) {
+            return true;
+        }
+        if (null !== $address->normalizedSnapshot()) {
+            return true;
+        }
+        if (null !== $address->providerDigest()) {
+            return true;
+        }
+        if (null !== $address->validationRaw()) {
+            return true;
+        }
+        return null !== $address->validationVerdict();
     }
 
     private function buildEvidenceSnapshot(AddressInterface $address): AddressEvidenceSnapshotInterface
@@ -1205,25 +1224,25 @@ SQL
         );
     }
 
-    private function bindEvidenceSnapshot(\PDOStatement $stmt, AddressEvidenceSnapshotInterface $snapshot): void
+    private function bindEvidenceSnapshot(\PDOStatement $pdoStatement, AddressEvidenceSnapshotInterface $addressEvidenceSnapshot): void
     {
-        $stmt->bindValue(':id', $snapshot->id());
-        $stmt->bindValue(':address_id', $snapshot->addressId());
-        $stmt->bindValue(':owner_id', $snapshot->ownerId());
-        $stmt->bindValue(':vendor_id', $snapshot->vendorId());
-        $stmt->bindValue(':source_system', $snapshot->sourceSystem());
-        $stmt->bindValue(':source_type', AddressRecordPolicy::normalizeSourceType($snapshot->sourceType()));
-        $stmt->bindValue(':source_reference', $snapshot->sourceReference());
-        $stmt->bindValue(':validated_by', $snapshot->validatedBy());
-        $stmt->bindValue(':validated_at', $snapshot->validatedAt());
-        $stmt->bindValue(':normalization_version', $snapshot->normalizationVersion());
-        $stmt->bindValue(':raw_input_snapshot', $this->encodeJsonNullable($snapshot->rawInputSnapshot()));
-        $stmt->bindValue(':normalized_snapshot', $this->encodeJsonNullable($snapshot->normalizedSnapshot()));
-        $stmt->bindValue(':validation_status', AddressRecordPolicy::normalizeValidationStatus($snapshot->validationStatus()));
-        $stmt->bindValue(':validation_score', $snapshot->validationScore());
-        $stmt->bindValue(':validation_issues', $this->encodeJsonNullable($snapshot->validationIssues()));
-        $stmt->bindValue(':provider_digest', $snapshot->providerDigest());
-        $stmt->bindValue(':created_at', $snapshot->createdAt());
+        $pdoStatement->bindValue(':id', $addressEvidenceSnapshot->id());
+        $pdoStatement->bindValue(':address_id', $addressEvidenceSnapshot->addressId());
+        $pdoStatement->bindValue(':owner_id', $addressEvidenceSnapshot->ownerId());
+        $pdoStatement->bindValue(':vendor_id', $addressEvidenceSnapshot->vendorId());
+        $pdoStatement->bindValue(':source_system', $addressEvidenceSnapshot->sourceSystem());
+        $pdoStatement->bindValue(':source_type', AddressRecordPolicy::normalizeSourceType($addressEvidenceSnapshot->sourceType()));
+        $pdoStatement->bindValue(':source_reference', $addressEvidenceSnapshot->sourceReference());
+        $pdoStatement->bindValue(':validated_by', $addressEvidenceSnapshot->validatedBy());
+        $pdoStatement->bindValue(':validated_at', $addressEvidenceSnapshot->validatedAt());
+        $pdoStatement->bindValue(':normalization_version', $addressEvidenceSnapshot->normalizationVersion());
+        $pdoStatement->bindValue(':raw_input_snapshot', $this->encodeJsonNullable($addressEvidenceSnapshot->rawInputSnapshot()));
+        $pdoStatement->bindValue(':normalized_snapshot', $this->encodeJsonNullable($addressEvidenceSnapshot->normalizedSnapshot()));
+        $pdoStatement->bindValue(':validation_status', AddressRecordPolicy::normalizeValidationStatus($addressEvidenceSnapshot->validationStatus()));
+        $pdoStatement->bindValue(':validation_score', $addressEvidenceSnapshot->validationScore());
+        $pdoStatement->bindValue(':validation_issues', $this->encodeJsonNullable($addressEvidenceSnapshot->validationIssues()));
+        $pdoStatement->bindValue(':provider_digest', $addressEvidenceSnapshot->providerDigest());
+        $pdoStatement->bindValue(':created_at', $addressEvidenceSnapshot->createdAt());
     }
 
     /** @param array<string, mixed> $row */
@@ -1362,13 +1381,15 @@ SQL
             $normalized['conflict_with_id'] ?? null,
         ];
 
-        foreach ($targets as $targetId) {
-            if (!is_string($targetId) || '' === trim($targetId)) {
+        foreach ($targets as $target) {
+            if (!is_string($target)) {
                 continue;
             }
-
-            if (null === $this->get($targetId, $ownerId, $vendorId)) {
-                throw new \RuntimeException(sprintf('Governance link target "%s" was not found in the current tenant scope.', $targetId));
+            if ('' === trim($target)) {
+                continue;
+            }
+            if (!$this->get($target, $ownerId, $vendorId) instanceof \App\EntityInterface\Record\AddressInterface) {
+                throw new \RuntimeException(sprintf('Governance link target "%s" was not found in the current tenant scope.', $target));
             }
         }
     }
@@ -1707,6 +1728,7 @@ SQL
      *   staleNormalization:int
      * }>
      */
+    #[\Override]
     public function summarizeNormalizationPortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -1799,15 +1821,15 @@ SQL
             ."WHEN 'pending' THEN 3 "
             ."ELSE 4 END ASC";
 
-        $stmt = $this->prepare($sql);
+        $pdoStatement = $this->prepare($sql);
         foreach ($params as $k => $v) {
-            $stmt->bindValue($k, $v);
+            $pdoStatement->bindValue($k, $v);
         }
         if (null === $expectedNormalizationVersion) {
-            $stmt->bindValue(':expected_normalization_version', null, \PDO::PARAM_NULL);
+            $pdoStatement->bindValue(':expected_normalization_version', null, \PDO::PARAM_NULL);
         }
-        $stmt->execute();
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $pdoStatement->execute();
+        $rows = $pdoStatement->fetchAll(\PDO::FETCH_ASSOC);
         if (!is_array($rows)) {
             return [];
         }

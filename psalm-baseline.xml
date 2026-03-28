@@ -1,0 +1,789 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="7.0.0-beta17@a7f96f911fc869c40c48ec977e21f01a8ca534bd">
+  <file src="src/Contract/Message/AddressOutboxEventContract.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[eventVersion]]></code>
+      <code><![CDATA[eventVersions]]></code>
+    </MissingPureAnnotation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[eventVersions]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Contract/Message/AddressRecordPolicy.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[inAllowed]]></code>
+      <code><![CDATA[normalizeToken]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Contract/Message/AddressValidated.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+      <code><![CDATA[asNullableFloat]]></code>
+      <code><![CDATA[asNullableInt]]></code>
+      <code><![CDATA[asNullableString]]></code>
+      <code><![CDATA[encodeJsonNullable]]></code>
+    </MissingPureAnnotation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[toDbArray]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Contract/Message/AddressValidationVerdict.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+      <code><![CDATA[jsonSerialize]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Entity/Record/AddressData.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Entity/Record/AddressEvidenceSnapshotData.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Entity/RootEntity.php">
+    <UnusedClass>
+      <code><![CDATA[RootEntity]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/EntityInterface/Record/AddressEvidenceSnapshotInterface.php">
+    <MissingAbstractPureAnnotation>
+      <code><![CDATA[addressId]]></code>
+      <code><![CDATA[createdAt]]></code>
+      <code><![CDATA[id]]></code>
+      <code><![CDATA[normalizationVersion]]></code>
+      <code><![CDATA[normalizedSnapshot]]></code>
+      <code><![CDATA[ownerId]]></code>
+      <code><![CDATA[providerDigest]]></code>
+      <code><![CDATA[rawInputSnapshot]]></code>
+      <code><![CDATA[sourceReference]]></code>
+      <code><![CDATA[sourceSystem]]></code>
+      <code><![CDATA[sourceType]]></code>
+      <code><![CDATA[validatedAt]]></code>
+      <code><![CDATA[validatedBy]]></code>
+      <code><![CDATA[validationIssues]]></code>
+      <code><![CDATA[validationScore]]></code>
+      <code><![CDATA[validationStatus]]></code>
+      <code><![CDATA[vendorId]]></code>
+    </MissingAbstractPureAnnotation>
+    <MissingInterfaceImmutableAnnotation>
+      <code><![CDATA[AddressEvidenceSnapshotInterface]]></code>
+    </MissingInterfaceImmutableAnnotation>
+  </file>
+  <file src="src/EntityInterface/Record/AddressInterface.php">
+    <MissingAbstractPureAnnotation>
+      <code><![CDATA[aliasOfId]]></code>
+      <code><![CDATA[city]]></code>
+      <code><![CDATA[cityNorm]]></code>
+      <code><![CDATA[conflictWithId]]></code>
+      <code><![CDATA[countryCode]]></code>
+      <code><![CDATA[createdAt]]></code>
+      <code><![CDATA[dedupeKey]]></code>
+      <code><![CDATA[deletedAt]]></code>
+      <code><![CDATA[duplicateOfId]]></code>
+      <code><![CDATA[geohash]]></code>
+      <code><![CDATA[governanceStatus]]></code>
+      <code><![CDATA[id]]></code>
+      <code><![CDATA[lastValidationProvider]]></code>
+      <code><![CDATA[lastValidationScore]]></code>
+      <code><![CDATA[lastValidationStatus]]></code>
+      <code><![CDATA[latitude]]></code>
+      <code><![CDATA[line1]]></code>
+      <code><![CDATA[line1Norm]]></code>
+      <code><![CDATA[line2]]></code>
+      <code><![CDATA[longitude]]></code>
+      <code><![CDATA[normalizationVersion]]></code>
+      <code><![CDATA[normalizedSnapshot]]></code>
+      <code><![CDATA[ownerId]]></code>
+      <code><![CDATA[postalCode]]></code>
+      <code><![CDATA[postalCodeNorm]]></code>
+      <code><![CDATA[providerDigest]]></code>
+      <code><![CDATA[rawInputSnapshot]]></code>
+      <code><![CDATA[region]]></code>
+      <code><![CDATA[regionNorm]]></code>
+      <code><![CDATA[revalidationDueAt]]></code>
+      <code><![CDATA[revalidationPolicy]]></code>
+      <code><![CDATA[sourceReference]]></code>
+      <code><![CDATA[sourceSystem]]></code>
+      <code><![CDATA[sourceType]]></code>
+      <code><![CDATA[supersededById]]></code>
+      <code><![CDATA[updatedAt]]></code>
+      <code><![CDATA[validatedAt]]></code>
+      <code><![CDATA[validationDeliverable]]></code>
+      <code><![CDATA[validationFingerprint]]></code>
+      <code><![CDATA[validationGranularity]]></code>
+      <code><![CDATA[validationProvider]]></code>
+      <code><![CDATA[validationQuality]]></code>
+      <code><![CDATA[validationRaw]]></code>
+      <code><![CDATA[validationStatus]]></code>
+      <code><![CDATA[validationVerdict]]></code>
+      <code><![CDATA[vendorId]]></code>
+    </MissingAbstractPureAnnotation>
+    <MissingInterfaceImmutableAnnotation>
+      <code><![CDATA[AddressInterface]]></code>
+    </MissingInterfaceImmutableAnnotation>
+  </file>
+  <file src="src/EntityInterface/Root/RootEntityInterface.php">
+    <MissingInterfaceImmutableAnnotation>
+      <code><![CDATA[RootEntityInterface]]></code>
+    </MissingInterfaceImmutableAnnotation>
+  </file>
+  <file src="src/Http/Controller/AddressController.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+      <code><![CDATA[nullableFormString]]></code>
+      <code><![CDATA[optArray]]></code>
+      <code><![CDATA[optFloat]]></code>
+      <code><![CDATA[optInt]]></code>
+      <code><![CDATA[optStr]]></code>
+      <code><![CDATA[reqStr]]></code>
+      <code><![CDATA[reqStringList]]></code>
+      <code><![CDATA[reviewReason]]></code>
+    </MissingPureAnnotation>
+    <PossiblyNullArgument>
+      <code><![CDATA[$address->revalidationDueAt()]]></code>
+      <code><![CDATA[$address->revalidationDueAt()]]></code>
+    </PossiblyNullArgument>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[__construct]]></code>
+      <code><![CDATA[applyValidated]]></code>
+      <code><![CDATA[countryPortfolioSummary]]></code>
+      <code><![CDATA[governanceClusterSummary]]></code>
+      <code><![CDATA[markDeleted]]></code>
+      <code><![CDATA[normalizationPortfolioSummary]]></code>
+      <code><![CDATA[page]]></code>
+      <code><![CDATA[patchOperational]]></code>
+      <code><![CDATA[patchOperationalBatch]]></code>
+      <code><![CDATA[queueSummary]]></code>
+      <code><![CDATA[sourcePortfolioSummary]]></code>
+      <code><![CDATA[validationPortfolioSummary]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Http/Dto/AddressInputFactory.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[boolOverride]]></code>
+      <code><![CDATA[floatOverride]]></code>
+      <code><![CDATA[intOverride]]></code>
+      <code><![CDATA[nullableTrimmed]]></code>
+      <code><![CDATA[stringOverride]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Http/ErrorMap.php">
+    <UnusedClass>
+      <code><![CDATA[ErrorMap]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Http/Middleware/Cors.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[isAllowed]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[Cors]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Http/Middleware/IpGuard.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[listFromEnv]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Http/Middleware/RateLimiter.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[asInt]]></code>
+      <code><![CDATA[init]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Http/Middleware/RequestId.php">
+    <UnusedClass>
+      <code><![CDATA[RequestId]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Http/Middleware/SecurityHeaders.php">
+    <UnusedClass>
+      <code><![CDATA[SecurityHeaders]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Http/Schema/Validator.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[isExpectedType]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Integration/Console/Command/AddressCreateCommand.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[nullable]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[AddressCreateCommand]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Integration/Console/Command/AddressDemoLoadCommand.php">
+    <UnusedClass>
+      <code><![CDATA[AddressDemoLoadCommand]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Integration/Console/Command/AddressEvidenceSummaryCommand.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[nullable]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[AddressEvidenceSummaryCommand]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Integration/Console/Command/AddressGovernanceClusterSummaryCommand.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[nullable]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[AddressGovernanceClusterSummaryCommand]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Integration/Console/Command/AddressPortfolioSummaryCommand.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[nullable]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[AddressPortfolioSummaryCommand]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Integration/Console/Command/AddressQueueSummaryCommand.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[nullable]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[AddressQueueSummaryCommand]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Integration/Console/Command/AddressSearchCommand.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[nullable]]></code>
+      <code><![CDATA[nullableBool]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[AddressSearchCommand]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Integration/Console/Command/AddressValidatedApplyCommand.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[nullable]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[AddressValidatedApplyCommand]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Integration/Geocode/GeocodeResult.php">
+    <MissingImmutableAnnotation>
+      <code><![CDATA[GeocodeResult]]></code>
+    </MissingImmutableAnnotation>
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+    </MissingPureAnnotation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[__construct]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Integration/Persistence/AddressPdoFactory.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[env]]></code>
+      <code><![CDATA[projectDir]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[AddressPdoFactory]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Integration/Persistence/AddressSchemaManager.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[ensureSqliteSchema]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Kernel.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[registerBundles]]></code>
+    </MissingPureAnnotation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[configureContainer]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Projection/AddressIndex/IndexProjector.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+    </MissingPureAnnotation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[onAddressUpdated]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Projection/AddressIndex/IndexRecord.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+      <code><![CDATA[geokey]]></code>
+      <code><![CDATA[toArray]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Projection/AddressIndex/PdoRepository.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[asNullableFloat]]></code>
+      <code><![CDATA[asNullableString]]></code>
+      <code><![CDATA[asString]]></code>
+    </MissingPureAnnotation>
+    <TypeDoesNotContainType>
+      <code><![CDATA[is_array($row)]]></code>
+    </TypeDoesNotContainType>
+  </file>
+  <file src="src/Projection/AddressIndex/RepositoryInterface.php">
+    <MissingAbstractPureAnnotation>
+      <code><![CDATA[getByDigest]]></code>
+      <code><![CDATA[search]]></code>
+      <code><![CDATA[upsert]]></code>
+    </MissingAbstractPureAnnotation>
+    <MissingInterfaceImmutableAnnotation>
+      <code><![CDATA[RepositoryInterface]]></code>
+    </MissingInterfaceImmutableAnnotation>
+  </file>
+  <file src="src/Repository/Persistence/AddressRepository.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array{items: AddressInterface[], nextCursor: ?string}]]></code>
+    </LessSpecificImplementedReturnType>
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+      <code><![CDATA[asNullableBool]]></code>
+      <code><![CDATA[asNullableFloat]]></code>
+      <code><![CDATA[asNullableInt]]></code>
+      <code><![CDATA[asNullableString]]></code>
+      <code><![CDATA[asString]]></code>
+      <code><![CDATA[boolFilter]]></code>
+      <code><![CDATA[decodeEvidenceCursor]]></code>
+      <code><![CDATA[decodeJsonNullable]]></code>
+      <code><![CDATA[encodeEvidenceCursor]]></code>
+      <code><![CDATA[encodeJsonNullable]]></code>
+      <code><![CDATA[ensureTenantScope]]></code>
+      <code><![CDATA[evidencePresenceClause]]></code>
+      <code><![CDATA[intRowValue]]></code>
+      <code><![CDATA[normalizeOptionalScalar]]></code>
+      <code><![CDATA[stringFilter]]></code>
+      <code><![CDATA[tenantParams]]></code>
+      <code><![CDATA[tenantWhereClause]]></code>
+    </MissingPureAnnotation>
+    <PossiblyFalseArgument>
+      <code><![CDATA[$decoded]]></code>
+    </PossiblyFalseArgument>
+    <PossiblyNullArrayAccess>
+      <code><![CDATA[$address->validationRaw()['issues']]]></code>
+      <code><![CDATA[$address->validationRaw()['issues']]]></code>
+    </PossiblyNullArrayAccess>
+    <PossiblyUndefinedArrayOffset>
+      <code><![CDATA[$id]]></code>
+    </PossiblyUndefinedArrayOffset>
+    <RedundantCondition>
+      <code><![CDATA[is_array($row)]]></code>
+      <code><![CDATA[is_array($row)]]></code>
+      <code><![CDATA[is_array($rows)]]></code>
+      <code><![CDATA[is_array($rows)]]></code>
+    </RedundantCondition>
+    <TypeDoesNotContainType>
+      <code><![CDATA[is_array($rows)]]></code>
+      <code><![CDATA[is_array($rows)]]></code>
+      <code><![CDATA[is_array($rows)]]></code>
+      <code><![CDATA[is_array($rows)]]></code>
+    </TypeDoesNotContainType>
+  </file>
+  <file src="src/RepositoryInterface/Persistence/AddressRepositoryInterface.php">
+    <MissingAbstractPureAnnotation>
+      <code><![CDATA[appendEvidenceSnapshot]]></code>
+      <code><![CDATA[create]]></code>
+      <code><![CDATA[delete]]></code>
+      <code><![CDATA[findByDedupeKey]]></code>
+      <code><![CDATA[findEvidenceHistoryPage]]></code>
+      <code><![CDATA[findPage]]></code>
+      <code><![CDATA[get]]></code>
+      <code><![CDATA[getLatestEvidenceSnapshot]]></code>
+      <code><![CDATA[patchOperational]]></code>
+      <code><![CDATA[summarizeCountryPortfolio]]></code>
+      <code><![CDATA[summarizeGovernanceCluster]]></code>
+      <code><![CDATA[summarizeNormalizationPortfolio]]></code>
+      <code><![CDATA[summarizeOperationalQueues]]></code>
+      <code><![CDATA[summarizeSourcePortfolio]]></code>
+      <code><![CDATA[summarizeValidationPortfolio]]></code>
+      <code><![CDATA[update]]></code>
+    </MissingAbstractPureAnnotation>
+    <MissingInterfaceImmutableAnnotation>
+      <code><![CDATA[AddressRepositoryInterface]]></code>
+    </MissingInterfaceImmutableAnnotation>
+  </file>
+  <file src="src/Service/Application/AddressGovernancePolicy.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[asNullableString]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Service/Application/AddressOutboxDrainerService.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+      <code><![CDATA[rowInt]]></code>
+      <code><![CDATA[rowString]]></code>
+    </MissingPureAnnotation>
+    <PossiblyFalseArgument>
+      <code><![CDATA[$ch]]></code>
+      <code><![CDATA[$ch]]></code>
+      <code><![CDATA[$ch]]></code>
+      <code><![CDATA[$ch]]></code>
+      <code><![CDATA[$ch]]></code>
+    </PossiblyFalseArgument>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[int]]></code>
+    </PossiblyUnusedReturnValue>
+  </file>
+  <file src="src/Service/Application/AddressProjectionService.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[AddressProjectionService]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Service/Application/AddressService.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+    </MissingPureAnnotation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[appendEvidenceSnapshot]]></code>
+    </PossiblyUnusedMethod>
+    <UnnecessaryVarAnnotation>
+      <code><![CDATA[array{
+         *   total:int,
+         *   dueForRevalidation:int,
+         *   evidenceMissing:int,
+         *   uncertainValidation:int,
+         *   conflictReview:int,
+         *   duplicateReview:int,
+         *   staleNormalizationVersion:int
+         * }]]></code>
+    </UnnecessaryVarAnnotation>
+  </file>
+  <file src="src/Service/Application/AddressValidatedApplierService.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+      <code><![CDATA[buildNormalizedSnapshot]]></code>
+      <code><![CDATA[encodePayload]]></code>
+      <code><![CDATA[governanceLinkId]]></code>
+      <code><![CDATA[hasEvidence]]></code>
+      <code><![CDATA[sanitizeGovernanceLink]]></code>
+      <code><![CDATA[tenantParams]]></code>
+      <code><![CDATA[tenantWhereClause]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Service/Application/Event/AddressCreatedEvent.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[name]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Service/Application/Event/AddressInMemoryEventDispatcherService.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[subscribe]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[AddressInMemoryEventDispatcherService]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Service/Application/Event/AddressUpdatedEvent.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[name]]></code>
+    </MissingPureAnnotation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[__construct]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/ServiceInterface/Application/AddressOutboxDrainerServiceInterface.php">
+    <MissingAbstractPureAnnotation>
+      <code><![CDATA[drain]]></code>
+    </MissingAbstractPureAnnotation>
+    <MissingInterfaceImmutableAnnotation>
+      <code><![CDATA[AddressOutboxDrainerServiceInterface]]></code>
+    </MissingInterfaceImmutableAnnotation>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[int]]></code>
+    </PossiblyUnusedReturnValue>
+  </file>
+  <file src="src/ServiceInterface/Application/AddressProjectionServiceInterface.php">
+    <MissingAbstractPureAnnotation>
+      <code><![CDATA[upsert]]></code>
+    </MissingAbstractPureAnnotation>
+    <MissingInterfaceImmutableAnnotation>
+      <code><![CDATA[AddressProjectionServiceInterface]]></code>
+    </MissingInterfaceImmutableAnnotation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[upsert]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/ServiceInterface/Application/AddressValidatedApplierServiceInterface.php">
+    <MissingAbstractPureAnnotation>
+      <code><![CDATA[apply]]></code>
+    </MissingAbstractPureAnnotation>
+    <MissingInterfaceImmutableAnnotation>
+      <code><![CDATA[AddressValidatedApplierServiceInterface]]></code>
+    </MissingInterfaceImmutableAnnotation>
+  </file>
+  <file src="src/ServiceInterface/Application/Event/AddressEventDispatcherServiceInterface.php">
+    <MissingAbstractPureAnnotation>
+      <code><![CDATA[dispatch]]></code>
+      <code><![CDATA[subscribe]]></code>
+    </MissingAbstractPureAnnotation>
+    <MissingInterfaceImmutableAnnotation>
+      <code><![CDATA[AddressEventDispatcherServiceInterface]]></code>
+    </MissingInterfaceImmutableAnnotation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[dispatch]]></code>
+      <code><![CDATA[subscribe]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/ServiceInterface/Application/Event/AddressEventInterface.php">
+    <MissingAbstractPureAnnotation>
+      <code><![CDATA[name]]></code>
+      <code><![CDATA[occurredAt]]></code>
+    </MissingAbstractPureAnnotation>
+    <MissingInterfaceImmutableAnnotation>
+      <code><![CDATA[AddressEventInterface]]></code>
+    </MissingInterfaceImmutableAnnotation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[occurredAt]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Util/Identifier/AddressUlid.php">
+    <InvalidOperand>
+      <code><![CDATA[bindec(str_pad($chunk, 5, '0', STR_PAD_RIGHT)) % 32]]></code>
+      <code><![CDATA[microtime(true) * 1000]]></code>
+    </InvalidOperand>
+    <MissingPureAnnotation>
+      <code><![CDATA[base32FromBinary]]></code>
+      <code><![CDATA[base32FromInt]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Util/Log/StructuredLogger.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[StructuredLogger]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/UtilInterface/Identifier/AddressUlidInterface.php">
+    <MissingAbstractPureAnnotation>
+      <code><![CDATA[generate]]></code>
+    </MissingAbstractPureAnnotation>
+    <MissingInterfaceImmutableAnnotation>
+      <code><![CDATA[AddressUlidInterface]]></code>
+    </MissingInterfaceImmutableAnnotation>
+  </file>
+  <file src="src/Value/Common/Country.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+    </MissingPureAnnotation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[from]]></code>
+      <code><![CDATA[value]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Value/CountryCode.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+      <code><![CDATA[equals]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Value/GeoPoint.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+      <code><![CDATA[equals]]></code>
+      <code><![CDATA[toKey]]></code>
+    </MissingPureAnnotation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[lat]]></code>
+      <code><![CDATA[lon]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Value/PostalCode.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+      <code><![CDATA[equals]]></code>
+    </MissingPureAnnotation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[equals]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Value/Primitive/Line.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[norm]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[Line]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Value/Primitive/Postal.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[norm]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[Postal]]></code>
+    </UnusedClass>
+  </file>
+  <file src="src/Value/Primitive/Region.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Value/StreetLine.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+      <code><![CDATA[equals]]></code>
+    </MissingPureAnnotation>
+  </file>
+  <file src="src/Value/Subdivision.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[__construct]]></code>
+      <code><![CDATA[equals]]></code>
+    </MissingPureAnnotation>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[code]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="tests/AddressUlidTest.php">
+    <UnusedClass>
+      <code><![CDATA[AddressUlidTest]]></code>
+    </UnusedClass>
+  </file>
+  <file src="tests/E2E/AddressApiPantherE2ETest.php">
+    <UnusedClass>
+      <code><![CDATA[AddressApiPantherE2ETest]]></code>
+    </UnusedClass>
+  </file>
+  <file src="tests/Functional/AddressControllerFunctionalTest.php">
+    <PossiblyFalseArgument>
+      <code><![CDATA[json_encode([
+            'ownerId' => 'owner-1',
+            'vendorId' => 'vendor-1',
+            'line1' => 'Main street 10',
+            'city' => 'Austin',
+            'countryCode' => 'us',
+        ], JSON_UNESCAPED_UNICODE)]]></code>
+    </PossiblyFalseArgument>
+    <UnusedClass>
+      <code><![CDATA[AddressControllerFunctionalTest]]></code>
+    </UnusedClass>
+  </file>
+  <file src="tests/HttpSchemaValidatorTest.php">
+    <UnusedClass>
+      <code><![CDATA[HttpSchemaValidatorTest]]></code>
+    </UnusedClass>
+  </file>
+  <file src="tests/IndexProjectorTest.php">
+    <PossiblyFalseArgument>
+      <code><![CDATA[$sql]]></code>
+    </PossiblyFalseArgument>
+    <TooManyArguments>
+      <code><![CDATA[new IndexProjector($repo, new Normalizer(), null, false)]]></code>
+    </TooManyArguments>
+    <UnusedClass>
+      <code><![CDATA[IndexProjectorTest]]></code>
+    </UnusedClass>
+  </file>
+  <file src="tests/Integration/AddressDemoFixtureIntegrationTest.php">
+    <UnusedClass>
+      <code><![CDATA[AddressDemoFixtureIntegrationTest]]></code>
+    </UnusedClass>
+  </file>
+  <file src="tests/Integration/AddressRepositoryTenantScopeIntegrationTest.php">
+    <UnusedClass>
+      <code><![CDATA[AddressRepositoryTenantScopeIntegrationTest]]></code>
+    </UnusedClass>
+  </file>
+  <file src="tests/Projection/AddressIndexRepositoryTest.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function setUp(): void]]></code>
+    </MissingOverrideAttribute>
+    <PossiblyFalseArgument>
+      <code><![CDATA[$sql]]></code>
+    </PossiblyFalseArgument>
+    <PossiblyUnusedMethod>
+      <code><![CDATA[testUpsertAndFetch]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="tests/Security/SymfonySecurityTest.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function tearDown(): void]]></code>
+    </MissingOverrideAttribute>
+    <UnusedClass>
+      <code><![CDATA[SymfonySecurityTest]]></code>
+    </UnusedClass>
+  </file>
+  <file src="tests/Service/AddressOutboxDrainerTest.php">
+    <MissingPureAnnotation>
+      <code><![CDATA[schemaSql]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[AddressOutboxDrainerTest]]></code>
+    </UnusedClass>
+    <UnusedClosureParam>
+      <code><![CDATA[$backoffMs]]></code>
+      <code><![CDATA[$backoffMs]]></code>
+      <code><![CDATA[$error]]></code>
+      <code><![CDATA[$error]]></code>
+      <code><![CDATA[$retryLimit]]></code>
+      <code><![CDATA[$retryLimit]]></code>
+      <code><![CDATA[$timeoutSec]]></code>
+      <code><![CDATA[$timeoutSec]]></code>
+    </UnusedClosureParam>
+  </file>
+  <file src="tests/Service/AddressServiceTest.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function setUp(): void]]></code>
+    </MissingOverrideAttribute>
+    <MissingPureAnnotation>
+      <code><![CDATA[schemaSql]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[AddressServiceTest]]></code>
+    </UnusedClass>
+  </file>
+  <file src="tests/Service/AddressValidatedApplierTest.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function setUp(): void]]></code>
+    </MissingOverrideAttribute>
+    <MissingPureAnnotation>
+      <code><![CDATA[schemaSql]]></code>
+    </MissingPureAnnotation>
+    <UnusedClass>
+      <code><![CDATA[AddressValidatedApplierTest]]></code>
+    </UnusedClass>
+  </file>
+  <file src="tests/Service/AddressValidatedTest.php">
+    <UnusedClass>
+      <code><![CDATA[AddressValidatedTest]]></code>
+    </UnusedClass>
+  </file>
+  <file src="tests/Support/TestDatabase.php">
+    <PossiblyInvalidCast>
+      <code><![CDATA[$pdo->getAttribute(PDO::ATTR_DRIVER_NAME)]]></code>
+    </PossiblyInvalidCast>
+  </file>
+  <file src="tests/Unit/AddressServiceUnitTest.php">
+    <UnusedClass>
+      <code><![CDATA[AddressServiceUnitTest]]></code>
+    </UnusedClass>
+  </file>
+  <file src="tests/ValueObjectsTest.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[testCountryCode]]></code>
+      <code><![CDATA[testGeoPoint]]></code>
+      <code><![CDATA[testPostalCode]]></code>
+      <code><![CDATA[testStreetLine]]></code>
+      <code><![CDATA[testSubdivision]]></code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="vendor/phpunit/phpunit/src/Framework/TestCase.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[final public function sortId(): string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="vendor/symfony/framework-bundle/Kernel/MicroKernelTrait.php">
+    <ParentNotFound>
+      <code><![CDATA[parent::class]]></code>
+    </ParentNotFound>
+  </file>
+</files>

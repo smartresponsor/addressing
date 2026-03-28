@@ -15,7 +15,7 @@ use App\Contract\Message\AddressRecordPolicy;
 final class AddressGovernancePolicy
 {
     /** @var array<string, list<string>> */
-    private const ALLOWED_TRANSITIONS = [
+    private const array ALLOWED_TRANSITIONS = [
         'canonical' => ['canonical', 'duplicate', 'superseded', 'alias', 'conflict'],
         'duplicate' => ['duplicate', 'conflict'],
         'superseded' => ['superseded', 'conflict'],

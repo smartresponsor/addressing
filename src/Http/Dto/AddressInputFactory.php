@@ -18,25 +18,25 @@ final class AddressInputFactory
     /**
      * @param array<string, mixed> $overrides
      */
-    public function fromManageDto(AddressManageDto $dto, array $overrides = []): AddressData
+    public function fromManageDto(AddressManageDto $addressManageDto, array $overrides = []): AddressData
     {
-        $now = self::stringOverride($overrides, 'createdAt') ?? (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
-        $line1 = (string) new StreetLine($dto->line1);
-        $countryCode = (string) new CountryCode($dto->countryCode);
+        $now = $this->stringOverride($overrides, 'createdAt') ?? (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
+        $line1 = (string) new StreetLine($addressManageDto->line1);
+        $countryCode = (string) new CountryCode($addressManageDto->countryCode);
         $postalCode = null;
-        if (null !== $dto->postalCode && '' !== trim($dto->postalCode)) {
-            $postalCode = (string) new PostalCode($dto->postalCode);
+        if (null !== $addressManageDto->postalCode && '' !== trim($addressManageDto->postalCode)) {
+            $postalCode = (string) new PostalCode($addressManageDto->postalCode);
         }
 
         $region = null;
-        if (null !== $dto->region && '' !== trim($dto->region)) {
-            $region = (string) new Subdivision($dto->region);
+        if (null !== $addressManageDto->region && '' !== trim($addressManageDto->region)) {
+            $region = (string) new Subdivision($addressManageDto->region);
         }
 
-        $city = trim($dto->city);
-        $ownerId = self::nullableTrimmed($dto->ownerId);
-        $vendorId = self::nullableTrimmed($dto->vendorId);
-        $line2 = self::nullableTrimmed($dto->line2);
+        $city = trim($addressManageDto->city);
+        $ownerId = $this->nullableTrimmed($addressManageDto->ownerId);
+        $vendorId = $this->nullableTrimmed($addressManageDto->vendorId);
+        $line2 = $this->nullableTrimmed($addressManageDto->line2);
 
         $line1Norm = strtolower($line1);
         $cityNorm = strtolower($city);
@@ -53,7 +53,7 @@ final class AddressInputFactory
         ], static fn (?string $value): bool => null !== $value && '' !== $value));
 
         return new AddressData(
-            self::stringOverride($overrides, 'id') ?? (string) new Ulid(),
+            $this->stringOverride($overrides, 'id') ?? (string) new Ulid(),
             $ownerId,
             $vendorId,
             $line1,
@@ -66,26 +66,26 @@ final class AddressInputFactory
             $cityNorm,
             $regionNorm,
             $postalNorm,
-            self::floatOverride($overrides, 'latitude'),
-            self::floatOverride($overrides, 'longitude'),
-            self::stringOverride($overrides, 'geohash'),
-            AddressRecordPolicy::normalizeValidationStatus(self::stringOverride($overrides, 'validationStatus'), 'pending'),
-            self::stringOverride($overrides, 'validationProvider'),
-            self::stringOverride($overrides, 'validatedAt'),
+            $this->floatOverride($overrides, 'latitude'),
+            $this->floatOverride($overrides, 'longitude'),
+            $this->stringOverride($overrides, 'geohash'),
+            AddressRecordPolicy::normalizeValidationStatus($this->stringOverride($overrides, 'validationStatus'), 'pending'),
+            $this->stringOverride($overrides, 'validationProvider'),
+            $this->stringOverride($overrides, 'validatedAt'),
             '' !== $dedupeKey ? $dedupeKey : null,
             $now,
-            self::stringOverride($overrides, 'updatedAt'),
-            self::stringOverride($overrides, 'deletedAt'),
-            self::stringOverride($overrides, 'validationFingerprint'),
+            $this->stringOverride($overrides, 'updatedAt'),
+            $this->stringOverride($overrides, 'deletedAt'),
+            $this->stringOverride($overrides, 'validationFingerprint'),
             isset($overrides['validationRaw']) && is_array($overrides['validationRaw']) ? $overrides['validationRaw'] : null,
             isset($overrides['validationVerdict']) && is_array($overrides['validationVerdict']) ? $overrides['validationVerdict'] : null,
-            self::boolOverride($overrides, 'validationDeliverable'),
-            self::stringOverride($overrides, 'validationGranularity'),
-            self::intOverride($overrides, 'validationQuality'),
-            self::stringOverride($overrides, 'sourceSystem') ?? 'symfony-demo',
-            AddressRecordPolicy::normalizeSourceType(self::stringOverride($overrides, 'sourceType') ?? 'manual'),
-            self::stringOverride($overrides, 'sourceReference'),
-            self::stringOverride($overrides, 'normalizationVersion') ?? 'demo-v1',
+            $this->boolOverride($overrides, 'validationDeliverable'),
+            $this->stringOverride($overrides, 'validationGranularity'),
+            $this->intOverride($overrides, 'validationQuality'),
+            $this->stringOverride($overrides, 'sourceSystem') ?? 'symfony-demo',
+            AddressRecordPolicy::normalizeSourceType($this->stringOverride($overrides, 'sourceType') ?? 'manual'),
+            $this->stringOverride($overrides, 'sourceReference'),
+            $this->stringOverride($overrides, 'normalizationVersion') ?? 'demo-v1',
             isset($overrides['rawInputSnapshot']) && is_array($overrides['rawInputSnapshot']) ? $overrides['rawInputSnapshot'] : [
                 'line1' => $line1,
                 'line2' => $line2,
@@ -100,28 +100,28 @@ final class AddressInputFactory
                 'regionNorm' => $regionNorm,
                 'postalCodeNorm' => $postalNorm,
             ],
-            self::stringOverride($overrides, 'providerDigest') ?? 'sha256:'.hash('sha256', $line1.'|'.$city.'|'.$countryCode),
-            AddressRecordPolicy::normalizeGovernanceStatus(self::stringOverride($overrides, 'governanceStatus') ?? 'canonical'),
-            self::stringOverride($overrides, 'duplicateOfId'),
-            self::stringOverride($overrides, 'supersededById'),
-            self::stringOverride($overrides, 'aliasOfId'),
-            self::stringOverride($overrides, 'conflictWithId'),
-            self::stringOverride($overrides, 'revalidationDueAt'),
-            AddressRecordPolicy::normalizeRevalidationPolicy(self::stringOverride($overrides, 'revalidationPolicy') ?? 'quarterly'),
-            self::stringOverride($overrides, 'lastValidationProvider'),
-            AddressRecordPolicy::normalizeLastValidationStatus(self::stringOverride($overrides, 'lastValidationStatus')),
-            self::intOverride($overrides, 'lastValidationScore'),
+            $this->stringOverride($overrides, 'providerDigest') ?? 'sha256:'.hash('sha256', $line1.'|'.$city.'|'.$countryCode),
+            AddressRecordPolicy::normalizeGovernanceStatus($this->stringOverride($overrides, 'governanceStatus') ?? 'canonical'),
+            $this->stringOverride($overrides, 'duplicateOfId'),
+            $this->stringOverride($overrides, 'supersededById'),
+            $this->stringOverride($overrides, 'aliasOfId'),
+            $this->stringOverride($overrides, 'conflictWithId'),
+            $this->stringOverride($overrides, 'revalidationDueAt'),
+            AddressRecordPolicy::normalizeRevalidationPolicy($this->stringOverride($overrides, 'revalidationPolicy') ?? 'quarterly'),
+            $this->stringOverride($overrides, 'lastValidationProvider'),
+            AddressRecordPolicy::normalizeLastValidationStatus($this->stringOverride($overrides, 'lastValidationStatus')),
+            $this->intOverride($overrides, 'lastValidationScore'),
         );
     }
 
     /** @param array<string, mixed> $overrides */
-    private static function stringOverride(array $overrides, string $key): ?string
+    private function stringOverride(array $overrides, string $key): ?string
     {
         return isset($overrides[$key]) && is_string($overrides[$key]) ? $overrides[$key] : null;
     }
 
     /** @param array<string, mixed> $overrides */
-    private static function intOverride(array $overrides, string $key): ?int
+    private function intOverride(array $overrides, string $key): ?int
     {
         if (!isset($overrides[$key])) {
             return null;
@@ -142,7 +142,7 @@ final class AddressInputFactory
     }
 
     /** @param array<string, mixed> $overrides */
-    private static function floatOverride(array $overrides, string $key): ?float
+    private function floatOverride(array $overrides, string $key): ?float
     {
         if (!isset($overrides[$key])) {
             return null;
@@ -160,12 +160,12 @@ final class AddressInputFactory
     }
 
     /** @param array<string, mixed> $overrides */
-    private static function boolOverride(array $overrides, string $key): ?bool
+    private function boolOverride(array $overrides, string $key): ?bool
     {
         return isset($overrides[$key]) && is_bool($overrides[$key]) ? $overrides[$key] : null;
     }
 
-    private static function nullableTrimmed(?string $value): ?string
+    private function nullableTrimmed(?string $value): ?string
     {
         if (null === $value) {
             return null;

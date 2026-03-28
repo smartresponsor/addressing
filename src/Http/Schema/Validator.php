@@ -47,7 +47,10 @@ final class Validator
 
         foreach ($data as $key => $value) {
             $expectedType = $definition['types'][$key] ?? null;
-            if (null === $expectedType || null === $value) {
+            if (null === $expectedType) {
+                continue;
+            }
+            if (null === $value) {
                 continue;
             }
 

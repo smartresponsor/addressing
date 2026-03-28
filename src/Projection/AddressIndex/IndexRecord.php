@@ -43,10 +43,10 @@ final readonly class IndexRecord
     /**
      * @param array{line1: StreetLine, line2: ?StreetLine, city: string, region: Region, postal: PostalCode, country: CountryCode, digest: string} $norm
      */
-    public static function fromNormalized(array $norm, ?GeocodeResult $geo = null): self
+    public static function fromNormalized(array $norm, ?GeocodeResult $geocodeResult = null): self
     {
-        $lat = $geo?->lat;
-        $lon = $geo?->lon;
+        $lat = $geocodeResult?->lat;
+        $lon = $geocodeResult?->lon;
         $now = (new \DateTimeImmutable('now'))->format('Y-m-d H:i:s');
 
         return new self(
@@ -59,9 +59,9 @@ final readonly class IndexRecord
             $norm['country']->value(),
             $lat,
             $lon,
-            $geo?->displayName,
-            $geo?->provider,
-            $geo?->confidence,
+            $geocodeResult?->displayName,
+            $geocodeResult?->provider,
+            $geocodeResult?->confidence,
             self::geokey($lat, $lon),
             $now,
             $now,

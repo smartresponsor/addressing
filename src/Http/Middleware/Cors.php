@@ -15,11 +15,6 @@ use Symfony\Component\HttpFoundation\Request;
  */
 final class Cors
 {
-    /**
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param string $method
-     * @return void
-     */
     public static function handle(Request $request, string $method): void
     {
         $allow = getenv('CORS_ALLOW_ORIGINS') ?: '*';
@@ -49,19 +44,14 @@ final class Cors
         }
     }
 
-    /**
-     * @param string $origin
-     * @param string $allowList
-     * @return bool
-     */
     private static function isAllowed(string $origin, string $allowList): bool
     {
-        $items = array_filter(array_map('trim', explode(',', $allowList)), fn($s) => $s !== '');
-        foreach ($items as $pat) {
-            if ($pat === '*') {
+        $items = array_filter(array_map('trim', explode(',', $allowList)), fn($s): bool => $s !== '');
+        foreach ($items as $item) {
+            if ($item === '*') {
                 return true;
             }
-            if (strcasecmp($origin, $pat) === 0) {
+            if (strcasecmp($origin, $item) === 0) {
                 return true;
             }
         }

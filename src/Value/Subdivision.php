@@ -13,13 +13,10 @@ use InvalidArgumentException;
 /**
  *
  */
-final class Subdivision
+final readonly class Subdivision implements \Stringable
 {
     private string $code;
 
-    /**
-     * @param string $code
-     */
     public function __construct(string $code)
     {
         $code = strtoupper(trim($code));
@@ -29,26 +26,17 @@ final class Subdivision
         $this->code = $code;
     }
 
-    /**
-     * @return string
-     */
     public function code(): string
     {
         return $this->code;
     }
 
-    /**
-     * @param \App\Value\Subdivision $other
-     * @return bool
-     */
     public function equals(self $other): bool
     {
         return $this->code === $other->code;
     }
 
-    /**
-     * @return string
-     */
+    #[\Override]
     public function __toString(): string
     {
         return $this->code;

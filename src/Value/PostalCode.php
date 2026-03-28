@@ -13,13 +13,10 @@ use InvalidArgumentException;
 /**
  *
  */
-final class PostalCode
+final readonly class PostalCode implements \Stringable
 {
     private string $value;
 
-    /**
-     * @param string $value
-     */
     public function __construct(string $value)
     {
         $value = trim($value);
@@ -32,26 +29,17 @@ final class PostalCode
         $this->value = $value;
     }
 
-    /**
-     * @return string
-     */
     public function value(): string
     {
         return $this->value;
     }
 
-    /**
-     * @param \App\Value\PostalCode $other
-     * @return bool
-     */
     public function equals(self $other): bool
     {
         return $this->value === $other->value;
     }
 
-    /**
-     * @return string
-     */
+    #[\Override]
     public function __toString(): string
     {
         return $this->value;

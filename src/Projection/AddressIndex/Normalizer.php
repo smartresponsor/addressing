@@ -37,16 +37,16 @@ final class Normalizer
         }
 
         $regionObj = new Region($region);
-        $postalObj = new PostalCode($postal);
-        $countryObj = new CountryCode($country);
+        $postalCode = new PostalCode($postal);
+        $countryCode = new CountryCode($country);
 
         $digest = hash('sha256', implode('|', [
             $line1Obj->value(),
             $line2Obj?->value() ?? '',
             strtolower($city),
             (string) $regionObj,
-            $postalObj->value(),
-            $countryObj->value(),
+            $postalCode->value(),
+            $countryCode->value(),
         ]));
 
         return [
@@ -54,8 +54,8 @@ final class Normalizer
             'line2' => $line2Obj,
             'city' => $city,
             'region' => $regionObj,
-            'postal' => $postalObj,
-            'country' => $countryObj,
+            'postal' => $postalCode,
+            'country' => $countryCode,
             'digest' => $digest,
         ];
     }

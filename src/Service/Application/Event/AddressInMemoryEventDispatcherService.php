@@ -23,6 +23,7 @@ final class AddressInMemoryEventDispatcherService implements AddressEventDispatc
      */
     private array $listener = [];
 
+    #[\Override]
     public function subscribe(string $eventName, callable $listener): void
     {
         $this->listener[$eventName][] = $listener;
@@ -34,13 +35,14 @@ final class AddressInMemoryEventDispatcherService implements AddressEventDispatc
      * Absolute rule:
      * dispatcher must never throw or affect business flow.
      */
-    public function dispatch(AddressEventInterface $event): void
+    #[\Override]
+    public function dispatch(AddressEventInterface $addressEvent): void
     {
-        $name = $event->name();
+        $name = $addressEvent->name();
 
         foreach ($this->listener[$name] ?? [] as $listener) {
             try {
-                $listener($event);
+                $listener($addressEvent);
             } catch (\Throwable) {
                 // intentionally ignored:
                 // dispatcher must never break the main flow

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Value\Primitive;
 
-final class Line
+final readonly class Line implements \Stringable
 {
     private string $v;
 
@@ -23,6 +23,7 @@ final class Line
         return trim($normalized);
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return $this->v;

@@ -22,6 +22,7 @@ final class AddressEvidenceSummaryCommand extends Command
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
@@ -30,13 +31,14 @@ final class AddressEvidenceSummaryCommand extends Command
             ->addOption('vendor-id', null, InputOption::VALUE_OPTIONAL);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
+        $symfonyStyle = new SymfonyStyle($input, $output);
         $summary = $this->addressService->evidenceHistorySummary(
-            self::requiredArgument($input, 'address-id'),
-            self::nullable($input->getOption('owner-id')),
-            self::nullable($input->getOption('vendor-id')),
+            $this->requiredArgument($input, 'address-id'),
+            $this->nullable($input->getOption('owner-id')),
+            $this->nullable($input->getOption('vendor-id')),
         );
 
         $payload = json_encode($summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -44,12 +46,12 @@ final class AddressEvidenceSummaryCommand extends Command
             throw new \RuntimeException('invalid_summary_payload');
         }
 
-        $io->writeln($payload);
+        $symfonyStyle->writeln($payload);
 
         return Command::SUCCESS;
     }
 
-    private static function requiredArgument(InputInterface $input, string $name): string
+    private function requiredArgument(InputInterface $input, string $name): string
     {
         $value = $input->getArgument($name);
 
@@ -60,7 +62,7 @@ final class AddressEvidenceSummaryCommand extends Command
         return $value;
     }
 
-    private static function nullable(mixed $value): ?string
+    private function nullable(mixed $value): ?string
     {
         if (!is_string($value)) {
             return null;

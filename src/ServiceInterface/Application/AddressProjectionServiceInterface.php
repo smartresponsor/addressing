@@ -8,5 +8,5 @@ use App\EntityInterface\Record\AddressInterface;
 
 interface AddressProjectionServiceInterface
 {
-    public function upsert(AddressInterface $a): void;
+    public function upsert(AddressInterface $address): void;
 }

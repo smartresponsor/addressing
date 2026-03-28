@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Value\Primitive;
 
-final class Region
+final readonly class Region implements \Stringable
 {
     private string $v;
 
@@ -13,6 +13,7 @@ final class Region
         $this->v = strtoupper(trim($s));
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return $this->v;

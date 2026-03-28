@@ -13,15 +13,11 @@ use InvalidArgumentException;
 /**
  *
  */
-final class GeoPoint
+final readonly class GeoPoint implements \Stringable
 {
     private float $lat;
     private float $lon;
 
-    /**
-     * @param float $lat
-     * @param float $lon
-     */
     public function __construct(float $lat, float $lon)
     {
         if ($lat < -90.0 || $lat > 90.0) {
@@ -34,42 +30,27 @@ final class GeoPoint
         $this->lon = $lon;
     }
 
-    /**
-     * @return float
-     */
     public function lat(): float
     {
         return $this->lat;
     }
 
-    /**
-     * @return float
-     */
     public function lon(): float
     {
         return $this->lon;
     }
 
-    /**
-     * @param \App\Value\GeoPoint $other
-     * @return bool
-     */
     public function equals(self $other): bool
     {
         return $this->lat === $other->lat && $this->lon === $other->lon;
     }
 
-    /**
-     * @return string
-     */
     public function toKey(): string
     {
         return sprintf('%+.6f,%+.6f', $this->lat, $this->lon);
     }
 
-    /**
-     * @return string
-     */
+    #[\Override]
     public function __toString(): string
     {
         return $this->toKey();

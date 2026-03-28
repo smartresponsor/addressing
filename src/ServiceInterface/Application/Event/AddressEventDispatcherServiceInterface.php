@@ -8,5 +8,5 @@ interface AddressEventDispatcherServiceInterface
 {
     public function subscribe(string $eventName, callable $listener): void;
 
-    public function dispatch(AddressEventInterface $event): void;
+    public function dispatch(AddressEventInterface $addressEvent): void;
 }

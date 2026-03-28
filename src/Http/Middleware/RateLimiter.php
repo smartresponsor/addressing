@@ -14,31 +14,18 @@ use Throwable;
 /**
  *
  */
-final class RateLimiter
+final readonly class RateLimiter
 {
-    private ?PDO $pdo;
-    private int $limitPerMinute;
-    private int $burst;
-
-    /**
-     * @param \PDO|null $pdo
-     * @param int $limitPerMinute
-     * @param int $burst
-     */
-    public function __construct(?PDO $pdo, int $limitPerMinute = 60, int $burst = 30)
+    public function __construct(private ?PDO $pdo, private int $limitPerMinute = 60, private int $burst = 30)
     {
-        $this->pdo = $pdo;
-        $this->limitPerMinute = $limitPerMinute;
-        $this->burst = $burst;
-        if ($this->pdo) $this->init();
+        if ($this->pdo instanceof \PDO) {
+            $this->init();
+        }
     }
 
-    /**
-     * @return void
-     */
     private function init(): void
     {
-        if ($this->pdo === null) {
+        if (!$this->pdo instanceof \PDO) {
             return;
         }
         try {
@@ -49,18 +36,13 @@ final class RateLimiter
                 cnt INTEGER NOT NULL,
                 PRIMARY KEY (client, rkey)
             )');
-        } catch (Throwable $e) {
+        } catch (Throwable) {
         }
     }
 
-    /**
-     * @param string $client
-     * @param string $key
-     * @return bool
-     */
     public function check(string $client, string $key): bool
     {
-        if ($this->pdo === null) {
+        if (!$this->pdo instanceof \PDO) {
             return true; // no DB — no rate limiting
         }
         $pdo = $this->pdo;

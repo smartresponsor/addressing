@@ -13,13 +13,10 @@ use InvalidArgumentException;
 /**
  *
  */
-final class Country
+final readonly class Country implements \Stringable
 {
     private string $code;
 
-    /**
-     * @param string $alpha2
-     */
     public function __construct(string $alpha2)
     {
         $filtered = preg_replace('/[^A-Za-z]/', '', $alpha2);
@@ -33,26 +30,17 @@ final class Country
         $this->code = $c;
     }
 
-    /**
-     * @param string|null $alpha2
-     * @return self
-     */
     public static function from(?string $alpha2): self
     {
         return new self($alpha2 ?? 'US');
     }
 
-    /**
-     * @return string
-     */
     public function value(): string
     {
         return $this->code;
     }
 
-    /**
-     * @return string
-     */
+    #[\Override]
     public function __toString(): string
     {
         return $this->code;

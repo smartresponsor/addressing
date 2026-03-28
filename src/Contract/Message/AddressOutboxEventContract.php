@@ -11,10 +11,10 @@ namespace App\Contract\Message;
 
 final class AddressOutboxEventContract
 {
-    public const SCHEMA_VERSION = 'address-outbox.v1';
+    public const string SCHEMA_VERSION = 'address-outbox.v1';
 
     /** @var array<string, int> */
-    private const EVENT_VERSIONS = [
+    private const array EVENT_VERSIONS = [
         'AddressCreated' => 1,
         'AddressUpdated' => 1,
         'AddressDeleted' => 1,
