@@ -25,7 +25,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.2"
+          php-version: "8.4"
           tools: composer
           coverage: none
 
@@ -81,4 +81,3 @@ jobs:
           name: addressing-report
           path: report/
           if-no-files-found: ignore
-
