@@ -1,0 +1,5 @@
+configurations:
+  - id: addressing
+    name: Addressing
+    description: Shared Qodana configuration for the Addressing repository.
+    qodanaYaml: qodana.yaml

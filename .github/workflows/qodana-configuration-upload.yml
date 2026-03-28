@@ -10,14 +10,19 @@ on:
 jobs:
   upload-qodana-config:
     runs-on: ubuntu-latest
+    env:
+      QODANA_CONFIGURATIONS_TOKEN: ${{ secrets.QODANA_CONFIGURATIONS_TOKEN }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Skip when Qodana token is missing
+        if: ${{ env.QODANA_CONFIGURATIONS_TOKEN == '' }}
+        run: echo "Skipping Qodana configuration upload because QODANA_CONFIGURATIONS_TOKEN is not configured."
+
       - name: Run Qodana Configuration Uploader
-        env:
-          QODANA_CONFIGURATIONS_TOKEN: ${{ secrets.QODANA_CONFIGURATIONS_TOKEN }}
+        if: ${{ env.QODANA_CONFIGURATIONS_TOKEN != '' }}
         run: |
           docker run --rm \
             -v $(pwd):/workspace \
