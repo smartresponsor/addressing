@@ -7,13 +7,13 @@ AddressEngine — это лёгкая, расширяемая и production-read
 - Валидация и нормализация.
 - Форматирование с учётом стран (UA, CA, AU).
 - Фасад `AddressFormatter` + фабрика стратегий.
-- Полностью покрыто тестами (Unit, Integration, E2E, Behat).
+- Полностью покрыто тестами (Unit, Integration, E2E).
 
 ## ✨ Key Features
 
 - **Domain Entities & Services**: чистая архитектура (контракты, фабрики, стратегии).
 - **Validation & Formatting**: гибкие правила для разных стран.
-- **Testing Suite**: Unit + Integration + E2E + BDD (Behat).
+- **Testing Suite**: Unit + Integration + E2E.
 - **Reports & QA**: Allure, PHPStan, Psalm, SonarCloud, Codecov.
 - **CI/CD Ready**: GitHub Actions + GitLab CI.
 - **Dev Workflow**: pre-commit hooks, Dependabot.
@@ -27,8 +27,8 @@ composer require your-org/address-engine
 
 ## 🚀 CI/CD Integrations
 
-- ✅ GitHub Actions (PHPUnit, Behat, Allure, Coverage).
-- ✅ GitLab CI (Sonar, Behat, Codecov).
+- ✅ GitHub Actions (PHPUnit, Allure, Coverage).
+- ✅ GitLab CI (Sonar, Codecov).
 - ✅ Auto release to Packagist.
 - ✅ Pre-commit hooks (phpstan, psalm, phpunit).
 
