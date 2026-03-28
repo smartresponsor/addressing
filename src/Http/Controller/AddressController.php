@@ -351,21 +351,6 @@ final class AddressController
     }
 
     /** @param array<string, mixed> $payload */
-    private static function requiredFormString(array $payload, string $key): string
-    {
-        if (!array_key_exists($key, $payload) || !is_scalar($payload[$key])) {
-            throw new \RuntimeException('missing_'.$key);
-        }
-
-        $value = trim((string) $payload[$key]);
-        if ('' === $value) {
-            throw new \RuntimeException('missing_'.$key);
-        }
-
-        return $value;
-    }
-
-    /** @param array<string, mixed> $payload */
     private static function nullableFormString(array $payload, string $key): ?string
     {
         if (!array_key_exists($key, $payload) || null === $payload[$key]) {
@@ -539,9 +524,6 @@ final class AddressController
     private static function queryBoolOrNull(Request $req, string $key): ?bool
     {
         $value = $req->query->get($key);
-        if (is_bool($value)) {
-            return $value;
-        }
         if (!is_string($value)) {
             return null;
         }
@@ -553,6 +535,11 @@ final class AddressController
         };
     }
 
+    /**
+     * @param array<string, mixed> $in
+     *
+     * @return array<string, mixed>|null
+     */
     private static function optArray(array $in, string $key): ?array
     {
         if (!array_key_exists($key, $in) || null === $in[$key]) {
@@ -565,6 +552,7 @@ final class AddressController
         return $in[$key];
     }
 
+    /** @param array<string, mixed> $in */
     private static function optInt(array $in, string $key): ?int
     {
         if (!array_key_exists($key, $in) || null === $in[$key] || '' === $in[$key]) {
@@ -579,6 +567,7 @@ final class AddressController
         throw new \RuntimeException('invalid_'.$key);
     }
 
+    /** @param array<string, mixed> $in */
     private static function optFloat(array $in, string $key): ?float
     {
         if (!array_key_exists($key, $in) || null === $in[$key] || '' === $in[$key]) {
@@ -593,7 +582,22 @@ final class AddressController
         throw new \RuntimeException('invalid_'.$key);
     }
 
-    /** @param array<string, mixed> $in */
+    /**
+     * @param array<string, mixed> $in
+     *
+     * @return array{
+     *   governanceStatus:?string,
+     *   duplicateOfId:?string,
+     *   supersededById:?string,
+     *   aliasOfId:?string,
+     *   conflictWithId:?string,
+     *   revalidationDueAt:?string,
+     *   revalidationPolicy:?string,
+     *   lastValidationProvider:?string,
+     *   lastValidationStatus:?string,
+     *   lastValidationScore:?int
+     * }
+     */
     private static function operationalPatch(array $in): array
     {
         return [

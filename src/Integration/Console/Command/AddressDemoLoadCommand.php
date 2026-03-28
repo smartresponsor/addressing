@@ -29,11 +29,24 @@ final class AddressDemoLoadCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $count = max(1, (int) $input->getOption('count'));
+        $count = max(1, self::intOption($input, 'count', 50));
         $loaded = $this->fixtureService->resetAndLoad($count);
 
         $io->success(sprintf('Loaded %d demo addresses.', $loaded));
 
         return Command::SUCCESS;
+    }
+
+    private static function intOption(InputInterface $input, string $name, int $default): int
+    {
+        $value = $input->getOption($name);
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return $default;
     }
 }

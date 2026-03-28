@@ -47,7 +47,7 @@ final class AddressSearchCommand extends Command
             self::nullable($input->getOption('vendor-id')),
             self::nullableUpper($input->getOption('country-code')),
             self::nullable($input->getOption('query')),
-            max(1, (int) $input->getOption('limit')),
+            max(1, self::intOption($input, 'limit', 25)),
             self::nullable($input->getOption('cursor')),
             [
                 'sourceType' => AddressRecordPolicy::normalizeSourceType(self::nullable($input->getOption('source-type'))),
@@ -71,12 +71,30 @@ final class AddressSearchCommand extends Command
             'revalidationPolicy' => $address->revalidationPolicy(),
         ], $result['items']);
 
-        $io->writeln(json_encode([
+        $payload = json_encode([
             'nextCursor' => $result['nextCursor'],
             'items' => $items,
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if (false === $payload) {
+            throw new \RuntimeException('invalid_search_payload');
+        }
+
+        $io->writeln($payload);
 
         return Command::SUCCESS;
+    }
+
+    private static function intOption(InputInterface $input, string $name, int $default): int
+    {
+        $value = $input->getOption($name);
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return $default;
     }
 
     private static function nullable(mixed $value): ?string

@@ -34,14 +34,30 @@ final class AddressEvidenceSummaryCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $summary = $this->addressService->evidenceHistorySummary(
-            (string) $input->getArgument('address-id'),
+            self::requiredArgument($input, 'address-id'),
             self::nullable($input->getOption('owner-id')),
             self::nullable($input->getOption('vendor-id')),
         );
 
-        $io->writeln(json_encode($summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $payload = json_encode($summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if (false === $payload) {
+            throw new \RuntimeException('invalid_summary_payload');
+        }
+
+        $io->writeln($payload);
 
         return Command::SUCCESS;
+    }
+
+    private static function requiredArgument(InputInterface $input, string $name): string
+    {
+        $value = $input->getArgument($name);
+
+        if (!is_string($value)) {
+            throw new \RuntimeException('invalid_argument_'.$name);
+        }
+
+        return $value;
     }
 
     private static function nullable(mixed $value): ?string

@@ -34,6 +34,8 @@ interface AddressRepositoryInterface
     public function patchOperational(string $id, ?string $ownerId, ?string $vendorId, array $patch): bool;
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return array{items: list<AddressInterface>, nextCursor: ?string}
      */
     public function findPage(
@@ -47,6 +49,8 @@ interface AddressRepositoryInterface
     ): array;
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return array{
      *   total:int,
      *   dueForRevalidation:int,
@@ -75,6 +79,19 @@ interface AddressRepositoryInterface
      */
     public function summarizeGovernanceCluster(string $addressId, ?string $ownerId, ?string $vendorId): array;
 
+    /**
+     * @param array<string, mixed> $filters
+     *
+     * @return array{
+     *   total:int,
+     *   dueForRevalidation:int,
+     *   evidenceMissing:int,
+     *   uncertainValidation:int,
+     *   conflictReview:int,
+     *   duplicateReview:int,
+     *   staleNormalizationVersion:int
+     * }
+     */
     public function summarizeOperationalQueues(
         ?string $ownerId,
         ?string $vendorId,
@@ -84,6 +101,8 @@ interface AddressRepositoryInterface
     ): array;
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return list<array{
      *   countryCode:string,
      *   total:int,
@@ -106,6 +125,8 @@ interface AddressRepositoryInterface
     ): array;
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return list<array{
      *   sourceSystem:string,
      *   sourceType:string,
@@ -130,6 +151,8 @@ interface AddressRepositoryInterface
     ): array;
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return list<array{
      *   validationProvider:string,
      *   validationStatus:string,
@@ -154,6 +177,8 @@ interface AddressRepositoryInterface
     ): array;
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return list<array{
      *   normalizationVersion:string,
      *   validationStatus:string,

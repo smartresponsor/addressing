@@ -40,7 +40,12 @@ final class AddressQueueSummaryCommand extends Command
             self::nullable($input->getOption('query')),
         );
 
-        $io->writeln(json_encode($summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $payload = json_encode($summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if (false === $payload) {
+            throw new \RuntimeException('invalid_summary_payload');
+        }
+
+        $io->writeln($payload);
 
         return Command::SUCCESS;
     }

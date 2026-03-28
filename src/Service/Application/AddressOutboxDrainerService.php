@@ -26,7 +26,7 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
         $count = 0;
 
         foreach ($rows as $r) {
-            $payload = json_decode((string) ($r['payload'] ?? ''), true);
+            $payload = json_decode(self::rowString($r, 'payload') ?? '', true);
             if (!is_array($payload)) {
                 $payload = null;
             }
@@ -35,8 +35,8 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
             $ok = $this->send(
                 $url,
                 [
-                    'name' => (string) $r['event_name'],
-                    'version' => (int) $r['event_version'],
+                    'name' => self::rowString($r, 'event_name') ?? '',
+                    'version' => self::rowInt($r, 'event_version'),
                     'payload' => $payload,
                 ],
                 $retryLimit,
@@ -52,7 +52,7 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
                     .'published_attempt = published_attempt + 1, last_error = NULL '
                     .'WHERE id = :id'
                 );
-                $upd->execute([':id' => $r['id']]);
+                $upd->execute([':id' => self::rowInt($r, 'id')]);
             } else {
                 $upd = $this->pdo->prepare(
                     'UPDATE address_outbox '
@@ -60,7 +60,7 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
                     .'published_attempt = published_attempt + 1, last_error = :err '
                     .'WHERE id = :id'
                 );
-                $upd->execute([':id' => $r['id'], ':err' => $err]);
+                $upd->execute([':id' => self::rowInt($r, 'id'), ':err' => $err]);
             }
 
             ++$count;
@@ -74,7 +74,7 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
      */
     private function reserveRows(string $lockId, int $limit): array
     {
-        $driver = (string) $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $driver = $this->driver();
 
         if ('pgsql' === $driver) {
             $stmt = $this->pdo->prepare(
@@ -94,7 +94,10 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
             $stmt->bindValue(':lockedBy', $lockId);
             $stmt->execute();
 
-            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            /** @var array<int, array<string, mixed>> $rows */
+            $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            return $rows;
         }
 
         $this->pdo->beginTransaction();
@@ -108,7 +111,7 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
         $sel->execute();
         $ids = $sel->fetchAll(\PDO::FETCH_COLUMN);
 
-        if ([] === $ids || false === $ids) {
+        if ([] === $ids) {
             $this->pdo->commit();
 
             return [];
@@ -127,6 +130,7 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
             .'FROM address_outbox WHERE locked_by = ? AND published_at IS NULL'
         );
         $rows->execute([$lockId]);
+        /** @var array<int, array<string, mixed>> $result */
         $result = $rows->fetchAll(\PDO::FETCH_ASSOC);
         $this->pdo->commit();
 
@@ -135,9 +139,36 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
 
     private function currentTimestampSql(): string
     {
-        $driver = (string) $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $driver = $this->driver();
 
         return 'pgsql' === $driver ? 'now()' : 'CURRENT_TIMESTAMP';
+    }
+
+    private function driver(): string
+    {
+        $driver = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+
+        return is_string($driver) ? $driver : '';
+    }
+
+    /** @param array<string, mixed> $row */
+    private static function rowString(array $row, string $key): ?string
+    {
+        return isset($row[$key]) && is_string($row[$key]) ? $row[$key] : null;
+    }
+
+    /** @param array<string, mixed> $row */
+    private static function rowInt(array $row, string $key): int
+    {
+        $value = $row[$key] ?? null;
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return 0;
     }
 
     /**

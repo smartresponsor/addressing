@@ -31,7 +31,11 @@ final class AddressOutboxEventContract
         return self::EVENT_VERSIONS[$eventName];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @param array<string, mixed> $payload
+     *
+     * @return array<string, mixed>
+     */
     public static function decoratePayload(string $eventName, array $payload): array
     {
         $version = self::eventVersion($eventName);

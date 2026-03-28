@@ -146,7 +146,9 @@ final class AddressValidatedApplierService implements AddressValidatedApplierSer
 
             $lastValidationProvider = $validated->lastValidationProvider ?? $validated->validationProvider;
             $lastValidationStatus = $validated->lastValidationStatus ?? 'validated';
-            $lastValidationScore = $validated->lastValidationScore ?? $validated->verdict?->quality;
+            $lastValidationScore = is_int($validated->lastValidationScore)
+                ? $validated->lastValidationScore
+                : $validated->verdict?->quality;
             if (null !== $validated->revalidationDueAt) {
                 $fields[] = 'revalidation_due_at = :revalidation_due_at';
                 $params[':revalidation_due_at'] = $validated->revalidationDueAt->format('Y-m-d H:i:sP');
@@ -199,7 +201,10 @@ final class AddressValidatedApplierService implements AddressValidatedApplierSer
                 throw new \RuntimeException('not_found');
             }
 
-            $evidenceSnapshotId = $this->appendEvidenceSnapshot($id, $ownerId, $vendorId, $validated, $params[':last_validation_status'] ?? 'validated', $params[':last_validation_score'] ?? null);
+            $lastValidationStatusParam = $lastValidationStatus;
+            $lastValidationScoreParam = $lastValidationScore;
+
+            $evidenceSnapshotId = $this->appendEvidenceSnapshot($id, $ownerId, $vendorId, $validated, $lastValidationStatusParam, $lastValidationScoreParam);
 
             $this->appendOutbox([
                 'id' => $id,
@@ -219,8 +224,8 @@ final class AddressValidatedApplierService implements AddressValidatedApplierSer
                 'governanceLinkId' => $this->governanceLinkId($governanceStatus, $duplicateOfId, $supersededById, $aliasOfId, $conflictWithId),
                 'revalidationDueAt' => $params[':revalidation_due_at'] ?? null,
                 'revalidationPolicy' => $params[':revalidation_policy'] ?? null,
-                'lastValidationStatus' => $params[':last_validation_status'] ?? null,
-                'lastValidationScore' => $params[':last_validation_score'] ?? null,
+                'lastValidationStatus' => $lastValidationStatusParam,
+                'lastValidationScore' => $lastValidationScoreParam,
                 'evidenceSnapshotId' => $evidenceSnapshotId,
             ]);
 

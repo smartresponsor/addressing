@@ -331,8 +331,8 @@ SQL
                 return false;
             }
 
-            $governanceStatus = array_key_exists('governance_status', $normalized)
-                ? (string) $normalized['governance_status']
+            $governanceStatus = array_key_exists('governance_status', $normalized) && is_string($normalized['governance_status'])
+                ? $normalized['governance_status']
                 : null;
             $governanceLinkId = null === $governanceStatus
                 ? null
@@ -368,6 +368,8 @@ SQL
     }
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return array{items: AddressInterface[], nextCursor: ?string}
      */
     public function findPage(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, int $limit, ?string $cursor, array $filters = []): array
@@ -540,7 +542,9 @@ SQL
             $stmt->bindValue($k, $v);
         }
         $stmt->execute();
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC) ?: [];
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        /** @var array<string, mixed> $summaryRow */
+        $summaryRow = is_array($row) ? $row : [];
 
         $relatedIds = [];
         $primaryLinkId = $this->governanceLinkId($current);
@@ -562,10 +566,10 @@ SQL
         }
 
         $relatedIds = array_values(array_unique($relatedIds));
-        $duplicateChildren = (int) ($row['duplicate_children'] ?? 0);
-        $supersededChildren = (int) ($row['superseded_children'] ?? 0);
-        $aliasChildren = (int) ($row['alias_children'] ?? 0);
-        $conflictPeers = (int) ($row['conflict_peers'] ?? 0);
+        $duplicateChildren = $this->intRowValue($summaryRow, 'duplicate_children');
+        $supersededChildren = $this->intRowValue($summaryRow, 'superseded_children');
+        $aliasChildren = $this->intRowValue($summaryRow, 'alias_children');
+        $conflictPeers = $this->intRowValue($summaryRow, 'conflict_peers');
         $inboundLinkedTotal = $duplicateChildren + $supersededChildren + $aliasChildren + $conflictPeers;
 
         return [
@@ -584,6 +588,8 @@ SQL
     }
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return array{
      *   total:int,
      *   dueForRevalidation:int,
@@ -694,6 +700,8 @@ SQL
     }
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return list<array{
      *   countryCode:string,
      *   total:int,
@@ -790,6 +798,8 @@ SQL
     }
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return list<array{
      *   sourceSystem:string,
      *   sourceType:string,
@@ -899,6 +909,8 @@ SQL
     }
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return list<array{
      *   validationProvider:string,
      *   validationStatus:string,
@@ -1340,6 +1352,7 @@ SQL
         return $normalized;
     }
 
+    /** @param array<string, mixed> $normalized */
     private function assertOperationalGovernanceTargetsExist(array $normalized, ?string $ownerId, ?string $vendorId): void
     {
         $targets = [
@@ -1625,6 +1638,20 @@ SQL
         return null;
     }
 
+    /** @param array<string, mixed> $row */
+    private function intRowValue(array $row, string $key): int
+    {
+        $value = $row[$key] ?? null;
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return 0;
+    }
+
     private function ensureTenantScope(?string $ownerId, ?string $vendorId): void
     {
         if (null === $ownerId && null === $vendorId) {
@@ -1662,6 +1689,8 @@ SQL
     }
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return list<array{
      *   normalizationVersion:string,
      *   validationStatus:string,

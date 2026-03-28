@@ -44,32 +44,49 @@ final class AddressCreateCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $dto = new AddressManageDto();
-        $dto->line1 = (string) $input->getOption('line1');
+        $dto->line1 = self::requiredOption($input, 'line1');
         $dto->line2 = self::nullable($input->getOption('line2'));
-        $dto->city = (string) $input->getOption('city');
+        $dto->city = self::requiredOption($input, 'city');
         $dto->region = self::nullable($input->getOption('region'));
         $dto->postalCode = self::nullable($input->getOption('postal-code'));
-        $dto->countryCode = (string) $input->getOption('country-code');
+        $dto->countryCode = self::requiredOption($input, 'country-code');
         $dto->ownerId = self::nullable($input->getOption('owner-id'));
         $dto->vendorId = self::nullable($input->getOption('vendor-id'));
 
         $address = $this->inputFactory->fromManageDto($dto, [
-            'sourceSystem' => (string) $input->getOption('source-system'),
+            'sourceSystem' => self::requiredOption($input, 'source-system'),
             'sourceType' => 'manual',
-            'sourceReference' => (string) $input->getOption('source-reference'),
+            'sourceReference' => self::requiredOption($input, 'source-reference'),
         ]);
         $this->addressService->create($address);
 
-        $io->writeln(json_encode([
+        $message = json_encode([
             'id' => $address->id(),
             'ownerId' => $address->ownerId(),
             'vendorId' => $address->vendorId(),
             'line1' => $address->line1(),
             'city' => $address->city(),
             'countryCode' => $address->countryCode(),
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if (false === $message) {
+            $io->error('Failed to encode command output.');
+
+            return Command::FAILURE;
+        }
+
+        $io->writeln($message);
 
         return Command::SUCCESS;
+    }
+
+    private static function requiredOption(InputInterface $input, string $name): string
+    {
+        $value = $input->getOption($name);
+        if (!is_string($value)) {
+            throw new \RuntimeException('invalid_option_'.$name);
+        }
+
+        return $value;
     }
 
     private static function nullable(mixed $value): ?string

@@ -26,6 +26,8 @@ final class AddressService
     }
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return array{items: list<AddressInterface>, nextCursor: ?string}
      */
     public function search(
@@ -167,6 +169,8 @@ final class AddressService
     }
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return array{
      *   total:int,
      *   dueForRevalidation:int,
@@ -184,10 +188,24 @@ final class AddressService
         ?string $q,
         array $filters = [],
     ): array {
-        return $this->repo->summarizeOperationalQueues($ownerId, $vendorId, $countryCode, $q, $filters);
+        /** @var array{
+         *   total:int,
+         *   dueForRevalidation:int,
+         *   evidenceMissing:int,
+         *   uncertainValidation:int,
+         *   conflictReview:int,
+         *   duplicateReview:int,
+         *   staleNormalizationVersion:int
+         * } $summary
+         */
+        $summary = $this->repo->summarizeOperationalQueues($ownerId, $vendorId, $countryCode, $q, $filters);
+
+        return $summary;
     }
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return list<array{
      *   countryCode:string,
      *   total:int,
@@ -212,6 +230,8 @@ final class AddressService
     }
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return list<array{
      *   sourceSystem:string,
      *   sourceType:string,
@@ -238,6 +258,8 @@ final class AddressService
     }
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return list<array{
      *   validationProvider:string,
      *   validationStatus:string,
@@ -264,6 +286,8 @@ final class AddressService
     }
 
     /**
+     * @param array<string, mixed> $filters
+     *
      * @return list<array{
      *   normalizationVersion:string,
      *   validationStatus:string,

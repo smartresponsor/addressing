@@ -79,9 +79,15 @@ final class AddressDemoFixtureService
     {
         $dto = new AddressManageDto();
         $dto->line1 = $this->faker->streetAddress();
-        $dto->line2 = $this->faker->optional(0.35)->secondaryAddress();
+        $line2 = $this->faker->optional(0.35, null)->randomElement([
+            'Suite '.$this->faker->buildingNumber(),
+            'Apt '.$this->faker->buildingNumber(),
+            'Unit '.$this->faker->buildingNumber(),
+        ]);
+        $dto->line2 = is_string($line2) ? $line2 : null;
         $dto->city = $this->faker->city();
-        $dto->region = $this->faker->stateAbbr();
+        $region = $this->faker->randomElement(['CA', 'FL', 'IL', 'NY', 'TX', 'WA']);
+        $dto->region = is_string($region) ? $region : null;
         $dto->postalCode = $this->faker->postcode();
         $dto->countryCode = 'US';
         $dto->ownerId = 'owner-'.$this->faker->numberBetween(1, 4);

@@ -9,7 +9,7 @@ final class AddressSchemaManager
 {
     public static function ensureSchema(\PDO $pdo, string $projectDir): void
     {
-        $driver = (string) $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $driver = self::driver($pdo);
         if ('sqlite' === $driver) {
             self::ensureSqliteSchema($pdo);
 
@@ -23,7 +23,7 @@ final class AddressSchemaManager
 
     public static function resetSchema(\PDO $pdo, string $projectDir): void
     {
-        $driver = (string) $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $driver = self::driver($pdo);
         if ('sqlite' === $driver) {
             $pdo->exec('DROP TABLE IF EXISTS address_outbox');
             $pdo->exec('DROP TABLE IF EXISTS address_evidence_snapshot');
@@ -156,5 +156,12 @@ CREATE TABLE IF NOT EXISTS address_outbox (
 );
 SQL
         );
+    }
+
+    private static function driver(\PDO $pdo): string
+    {
+        $driver = $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+
+        return is_string($driver) ? $driver : '';
     }
 }

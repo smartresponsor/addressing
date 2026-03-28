@@ -35,7 +35,7 @@ final class AddressPortfolioSummaryCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $kind = (string) $input->getArgument('kind');
+        $kind = self::requiredArgument($input, 'kind');
         $ownerId = self::nullable($input->getOption('owner-id'));
         $vendorId = self::nullable($input->getOption('vendor-id'));
         $countryCode = self::nullable($input->getOption('country-code'));
@@ -49,9 +49,25 @@ final class AddressPortfolioSummaryCommand extends Command
             default => throw new \RuntimeException('invalid_portfolio_kind'),
         };
 
-        $io->writeln(json_encode($summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $payload = json_encode($summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if (false === $payload) {
+            throw new \RuntimeException('invalid_summary_payload');
+        }
+
+        $io->writeln($payload);
 
         return Command::SUCCESS;
+    }
+
+    private static function requiredArgument(InputInterface $input, string $name): string
+    {
+        $value = $input->getArgument($name);
+
+        if (!is_string($value)) {
+            throw new \RuntimeException('invalid_argument_'.$name);
+        }
+
+        return $value;
     }
 
     private static function nullable(mixed $value): ?string

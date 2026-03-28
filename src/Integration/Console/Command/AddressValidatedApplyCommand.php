@@ -35,14 +35,14 @@ final class AddressValidatedApplyCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $payload = json_decode((string) $input->getArgument('payload-json'), true);
+        $payload = json_decode(self::requiredArgument($input, 'payload-json'), true);
         if (!is_array($payload)) {
             throw new \RuntimeException('invalid_json');
         }
 
         $validated = AddressValidated::fromArray($payload);
         $this->validatedApplier->apply(
-            (string) $input->getArgument('address-id'),
+            self::requiredArgument($input, 'address-id'),
             $validated,
             self::nullable($input->getOption('owner-id')),
             self::nullable($input->getOption('vendor-id')),
@@ -51,6 +51,17 @@ final class AddressValidatedApplyCommand extends Command
         $io->success('Validated payload applied.');
 
         return Command::SUCCESS;
+    }
+
+    private static function requiredArgument(InputInterface $input, string $name): string
+    {
+        $value = $input->getArgument($name);
+
+        if (!is_string($value)) {
+            throw new \RuntimeException('invalid_argument_'.$name);
+        }
+
+        return $value;
     }
 
     private static function nullable(mixed $value): ?string
