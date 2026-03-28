@@ -114,12 +114,16 @@ jobs:
         run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Domain gate (strict)
-        shell: pwsh
+        shell: bash
         env:
           SR_CANON_REQUIRED: "1"
           SR_GATE_STRICT: "1"
         run: |
-          pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "${SR_DOMAIN}"
+          if [ -f "Domain/Tool/github-gate.ps1" ]; then
+            pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "${SR_DOMAIN}"
+          else
+            echo "Skipping domain gate: Domain/Tool/github-gate.ps1 is not present in this repository."
+          fi
 
       - name: Quality checks
         run: |

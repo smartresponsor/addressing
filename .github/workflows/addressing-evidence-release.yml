@@ -33,35 +33,37 @@ jobs:
         run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Domain report (soft)
-        shell: pwsh
+        shell: bash
         env:
           SR_DOMAIN: "addressing"
           SR_CANON_REQUIRED: "0"
         run: |
-          pwsh -NoProfile -File Domain/Tool/run.ps1 doctor -Domain "addressing" -Repo "${{ github.workspace }}"
-          $global:LASTEXITCODE = 0
-          pwsh -NoProfile -File Domain/Tool/run.ps1 scan -Domain "addressing"
-          $global:LASTEXITCODE = 0
-          pwsh -NoProfile -File Domain/Tool/run.ps1 health -Domain "addressing" -Repo "${{ github.workspace }}"
-          $global:LASTEXITCODE = 0
-          pwsh -NoProfile -File Domain/Tool/run.ps1 validate -Domain "addressing" -Repo "${{ github.workspace }}" -AllowMissing
-          $global:LASTEXITCODE = 0
-          exit 0
+          if [ -f "Domain/Tool/run.ps1" ]; then
+            pwsh -NoProfile -File Domain/Tool/run.ps1 doctor -Domain "addressing" -Repo "${{ github.workspace }}" || true
+            pwsh -NoProfile -File Domain/Tool/run.ps1 scan -Domain "addressing" || true
+            pwsh -NoProfile -File Domain/Tool/run.ps1 health -Domain "addressing" -Repo "${{ github.workspace }}" || true
+            pwsh -NoProfile -File Domain/Tool/run.ps1 validate -Domain "addressing" -Repo "${{ github.workspace }}" -AllowMissing || true
+          else
+            echo "Skipping domain report: Domain/Tool/run.ps1 is not present in this repository."
+          fi
 
       - name: Evidence pack
         id: pack
-        shell: pwsh
+        shell: bash
         env:
           SR_DOMAIN: "addressing"
         run: |
-          $kind = "run"
-          $ref = ""
-          if ("${{ github.ref_type }}" -eq "tag") {
-            $kind = "tag"
-            $ref = "${{ github.ref_name }}"
-          }
-          pwsh -NoProfile -File Domain/Tool/evidence-pack.ps1 -Domain "addressing" -Kind $kind -Ref $ref -Train "${{ vars.SR_TRAIN }}"
-          exit 0
+          if [ -f "Domain/Tool/evidence-pack.ps1" ]; then
+            kind="run"
+            ref=""
+            if [ "${{ github.ref_type }}" = "tag" ]; then
+              kind="tag"
+              ref="${{ github.ref_name }}"
+            fi
+            pwsh -NoProfile -File Domain/Tool/evidence-pack.ps1 -Domain "addressing" -Kind "$kind" -Ref "$ref" -Train "${{ vars.SR_TRAIN }}" || true
+          else
+            echo "Skipping evidence pack: Domain/Tool/evidence-pack.ps1 is not present in this repository."
+          fi
 
       - name: Upload evidence to release
         uses: softprops/action-gh-release@v2

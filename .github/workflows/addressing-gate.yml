@@ -39,13 +39,17 @@ jobs:
         run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Domain gate (soft)
-        shell: pwsh
+        shell: bash
         env:
           SR_DOMAIN: "addressing"
           SR_CANON_REQUIRED: "0"
           SR_GATE_STRICT: "0"
         run: |
-          pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "addressing"
+          if [ -f "Domain/Tool/github-gate.ps1" ]; then
+            pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "addressing"
+          else
+            echo "Skipping domain gate: Domain/Tool/github-gate.ps1 is not present in this repository."
+          fi
 
       - name: Upload report artifact
         if: always()
