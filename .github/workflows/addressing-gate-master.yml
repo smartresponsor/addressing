@@ -78,7 +78,6 @@ jobs:
       MIN_COVERAGE: "80"
       PANTHER_EXTERNAL_BASE_URI: "http://127.0.0.1:8000"
       APP_ENV: "test"
-      APP_VAR_DIR: "${{ runner.temp }}/symfony-var"
 
       PG_DSN: pgsql:host=127.0.0.1;port=5432;dbname=smartresponsor
       PG_USER: smartresponsor
@@ -136,6 +135,7 @@ jobs:
 
       - name: Unit tests with coverage threshold
         run: |
+          export APP_VAR_DIR="$RUNNER_TEMP/symfony-var"
           mkdir -p "$APP_VAR_DIR" build/logs
           php -S 127.0.0.1:8000 -t public > build/logs/php-server.log 2>&1 &
           SERVER_PID=$!
