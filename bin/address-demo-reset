@@ -3,22 +3,8 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-require __DIR__ . '/../vendor/autoload.php';
-
-use App\Fixture\AddressDemoFixtureService;
-
-$dsn = getenv('PG_DSN');
-$user = getenv('PG_USER');
-$pass = getenv('PG_PASS');
 $count = isset($argv[1]) && is_numeric($argv[1]) ? max(1, (int) $argv[1]) : 50;
+$command = escapeshellarg(PHP_BINARY).' '.escapeshellarg(__DIR__.'/console').' address:demo:load --count='.escapeshellarg((string) $count);
+passthru($command, $exitCode);
 
-if (!is_string($dsn) || $dsn === '' || !is_string($user) || $user === '') {
-    fwrite(STDERR, "PG_DSN/PG_USER are required\n");
-    exit(2);
-}
-
-$pdo = new PDO($dsn, $user, is_string($pass) ? $pass : '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-$fixture = new AddressDemoFixtureService($pdo);
-$loaded = $fixture->resetAndLoad($count);
-
-fwrite(STDOUT, "Demo address data reset complete. Loaded: {$loaded}\n");
+exit($exitCode);
