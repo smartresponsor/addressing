@@ -12,6 +12,7 @@ $checks = [
     'tests/console-application.php' => is_file($root.'/tests/console-application.php'),
     'tests/Support/TestDatabase.php' => is_file($root.'/tests/Support/TestDatabase.php'),
     'tests/Support/TestRuntimeEnvironment.php' => is_file($root.'/tests/Support/TestRuntimeEnvironment.php'),
+    'tests/Security/SymfonySecurityTest.php' => is_file($root.'/tests/Security/SymfonySecurityTest.php'),
     'bin/address-demo-reset' => is_file($root.'/bin/address-demo-reset'),
     'bin/console' => is_file($root.'/bin/console'),
     'tools/smoke/category-runtime-smoke.php' => is_file($root.'/tools/smoke/category-runtime-smoke.php'),
@@ -31,6 +32,7 @@ $demoResetUsesRuntimeBootstrap = false;
 $serviceTestUsesSharedTestDatabase = false;
 $functionalTestUsesSharedTestDatabase = false;
 $serviceTestEmbedsSchemaSql = false;
+$securityTestUsesSharedTestDatabase = false;
 
 $objectManagerPath = $root.'/tests/object-manager.php';
 if (is_file($objectManagerPath)) {
@@ -60,6 +62,12 @@ if (is_file($functionalTestPath)) {
     $functionalTestUsesSharedTestDatabase = str_contains($functionalTestContent, 'TestDatabase::freshSqlitePath(') && str_contains($functionalTestContent, 'TestDatabase::resetAddressSchema(');
 }
 
+$securityTestPath = $root.'/tests/Security/SymfonySecurityTest.php';
+if (is_file($securityTestPath)) {
+    $securityTestContent = (string) file_get_contents($securityTestPath);
+    $securityTestUsesSharedTestDatabase = str_contains($securityTestContent, 'TestDatabase::createInMemorySqlitePdo(');
+}
+
 $transitionLayer = [
     'bin/address-demo-reset-runtime' => is_file($root.'/bin/address-demo-reset-runtime'),
     'tests/object-manager.runtime.php' => is_file($root.'/tests/object-manager.runtime.php'),
@@ -78,6 +86,7 @@ fwrite(STDOUT, json_encode([
         'serviceTestUsesSharedTestDatabase' => $serviceTestUsesSharedTestDatabase,
         'serviceTestEmbedsSchemaSql' => $serviceTestEmbedsSchemaSql,
         'functionalTestUsesSharedTestDatabase' => $functionalTestUsesSharedTestDatabase,
+        'securityTestUsesSharedTestDatabase' => $securityTestUsesSharedTestDatabase,
         'transitionLayerRetired' => !in_array(true, $transitionLayer, true),
     ],
     'transitionLayer' => $transitionLayer,

@@ -25,9 +25,16 @@ final class TestDatabase
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             ]);
         } else {
-            $pdo = new PDO('sqlite::memory:');
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $pdo = self::createInMemorySqlitePdo();
         }
+
+        return $pdo;
+    }
+
+    public static function createInMemorySqlitePdo(): PDO
+    {
+        $pdo = new PDO('sqlite::memory:');
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         return $pdo;
     }

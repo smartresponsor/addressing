@@ -10,10 +10,10 @@ For generic tooling compatibility, `tests/object-manager.php` returns the primar
 
 The current test-support surface is centered on:
 
-- `tests/Support/TestDatabase.php` for shared PDO creation, schema reset, and SQLite path allocation
+- `tests/Support/TestDatabase.php` for shared PDO creation, schema reset, file-backed SQLite path allocation, and in-memory SQLite creation
 - `tests/Support/TestRuntimeEnvironment.php` for runtime environment wiring when a test boots the Symfony kernel against a file-backed SQLite database
 
-This keeps functional/runtime-facing tests aligned with the same schema/bootstrap truth instead of duplicating it piecemeal.
+This keeps functional, integration, and security-facing tests aligned with the same schema/bootstrap truth instead of duplicating it piecemeal.
 
 ## Local
 
@@ -23,7 +23,7 @@ This keeps functional/runtime-facing tests aligned with the same schema/bootstra
    - `TEST_DB_PASS="addressing"`
 2. Run the PHPUnit suites via the Composer scripts.
 
-If `TEST_DB_DSN` is empty, integration and functional tests use SQLite.
+If `TEST_DB_DSN` is empty, integration, service, functional, and security tests default to SQLite-based test support.
 
 ## Docker
 
