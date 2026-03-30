@@ -37,9 +37,20 @@ The current trust-surface smoke entrypoints are:
 - `composer smoke:doctrine`
 - `composer smoke:graphql`
 
+## Report commands
+
+The current runtime/trust-surface reports are:
+
+- `composer report:runtime-proof`
+- `composer report:bootstrap-drift`
+- `composer report:deptrac-drift`
+- `composer report:legacy-runtime-surface`
+- `composer report:runtime-sync`
+- `composer qa:trust-surface`
+
 Notes:
 
 - `smoke:doctrine` is intentionally `not_applicable` in the current PDO-first runtime.
 - `smoke:graphql` is intentionally `not_applicable` because no GraphQL surface is wired in the current slice.
-- `composer fixtures:demo` now uses the current runtime-safe `bin/address-demo-reset` entrypoint.
-- `bin/address-demo-reset-runtime` remains available as a direct replacement-safe entrypoint during the runtime synchronization period.
+- `composer fixtures:demo` uses the container-managed `bin/address-demo-reset` entrypoint.
+- The temporary runtime replacement layer introduced during the synchronization phase has been retired from the active trust surface.
