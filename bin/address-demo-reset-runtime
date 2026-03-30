@@ -1,0 +1,16 @@
+#!/usr/bin/env php
+<?php
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+declare(strict_types=1);
+
+use App\Fixture\AddressDemoFixtureService;
+
+require dirname(__DIR__).'/tools/support/AddressRuntimeBootstrap.php';
+
+$count = isset($argv[1]) && is_numeric($argv[1]) ? max(1, (int) $argv[1]) : 50;
+
+/** @var AddressDemoFixtureService $fixtureService */
+$fixtureService = AddressRuntimeBootstrap::service(AddressDemoFixtureService::class);
+$loaded = $fixtureService->resetAndLoad($count);
+
+fwrite(STDOUT, sprintf("Runtime demo reset complete. Loaded: %d\n", $loaded));
