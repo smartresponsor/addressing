@@ -19,6 +19,7 @@ $checks = [
     'tools/smoke/category-doctrine-mapping-smoke.php' => is_file($root.'/tools/smoke/category-doctrine-mapping-smoke.php'),
     'tools/smoke/category-graphql-smoke.php' => is_file($root.'/tools/smoke/category-graphql-smoke.php'),
     'tools/qa/AddressTrustSurfaceRunner.php' => is_file($root.'/tools/qa/AddressTrustSurfaceRunner.php'),
+    'tools/inspection/AddressRuntimeSyncSummary.php' => is_file($root.'/tools/inspection/AddressRuntimeSyncSummary.php'),
 ];
 
 $objectManagerUsesRuntimeBootstrap = false;
@@ -40,6 +41,13 @@ if (is_file($demoResetPath)) {
     $demoResetUsesRuntimeBootstrap = str_contains((string) file_get_contents($demoResetPath), 'AddressRuntimeBootstrap');
 }
 
+$transitionLayer = [
+    'bin/address-demo-reset-runtime' => is_file($root.'/bin/address-demo-reset-runtime'),
+    'tests/object-manager.runtime.php' => is_file($root.'/tests/object-manager.runtime.php'),
+    'tests/runtime-console-application.php' => is_file($root.'/tests/runtime-console-application.php'),
+    'tools/inspection/AddressWave2SyncSummary.php' => is_file($root.'/tools/inspection/AddressWave2SyncSummary.php'),
+];
+
 fwrite(STDOUT, json_encode([
     'component' => 'Addressing',
     'status' => in_array(false, $checks, true) ? 'incomplete' : 'ready',
@@ -48,5 +56,7 @@ fwrite(STDOUT, json_encode([
         'objectManagerUsesRuntimeBootstrap' => $objectManagerUsesRuntimeBootstrap,
         'consoleUsesRuntimeBootstrap' => $consoleUsesRuntimeBootstrap,
         'demoResetUsesRuntimeBootstrap' => $demoResetUsesRuntimeBootstrap,
+        'transitionLayerRetired' => !in_array(true, $transitionLayer, true),
     ],
+    'transitionLayer' => $transitionLayer,
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);

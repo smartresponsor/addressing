@@ -8,7 +8,9 @@ $reports = [
     'tools/inspection/AddressDeptracDriftReport.php',
     'tools/inspection/AddressLegacyRuntimeSurfaceReport.php',
     'tools/inspection/AddressCurrentNamespaceMap.php',
-    'tools/inspection/AddressWave2SyncSummary.php',
+    'tools/inspection/AddressRuntimeSyncSummary.php',
+    'tools/inspection/AddressRuntimeProofReport.php',
+    'tools/inspection/AddressComposerScriptSurfaceReport.php',
 ];
 
 $results = [];
@@ -22,6 +24,6 @@ foreach ($reports as $report) {
 
 fwrite(STDOUT, json_encode([
     'component' => 'Addressing',
-    'status' => 'report',
+    'status' => in_array(false, array_column($results, 'exists'), true) ? 'partial' : 'ready',
     'reports' => $results,
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);

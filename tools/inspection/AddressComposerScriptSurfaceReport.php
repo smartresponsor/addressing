@@ -20,7 +20,7 @@ $scripts = $payload['scripts'];
 $report = [];
 $missingPaths = [];
 foreach ($scripts as $name => $definition) {
-    if (!is_string($name) || !str_starts_with($name, 'smoke:')) {
+    if (!is_string($name) || !(str_starts_with($name, 'smoke:') || str_starts_with($name, 'report:') || 'qa:trust-surface' === $name)) {
         continue;
     }
 
@@ -67,7 +67,7 @@ $missingPaths = array_values(array_unique($missingPaths));
 fwrite(STDOUT, json_encode([
     'component' => 'Addressing',
     'status' => [] === $missingPaths ? 'ready' : 'incomplete',
-    'smokeScriptCount' => count($report),
+    'scriptCount' => count($report),
     'missingPathCount' => count($missingPaths),
     'missingPaths' => $missingPaths,
     'scripts' => $report,
