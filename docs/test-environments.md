@@ -6,6 +6,15 @@ The current Addressing slice is PDO-first at runtime. The Symfony container expo
 
 For generic tooling compatibility, `tests/object-manager.php` returns the primary `PDO` connection for the active runtime slice, and `tests/console-application.php` boots the current Symfony kernel through the shared runtime bootstrap helper.
 
+## Shared test support layer
+
+The current test-support surface is centered on:
+
+- `tests/Support/TestDatabase.php` for shared PDO creation, schema reset, and SQLite path allocation
+- `tests/Support/TestRuntimeEnvironment.php` for runtime environment wiring when a test boots the Symfony kernel against a file-backed SQLite database
+
+This keeps functional/runtime-facing tests aligned with the same schema/bootstrap truth instead of duplicating it piecemeal.
+
 ## Local
 
 1. Export test database variables when you want PostgreSQL-backed tests:
@@ -46,6 +55,7 @@ The current runtime/trust-surface reports are:
 - `composer report:deptrac-drift`
 - `composer report:legacy-runtime-surface`
 - `composer report:runtime-sync`
+- `composer report:test-support`
 - `composer qa:trust-surface`
 
 Notes:
