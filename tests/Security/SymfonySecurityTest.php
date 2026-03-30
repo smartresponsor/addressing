@@ -6,8 +6,8 @@ namespace Tests\Security;
 
 use App\Http\Middleware\IpGuard;
 use App\Http\Middleware\RateLimiter;
-use PDO;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\TestDatabase;
 
 final class SymfonySecurityTest extends TestCase
 {
@@ -28,8 +28,7 @@ final class SymfonySecurityTest extends TestCase
 
     public function testRateLimiterBlocksAfterBurstLimit(): void
     {
-        $pdo = new PDO('sqlite::memory:');
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo = TestDatabase::createInMemorySqlitePdo();
 
         $limiter = new RateLimiter($pdo, 2, 1);
 
