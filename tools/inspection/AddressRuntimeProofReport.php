@@ -15,6 +15,9 @@ $checks = [
     'tests/Support/TestRuntimeEnvironment.php' => is_file($root.'/tests/Support/TestRuntimeEnvironment.php'),
     'tests/Service/AddressServiceTest.php' => is_file($root.'/tests/Service/AddressServiceTest.php'),
     'tests/Security/SymfonySecurityTest.php' => is_file($root.'/tests/Security/SymfonySecurityTest.php'),
+    'src/Http/Controller/AddressController.php' => is_file($root.'/src/Http/Controller/AddressController.php'),
+    'src/Service/Application/AddressService.php' => is_file($root.'/src/Service/Application/AddressService.php'),
+    'tools/inspection/AddressApplicationSurfaceReport.php' => is_file($root.'/tools/inspection/AddressApplicationSurfaceReport.php'),
     'bin/address-demo-reset' => is_file($root.'/bin/address-demo-reset'),
     'bin/console' => is_file($root.'/bin/console'),
     'tools/smoke/category-runtime-smoke.php' => is_file($root.'/tools/smoke/category-runtime-smoke.php'),
@@ -41,6 +44,9 @@ $serviceTestEmbedsSchemaSql = false;
 $securityTestUsesSharedTestDatabase = false;
 $doctrineOrmInRequire = false;
 $doctrineOrmInRequireDev = false;
+$controllerInjectsRepositoryDirectly = false;
+$controllerUsesServiceSearch = false;
+$controllerUsesServiceMarkDeleted = false;
 
 $composerPath = $root.'/composer.json';
 if (is_file($composerPath)) {
@@ -95,6 +101,14 @@ if (is_file($securityTestPath)) {
     $securityTestUsesSharedTestDatabase = str_contains($securityTestContent, 'TestDatabase::createInMemorySqlitePdo(');
 }
 
+$controllerPath = $root.'/src/Http/Controller/AddressController.php';
+if (is_file($controllerPath)) {
+    $controllerContent = (string) file_get_contents($controllerPath);
+    $controllerInjectsRepositoryDirectly = str_contains($controllerContent, 'private AddressRepository $addressRepository');
+    $controllerUsesServiceSearch = str_contains($controllerContent, '$this->addressService->search(');
+    $controllerUsesServiceMarkDeleted = str_contains($controllerContent, '$this->addressService->markDeleted(');
+}
+
 $transitionLayer = [
     'bin/address-demo-reset-runtime' => is_file($root.'/bin/address-demo-reset-runtime'),
     'tests/object-manager.runtime.php' => is_file($root.'/tests/object-manager.runtime.php'),
@@ -119,6 +133,9 @@ fwrite(STDOUT, json_encode([
         'securityTestUsesSharedTestDatabase' => $securityTestUsesSharedTestDatabase,
         'doctrineOrmInRequire' => $doctrineOrmInRequire,
         'doctrineOrmInRequireDev' => $doctrineOrmInRequireDev,
+        'controllerInjectsRepositoryDirectly' => $controllerInjectsRepositoryDirectly,
+        'controllerUsesServiceSearch' => $controllerUsesServiceSearch,
+        'controllerUsesServiceMarkDeleted' => $controllerUsesServiceMarkDeleted,
         'transitionLayerRetired' => !in_array(true, $transitionLayer, true),
     ],
     'transitionLayer' => $transitionLayer,

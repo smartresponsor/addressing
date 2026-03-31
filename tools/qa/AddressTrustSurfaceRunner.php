@@ -13,6 +13,7 @@ $reports = [
     'tools/inspection/AddressComposerScriptSurfaceReport.php',
     'tools/inspection/AddressTestSupportSurfaceReport.php',
     'tools/inspection/AddressPackageSurfaceReport.php',
+    'tools/inspection/AddressApplicationSurfaceReport.php',
 ];
 
 $results = [];
