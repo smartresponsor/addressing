@@ -26,6 +26,7 @@ $checks = [
     'tools/qa/AddressTrustSurfaceRunner.php' => is_file($root.'/tools/qa/AddressTrustSurfaceRunner.php'),
     'tools/inspection/AddressRuntimeSyncSummary.php' => is_file($root.'/tools/inspection/AddressRuntimeSyncSummary.php'),
     'tools/inspection/AddressTestSupportSurfaceReport.php' => is_file($root.'/tools/inspection/AddressTestSupportSurfaceReport.php'),
+    'tools/inspection/AddressPackageSurfaceReport.php' => is_file($root.'/tools/inspection/AddressPackageSurfaceReport.php'),
 ];
 
 $schemaManagerDefinesTenantScopeConstraint = false;
@@ -38,6 +39,19 @@ $serviceTestUsesSharedTestDatabase = false;
 $functionalTestUsesSharedTestDatabase = false;
 $serviceTestEmbedsSchemaSql = false;
 $securityTestUsesSharedTestDatabase = false;
+$doctrineOrmInRequire = false;
+$doctrineOrmInRequireDev = false;
+
+$composerPath = $root.'/composer.json';
+if (is_file($composerPath)) {
+    $composer = json_decode((string) file_get_contents($composerPath), true);
+    if (is_array($composer)) {
+        $require = isset($composer['require']) && is_array($composer['require']) ? $composer['require'] : [];
+        $requireDev = isset($composer['require-dev']) && is_array($composer['require-dev']) ? $composer['require-dev'] : [];
+        $doctrineOrmInRequire = array_key_exists('doctrine/orm', $require);
+        $doctrineOrmInRequireDev = array_key_exists('doctrine/orm', $requireDev);
+    }
+}
 
 $schemaManagerPath = $root.'/src/Integration/Persistence/AddressSchemaManager.php';
 if (is_file($schemaManagerPath)) {
@@ -103,6 +117,8 @@ fwrite(STDOUT, json_encode([
         'serviceTestEmbedsSchemaSql' => $serviceTestEmbedsSchemaSql,
         'functionalTestUsesSharedTestDatabase' => $functionalTestUsesSharedTestDatabase,
         'securityTestUsesSharedTestDatabase' => $securityTestUsesSharedTestDatabase,
+        'doctrineOrmInRequire' => $doctrineOrmInRequire,
+        'doctrineOrmInRequireDev' => $doctrineOrmInRequireDev,
         'transitionLayerRetired' => !in_array(true, $transitionLayer, true),
     ],
     'transitionLayer' => $transitionLayer,
