@@ -6,6 +6,19 @@ The current Addressing slice is PDO-first at runtime. The Symfony container expo
 
 For generic tooling compatibility, `tests/object-manager.php` returns the primary `PDO` connection for the active runtime slice, and `tests/console-application.php` boots the current Symfony kernel through the shared runtime bootstrap helper.
 
+## Shared SQLite schema authority
+
+The shared SQLite schema authority now lives in `src/Integration/Persistence/AddressSchemaManager.php` and is consumed through `tests/Support/TestDatabase.php`.
+
+That shared schema surface includes:
+
+- tenant-scope checks on `address_entity`
+- evidence-scope checks on `address_evidence_snapshot`
+- SQLite dedupe autofill triggers
+- outbox `stream` column parity with the service-test schema expectations
+
+This reduces the gap between runtime-facing tests and service-level expectations before the remaining embedded `schemaSql()` in `tests/Service/AddressServiceTest.php` is retired.
+
 ## Shared test support layer
 
 The current test-support surface is centered on:
