@@ -5,12 +5,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controller;
 
-use App\Contract\Message\AddressRecordPolicy;
-use App\Contract\Message\AddressValidated;
-use App\Entity\Record\AddressData;
 use App\EntityInterface\Record\AddressInterface;
 use App\Http\Dto\AddressInputFactory;
 use App\Http\Dto\AddressManageDto;
+use App\Http\Factory\AddressApiPayloadFactory;
 use App\Http\Factory\AddressQueryFilterFactory;
 use App\Http\Factory\AddressViewArrayFactory;
 use App\Http\Form\AddressManageType;
@@ -33,6 +31,7 @@ final readonly class AddressController
         private AddressInputFactory $addressInputFactory,
         private AddressQueryFilterFactory $addressQueryFilterFactory,
         private AddressViewArrayFactory $addressViewArrayFactory,
+        private AddressApiPayloadFactory $addressApiPayloadFactory,
     ) {
     }
 
@@ -62,63 +61,12 @@ final readonly class AddressController
 
     public function create(Request $request): JsonResponse
     {
-        $in = $this->json($request);
-
-        $id = (string) new Ulid();
-        $now = (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
-
-        $addressData = new AddressData(
-            $id,
-            $this->optStr($in, 'ownerId'),
-            $this->optStr($in, 'vendorId'),
-            $this->reqStr($in, 'line1'),
-            $this->optStr($in, 'line2'),
-            $this->reqStr($in, 'city'),
-            $this->optStr($in, 'region'),
-            $this->optStr($in, 'postalCode'),
-            strtoupper($this->reqStr($in, 'countryCode')),
-            $this->optStr($in, 'line1Norm'),
-            $this->optStr($in, 'cityNorm'),
-            $this->optStr($in, 'regionNorm'),
-            $this->optStr($in, 'postalCodeNorm'),
-            $this->optFloat($in, 'latitude'),
-            $this->optFloat($in, 'longitude'),
-            $this->optStr($in, 'geohash'),
-            AddressRecordPolicy::normalizeValidationStatus($this->optStr($in, 'validationStatus'), 'pending'),
-            $this->optStr($in, 'validationProvider'),
-            $this->optStr($in, 'validatedAt'),
-            $this->optStr($in, 'dedupeKey'),
-            $now,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            $this->optStr($in, 'sourceSystem'),
-            AddressRecordPolicy::normalizeSourceType($this->optStr($in, 'sourceType')),
-            $this->optStr($in, 'sourceReference'),
-            $this->optStr($in, 'normalizationVersion'),
-            $this->optArray($in, 'rawInputSnapshot'),
-            $this->optArray($in, 'normalizedSnapshot'),
-            $this->optStr($in, 'providerDigest'),
-            AddressRecordPolicy::normalizeGovernanceStatus($this->optStr($in, 'governanceStatus') ?? 'canonical'),
-            $this->optStr($in, 'duplicateOfId'),
-            $this->optStr($in, 'supersededById'),
-            $this->optStr($in, 'aliasOfId'),
-            $this->optStr($in, 'conflictWithId'),
-            $this->optStr($in, 'revalidationDueAt'),
-            AddressRecordPolicy::normalizeRevalidationPolicy($this->optStr($in, 'revalidationPolicy')),
-            $this->optStr($in, 'lastValidationProvider'),
-            AddressRecordPolicy::normalizeLastValidationStatus($this->optStr($in, 'lastValidationStatus')),
-            $this->optInt($in, 'lastValidationScore')
-        );
+        $payload = $this->addressApiPayloadFactory->decodeJsonRequest($request);
+        $addressData = $this->addressApiPayloadFactory->createAddressData($payload);
 
         $this->addressService->create($addressData);
 
-        return new JsonResponse(['id' => $id], 201);
+        return new JsonResponse(['id' => $addressData->id()], 201);
     }
 
     public function get(Request $request, string $id): JsonResponse
@@ -222,9 +170,9 @@ final readonly class AddressController
 
     public function patchOperational(Request $request, string $id): JsonResponse
     {
-        $in = $this->json($request);
+        $payload = $this->addressApiPayloadFactory->decodeJsonRequest($request);
         [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
-        $patch = $this->operationalPatch($in);
+        $patch = $this->addressApiPayloadFactory->operationalPatch($payload);
 
         try {
             $ok = $this->addressService->patchOperational($id, $ownerId, $vendorId, $patch);
@@ -246,10 +194,10 @@ final readonly class AddressController
 
     public function patchOperationalBatch(Request $request): JsonResponse
     {
-        $in = $this->json($request);
+        $payload = $this->addressApiPayloadFactory->decodeJsonRequest($request);
         [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
-        $ids = $this->reqStringList($in, 'ids');
-        $patch = $this->operationalPatch($in);
+        $ids = $this->addressApiPayloadFactory->requireStringList($payload, 'ids');
+        $patch = $this->addressApiPayloadFactory->operationalPatch($payload);
 
         $patchedIds = [];
         $failed = [];
@@ -273,38 +221,9 @@ final readonly class AddressController
 
     public function applyValidated(Request $request, string $id): JsonResponse
     {
-        $in = $this->json($request);
+        $payload = $this->addressApiPayloadFactory->decodeJsonRequest($request);
         [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
-
-        $addressValidated = AddressValidated::fromArray([
-            'line1Norm' => $this->optStr($in, 'line1Norm'),
-            'cityNorm' => $this->optStr($in, 'cityNorm'),
-            'regionNorm' => $this->optStr($in, 'regionNorm'),
-            'postalCodeNorm' => $this->optStr($in, 'postalCodeNorm'),
-            'latitude' => $this->optFloat($in, 'latitude'),
-            'longitude' => $this->optFloat($in, 'longitude'),
-            'geohash' => $this->optStr($in, 'geohash'),
-            'validationProvider' => $this->optStr($in, 'provider') ?? $this->optStr($in, 'validationProvider'),
-            'validatedAt' => $this->optStr($in, 'validatedAt'),
-            'dedupeKey' => $this->optStr($in, 'dedupeKey'),
-            'sourceSystem' => $this->optStr($in, 'sourceSystem'),
-            'sourceType' => $this->optStr($in, 'sourceType'),
-            'sourceReference' => $this->optStr($in, 'sourceReference'),
-            'normalizationVersion' => $this->optStr($in, 'normalizationVersion'),
-            'rawInput' => $this->optArray($in, 'rawInput'),
-            'normalizedSnapshot' => $this->optArray($in, 'normalizedSnapshot'),
-            'providerDigest' => $this->optStr($in, 'providerDigest'),
-            'governanceStatus' => $this->optStr($in, 'governanceStatus'),
-            'duplicateOfId' => $this->optStr($in, 'duplicateOfId'),
-            'supersededById' => $this->optStr($in, 'supersededById'),
-            'aliasOfId' => $this->optStr($in, 'aliasOfId'),
-            'conflictWithId' => $this->optStr($in, 'conflictWithId'),
-            'revalidationDueAt' => $this->optStr($in, 'revalidationDueAt'),
-            'revalidationPolicy' => $this->optStr($in, 'revalidationPolicy'),
-            'lastValidationProvider' => $this->optStr($in, 'lastValidationProvider'),
-            'lastValidationStatus' => $this->optStr($in, 'lastValidationStatus'),
-            'lastValidationScore' => $this->optInt($in, 'lastValidationScore'),
-        ]);
+        $addressValidated = $this->addressApiPayloadFactory->createAddressValidated($payload);
 
         $this->addressValidatedApplierService->apply($id, $addressValidated, $ownerId, $vendorId);
 
@@ -358,146 +277,5 @@ final readonly class AddressController
         $value = trim((string) $payload[$key]);
 
         return '' === $value ? null : $value;
-    }
-
-    /** @return array<string, mixed> */
-    private function json(Request $request): array
-    {
-        $raw = $request->getContent();
-        $data = json_decode($raw, true);
-        if (!is_array($data)) {
-            throw new \RuntimeException('invalid_json');
-        }
-
-        return $data;
-    }
-
-    /** @param array<string, mixed> $in */
-    private function reqStr(array $in, string $key): string
-    {
-        if (!array_key_exists($key, $in) || !is_string($in[$key]) || '' === trim($in[$key])) {
-            throw new \RuntimeException('missing_'.$key);
-        }
-
-        return trim($in[$key]);
-    }
-
-    /** @param array<string, mixed> $in */
-    private function optStr(array $in, string $key): ?string
-    {
-        if (!array_key_exists($key, $in) || null === $in[$key]) {
-            return null;
-        }
-        if (!is_string($in[$key])) {
-            throw new \RuntimeException('invalid_'.$key);
-        }
-        $v = trim($in[$key]);
-
-        return '' === $v ? null : $v;
-    }
-
-    /**
-     * @param array<string, mixed> $in
-     *
-     * @return list<string>
-     */
-    private function reqStringList(array $in, string $key): array
-    {
-        if (!array_key_exists($key, $in) || !is_array($in[$key])) {
-            throw new \RuntimeException('missing_'.$key);
-        }
-
-        $values = [];
-        foreach ($in[$key] as $item) {
-            if (!is_string($item) || '' === trim($item)) {
-                throw new \RuntimeException('invalid_'.$key);
-            }
-            $values[] = trim($item);
-        }
-
-        if ([] === $values) {
-            throw new \RuntimeException('invalid_'.$key);
-        }
-
-        return array_values(array_unique($values));
-    }
-
-    /**
-     * @param array<string, mixed> $in
-     *
-     * @return array<string, mixed>|null
-     */
-    private function optArray(array $in, string $key): ?array
-    {
-        if (!array_key_exists($key, $in) || null === $in[$key]) {
-            return null;
-        }
-        if (!is_array($in[$key])) {
-            throw new \RuntimeException('invalid_'.$key);
-        }
-
-        return $in[$key];
-    }
-
-    /** @param array<string, mixed> $in */
-    private function optInt(array $in, string $key): ?int
-    {
-        if (!array_key_exists($key, $in) || null === $in[$key] || '' === $in[$key]) {
-            return null;
-        }
-        if (is_int($in[$key])) {
-            return $in[$key];
-        }
-        if (is_string($in[$key]) && is_numeric($in[$key])) {
-            return (int) $in[$key];
-        }
-        throw new \RuntimeException('invalid_'.$key);
-    }
-
-    /** @param array<string, mixed> $in */
-    private function optFloat(array $in, string $key): ?float
-    {
-        if (!array_key_exists($key, $in) || null === $in[$key] || '' === $in[$key]) {
-            return null;
-        }
-        if (is_int($in[$key]) || is_float($in[$key])) {
-            return (float) $in[$key];
-        }
-        if (is_string($in[$key]) && is_numeric($in[$key])) {
-            return (float) $in[$key];
-        }
-        throw new \RuntimeException('invalid_'.$key);
-    }
-
-    /**
-     * @param array<string, mixed> $in
-     *
-     * @return array{
-     *   governanceStatus:?string,
-     *   duplicateOfId:?string,
-     *   supersededById:?string,
-     *   aliasOfId:?string,
-     *   conflictWithId:?string,
-     *   revalidationDueAt:?string,
-     *   revalidationPolicy:?string,
-     *   lastValidationProvider:?string,
-     *   lastValidationStatus:?string,
-     *   lastValidationScore:?int
-     * }
-     */
-    private function operationalPatch(array $in): array
-    {
-        return [
-            'governanceStatus' => $this->optStr($in, 'governanceStatus'),
-            'duplicateOfId' => $this->optStr($in, 'duplicateOfId'),
-            'supersededById' => $this->optStr($in, 'supersededById'),
-            'aliasOfId' => $this->optStr($in, 'aliasOfId'),
-            'conflictWithId' => $this->optStr($in, 'conflictWithId'),
-            'revalidationDueAt' => $this->optStr($in, 'revalidationDueAt'),
-            'revalidationPolicy' => $this->optStr($in, 'revalidationPolicy'),
-            'lastValidationProvider' => $this->optStr($in, 'lastValidationProvider'),
-            'lastValidationStatus' => $this->optStr($in, 'lastValidationStatus'),
-            'lastValidationScore' => $this->optInt($in, 'lastValidationScore'),
-        ];
     }
 }

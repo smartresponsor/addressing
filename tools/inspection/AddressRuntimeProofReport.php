@@ -19,6 +19,7 @@ $checks = [
     'src/Service/Application/AddressService.php' => is_file($root.'/src/Service/Application/AddressService.php'),
     'src/Http/Factory/AddressQueryFilterFactory.php' => is_file($root.'/src/Http/Factory/AddressQueryFilterFactory.php'),
     'src/Http/Factory/AddressViewArrayFactory.php' => is_file($root.'/src/Http/Factory/AddressViewArrayFactory.php'),
+    'src/Http/Factory/AddressApiPayloadFactory.php' => is_file($root.'/src/Http/Factory/AddressApiPayloadFactory.php'),
     'tools/inspection/AddressApplicationSurfaceReport.php' => is_file($root.'/tools/inspection/AddressApplicationSurfaceReport.php'),
     'bin/address-demo-reset' => is_file($root.'/bin/address-demo-reset'),
     'bin/console' => is_file($root.'/bin/console'),
@@ -34,123 +35,52 @@ $checks = [
     'tools/inspection/AddressPackageSurfaceReport.php' => is_file($root.'/tools/inspection/AddressPackageSurfaceReport.php'),
 ];
 
-$schemaManagerDefinesTenantScopeConstraint = false;
-$schemaManagerDefinesOutboxStreamColumn = false;
-$schemaManagerDefinesDedupeTriggers = false;
-$objectManagerUsesRuntimeBootstrap = false;
-$consoleUsesRuntimeBootstrap = false;
-$demoResetUsesRuntimeBootstrap = false;
-$serviceTestUsesSharedTestDatabase = false;
-$functionalTestUsesSharedTestDatabase = false;
-$serviceTestEmbedsSchemaSql = false;
-$securityTestUsesSharedTestDatabase = false;
-$doctrineOrmInRequire = false;
-$doctrineOrmInRequireDev = false;
 $controllerInjectsRepositoryDirectly = false;
-$controllerUsesServiceSearch = false;
-$controllerUsesServiceMarkDeleted = false;
 $controllerInjectsAddressQueryFilterFactory = false;
 $controllerInjectsAddressViewArrayFactory = false;
-$controllerDefinesOperationalFiltersMethod = false;
-$controllerDefinesToArrayMethod = false;
-
-$composerPath = $root.'/composer.json';
-if (is_file($composerPath)) {
-    $composer = json_decode((string) file_get_contents($composerPath), true);
-    if (is_array($composer)) {
-        $require = isset($composer['require']) && is_array($composer['require']) ? $composer['require'] : [];
-        $requireDev = isset($composer['require-dev']) && is_array($composer['require-dev']) ? $composer['require-dev'] : [];
-        $doctrineOrmInRequire = array_key_exists('doctrine/orm', $require);
-        $doctrineOrmInRequireDev = array_key_exists('doctrine/orm', $requireDev);
-    }
-}
-
-$schemaManagerPath = $root.'/src/Integration/Persistence/AddressSchemaManager.php';
-if (is_file($schemaManagerPath)) {
-    $schemaManagerContent = (string) file_get_contents($schemaManagerPath);
-    $schemaManagerDefinesTenantScopeConstraint = str_contains($schemaManagerContent, 'address_tenant_scope_chk');
-    $schemaManagerDefinesOutboxStreamColumn = str_contains($schemaManagerContent, 'stream TEXT NOT NULL DEFAULT ''address''');
-    $schemaManagerDefinesDedupeTriggers = str_contains($schemaManagerContent, 'trg_address_dedupe_autofill') && str_contains($schemaManagerContent, 'trg_address_dedupe_autofill_update');
-}
-
-$objectManagerPath = $root.'/tests/object-manager.php';
-if (is_file($objectManagerPath)) {
-    $objectManagerUsesRuntimeBootstrap = str_contains((string) file_get_contents($objectManagerPath), 'AddressRuntimeBootstrap');
-}
-
-$consolePath = $root.'/tests/console-application.php';
-if (is_file($consolePath)) {
-    $consoleUsesRuntimeBootstrap = str_contains((string) file_get_contents($consolePath), 'AddressRuntimeBootstrap');
-}
-
-$demoResetPath = $root.'/bin/address-demo-reset';
-if (is_file($demoResetPath)) {
-    $demoResetUsesRuntimeBootstrap = str_contains((string) file_get_contents($demoResetPath), 'AddressRuntimeBootstrap');
-}
-
-$serviceTestPath = $root.'/tests/Service/AddressServiceTest.php';
-if (is_file($serviceTestPath)) {
-    $serviceTestContent = (string) file_get_contents($serviceTestPath);
-    $serviceTestUsesSharedTestDatabase = str_contains($serviceTestContent, 'TestDatabase::createInMemorySqlitePdo(') && str_contains($serviceTestContent, 'TestDatabase::resetAddressSchema(');
-    $serviceTestEmbedsSchemaSql = str_contains($serviceTestContent, 'private function schemaSql(');
-}
-
-$functionalTestPath = $root.'/tests/Functional/AddressControllerFunctionalTest.php';
-if (is_file($functionalTestPath)) {
-    $functionalTestContent = (string) file_get_contents($functionalTestPath);
-    $functionalTestUsesSharedTestDatabase = str_contains($functionalTestContent, 'TestDatabase::freshSqlitePath(') && str_contains($functionalTestContent, 'TestDatabase::resetAddressSchema(');
-}
-
-$securityTestPath = $root.'/tests/Security/SymfonySecurityTest.php';
-if (is_file($securityTestPath)) {
-    $securityTestContent = (string) file_get_contents($securityTestPath);
-    $securityTestUsesSharedTestDatabase = str_contains($securityTestContent, 'TestDatabase::createInMemorySqlitePdo(');
-}
+$controllerInjectsAddressApiPayloadFactory = false;
+$controllerDefinesJsonMethod = false;
+$controllerDefinesReqStrMethod = false;
+$controllerDefinesOptStrMethod = false;
+$controllerDefinesReqStringListMethod = false;
+$controllerDefinesOptArrayMethod = false;
+$controllerDefinesOptIntMethod = false;
+$controllerDefinesOptFloatMethod = false;
+$controllerDefinesOperationalPatchMethod = false;
 
 $controllerPath = $root.'/src/Http/Controller/AddressController.php';
 if (is_file($controllerPath)) {
     $controllerContent = (string) file_get_contents($controllerPath);
     $controllerInjectsRepositoryDirectly = str_contains($controllerContent, 'private AddressRepository $addressRepository');
-    $controllerUsesServiceSearch = str_contains($controllerContent, '$this->addressService->search(');
-    $controllerUsesServiceMarkDeleted = str_contains($controllerContent, '$this->addressService->markDeleted(');
     $controllerInjectsAddressQueryFilterFactory = str_contains($controllerContent, 'private AddressQueryFilterFactory $addressQueryFilterFactory');
     $controllerInjectsAddressViewArrayFactory = str_contains($controllerContent, 'private AddressViewArrayFactory $addressViewArrayFactory');
-    $controllerDefinesOperationalFiltersMethod = str_contains($controllerContent, 'private function operationalFilters(');
-    $controllerDefinesToArrayMethod = str_contains($controllerContent, 'private function toArray(');
+    $controllerInjectsAddressApiPayloadFactory = str_contains($controllerContent, 'private AddressApiPayloadFactory $addressApiPayloadFactory');
+    $controllerDefinesJsonMethod = str_contains($controllerContent, 'private function json(');
+    $controllerDefinesReqStrMethod = str_contains($controllerContent, 'private function reqStr(');
+    $controllerDefinesOptStrMethod = str_contains($controllerContent, 'private function optStr(');
+    $controllerDefinesReqStringListMethod = str_contains($controllerContent, 'private function reqStringList(');
+    $controllerDefinesOptArrayMethod = str_contains($controllerContent, 'private function optArray(');
+    $controllerDefinesOptIntMethod = str_contains($controllerContent, 'private function optInt(');
+    $controllerDefinesOptFloatMethod = str_contains($controllerContent, 'private function optFloat(');
+    $controllerDefinesOperationalPatchMethod = str_contains($controllerContent, 'private function operationalPatch(');
 }
-
-$transitionLayer = [
-    'bin/address-demo-reset-runtime' => is_file($root.'/bin/address-demo-reset-runtime'),
-    'tests/object-manager.runtime.php' => is_file($root.'/tests/object-manager.runtime.php'),
-    'tests/runtime-console-application.php' => is_file($root.'/tests/runtime-console-application.php'),
-    'tools/inspection/AddressWave2SyncSummary.php' => is_file($root.'/tools/inspection/AddressWave2SyncSummary.php'),
-];
 
 fwrite(STDOUT, json_encode([
     'component' => 'Addressing',
     'status' => in_array(false, $checks, true) ? 'incomplete' : 'ready',
     'checks' => $checks,
     'signals' => [
-        'schemaManagerDefinesTenantScopeConstraint' => $schemaManagerDefinesTenantScopeConstraint,
-        'schemaManagerDefinesOutboxStreamColumn' => $schemaManagerDefinesOutboxStreamColumn,
-        'schemaManagerDefinesDedupeTriggers' => $schemaManagerDefinesDedupeTriggers,
-        'objectManagerUsesRuntimeBootstrap' => $objectManagerUsesRuntimeBootstrap,
-        'consoleUsesRuntimeBootstrap' => $consoleUsesRuntimeBootstrap,
-        'demoResetUsesRuntimeBootstrap' => $demoResetUsesRuntimeBootstrap,
-        'serviceTestUsesSharedTestDatabase' => $serviceTestUsesSharedTestDatabase,
-        'serviceTestEmbedsSchemaSql' => $serviceTestEmbedsSchemaSql,
-        'functionalTestUsesSharedTestDatabase' => $functionalTestUsesSharedTestDatabase,
-        'securityTestUsesSharedTestDatabase' => $securityTestUsesSharedTestDatabase,
-        'doctrineOrmInRequire' => $doctrineOrmInRequire,
-        'doctrineOrmInRequireDev' => $doctrineOrmInRequireDev,
         'controllerInjectsRepositoryDirectly' => $controllerInjectsRepositoryDirectly,
-        'controllerUsesServiceSearch' => $controllerUsesServiceSearch,
-        'controllerUsesServiceMarkDeleted' => $controllerUsesServiceMarkDeleted,
         'controllerInjectsAddressQueryFilterFactory' => $controllerInjectsAddressQueryFilterFactory,
         'controllerInjectsAddressViewArrayFactory' => $controllerInjectsAddressViewArrayFactory,
-        'controllerDefinesOperationalFiltersMethod' => $controllerDefinesOperationalFiltersMethod,
-        'controllerDefinesToArrayMethod' => $controllerDefinesToArrayMethod,
-        'transitionLayerRetired' => !in_array(true, $transitionLayer, true),
+        'controllerInjectsAddressApiPayloadFactory' => $controllerInjectsAddressApiPayloadFactory,
+        'controllerDefinesJsonMethod' => $controllerDefinesJsonMethod,
+        'controllerDefinesReqStrMethod' => $controllerDefinesReqStrMethod,
+        'controllerDefinesOptStrMethod' => $controllerDefinesOptStrMethod,
+        'controllerDefinesReqStringListMethod' => $controllerDefinesReqStringListMethod,
+        'controllerDefinesOptArrayMethod' => $controllerDefinesOptArrayMethod,
+        'controllerDefinesOptIntMethod' => $controllerDefinesOptIntMethod,
+        'controllerDefinesOptFloatMethod' => $controllerDefinesOptFloatMethod,
+        'controllerDefinesOperationalPatchMethod' => $controllerDefinesOperationalPatchMethod,
     ],
-    'transitionLayer' => $transitionLayer,
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
