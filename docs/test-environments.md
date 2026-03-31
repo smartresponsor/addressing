@@ -8,16 +8,14 @@ For generic tooling compatibility, `tests/object-manager.php` returns the primar
 
 ## Shared SQLite schema authority
 
-The shared SQLite schema authority now lives in `src/Integration/Persistence/AddressSchemaManager.php` and is consumed through `tests/Support/TestDatabase.php`.
+The shared SQLite schema authority lives in `src/Integration/Persistence/AddressSchemaManager.php` and is consumed through `tests/Support/TestDatabase.php`.
 
 That shared schema surface includes:
 
 - tenant-scope checks on `address_entity`
 - evidence-scope checks on `address_evidence_snapshot`
 - SQLite dedupe autofill triggers
-- outbox `stream` column parity with the service-test schema expectations
-
-This reduces the gap between runtime-facing tests and service-level expectations before the remaining embedded `schemaSql()` in `tests/Service/AddressServiceTest.php` is retired.
+- outbox `stream` column parity with service and repository expectations
 
 ## Shared test support layer
 
@@ -26,7 +24,7 @@ The current test-support surface is centered on:
 - `tests/Support/TestDatabase.php` for shared PDO creation, schema reset, file-backed SQLite path allocation, and in-memory SQLite creation
 - `tests/Support/TestRuntimeEnvironment.php` for runtime environment wiring when a test boots the Symfony kernel against a file-backed SQLite database
 
-This keeps functional, integration, and security-facing tests aligned with the same schema/bootstrap truth instead of duplicating it piecemeal.
+At this point service, functional, integration, and security-facing tests all rely on the shared SQLite/schema support surface. The old embedded service-test-only schema island has been retired.
 
 ## Local
 
