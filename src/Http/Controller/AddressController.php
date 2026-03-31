@@ -11,6 +11,8 @@ use App\Entity\Record\AddressData;
 use App\EntityInterface\Record\AddressInterface;
 use App\Http\Dto\AddressInputFactory;
 use App\Http\Dto\AddressManageDto;
+use App\Http\Factory\AddressQueryFilterFactory;
+use App\Http\Factory\AddressViewArrayFactory;
 use App\Http\Form\AddressManageType;
 use App\Service\Application\AddressService;
 use App\Service\Application\AddressValidatedApplierService;
@@ -29,6 +31,8 @@ final readonly class AddressController
         private FormFactoryInterface $formFactory,
         private Environment $twigEnvironment,
         private AddressInputFactory $addressInputFactory,
+        private AddressQueryFilterFactory $addressQueryFilterFactory,
+        private AddressViewArrayFactory $addressViewArrayFactory,
     ) {
     }
 
@@ -119,18 +123,18 @@ final readonly class AddressController
 
     public function get(Request $request, string $id): JsonResponse
     {
-        [$ownerId, $vendorId] = $this->tenantFromQuery($request);
+        [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
         $address = $this->addressService->get($id, $ownerId, $vendorId);
         if (!$address instanceof \App\EntityInterface\Record\AddressInterface) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }
 
-        return new JsonResponse($this->toArray($address, null));
+        return new JsonResponse($this->addressViewArrayFactory->toArray($address, null));
     }
 
     public function markDeleted(Request $request, string $id): JsonResponse
     {
-        [$ownerId, $vendorId] = $this->tenantFromQuery($request);
+        [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
         $this->addressService->markDeleted($id, $ownerId, $vendorId);
 
         return new JsonResponse(['ok' => true]);
@@ -138,17 +142,17 @@ final readonly class AddressController
 
     public function page(Request $request): JsonResponse
     {
-        $limit = $this->pageLimit($request);
-        $cursor = $this->queryStringOrNull($request, 'cursor');
-        [$ownerId, $vendorId] = $this->tenantFromQuery($request);
-        $countryCode = $this->queryCountryCodeOrNull($request);
-        $q = $this->queryStringOrNull($request, 'q');
-        $expectedNormalizationVersion = $this->queryStringOrNull($request, 'expectedNormalizationVersion');
-        $filters = $this->operationalFilters($request, true, true);
+        $limit = $this->addressQueryFilterFactory->pageLimit($request);
+        $cursor = $this->addressQueryFilterFactory->queryStringOrNull($request, 'cursor');
+        [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
+        $countryCode = $this->addressQueryFilterFactory->queryCountryCodeOrNull($request);
+        $q = $this->addressQueryFilterFactory->queryStringOrNull($request, 'q');
+        $expectedNormalizationVersion = $this->addressQueryFilterFactory->queryStringOrNull($request, 'expectedNormalizationVersion');
+        $filters = $this->addressQueryFilterFactory->operationalFilters($request, true, true);
 
         $res = $this->addressService->search($ownerId, $vendorId, $countryCode, $q, $limit, $cursor, $filters);
 
-        $items = array_map(fn (AddressInterface $address): array => $this->toArray($address, $expectedNormalizationVersion), $res['items']);
+        $items = array_map(fn (AddressInterface $address): array => $this->addressViewArrayFactory->toArray($address, $expectedNormalizationVersion), $res['items']);
 
         return new JsonResponse([
             'items' => $items,
@@ -158,56 +162,56 @@ final readonly class AddressController
 
     public function queueSummary(Request $request): JsonResponse
     {
-        [$ownerId, $vendorId] = $this->tenantFromQuery($request);
-        $countryCode = $this->queryCountryCodeOrNull($request);
-        $q = $this->queryStringOrNull($request, 'q');
-        $summary = $this->addressService->operationalQueueSummary($ownerId, $vendorId, $countryCode, $q, $this->operationalFilters($request, false, true));
+        [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
+        $countryCode = $this->addressQueryFilterFactory->queryCountryCodeOrNull($request);
+        $q = $this->addressQueryFilterFactory->queryStringOrNull($request, 'q');
+        $summary = $this->addressService->operationalQueueSummary($ownerId, $vendorId, $countryCode, $q, $this->addressQueryFilterFactory->operationalFilters($request, false, true));
 
         return new JsonResponse($summary);
     }
 
     public function countryPortfolioSummary(Request $request): JsonResponse
     {
-        [$ownerId, $vendorId] = $this->tenantFromQuery($request);
-        $q = $this->queryStringOrNull($request, 'q');
-        $summary = $this->addressService->countryPortfolioSummary($ownerId, $vendorId, $q, $this->operationalFilters($request));
+        [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
+        $q = $this->addressQueryFilterFactory->queryStringOrNull($request, 'q');
+        $summary = $this->addressService->countryPortfolioSummary($ownerId, $vendorId, $q, $this->addressQueryFilterFactory->operationalFilters($request));
 
         return new JsonResponse(['items' => $summary]);
     }
 
     public function sourcePortfolioSummary(Request $request): JsonResponse
     {
-        [$ownerId, $vendorId] = $this->tenantFromQuery($request);
-        $countryCode = $this->queryCountryCodeOrNull($request);
-        $q = $this->queryStringOrNull($request, 'q');
-        $summary = $this->addressService->sourcePortfolioSummary($ownerId, $vendorId, $countryCode, $q, $this->portfolioFilters($request, true));
+        [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
+        $countryCode = $this->addressQueryFilterFactory->queryCountryCodeOrNull($request);
+        $q = $this->addressQueryFilterFactory->queryStringOrNull($request, 'q');
+        $summary = $this->addressService->sourcePortfolioSummary($ownerId, $vendorId, $countryCode, $q, $this->addressQueryFilterFactory->portfolioFilters($request, true));
 
         return new JsonResponse(['items' => $summary]);
     }
 
     public function validationPortfolioSummary(Request $request): JsonResponse
     {
-        [$ownerId, $vendorId] = $this->tenantFromQuery($request);
-        $countryCode = $this->queryCountryCodeOrNull($request);
-        $q = $this->queryStringOrNull($request, 'q');
-        $summary = $this->addressService->validationPortfolioSummary($ownerId, $vendorId, $countryCode, $q, $this->portfolioFilters($request, true, true));
+        [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
+        $countryCode = $this->addressQueryFilterFactory->queryCountryCodeOrNull($request);
+        $q = $this->addressQueryFilterFactory->queryStringOrNull($request, 'q');
+        $summary = $this->addressService->validationPortfolioSummary($ownerId, $vendorId, $countryCode, $q, $this->addressQueryFilterFactory->portfolioFilters($request, true, true));
 
         return new JsonResponse(['items' => $summary]);
     }
 
     public function normalizationPortfolioSummary(Request $request): JsonResponse
     {
-        [$ownerId, $vendorId] = $this->tenantFromQuery($request);
-        $countryCode = $this->queryCountryCodeOrNull($request);
-        $q = $this->queryStringOrNull($request, 'q');
-        $summary = $this->addressService->normalizationPortfolioSummary($ownerId, $vendorId, $countryCode, $q, $this->portfolioFilters($request, true, true, true));
+        [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
+        $countryCode = $this->addressQueryFilterFactory->queryCountryCodeOrNull($request);
+        $q = $this->addressQueryFilterFactory->queryStringOrNull($request, 'q');
+        $summary = $this->addressService->normalizationPortfolioSummary($ownerId, $vendorId, $countryCode, $q, $this->addressQueryFilterFactory->portfolioFilters($request, true, true, true));
 
         return new JsonResponse(['items' => $summary]);
     }
 
     public function governanceClusterSummary(Request $request, string $id): JsonResponse
     {
-        [$ownerId, $vendorId] = $this->tenantFromQuery($request);
+        [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
         $summary = $this->addressService->governanceClusterSummary($id, $ownerId, $vendorId);
         if (0 === $summary['clusterSize']) {
             return new JsonResponse(['error' => 'not_found'], 404);
@@ -219,7 +223,7 @@ final readonly class AddressController
     public function patchOperational(Request $request, string $id): JsonResponse
     {
         $in = $this->json($request);
-        [$ownerId, $vendorId] = $this->tenantFromQuery($request);
+        [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
         $patch = $this->operationalPatch($in);
 
         try {
@@ -237,13 +241,13 @@ final readonly class AddressController
             return new JsonResponse(['error' => 'not_found'], 404);
         }
 
-        return new JsonResponse($this->toArray($address, null));
+        return new JsonResponse($this->addressViewArrayFactory->toArray($address, null));
     }
 
     public function patchOperationalBatch(Request $request): JsonResponse
     {
         $in = $this->json($request);
-        [$ownerId, $vendorId] = $this->tenantFromQuery($request);
+        [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
         $ids = $this->reqStringList($in, 'ids');
         $patch = $this->operationalPatch($in);
 
@@ -270,7 +274,7 @@ final readonly class AddressController
     public function applyValidated(Request $request, string $id): JsonResponse
     {
         $in = $this->json($request);
-        [$ownerId, $vendorId] = $this->tenantFromQuery($request);
+        [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
 
         $addressValidated = AddressValidated::fromArray([
             'line1Norm' => $this->optStr($in, 'line1Norm'),
@@ -309,7 +313,7 @@ final readonly class AddressController
             return new JsonResponse(['error' => 'not_found'], 404);
         }
 
-        return new JsonResponse($this->toArray($address, null));
+        return new JsonResponse($this->addressViewArrayFactory->toArray($address, null));
     }
 
     private function createFromManageDto(AddressManageDto $addressManageDto): string
@@ -336,14 +340,7 @@ final readonly class AddressController
         }
 
         return array_map(
-            static fn (AddressInterface $address): array => [
-                'id' => $address->id(),
-                'line1' => $address->line1(),
-                'city' => $address->city(),
-                'countryCode' => $address->countryCode(),
-                'governanceStatus' => $address->governanceStatus(),
-                'validationStatus' => $address->validationStatus(),
-            ],
+            fn (AddressInterface $address): array => $this->addressViewArrayFactory->previewRow($address),
             $this->addressService->search($ownerId, $vendorId, null, null, 10, null)['items']
         );
     }
@@ -425,114 +422,6 @@ final readonly class AddressController
         return array_values(array_unique($values));
     }
 
-    /** @return array{0: ?string, 1: ?string} */
-    private function tenantFromQuery(Request $request): array
-    {
-        $ownerId = $this->queryStringOrNull($request, 'ownerId');
-        $vendorId = $this->queryStringOrNull($request, 'vendorId');
-
-        return [$ownerId, $vendorId];
-    }
-
-    private function pageLimit(Request $request): int
-    {
-        $limit = (int) ($request->query->get('limit') ?? 25);
-
-        return max(1, min($limit, 200));
-    }
-
-    private function queryCountryCodeOrNull(Request $request): ?string
-    {
-        $countryCode = $this->queryStringOrNull($request, 'countryCode');
-
-        return null !== $countryCode ? strtoupper($countryCode) : null;
-    }
-
-    /** @return array<string, mixed> */
-    private function operationalFilters(
-        Request $request,
-        bool $includeQueue = false,
-        bool $includeExpectedNormalizationVersion = false,
-    ): array {
-        $filters = [
-            'sourceType' => AddressRecordPolicy::normalizeSourceType($this->queryStringOrNull($request, 'sourceType')),
-            'governanceStatus' => $this->normalizedGovernanceStatus($request),
-            'revalidationPolicy' => AddressRecordPolicy::normalizeRevalidationPolicy($this->queryStringOrNull($request, 'revalidationPolicy')),
-            'hasEvidence' => $this->queryBoolOrNull($request, 'hasEvidence'),
-            'revalidationDueBefore' => $this->queryStringOrNull($request, 'revalidationDueBefore'),
-        ];
-
-        if ($includeQueue) {
-            $filters['queue'] = $this->queryStringOrNull($request, 'queue');
-        }
-
-        if ($includeExpectedNormalizationVersion) {
-            $filters['expectedNormalizationVersion'] = $this->queryStringOrNull($request, 'expectedNormalizationVersion');
-        }
-
-        return $filters;
-    }
-
-    /** @return array<string, mixed> */
-    private function portfolioFilters(
-        Request $request,
-        bool $includeSourceSystem = false,
-        bool $includeValidation = false,
-        bool $includeExpectedNormalizationVersion = false,
-    ): array {
-        $filters = $this->operationalFilters($request, false, $includeExpectedNormalizationVersion);
-
-        if ($includeSourceSystem) {
-            $filters['sourceSystem'] = $this->queryStringOrNull($request, 'sourceSystem');
-        }
-
-        if ($includeValidation) {
-            $filters['validationProvider'] = $this->queryStringOrNull($request, 'validationProvider');
-            $filters['validationStatus'] = $this->normalizedValidationStatus($request);
-        }
-
-        return $filters;
-    }
-
-    private function normalizedGovernanceStatus(Request $request): ?string
-    {
-        $governanceStatus = $this->queryStringOrNull($request, 'governanceStatus');
-
-        return null !== $governanceStatus
-            ? AddressRecordPolicy::normalizeGovernanceStatus($governanceStatus)
-            : null;
-    }
-
-    private function normalizedValidationStatus(Request $request): ?string
-    {
-        $validationStatus = $this->queryStringOrNull($request, 'validationStatus');
-
-        return null !== $validationStatus
-            ? AddressRecordPolicy::normalizeValidationStatus($validationStatus)
-            : null;
-    }
-
-    private function queryStringOrNull(Request $request, string $key): ?string
-    {
-        $value = $request->query->get($key);
-
-        return is_string($value) && '' !== $value ? $value : null;
-    }
-
-    private function queryBoolOrNull(Request $request, string $key): ?bool
-    {
-        $value = $request->query->get($key);
-        if (!is_string($value)) {
-            return null;
-        }
-
-        return match (strtolower(trim($value))) {
-            '1', 'true', 'yes' => true,
-            '0', 'false', 'no' => false,
-            default => null,
-        };
-    }
-
     /**
      * @param array<string, mixed> $in
      *
@@ -610,117 +499,5 @@ final readonly class AddressController
             'lastValidationStatus' => $this->optStr($in, 'lastValidationStatus'),
             'lastValidationScore' => $this->optInt($in, 'lastValidationScore'),
         ];
-    }
-
-    /** @return array<string, mixed> */
-    private function toArray(AddressInterface $address, ?string $expectedNormalizationVersion): array
-    {
-        $governanceLinkId = $this->primaryGovernanceLinkId($address);
-        $hasEvidence = null !== $address->providerDigest()
-            || null !== $address->rawInputSnapshot()
-            || null !== $address->normalizedSnapshot();
-        $isRevalidationDue = null !== $address->revalidationDueAt()
-            && false !== strtotime($address->revalidationDueAt())
-            && strtotime($address->revalidationDueAt()) <= time();
-        $isEvidenceMissing = !$hasEvidence;
-        $isValidationUncertain = 'uncertain' === $address->validationStatus() || 'uncertain' === $address->lastValidationStatus();
-        $isGovernanceConflict = 'conflict' === $address->governanceStatus();
-        $isNormalizationStale = null !== $expectedNormalizationVersion
-            && $address->normalizationVersion() !== $expectedNormalizationVersion;
-        $reviewReason = $this->reviewReason($isGovernanceConflict, $isValidationUncertain, $isEvidenceMissing, $isRevalidationDue, $isNormalizationStale, $address->governanceStatus());
-
-        return [
-            'id' => $address->id(),
-            'ownerId' => $address->ownerId(),
-            'vendorId' => $address->vendorId(),
-            'line1' => $address->line1(),
-            'line2' => $address->line2(),
-            'city' => $address->city(),
-            'region' => $address->region(),
-            'postalCode' => $address->postalCode(),
-            'countryCode' => $address->countryCode(),
-            'line1Norm' => $address->line1Norm(),
-            'cityNorm' => $address->cityNorm(),
-            'regionNorm' => $address->regionNorm(),
-            'postalCodeNorm' => $address->postalCodeNorm(),
-            'latitude' => $address->latitude(),
-            'longitude' => $address->longitude(),
-            'geohash' => $address->geohash(),
-            'validationStatus' => $address->validationStatus(),
-            'validationProvider' => $address->validationProvider(),
-            'validatedAt' => $address->validatedAt(),
-            'dedupeKey' => $address->dedupeKey(),
-            'sourceSystem' => $address->sourceSystem(),
-            'sourceType' => $address->sourceType(),
-            'sourceReference' => $address->sourceReference(),
-            'normalizationVersion' => $address->normalizationVersion(),
-            'rawInputSnapshot' => $address->rawInputSnapshot(),
-            'normalizedSnapshot' => $address->normalizedSnapshot(),
-            'providerDigest' => $address->providerDigest(),
-            'hasEvidence' => $hasEvidence,
-            'isEvidenceMissing' => $isEvidenceMissing,
-            'isValidationUncertain' => $isValidationUncertain,
-            'isGovernanceConflict' => $isGovernanceConflict,
-            'isNormalizationStale' => $isNormalizationStale,
-            'requiresReview' => null !== $reviewReason,
-            'reviewReason' => $reviewReason,
-            'governanceStatus' => $address->governanceStatus(),
-            'governanceLinkId' => $governanceLinkId,
-            'hasGovernanceLink' => null !== $governanceLinkId,
-            'duplicateOfId' => $address->duplicateOfId(),
-            'supersededById' => $address->supersededById(),
-            'aliasOfId' => $address->aliasOfId(),
-            'conflictWithId' => $address->conflictWithId(),
-            'revalidationDueAt' => $address->revalidationDueAt(),
-            'isRevalidationDue' => $isRevalidationDue,
-            'revalidationPolicy' => $address->revalidationPolicy(),
-            'lastValidationProvider' => $address->lastValidationProvider(),
-            'lastValidationStatus' => $address->lastValidationStatus(),
-            'lastValidationScore' => $address->lastValidationScore(),
-            'createdAt' => $address->createdAt(),
-            'updatedAt' => $address->updatedAt(),
-            'deletedAt' => $address->deletedAt(),
-        ];
-    }
-
-    private function reviewReason(
-        bool $isGovernanceConflict,
-        bool $isValidationUncertain,
-        bool $isEvidenceMissing,
-        bool $isRevalidationDue,
-        bool $isNormalizationStale,
-        string $governanceStatus,
-    ): ?string {
-        if ($isGovernanceConflict) {
-            return 'governanceConflict';
-        }
-        if ('duplicate' === $governanceStatus) {
-            return 'duplicateReview';
-        }
-        if ($isValidationUncertain) {
-            return 'uncertainValidation';
-        }
-        if ($isEvidenceMissing) {
-            return 'evidenceMissing';
-        }
-        if ($isRevalidationDue) {
-            return 'dueForRevalidation';
-        }
-        if ($isNormalizationStale) {
-            return 'staleNormalizationVersion';
-        }
-
-        return null;
-    }
-
-    private function primaryGovernanceLinkId(AddressInterface $address): ?string
-    {
-        foreach ([$address->duplicateOfId(), $address->supersededById(), $address->aliasOfId(), $address->conflictWithId()] as $candidate) {
-            if (null !== $candidate && '' !== $candidate) {
-                return $candidate;
-            }
-        }
-
-        return null;
     }
 }
