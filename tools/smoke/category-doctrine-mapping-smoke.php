@@ -11,6 +11,6 @@ fwrite(STDOUT, json_encode([
     'component' => 'Addressing',
     'check' => 'doctrine_mapping',
     'status' => 'not_applicable',
-    'reason' => 'Current Addressing runtime is PDO-first and does not expose a Doctrine ORM mapping surface in the Symfony container.',
-    'doctrineOrmInstalled' => $available,
+    'reason' => 'Current Addressing runtime is PDO-first. Doctrine ORM, when installed, is a development-only footprint and is not part of the runtime contract or Symfony container surface.',
+    'doctrineOrmAvailableInDevContext' => $available,
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);

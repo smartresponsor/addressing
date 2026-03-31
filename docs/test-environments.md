@@ -6,6 +6,14 @@ The current Addressing slice is PDO-first at runtime. The Symfony container expo
 
 For generic tooling compatibility, `tests/object-manager.php` returns the primary `PDO` connection for the active runtime slice, and `tests/console-application.php` boots the current Symfony kernel through the shared runtime bootstrap helper.
 
+## Package surface posture
+
+The package surface is aligned to the PDO-first runtime contract:
+
+- `doctrine/orm` is no longer part of the runtime `require` surface
+- when present, Doctrine ORM is a development-only footprint used for inspection/static-analysis compatibility rather than as a runtime contract
+- legacy Doctrine fixtures packages are not part of the active package surface
+
 ## Shared SQLite schema authority
 
 The shared SQLite schema authority lives in `src/Integration/Persistence/AddressSchemaManager.php` and is consumed through `tests/Support/TestDatabase.php`.
@@ -67,11 +75,12 @@ The current runtime/trust-surface reports are:
 - `composer report:legacy-runtime-surface`
 - `composer report:runtime-sync`
 - `composer report:test-support`
+- `composer report:package-surface`
 - `composer qa:trust-surface`
 
 Notes:
 
-- `smoke:doctrine` is intentionally `not_applicable` in the current PDO-first runtime.
+- `smoke:doctrine` is intentionally `not_applicable` in the current PDO-first runtime contract.
 - `smoke:graphql` is intentionally `not_applicable` because no GraphQL surface is wired in the current slice.
 - `composer fixtures:demo` uses the container-managed `bin/address-demo-reset` entrypoint.
 - The temporary runtime replacement layer introduced during the synchronization phase has been retired from the active trust surface.
