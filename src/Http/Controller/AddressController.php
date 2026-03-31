@@ -12,7 +12,6 @@ use App\EntityInterface\Record\AddressInterface;
 use App\Http\Dto\AddressInputFactory;
 use App\Http\Dto\AddressManageDto;
 use App\Http\Form\AddressManageType;
-use App\Repository\Persistence\AddressRepository;
 use App\Service\Application\AddressService;
 use App\Service\Application\AddressValidatedApplierService;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -25,7 +24,6 @@ use Twig\Environment;
 final readonly class AddressController
 {
     public function __construct(
-        private AddressRepository $addressRepository,
         private AddressValidatedApplierService $addressValidatedApplierService,
         private AddressService $addressService,
         private FormFactoryInterface $formFactory,
@@ -114,7 +112,7 @@ final readonly class AddressController
             $this->optInt($in, 'lastValidationScore')
         );
 
-        $this->addressRepository->create($addressData);
+        $this->addressService->create($addressData);
 
         return new JsonResponse(['id' => $id], 201);
     }
@@ -122,7 +120,7 @@ final readonly class AddressController
     public function get(Request $request, string $id): JsonResponse
     {
         [$ownerId, $vendorId] = $this->tenantFromQuery($request);
-        $address = $this->addressRepository->get($id, $ownerId, $vendorId);
+        $address = $this->addressService->get($id, $ownerId, $vendorId);
         if (!$address instanceof \App\EntityInterface\Record\AddressInterface) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }
@@ -133,7 +131,7 @@ final readonly class AddressController
     public function markDeleted(Request $request, string $id): JsonResponse
     {
         [$ownerId, $vendorId] = $this->tenantFromQuery($request);
-        $this->addressRepository->markDeleted($id, $ownerId, $vendorId);
+        $this->addressService->markDeleted($id, $ownerId, $vendorId);
 
         return new JsonResponse(['ok' => true]);
     }
@@ -148,7 +146,7 @@ final readonly class AddressController
         $expectedNormalizationVersion = $this->queryStringOrNull($request, 'expectedNormalizationVersion');
         $filters = $this->operationalFilters($request, true, true);
 
-        $res = $this->addressRepository->findPage($ownerId, $vendorId, $countryCode, $q, $limit, $cursor, $filters);
+        $res = $this->addressService->search($ownerId, $vendorId, $countryCode, $q, $limit, $cursor, $filters);
 
         $items = array_map(fn (AddressInterface $address): array => $this->toArray($address, $expectedNormalizationVersion), $res['items']);
 
@@ -163,7 +161,7 @@ final readonly class AddressController
         [$ownerId, $vendorId] = $this->tenantFromQuery($request);
         $countryCode = $this->queryCountryCodeOrNull($request);
         $q = $this->queryStringOrNull($request, 'q');
-        $summary = $this->addressRepository->summarizeOperationalQueues($ownerId, $vendorId, $countryCode, $q, $this->operationalFilters($request, false, true));
+        $summary = $this->addressService->operationalQueueSummary($ownerId, $vendorId, $countryCode, $q, $this->operationalFilters($request, false, true));
 
         return new JsonResponse($summary);
     }
@@ -172,7 +170,7 @@ final readonly class AddressController
     {
         [$ownerId, $vendorId] = $this->tenantFromQuery($request);
         $q = $this->queryStringOrNull($request, 'q');
-        $summary = $this->addressRepository->summarizeCountryPortfolio($ownerId, $vendorId, $q, $this->operationalFilters($request));
+        $summary = $this->addressService->countryPortfolioSummary($ownerId, $vendorId, $q, $this->operationalFilters($request));
 
         return new JsonResponse(['items' => $summary]);
     }
@@ -182,7 +180,7 @@ final readonly class AddressController
         [$ownerId, $vendorId] = $this->tenantFromQuery($request);
         $countryCode = $this->queryCountryCodeOrNull($request);
         $q = $this->queryStringOrNull($request, 'q');
-        $summary = $this->addressRepository->summarizeSourcePortfolio($ownerId, $vendorId, $countryCode, $q, $this->portfolioFilters($request, true));
+        $summary = $this->addressService->sourcePortfolioSummary($ownerId, $vendorId, $countryCode, $q, $this->portfolioFilters($request, true));
 
         return new JsonResponse(['items' => $summary]);
     }
@@ -192,7 +190,7 @@ final readonly class AddressController
         [$ownerId, $vendorId] = $this->tenantFromQuery($request);
         $countryCode = $this->queryCountryCodeOrNull($request);
         $q = $this->queryStringOrNull($request, 'q');
-        $summary = $this->addressRepository->summarizeValidationPortfolio($ownerId, $vendorId, $countryCode, $q, $this->portfolioFilters($request, true, true));
+        $summary = $this->addressService->validationPortfolioSummary($ownerId, $vendorId, $countryCode, $q, $this->portfolioFilters($request, true, true));
 
         return new JsonResponse(['items' => $summary]);
     }
@@ -202,7 +200,7 @@ final readonly class AddressController
         [$ownerId, $vendorId] = $this->tenantFromQuery($request);
         $countryCode = $this->queryCountryCodeOrNull($request);
         $q = $this->queryStringOrNull($request, 'q');
-        $summary = $this->addressRepository->summarizeNormalizationPortfolio($ownerId, $vendorId, $countryCode, $q, $this->portfolioFilters($request, true, true, true));
+        $summary = $this->addressService->normalizationPortfolioSummary($ownerId, $vendorId, $countryCode, $q, $this->portfolioFilters($request, true, true, true));
 
         return new JsonResponse(['items' => $summary]);
     }
@@ -210,7 +208,7 @@ final readonly class AddressController
     public function governanceClusterSummary(Request $request, string $id): JsonResponse
     {
         [$ownerId, $vendorId] = $this->tenantFromQuery($request);
-        $summary = $this->addressRepository->summarizeGovernanceCluster($id, $ownerId, $vendorId);
+        $summary = $this->addressService->governanceClusterSummary($id, $ownerId, $vendorId);
         if (0 === $summary['clusterSize']) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }
@@ -225,7 +223,7 @@ final readonly class AddressController
         $patch = $this->operationalPatch($in);
 
         try {
-            $ok = $this->addressRepository->patchOperational($id, $ownerId, $vendorId, $patch);
+            $ok = $this->addressService->patchOperational($id, $ownerId, $vendorId, $patch);
         } catch (\RuntimeException $exception) {
             return new JsonResponse(['error' => 'invalid_governance_transition', 'message' => $exception->getMessage()], 422);
         }
@@ -234,7 +232,7 @@ final readonly class AddressController
             return new JsonResponse(['error' => 'not_found_or_not_patched'], 404);
         }
 
-        $address = $this->addressRepository->get($id, $ownerId, $vendorId);
+        $address = $this->addressService->get($id, $ownerId, $vendorId);
         if (!$address instanceof \App\EntityInterface\Record\AddressInterface) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }
@@ -253,7 +251,7 @@ final readonly class AddressController
         $failed = [];
         foreach ($ids as $id) {
             try {
-                if ($this->addressRepository->patchOperational($id, $ownerId, $vendorId, $patch)) {
+                if ($this->addressService->patchOperational($id, $ownerId, $vendorId, $patch)) {
                     $patchedIds[] = $id;
                 }
             } catch (\RuntimeException $exception) {
@@ -306,7 +304,7 @@ final readonly class AddressController
 
         $this->addressValidatedApplierService->apply($id, $addressValidated, $ownerId, $vendorId);
 
-        $address = $this->addressRepository->get($id, $ownerId, $vendorId);
+        $address = $this->addressService->get($id, $ownerId, $vendorId);
         if (!$address instanceof \App\EntityInterface\Record\AddressInterface) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }
