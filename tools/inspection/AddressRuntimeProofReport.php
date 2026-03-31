@@ -13,6 +13,7 @@ $checks = [
     'tests/console-application.php' => is_file($root.'/tests/console-application.php'),
     'tests/Support/TestDatabase.php' => is_file($root.'/tests/Support/TestDatabase.php'),
     'tests/Support/TestRuntimeEnvironment.php' => is_file($root.'/tests/Support/TestRuntimeEnvironment.php'),
+    'tests/Service/AddressServiceTest.php' => is_file($root.'/tests/Service/AddressServiceTest.php'),
     'tests/Security/SymfonySecurityTest.php' => is_file($root.'/tests/Security/SymfonySecurityTest.php'),
     'bin/address-demo-reset' => is_file($root.'/bin/address-demo-reset'),
     'bin/console' => is_file($root.'/bin/console'),
@@ -64,7 +65,7 @@ if (is_file($demoResetPath)) {
 $serviceTestPath = $root.'/tests/Service/AddressServiceTest.php';
 if (is_file($serviceTestPath)) {
     $serviceTestContent = (string) file_get_contents($serviceTestPath);
-    $serviceTestUsesSharedTestDatabase = str_contains($serviceTestContent, 'TestDatabase::createPdo(') && str_contains($serviceTestContent, 'TestDatabase::resetAddressSchema(');
+    $serviceTestUsesSharedTestDatabase = str_contains($serviceTestContent, 'TestDatabase::createInMemorySqlitePdo(') && str_contains($serviceTestContent, 'TestDatabase::resetAddressSchema(');
     $serviceTestEmbedsSchemaSql = str_contains($serviceTestContent, 'private function schemaSql(');
 }
 

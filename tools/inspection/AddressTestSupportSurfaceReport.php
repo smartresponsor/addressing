@@ -38,7 +38,7 @@ fwrite(STDOUT, json_encode([
         'testDatabaseDelegatesToSchemaManager' => str_contains($testDatabaseContent, 'AddressSchemaManager::resetSchema('),
         'testDatabaseProvidesFreshSqlitePath' => str_contains($testDatabaseContent, 'freshSqlitePath('),
         'testDatabaseProvidesInMemorySqlitePdo' => str_contains($testDatabaseContent, 'createInMemorySqlitePdo('),
-        'serviceTestUsesSharedTestDatabase' => str_contains($serviceTestContent, 'TestDatabase::createPdo(') && str_contains($serviceTestContent, 'TestDatabase::resetAddressSchema('),
+        'serviceTestUsesSharedTestDatabase' => str_contains($serviceTestContent, 'TestDatabase::createInMemorySqlitePdo(') && str_contains($serviceTestContent, 'TestDatabase::resetAddressSchema('),
         'serviceTestEmbedsSchemaSql' => str_contains($serviceTestContent, 'private function schemaSql('),
         'functionalTestUsesSharedTestDatabase' => str_contains($functionalTestContent, 'TestDatabase::freshSqlitePath(') && str_contains($functionalTestContent, 'TestDatabase::resetAddressSchema('),
         'functionalTestUsesRuntimeEnvironmentHelper' => str_contains($functionalTestContent, 'TestRuntimeEnvironment::configureSqliteAddressRuntime('),
