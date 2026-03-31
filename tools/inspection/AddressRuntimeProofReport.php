@@ -17,6 +17,8 @@ $checks = [
     'tests/Security/SymfonySecurityTest.php' => is_file($root.'/tests/Security/SymfonySecurityTest.php'),
     'src/Http/Controller/AddressController.php' => is_file($root.'/src/Http/Controller/AddressController.php'),
     'src/Service/Application/AddressService.php' => is_file($root.'/src/Service/Application/AddressService.php'),
+    'src/Http/Factory/AddressQueryFilterFactory.php' => is_file($root.'/src/Http/Factory/AddressQueryFilterFactory.php'),
+    'src/Http/Factory/AddressViewArrayFactory.php' => is_file($root.'/src/Http/Factory/AddressViewArrayFactory.php'),
     'tools/inspection/AddressApplicationSurfaceReport.php' => is_file($root.'/tools/inspection/AddressApplicationSurfaceReport.php'),
     'bin/address-demo-reset' => is_file($root.'/bin/address-demo-reset'),
     'bin/console' => is_file($root.'/bin/console'),
@@ -47,6 +49,10 @@ $doctrineOrmInRequireDev = false;
 $controllerInjectsRepositoryDirectly = false;
 $controllerUsesServiceSearch = false;
 $controllerUsesServiceMarkDeleted = false;
+$controllerInjectsAddressQueryFilterFactory = false;
+$controllerInjectsAddressViewArrayFactory = false;
+$controllerDefinesOperationalFiltersMethod = false;
+$controllerDefinesToArrayMethod = false;
 
 $composerPath = $root.'/composer.json';
 if (is_file($composerPath)) {
@@ -107,6 +113,10 @@ if (is_file($controllerPath)) {
     $controllerInjectsRepositoryDirectly = str_contains($controllerContent, 'private AddressRepository $addressRepository');
     $controllerUsesServiceSearch = str_contains($controllerContent, '$this->addressService->search(');
     $controllerUsesServiceMarkDeleted = str_contains($controllerContent, '$this->addressService->markDeleted(');
+    $controllerInjectsAddressQueryFilterFactory = str_contains($controllerContent, 'private AddressQueryFilterFactory $addressQueryFilterFactory');
+    $controllerInjectsAddressViewArrayFactory = str_contains($controllerContent, 'private AddressViewArrayFactory $addressViewArrayFactory');
+    $controllerDefinesOperationalFiltersMethod = str_contains($controllerContent, 'private function operationalFilters(');
+    $controllerDefinesToArrayMethod = str_contains($controllerContent, 'private function toArray(');
 }
 
 $transitionLayer = [
@@ -136,6 +146,10 @@ fwrite(STDOUT, json_encode([
         'controllerInjectsRepositoryDirectly' => $controllerInjectsRepositoryDirectly,
         'controllerUsesServiceSearch' => $controllerUsesServiceSearch,
         'controllerUsesServiceMarkDeleted' => $controllerUsesServiceMarkDeleted,
+        'controllerInjectsAddressQueryFilterFactory' => $controllerInjectsAddressQueryFilterFactory,
+        'controllerInjectsAddressViewArrayFactory' => $controllerInjectsAddressViewArrayFactory,
+        'controllerDefinesOperationalFiltersMethod' => $controllerDefinesOperationalFiltersMethod,
+        'controllerDefinesToArrayMethod' => $controllerDefinesToArrayMethod,
         'transitionLayerRetired' => !in_array(true, $transitionLayer, true),
     ],
     'transitionLayer' => $transitionLayer,
