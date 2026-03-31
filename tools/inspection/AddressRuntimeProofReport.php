@@ -7,6 +7,7 @@ $checks = [
     'composer.json' => is_file($root.'/composer.json'),
     'phpunit.xml.dist' => is_file($root.'/phpunit.xml.dist'),
     'config/addressing_deptrac.yaml' => is_file($root.'/config/addressing_deptrac.yaml'),
+    'src/Integration/Persistence/AddressSchemaManager.php' => is_file($root.'/src/Integration/Persistence/AddressSchemaManager.php'),
     'tools/support/AddressRuntimeBootstrap.php' => is_file($root.'/tools/support/AddressRuntimeBootstrap.php'),
     'tests/object-manager.php' => is_file($root.'/tests/object-manager.php'),
     'tests/console-application.php' => is_file($root.'/tests/console-application.php'),
@@ -26,6 +27,9 @@ $checks = [
     'tools/inspection/AddressTestSupportSurfaceReport.php' => is_file($root.'/tools/inspection/AddressTestSupportSurfaceReport.php'),
 ];
 
+$schemaManagerDefinesTenantScopeConstraint = false;
+$schemaManagerDefinesOutboxStreamColumn = false;
+$schemaManagerDefinesDedupeTriggers = false;
 $objectManagerUsesRuntimeBootstrap = false;
 $consoleUsesRuntimeBootstrap = false;
 $demoResetUsesRuntimeBootstrap = false;
@@ -33,6 +37,14 @@ $serviceTestUsesSharedTestDatabase = false;
 $functionalTestUsesSharedTestDatabase = false;
 $serviceTestEmbedsSchemaSql = false;
 $securityTestUsesSharedTestDatabase = false;
+
+$schemaManagerPath = $root.'/src/Integration/Persistence/AddressSchemaManager.php';
+if (is_file($schemaManagerPath)) {
+    $schemaManagerContent = (string) file_get_contents($schemaManagerPath);
+    $schemaManagerDefinesTenantScopeConstraint = str_contains($schemaManagerContent, 'address_tenant_scope_chk');
+    $schemaManagerDefinesOutboxStreamColumn = str_contains($schemaManagerContent, 'stream TEXT NOT NULL DEFAULT ''address''');
+    $schemaManagerDefinesDedupeTriggers = str_contains($schemaManagerContent, 'trg_address_dedupe_autofill') && str_contains($schemaManagerContent, 'trg_address_dedupe_autofill_update');
+}
 
 $objectManagerPath = $root.'/tests/object-manager.php';
 if (is_file($objectManagerPath)) {
@@ -80,6 +92,9 @@ fwrite(STDOUT, json_encode([
     'status' => in_array(false, $checks, true) ? 'incomplete' : 'ready',
     'checks' => $checks,
     'signals' => [
+        'schemaManagerDefinesTenantScopeConstraint' => $schemaManagerDefinesTenantScopeConstraint,
+        'schemaManagerDefinesOutboxStreamColumn' => $schemaManagerDefinesOutboxStreamColumn,
+        'schemaManagerDefinesDedupeTriggers' => $schemaManagerDefinesDedupeTriggers,
         'objectManagerUsesRuntimeBootstrap' => $objectManagerUsesRuntimeBootstrap,
         'consoleUsesRuntimeBootstrap' => $consoleUsesRuntimeBootstrap,
         'demoResetUsesRuntimeBootstrap' => $demoResetUsesRuntimeBootstrap,
