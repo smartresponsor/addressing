@@ -9,6 +9,8 @@ $checks = [
     'config/addressing_deptrac.yaml' => is_file($root.'/config/addressing_deptrac.yaml'),
     'src/Integration/Persistence/AddressSchemaManager.php' => is_file($root.'/src/Integration/Persistence/AddressSchemaManager.php'),
     'src/Integration/Persistence/AddressTenantScopeSqlHelper.php' => is_file($root.'/src/Integration/Persistence/AddressTenantScopeSqlHelper.php'),
+    'src/Integration/Persistence/AddressValidatedMutationPlan.php' => is_file($root.'/src/Integration/Persistence/AddressValidatedMutationPlan.php'),
+    'src/Integration/Persistence/AddressValidatedMutationPlanBuilder.php' => is_file($root.'/src/Integration/Persistence/AddressValidatedMutationPlanBuilder.php'),
     'src/Service/Application/AddressValidatedPayloadFactory.php' => is_file($root.'/src/Service/Application/AddressValidatedPayloadFactory.php'),
     'src/Service/Application/AddressValidatedApplierService.php' => is_file($root.'/src/Service/Application/AddressValidatedApplierService.php'),
     'src/Http/Controller/AddressController.php' => is_file($root.'/src/Http/Controller/AddressController.php'),
@@ -18,6 +20,7 @@ $checks = [
     'src/Http/Factory/AddressApiPayloadFactory.php' => is_file($root.'/src/Http/Factory/AddressApiPayloadFactory.php'),
     'tools/inspection/AddressApplicationSurfaceReport.php' => is_file($root.'/tools/inspection/AddressApplicationSurfaceReport.php'),
     'tools/inspection/AddressValidatedApplierSurfaceReport.php' => is_file($root.'/tools/inspection/AddressValidatedApplierSurfaceReport.php'),
+    'tools/inspection/AddressValidatedMutationPlanSurfaceReport.php' => is_file($root.'/tools/inspection/AddressValidatedMutationPlanSurfaceReport.php'),
     'tools/qa/AddressTrustSurfaceRunner.php' => is_file($root.'/tools/qa/AddressTrustSurfaceRunner.php'),
 ];
 
@@ -42,12 +45,9 @@ fwrite(STDOUT, json_encode([
         'controllerDefinesOperationalPatchMethod' => str_contains($controllerContent, 'private function operationalPatch('),
         'validatedApplierInjectsTenantScopeSqlHelper' => str_contains($validatedApplierContent, 'private AddressTenantScopeSqlHelper $addressTenantScopeSqlHelper'),
         'validatedApplierInjectsPayloadFactory' => str_contains($validatedApplierContent, 'private AddressValidatedPayloadFactory $addressValidatedPayloadFactory'),
-        'validatedApplierDefinesTenantWhereClauseMethod' => str_contains($validatedApplierContent, 'private function tenantWhereClause('),
-        'validatedApplierDefinesTenantParamsMethod' => str_contains($validatedApplierContent, 'private function tenantParams('),
-        'validatedApplierDefinesHasEvidenceMethod' => str_contains($validatedApplierContent, 'private function hasEvidence('),
-        'validatedApplierDefinesBuildNormalizedSnapshotMethod' => str_contains($validatedApplierContent, 'private function buildNormalizedSnapshot('),
-        'validatedApplierDefinesBuildProviderDigestMethod' => str_contains($validatedApplierContent, 'private function buildProviderDigest('),
-        'validatedApplierDefinesGovernanceLinkIdMethod' => str_contains($validatedApplierContent, 'private function governanceLinkId('),
-        'validatedApplierDefinesSanitizeGovernanceLinkMethod' => str_contains($validatedApplierContent, 'private function sanitizeGovernanceLink('),
+        'validatedApplierInjectsMutationPlanBuilder' => str_contains($validatedApplierContent, 'private AddressValidatedMutationPlanBuilder $addressValidatedMutationPlanBuilder'),
+        'validatedApplierUsesMutationPlanBuilder' => str_contains($validatedApplierContent, '$this->addressValidatedMutationPlanBuilder->build('),
+        'validatedApplierDefinesInlineFieldsArray' => str_contains($validatedApplierContent, '$fields = []'),
+        'validatedApplierDefinesJsonAssignmentMethod' => str_contains($validatedApplierContent, 'private function jsonAssignment('),
     ],
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
