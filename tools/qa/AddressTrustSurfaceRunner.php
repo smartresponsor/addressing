@@ -16,6 +16,7 @@ $reports = [
     'tools/inspection/AddressApplicationSurfaceReport.php',
     'tools/inspection/AddressValidatedApplierSurfaceReport.php',
     'tools/inspection/AddressValidatedMutationPlanSurfaceReport.php',
+    'tools/inspection/AddressPersistenceWriteSurfaceReport.php',
 ];
 
 $results = [];

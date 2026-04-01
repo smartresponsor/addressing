@@ -11,6 +11,8 @@ $checks = [
     'src/Integration/Persistence/AddressTenantScopeSqlHelper.php' => is_file($root.'/src/Integration/Persistence/AddressTenantScopeSqlHelper.php'),
     'src/Integration/Persistence/AddressValidatedMutationPlan.php' => is_file($root.'/src/Integration/Persistence/AddressValidatedMutationPlan.php'),
     'src/Integration/Persistence/AddressValidatedMutationPlanBuilder.php' => is_file($root.'/src/Integration/Persistence/AddressValidatedMutationPlanBuilder.php'),
+    'src/Integration/Persistence/AddressEvidenceSnapshotWriter.php' => is_file($root.'/src/Integration/Persistence/AddressEvidenceSnapshotWriter.php'),
+    'src/Integration/Persistence/AddressOutboxWriter.php' => is_file($root.'/src/Integration/Persistence/AddressOutboxWriter.php'),
     'src/Service/Application/AddressValidatedPayloadFactory.php' => is_file($root.'/src/Service/Application/AddressValidatedPayloadFactory.php'),
     'src/Service/Application/AddressValidatedApplierService.php' => is_file($root.'/src/Service/Application/AddressValidatedApplierService.php'),
     'src/Http/Controller/AddressController.php' => is_file($root.'/src/Http/Controller/AddressController.php'),
@@ -21,6 +23,7 @@ $checks = [
     'tools/inspection/AddressApplicationSurfaceReport.php' => is_file($root.'/tools/inspection/AddressApplicationSurfaceReport.php'),
     'tools/inspection/AddressValidatedApplierSurfaceReport.php' => is_file($root.'/tools/inspection/AddressValidatedApplierSurfaceReport.php'),
     'tools/inspection/AddressValidatedMutationPlanSurfaceReport.php' => is_file($root.'/tools/inspection/AddressValidatedMutationPlanSurfaceReport.php'),
+    'tools/inspection/AddressPersistenceWriteSurfaceReport.php' => is_file($root.'/tools/inspection/AddressPersistenceWriteSurfaceReport.php'),
     'tools/qa/AddressTrustSurfaceRunner.php' => is_file($root.'/tools/qa/AddressTrustSurfaceRunner.php'),
 ];
 
@@ -46,8 +49,14 @@ fwrite(STDOUT, json_encode([
         'validatedApplierInjectsTenantScopeSqlHelper' => str_contains($validatedApplierContent, 'private AddressTenantScopeSqlHelper $addressTenantScopeSqlHelper'),
         'validatedApplierInjectsPayloadFactory' => str_contains($validatedApplierContent, 'private AddressValidatedPayloadFactory $addressValidatedPayloadFactory'),
         'validatedApplierInjectsMutationPlanBuilder' => str_contains($validatedApplierContent, 'private AddressValidatedMutationPlanBuilder $addressValidatedMutationPlanBuilder'),
+        'validatedApplierInjectsEvidenceWriter' => str_contains($validatedApplierContent, 'private AddressEvidenceSnapshotWriter $addressEvidenceSnapshotWriter'),
+        'validatedApplierInjectsOutboxWriter' => str_contains($validatedApplierContent, 'private AddressOutboxWriter $addressOutboxWriter'),
         'validatedApplierUsesMutationPlanBuilder' => str_contains($validatedApplierContent, '$this->addressValidatedMutationPlanBuilder->build('),
+        'validatedApplierUsesEvidenceWriter' => str_contains($validatedApplierContent, '$this->addressEvidenceSnapshotWriter->write('),
+        'validatedApplierUsesOutboxWriter' => str_contains($validatedApplierContent, '$this->addressOutboxWriter->write('),
         'validatedApplierDefinesInlineFieldsArray' => str_contains($validatedApplierContent, '$fields = []'),
         'validatedApplierDefinesJsonAssignmentMethod' => str_contains($validatedApplierContent, 'private function jsonAssignment('),
+        'validatedApplierDefinesAppendEvidenceSnapshotMethod' => str_contains($validatedApplierContent, 'private function appendEvidenceSnapshot('),
+        'validatedApplierDefinesAppendOutboxMethod' => str_contains($validatedApplierContent, 'private function appendOutbox('),
     ],
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);

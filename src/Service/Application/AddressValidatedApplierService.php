@@ -1,12 +1,13 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Service\Application;
 
-use App\Contract\Message\AddressOutboxEventContract;
-use App\Contract\Message\AddressRecordPolicy;
 use App\Contract\Message\AddressValidated;
+use App\Integration\Persistence\AddressEvidenceSnapshotWriter;
+use App\Integration\Persistence\AddressOutboxWriter;
 use App\Integration\Persistence\AddressTenantScopeSqlHelper;
 use App\Integration\Persistence\AddressValidatedMutationPlanBuilder;
 use App\ServiceInterface\Application\AddressValidatedApplierServiceInterface;
@@ -18,6 +19,8 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         private AddressTenantScopeSqlHelper $addressTenantScopeSqlHelper,
         private AddressValidatedPayloadFactory $addressValidatedPayloadFactory,
         private AddressValidatedMutationPlanBuilder $addressValidatedMutationPlanBuilder,
+        private AddressEvidenceSnapshotWriter $addressEvidenceSnapshotWriter,
+        private AddressOutboxWriter $addressOutboxWriter,
     ) {
     }
 
@@ -65,7 +68,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 throw new \RuntimeException('not_found');
             }
 
-            $evidenceSnapshotId = $this->appendEvidenceSnapshot(
+            $evidenceSnapshotId = $this->addressEvidenceSnapshotWriter->write(
                 $id,
                 $ownerId,
                 $vendorId,
@@ -76,7 +79,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 $plan->providerDigest,
             );
 
-            $this->appendOutbox(
+            $this->addressOutboxWriter->write(
                 $this->addressValidatedPayloadFactory->outboxPayload(
                     $id,
                     $ownerId,
@@ -107,97 +110,6 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
             $this->rollbackIfActive();
             throw new \RuntimeException('apply_failed');
         }
-    }
-
-    private function appendEvidenceSnapshot(
-        string $addressId,
-        ?string $ownerId,
-        ?string $vendorId,
-        AddressValidated $addressValidated,
-        string $validationStatus,
-        ?int $validationScore,
-        ?array $normalizedSnapshot,
-        ?string $providerDigest,
-    ): ?string {
-        if (!$this->addressValidatedPayloadFactory->hasEvidence($addressValidated)) {
-            return null;
-        }
-
-        $snapshotId = bin2hex(random_bytes(16));
-        $createdAt = ($addressValidated->validatedAt ?? new \DateTimeImmutable())->format('Y-m-d H:i:sP');
-        $validationIssues = $addressValidated->addressValidationVerdict?->jsonSerialize();
-
-        $pdoStatement = $this->prepare(
-            'INSERT INTO address_evidence_snapshot (
-                id, address_id, owner_id, vendor_id, source_system, source_type, source_reference, validated_by, validated_at,
-                normalization_version, raw_input_snapshot, normalized_snapshot, validation_status, validation_score, validation_issues, provider_digest, created_at
-            ) VALUES (
-                :id, :address_id, :owner_id, :vendor_id, :source_system, :source_type, :source_reference, :validated_by, :validated_at,
-                :normalization_version, :raw_input_snapshot, :normalized_snapshot, :validation_status, :validation_score, :validation_issues, :provider_digest, :created_at
-            )'
-        );
-
-        $pdoStatement->execute([
-            ':id' => $snapshotId,
-            ':address_id' => $addressId,
-            ':owner_id' => $ownerId,
-            ':vendor_id' => $vendorId,
-            ':source_system' => $addressValidated->sourceSystem,
-            ':source_type' => AddressRecordPolicy::normalizeSourceType($addressValidated->sourceType),
-            ':source_reference' => $addressValidated->sourceReference,
-            ':validated_by' => $addressValidated->validationProvider ?? $addressValidated->lastValidationProvider,
-            ':validated_at' => $addressValidated->validatedAt?->format('Y-m-d H:i:sP'),
-            ':normalization_version' => $addressValidated->normalizationVersion,
-            ':raw_input_snapshot' => $this->encodePayloadNullable($addressValidated->rawInput),
-            ':normalized_snapshot' => $this->encodePayloadNullable($normalizedSnapshot),
-            ':validation_status' => AddressRecordPolicy::normalizeValidationStatus($validationStatus),
-            ':validation_score' => $validationScore,
-            ':validation_issues' => $this->encodePayloadNullable($validationIssues),
-            ':provider_digest' => $providerDigest,
-            ':created_at' => $createdAt,
-        ]);
-
-        return $snapshotId;
-    }
-
-    /** @param array<string, mixed> $payload */
-    private function appendOutbox(array $payload): void
-    {
-        $eventName = 'AddressValidatedApplied';
-        $payloadJson = $this->encodePayload(AddressOutboxEventContract::decoratePayload($eventName, $payload));
-        $payloadExpr = $this->isPgsql() ? ':payload::jsonb' : ':payload';
-
-        $pdoStatement = $this->prepare(
-            "INSERT INTO address_outbox (event_name, event_version, payload)
-         VALUES (:name, :ver, {$payloadExpr})"
-        );
-
-        $pdoStatement->execute([
-            ':name' => $eventName,
-            ':ver' => AddressOutboxEventContract::eventVersion($eventName),
-            ':payload' => $payloadJson,
-        ]);
-    }
-
-    /** @param array<string, mixed>|null $payload */
-    private function encodePayloadNullable(?array $payload): ?string
-    {
-        if (null === $payload) {
-            return null;
-        }
-
-        return $this->encodePayload($payload);
-    }
-
-    /** @param array<string, mixed> $payload */
-    private function encodePayload(array $payload): string
-    {
-        $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        if (false === $json) {
-            throw new \RuntimeException('payload_encode_failed');
-        }
-
-        return $json;
     }
 
     private function isPgsql(): bool
