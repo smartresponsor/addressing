@@ -148,6 +148,11 @@ final readonly class AddressService
         return $this->addressRepository->get($id, $ownerId, $vendorId);
     }
 
+    public function markDeleted(string $id, ?string $ownerId, ?string $vendorId): void
+    {
+        $this->addressRepository->delete($id, $ownerId, $vendorId);
+    }
+
     /**
      * @return array{
      *   addressId:string,
