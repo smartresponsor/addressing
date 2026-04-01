@@ -8,15 +8,15 @@ deptrac:
     - '#.*Kernel.php#'
 
   layers:
-    - name: Controller
+    - name: HttpController
       collectors:
         - type: className
-          regex: '^App\\Controller\\.*'
+          regex: '^App\\Http\\Controller\\.*'
 
     - name: Http
       collectors:
         - type: className
-          regex: '^App\\(Request|Response|Dto|Command)\\.*'
+          regex: '^App\\Http\\(?!Controller\\).*'
 
     - name: ServiceInterface
       collectors:
@@ -38,45 +38,76 @@ deptrac:
         - type: className
           regex: '^App\\Repository\\.*'
 
+    - name: Integration
+      collectors:
+        - type: className
+          regex: '^App\\Integration\\.*'
+
+    - name: Contract
+      collectors:
+        - type: className
+          regex: '^App\\Contract\\.*'
+
+    - name: EntityInterface
+      collectors:
+        - type: className
+          regex: '^App\\EntityInterface\\.*'
+
     - name: Entity
       collectors:
         - type: className
           regex: '^App\\Entity\\.*'
 
-    - name: InfrastructureInterface
+    - name: Value
       collectors:
         - type: className
-          regex: '^App\\InfrastructureInterface\\.*'
-
-    - name: Infrastructure
-      collectors:
-        - type: className
-          regex: '^App\\Infrastructure\\.*'
+          regex: '^App\\Value\\.*'
 
   ruleset:
-    Controller:
+    HttpController:
       - Http
       - Service
       - ServiceInterface
+      - RepositoryInterface
+      - Contract
+      - EntityInterface
+      - Value
 
     Http:
       - Service
       - ServiceInterface
+      - RepositoryInterface
+      - Contract
+      - EntityInterface
+      - Value
 
     Service:
       - ServiceInterface
       - RepositoryInterface
+      - Repository
+      - Contract
+      - EntityInterface
       - Entity
-      - InfrastructureInterface
+      - Value
+      - Integration
 
     Repository:
+      - RepositoryInterface
+      - Contract
+      - EntityInterface
       - Entity
+      - Value
+      - Integration
 
-    Infrastructure:
-      - InfrastructureInterface
+    Integration:
+      - Contract
+      - EntityInterface
       - Entity
+      - Value
 
+    Contract: ~
     ServiceInterface: ~
     RepositoryInterface: ~
-    InfrastructureInterface: ~
+    EntityInterface: ~
     Entity: ~
+    Value: ~
