@@ -7,12 +7,16 @@ namespace App\Service\Application;
 use App\Contract\Message\AddressOutboxEventContract;
 use App\Contract\Message\AddressRecordPolicy;
 use App\Contract\Message\AddressValidated;
+use App\Integration\Persistence\AddressTenantScopeSqlHelper;
 use App\ServiceInterface\Application\AddressValidatedApplierServiceInterface;
 
 final readonly class AddressValidatedApplierService implements AddressValidatedApplierServiceInterface
 {
-    public function __construct(private \PDO $pdo)
-    {
+    public function __construct(
+        private \PDO $pdo,
+        private AddressTenantScopeSqlHelper $addressTenantScopeSqlHelper,
+        private AddressValidatedPayloadFactory $addressValidatedPayloadFactory,
+    ) {
     }
 
     #[\Override]
@@ -21,8 +25,8 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         $fingerprint = $addressValidated->fingerprint();
         $now = new \DateTimeImmutable('now');
         $validatedAt = $addressValidated->validatedAt ?? $now;
-        $scopeParams = $this->tenantParams($ownerId, $vendorId);
-        $scopeWhere = $this->tenantWhereClause($ownerId, $vendorId);
+        $scopeParams = $this->addressTenantScopeSqlHelper->params($ownerId, $vendorId);
+        $scopeWhere = $this->addressTenantScopeSqlHelper->whereClause($ownerId, $vendorId);
         $lockClause = $this->isPgsql() ? ' FOR UPDATE' : '';
 
         try {
@@ -47,10 +51,13 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
             $fields = [];
 
             $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($addressValidated->governanceStatus);
-            $duplicateOfId = $this->sanitizeGovernanceLink($addressValidated->duplicateOfId, $id);
-            $supersededById = $this->sanitizeGovernanceLink($addressValidated->supersededById, $id);
-            $aliasOfId = $this->sanitizeGovernanceLink($addressValidated->aliasOfId, $id);
-            $conflictWithId = $this->sanitizeGovernanceLink($addressValidated->conflictWithId, $id);
+            $duplicateOfId = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->duplicateOfId, $id);
+            $supersededById = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->supersededById, $id);
+            $aliasOfId = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->aliasOfId, $id);
+            $conflictWithId = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->conflictWithId, $id);
+            $normalizedSnapshot = $this->addressValidatedPayloadFactory->normalizedSnapshot($addressValidated);
+            $providerDigest = $this->addressValidatedPayloadFactory->providerDigest($addressValidated);
+
             $params = array_merge([
                 ':id' => $id,
                 ':updated_at' => $now->format('Y-m-d H:i:sP'),
@@ -134,12 +141,10 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 $fields[] = $this->jsonAssignment('raw_input_snapshot', ':raw_input_snapshot');
                 $params[':raw_input_snapshot'] = $this->encodePayload($addressValidated->rawInput);
             }
-            $normalizedSnapshot = $addressValidated->normalizedSnapshot ?? $this->buildNormalizedSnapshot($addressValidated);
             if (null !== $normalizedSnapshot) {
                 $fields[] = $this->jsonAssignment('normalized_snapshot', ':normalized_snapshot');
                 $params[':normalized_snapshot'] = $this->encodePayload($normalizedSnapshot);
             }
-            $providerDigest = $addressValidated->providerDigest ?? $this->buildProviderDigest($addressValidated);
             if (null !== $providerDigest) {
                 $fields[] = 'provider_digest = :provider_digest';
                 $params[':provider_digest'] = $providerDigest;
@@ -200,33 +205,39 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 throw new \RuntimeException('not_found');
             }
 
-            $lastValidationStatusParam = $lastValidationStatus;
-            $lastValidationScoreParam = $lastValidationScore;
+            $evidenceSnapshotId = $this->appendEvidenceSnapshot(
+                $id,
+                $ownerId,
+                $vendorId,
+                $addressValidated,
+                $lastValidationStatus,
+                $lastValidationScore,
+                $normalizedSnapshot,
+                $providerDigest,
+            );
 
-            $evidenceSnapshotId = $this->appendEvidenceSnapshot($id, $ownerId, $vendorId, $addressValidated, $lastValidationStatusParam, $lastValidationScoreParam);
-
-            $this->appendOutbox([
-                'id' => $id,
-                'ownerId' => $ownerId,
-                'vendorId' => $vendorId,
-                'fingerprint' => $fingerprint,
-                'provider' => $addressValidated->validationProvider,
-                'validatedAt' => $validatedAt->format(DATE_ATOM),
-                'deliverable' => $addressValidated->addressValidationVerdict?->deliverable,
-                'granularity' => $addressValidated->addressValidationVerdict?->granularity,
-                'quality' => $addressValidated->addressValidationVerdict?->quality,
-                'rawSha256' => $params[':validation_raw_sha256'] ?? null,
-                'sourceType' => $addressValidated->sourceType,
-                'providerDigest' => $params[':provider_digest'] ?? $addressValidated->providerDigest,
-                'hasEvidence' => isset($params[':raw_input_snapshot']) || isset($params[':normalized_snapshot']) || isset($params[':provider_digest']),
-                'governanceStatus' => $governanceStatus,
-                'governanceLinkId' => $this->governanceLinkId($governanceStatus, $duplicateOfId, $supersededById, $aliasOfId, $conflictWithId),
-                'revalidationDueAt' => $params[':revalidation_due_at'] ?? null,
-                'revalidationPolicy' => $params[':revalidation_policy'] ?? null,
-                'lastValidationStatus' => $lastValidationStatusParam,
-                'lastValidationScore' => $lastValidationScoreParam,
-                'evidenceSnapshotId' => $evidenceSnapshotId,
-            ]);
+            $this->appendOutbox(
+                $this->addressValidatedPayloadFactory->outboxPayload(
+                    $id,
+                    $ownerId,
+                    $vendorId,
+                    $fingerprint,
+                    $addressValidated,
+                    $validatedAt,
+                    $params[':validation_raw_sha256'] ?? null,
+                    $governanceStatus,
+                    $duplicateOfId,
+                    $supersededById,
+                    $aliasOfId,
+                    $conflictWithId,
+                    $params[':revalidation_due_at'] ?? null,
+                    $params[':revalidation_policy'] ?? null,
+                    $lastValidationStatus,
+                    $lastValidationScore,
+                    $evidenceSnapshotId,
+                    $providerDigest,
+                )
+            );
 
             $this->pdo->commit();
         } catch (\RuntimeException $e) {
@@ -245,8 +256,10 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         AddressValidated $addressValidated,
         string $validationStatus,
         ?int $validationScore,
+        ?array $normalizedSnapshot,
+        ?string $providerDigest,
     ): ?string {
-        if (!$this->hasEvidence($addressValidated)) {
+        if (!$this->addressValidatedPayloadFactory->hasEvidence($addressValidated)) {
             return null;
         }
 
@@ -276,24 +289,15 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
             ':validated_at' => $addressValidated->validatedAt?->format('Y-m-d H:i:sP'),
             ':normalization_version' => $addressValidated->normalizationVersion,
             ':raw_input_snapshot' => $this->encodePayloadNullable($addressValidated->rawInput),
-            ':normalized_snapshot' => $this->encodePayloadNullable($addressValidated->normalizedSnapshot ?? $this->buildNormalizedSnapshot($addressValidated)),
+            ':normalized_snapshot' => $this->encodePayloadNullable($normalizedSnapshot),
             ':validation_status' => AddressRecordPolicy::normalizeValidationStatus($validationStatus),
             ':validation_score' => $validationScore,
             ':validation_issues' => $this->encodePayloadNullable($validationIssues),
-            ':provider_digest' => $addressValidated->providerDigest ?? $this->buildProviderDigest($addressValidated),
+            ':provider_digest' => $providerDigest,
             ':created_at' => $createdAt,
         ]);
 
         return $snapshotId;
-    }
-
-    private function hasEvidence(AddressValidated $addressValidated): bool
-    {
-        return null !== $addressValidated->rawInput
-            || null !== $addressValidated->normalizedSnapshot
-            || null !== $addressValidated->providerDigest
-            || null !== $addressValidated->raw
-            || $addressValidated->addressValidationVerdict instanceof \App\Contract\Message\AddressValidationVerdict;
     }
 
     /** @param array<string, mixed> $payload */
@@ -343,99 +347,6 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         }
 
         return $field.' = '.$placeholder;
-    }
-
-    private function sanitizeGovernanceLink(?string $linkId, string $currentId): ?string
-    {
-        $linkId = is_string($linkId) ? trim($linkId) : '';
-        if ('' === $linkId || $linkId === $currentId) {
-            return null;
-        }
-
-        return $linkId;
-    }
-
-    private function governanceLinkId(
-        string $governanceStatus,
-        ?string $duplicateOfId,
-        ?string $supersededById,
-        ?string $aliasOfId,
-        ?string $conflictWithId,
-    ): ?string {
-        return match ($governanceStatus) {
-            'duplicate' => $duplicateOfId,
-            'superseded' => $supersededById,
-            'alias' => $aliasOfId,
-            'conflict' => $conflictWithId,
-            default => null,
-        };
-    }
-
-    /** @return array<string, mixed>|null */
-    private function buildNormalizedSnapshot(AddressValidated $addressValidated): ?array
-    {
-        $snapshot = array_filter([
-            'line1Norm' => $addressValidated->line1Norm,
-            'cityNorm' => $addressValidated->cityNorm,
-            'regionNorm' => $addressValidated->regionNorm,
-            'postalCodeNorm' => $addressValidated->postalCodeNorm,
-            'latitude' => $addressValidated->latitude,
-            'longitude' => $addressValidated->longitude,
-            'geohash' => $addressValidated->geohash,
-        ], static fn (mixed $value): bool => null !== $value);
-
-        if ([] === $snapshot) {
-            return null;
-        }
-
-        /* @var array<string, mixed> $snapshot */
-        return $snapshot;
-    }
-
-    private function buildProviderDigest(AddressValidated $addressValidated): ?string
-    {
-        $payload = array_filter([
-            'provider' => $addressValidated->validationProvider,
-            'validatedAt' => $addressValidated->validatedAt?->format(DATE_ATOM),
-            'raw' => $addressValidated->raw,
-            'verdict' => $addressValidated->addressValidationVerdict?->jsonSerialize(),
-            'normalizedSnapshot' => $addressValidated->normalizedSnapshot,
-        ], static fn (mixed $value): bool => null !== $value);
-
-        if ([] === $payload) {
-            return null;
-        }
-
-        return hash('sha256', $this->encodePayload($payload));
-    }
-
-    private function tenantWhereClause(?string $ownerId, ?string $vendorId): string
-    {
-        if (null !== $ownerId && null !== $vendorId) {
-            return '(owner_id = :owner_id AND vendor_id = :vendor_id)';
-        }
-        if (null !== $ownerId) {
-            return '(owner_id = :owner_id)';
-        }
-        if (null !== $vendorId) {
-            return '(vendor_id = :vendor_id)';
-        }
-
-        return '1 = 1';
-    }
-
-    /** @return array<string, string> */
-    private function tenantParams(?string $ownerId, ?string $vendorId): array
-    {
-        $params = [];
-        if (null !== $ownerId) {
-            $params[':owner_id'] = $ownerId;
-        }
-        if (null !== $vendorId) {
-            $params[':vendor_id'] = $vendorId;
-        }
-
-        return $params;
     }
 
     private function isPgsql(): bool
