@@ -8,149 +8,46 @@ $checks = [
     'phpunit.xml.dist' => is_file($root.'/phpunit.xml.dist'),
     'config/addressing_deptrac.yaml' => is_file($root.'/config/addressing_deptrac.yaml'),
     'src/Integration/Persistence/AddressSchemaManager.php' => is_file($root.'/src/Integration/Persistence/AddressSchemaManager.php'),
-    'tools/support/AddressRuntimeBootstrap.php' => is_file($root.'/tools/support/AddressRuntimeBootstrap.php'),
-    'tests/object-manager.php' => is_file($root.'/tests/object-manager.php'),
-    'tests/console-application.php' => is_file($root.'/tests/console-application.php'),
-    'tests/Support/TestDatabase.php' => is_file($root.'/tests/Support/TestDatabase.php'),
-    'tests/Support/TestRuntimeEnvironment.php' => is_file($root.'/tests/Support/TestRuntimeEnvironment.php'),
-    'tests/Service/AddressServiceTest.php' => is_file($root.'/tests/Service/AddressServiceTest.php'),
-    'tests/Security/SymfonySecurityTest.php' => is_file($root.'/tests/Security/SymfonySecurityTest.php'),
+    'src/Integration/Persistence/AddressTenantScopeSqlHelper.php' => is_file($root.'/src/Integration/Persistence/AddressTenantScopeSqlHelper.php'),
+    'src/Service/Application/AddressValidatedPayloadFactory.php' => is_file($root.'/src/Service/Application/AddressValidatedPayloadFactory.php'),
+    'src/Service/Application/AddressValidatedApplierService.php' => is_file($root.'/src/Service/Application/AddressValidatedApplierService.php'),
     'src/Http/Controller/AddressController.php' => is_file($root.'/src/Http/Controller/AddressController.php'),
     'src/Service/Application/AddressService.php' => is_file($root.'/src/Service/Application/AddressService.php'),
     'src/Http/Factory/AddressQueryFilterFactory.php' => is_file($root.'/src/Http/Factory/AddressQueryFilterFactory.php'),
     'src/Http/Factory/AddressViewArrayFactory.php' => is_file($root.'/src/Http/Factory/AddressViewArrayFactory.php'),
+    'src/Http/Factory/AddressApiPayloadFactory.php' => is_file($root.'/src/Http/Factory/AddressApiPayloadFactory.php'),
     'tools/inspection/AddressApplicationSurfaceReport.php' => is_file($root.'/tools/inspection/AddressApplicationSurfaceReport.php'),
-    'bin/address-demo-reset' => is_file($root.'/bin/address-demo-reset'),
-    'bin/console' => is_file($root.'/bin/console'),
-    'tools/smoke/category-runtime-smoke.php' => is_file($root.'/tools/smoke/category-runtime-smoke.php'),
-    'tools/smoke/category-fixture-sanity.php' => is_file($root.'/tools/smoke/category-fixture-sanity.php'),
-    'tools/smoke/category-container-boot-smoke.php' => is_file($root.'/tools/smoke/category-container-boot-smoke.php'),
-    'tools/smoke/category-fixture-load-smoke.php' => is_file($root.'/tools/smoke/category-fixture-load-smoke.php'),
-    'tools/smoke/category-doctrine-mapping-smoke.php' => is_file($root.'/tools/smoke/category-doctrine-mapping-smoke.php'),
-    'tools/smoke/category-graphql-smoke.php' => is_file($root.'/tools/smoke/category-graphql-smoke.php'),
+    'tools/inspection/AddressValidatedApplierSurfaceReport.php' => is_file($root.'/tools/inspection/AddressValidatedApplierSurfaceReport.php'),
     'tools/qa/AddressTrustSurfaceRunner.php' => is_file($root.'/tools/qa/AddressTrustSurfaceRunner.php'),
-    'tools/inspection/AddressRuntimeSyncSummary.php' => is_file($root.'/tools/inspection/AddressRuntimeSyncSummary.php'),
-    'tools/inspection/AddressTestSupportSurfaceReport.php' => is_file($root.'/tools/inspection/AddressTestSupportSurfaceReport.php'),
-    'tools/inspection/AddressPackageSurfaceReport.php' => is_file($root.'/tools/inspection/AddressPackageSurfaceReport.php'),
 ];
-
-$schemaManagerDefinesTenantScopeConstraint = false;
-$schemaManagerDefinesOutboxStreamColumn = false;
-$schemaManagerDefinesDedupeTriggers = false;
-$objectManagerUsesRuntimeBootstrap = false;
-$consoleUsesRuntimeBootstrap = false;
-$demoResetUsesRuntimeBootstrap = false;
-$serviceTestUsesSharedTestDatabase = false;
-$functionalTestUsesSharedTestDatabase = false;
-$serviceTestEmbedsSchemaSql = false;
-$securityTestUsesSharedTestDatabase = false;
-$doctrineOrmInRequire = false;
-$doctrineOrmInRequireDev = false;
-$controllerInjectsRepositoryDirectly = false;
-$controllerUsesServiceSearch = false;
-$controllerUsesServiceMarkDeleted = false;
-$controllerInjectsAddressQueryFilterFactory = false;
-$controllerInjectsAddressViewArrayFactory = false;
-$controllerDefinesOperationalFiltersMethod = false;
-$controllerDefinesToArrayMethod = false;
-
-$composerPath = $root.'/composer.json';
-if (is_file($composerPath)) {
-    $composer = json_decode((string) file_get_contents($composerPath), true);
-    if (is_array($composer)) {
-        $require = isset($composer['require']) && is_array($composer['require']) ? $composer['require'] : [];
-        $requireDev = isset($composer['require-dev']) && is_array($composer['require-dev']) ? $composer['require-dev'] : [];
-        $doctrineOrmInRequire = array_key_exists('doctrine/orm', $require);
-        $doctrineOrmInRequireDev = array_key_exists('doctrine/orm', $requireDev);
-    }
-}
-
-$schemaManagerPath = $root.'/src/Integration/Persistence/AddressSchemaManager.php';
-if (is_file($schemaManagerPath)) {
-    $schemaManagerContent = (string) file_get_contents($schemaManagerPath);
-    $schemaManagerDefinesTenantScopeConstraint = str_contains($schemaManagerContent, 'address_tenant_scope_chk');
-    $schemaManagerDefinesOutboxStreamColumn = str_contains($schemaManagerContent, 'stream TEXT NOT NULL DEFAULT ''address''');
-    $schemaManagerDefinesDedupeTriggers = str_contains($schemaManagerContent, 'trg_address_dedupe_autofill') && str_contains($schemaManagerContent, 'trg_address_dedupe_autofill_update');
-}
-
-$objectManagerPath = $root.'/tests/object-manager.php';
-if (is_file($objectManagerPath)) {
-    $objectManagerUsesRuntimeBootstrap = str_contains((string) file_get_contents($objectManagerPath), 'AddressRuntimeBootstrap');
-}
-
-$consolePath = $root.'/tests/console-application.php';
-if (is_file($consolePath)) {
-    $consoleUsesRuntimeBootstrap = str_contains((string) file_get_contents($consolePath), 'AddressRuntimeBootstrap');
-}
-
-$demoResetPath = $root.'/bin/address-demo-reset';
-if (is_file($demoResetPath)) {
-    $demoResetUsesRuntimeBootstrap = str_contains((string) file_get_contents($demoResetPath), 'AddressRuntimeBootstrap');
-}
-
-$serviceTestPath = $root.'/tests/Service/AddressServiceTest.php';
-if (is_file($serviceTestPath)) {
-    $serviceTestContent = (string) file_get_contents($serviceTestPath);
-    $serviceTestUsesSharedTestDatabase = str_contains($serviceTestContent, 'TestDatabase::createInMemorySqlitePdo(') && str_contains($serviceTestContent, 'TestDatabase::resetAddressSchema(');
-    $serviceTestEmbedsSchemaSql = str_contains($serviceTestContent, 'private function schemaSql(');
-}
-
-$functionalTestPath = $root.'/tests/Functional/AddressControllerFunctionalTest.php';
-if (is_file($functionalTestPath)) {
-    $functionalTestContent = (string) file_get_contents($functionalTestPath);
-    $functionalTestUsesSharedTestDatabase = str_contains($functionalTestContent, 'TestDatabase::freshSqlitePath(') && str_contains($functionalTestContent, 'TestDatabase::resetAddressSchema(');
-}
-
-$securityTestPath = $root.'/tests/Security/SymfonySecurityTest.php';
-if (is_file($securityTestPath)) {
-    $securityTestContent = (string) file_get_contents($securityTestPath);
-    $securityTestUsesSharedTestDatabase = str_contains($securityTestContent, 'TestDatabase::createInMemorySqlitePdo(');
-}
 
 $controllerPath = $root.'/src/Http/Controller/AddressController.php';
-if (is_file($controllerPath)) {
-    $controllerContent = (string) file_get_contents($controllerPath);
-    $controllerInjectsRepositoryDirectly = str_contains($controllerContent, 'private AddressRepository $addressRepository');
-    $controllerUsesServiceSearch = str_contains($controllerContent, '$this->addressService->search(');
-    $controllerUsesServiceMarkDeleted = str_contains($controllerContent, '$this->addressService->markDeleted(');
-    $controllerInjectsAddressQueryFilterFactory = str_contains($controllerContent, 'private AddressQueryFilterFactory $addressQueryFilterFactory');
-    $controllerInjectsAddressViewArrayFactory = str_contains($controllerContent, 'private AddressViewArrayFactory $addressViewArrayFactory');
-    $controllerDefinesOperationalFiltersMethod = str_contains($controllerContent, 'private function operationalFilters(');
-    $controllerDefinesToArrayMethod = str_contains($controllerContent, 'private function toArray(');
-}
-
-$transitionLayer = [
-    'bin/address-demo-reset-runtime' => is_file($root.'/bin/address-demo-reset-runtime'),
-    'tests/object-manager.runtime.php' => is_file($root.'/tests/object-manager.runtime.php'),
-    'tests/runtime-console-application.php' => is_file($root.'/tests/runtime-console-application.php'),
-    'tools/inspection/AddressWave2SyncSummary.php' => is_file($root.'/tools/inspection/AddressWave2SyncSummary.php'),
-];
+$controllerContent = is_file($controllerPath) ? (string) file_get_contents($controllerPath) : '';
+$validatedApplierPath = $root.'/src/Service/Application/AddressValidatedApplierService.php';
+$validatedApplierContent = is_file($validatedApplierPath) ? (string) file_get_contents($validatedApplierPath) : '';
 
 fwrite(STDOUT, json_encode([
     'component' => 'Addressing',
     'status' => in_array(false, $checks, true) ? 'incomplete' : 'ready',
     'checks' => $checks,
     'signals' => [
-        'schemaManagerDefinesTenantScopeConstraint' => $schemaManagerDefinesTenantScopeConstraint,
-        'schemaManagerDefinesOutboxStreamColumn' => $schemaManagerDefinesOutboxStreamColumn,
-        'schemaManagerDefinesDedupeTriggers' => $schemaManagerDefinesDedupeTriggers,
-        'objectManagerUsesRuntimeBootstrap' => $objectManagerUsesRuntimeBootstrap,
-        'consoleUsesRuntimeBootstrap' => $consoleUsesRuntimeBootstrap,
-        'demoResetUsesRuntimeBootstrap' => $demoResetUsesRuntimeBootstrap,
-        'serviceTestUsesSharedTestDatabase' => $serviceTestUsesSharedTestDatabase,
-        'serviceTestEmbedsSchemaSql' => $serviceTestEmbedsSchemaSql,
-        'functionalTestUsesSharedTestDatabase' => $functionalTestUsesSharedTestDatabase,
-        'securityTestUsesSharedTestDatabase' => $securityTestUsesSharedTestDatabase,
-        'doctrineOrmInRequire' => $doctrineOrmInRequire,
-        'doctrineOrmInRequireDev' => $doctrineOrmInRequireDev,
-        'controllerInjectsRepositoryDirectly' => $controllerInjectsRepositoryDirectly,
-        'controllerUsesServiceSearch' => $controllerUsesServiceSearch,
-        'controllerUsesServiceMarkDeleted' => $controllerUsesServiceMarkDeleted,
-        'controllerInjectsAddressQueryFilterFactory' => $controllerInjectsAddressQueryFilterFactory,
-        'controllerInjectsAddressViewArrayFactory' => $controllerInjectsAddressViewArrayFactory,
-        'controllerDefinesOperationalFiltersMethod' => $controllerDefinesOperationalFiltersMethod,
-        'controllerDefinesToArrayMethod' => $controllerDefinesToArrayMethod,
-        'transitionLayerRetired' => !in_array(true, $transitionLayer, true),
+        'controllerInjectsAddressApiPayloadFactory' => str_contains($controllerContent, 'private AddressApiPayloadFactory $addressApiPayloadFactory'),
+        'controllerDefinesJsonMethod' => str_contains($controllerContent, 'private function json('),
+        'controllerDefinesReqStrMethod' => str_contains($controllerContent, 'private function reqStr('),
+        'controllerDefinesOptStrMethod' => str_contains($controllerContent, 'private function optStr('),
+        'controllerDefinesReqStringListMethod' => str_contains($controllerContent, 'private function reqStringList('),
+        'controllerDefinesOptArrayMethod' => str_contains($controllerContent, 'private function optArray('),
+        'controllerDefinesOptIntMethod' => str_contains($controllerContent, 'private function optInt('),
+        'controllerDefinesOptFloatMethod' => str_contains($controllerContent, 'private function optFloat('),
+        'controllerDefinesOperationalPatchMethod' => str_contains($controllerContent, 'private function operationalPatch('),
+        'validatedApplierInjectsTenantScopeSqlHelper' => str_contains($validatedApplierContent, 'private AddressTenantScopeSqlHelper $addressTenantScopeSqlHelper'),
+        'validatedApplierInjectsPayloadFactory' => str_contains($validatedApplierContent, 'private AddressValidatedPayloadFactory $addressValidatedPayloadFactory'),
+        'validatedApplierDefinesTenantWhereClauseMethod' => str_contains($validatedApplierContent, 'private function tenantWhereClause('),
+        'validatedApplierDefinesTenantParamsMethod' => str_contains($validatedApplierContent, 'private function tenantParams('),
+        'validatedApplierDefinesHasEvidenceMethod' => str_contains($validatedApplierContent, 'private function hasEvidence('),
+        'validatedApplierDefinesBuildNormalizedSnapshotMethod' => str_contains($validatedApplierContent, 'private function buildNormalizedSnapshot('),
+        'validatedApplierDefinesBuildProviderDigestMethod' => str_contains($validatedApplierContent, 'private function buildProviderDigest('),
+        'validatedApplierDefinesGovernanceLinkIdMethod' => str_contains($validatedApplierContent, 'private function governanceLinkId('),
+        'validatedApplierDefinesSanitizeGovernanceLinkMethod' => str_contains($validatedApplierContent, 'private function sanitizeGovernanceLink('),
     ],
-    'transitionLayer' => $transitionLayer,
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
