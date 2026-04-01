@@ -1,97 +1,143 @@
 <?php
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
- * Owner: Marketing America Corp
- */
-
-use App\Http\AddressApi\Controller;
+use App\Http\Controller\AddressController;
 use App\Http\ErrorMap;
 use App\Http\Middleware\Cors;
 use App\Http\Middleware\IpGuard;
 use App\Http\Middleware\RateLimiter;
 use App\Http\Middleware\RequestId;
+use App\Http\Middleware\SecurityHeaders;
+use App\Integration\Persistence\AddressPdoFactory;
+use App\Kernel;
+use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
-require_once dirname(__DIR__) . '/vendor/autoload.php';
+require_once dirname(__DIR__).'/vendor/autoload.php';
 
-$path = dirname(__DIR__) . '/var';
-if (!is_dir($path)) {
-    @mkdir($path, 0775, true);
+if (class_exists(Dotenv::class) && file_exists(dirname(__DIR__).'/.env')) {
+    (new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
 }
 
-$limitPdo = new PDO('sqlite:' . $path . '/rate-limit.sqlite');
-$limitPdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$_SERVER['APP_ENV'] ??= 'dev';
+$_SERVER['APP_DEBUG'] ??= '1';
 
-$pgDsn = (string)(getenv('PG_DSN') ?: getenv('DB_DSN'));
-if ($pgDsn === '') {
-    ErrorMap::emit(500, 'missing_pg_dsn', [
-        'hint' => 'Set PG_DSN (or DB_DSN) to a Postgres connection string.',
-    ]);
+$request = Request::createFromGlobals();
+$method = $request->getMethod();
+$pathInfo = $request->getPathInfo();
+
+RequestId::ensure();
+Cors::handle($request, $method);
+SecurityHeaders::apply();
+
+$clientIp = (string) ($request->server->get('REMOTE_ADDR') ?? '0.0.0.0');
+if (!IpGuard::allowed($clientIp, $pathInfo)) {
+    ErrorMap::emit(403, 'forbidden', 'ip_forbidden');
     exit(0);
 }
 
-$pgUser = (string)(getenv('PG_USER') ?: '');
-$pgPass = (string)(getenv('PG_PASS') ?: '');
+$rateLimiter = new RateLimiter(AddressPdoFactory::createRateLimit());
+if (!filter_var($_SERVER['RATE_LIMIT_DISABLED'] ?? getenv('RATE_LIMIT_DISABLED') ?? false, FILTER_VALIDATE_BOOL)
+    && !$rateLimiter->check($clientIp, $method.' '.$pathInfo)
+) {
+    ErrorMap::emit(429, 'too_many_requests', 'rate_limit_exceeded');
+    exit(0);
+}
 
-$pg = new PDO($pgDsn, $pgUser === '' ? null : $pgUser, $pgPass === '' ? null : $pgPass, [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-]);
-
-$req = Request::createFromGlobals();
-
-(new RequestId())->handle($req);
-Cors::handle($req);
-(new IpGuard())->handle($req);
-(new RateLimiter($limitPdo))->handle($req);
-
-$controller = Controller::fromPg($pg);
-
-$method = $req->getMethod();
-$pathInfo = $req->getPathInfo();
+$kernel = new Kernel($_SERVER['APP_ENV'], (bool) $_SERVER['APP_DEBUG']);
+$kernel->boot();
+$controller = $kernel->getContainer()->get(AddressController::class);
 
 try {
-    if ($method === 'POST' && $pathInfo === '/api/address') {
-        $controller->create($req)->send();
+    if ('/address/manage' === $pathInfo && ('GET' === $method || 'POST' === $method)) {
+        $controller->manage($request)->send();
         exit(0);
     }
 
-    if ($method === 'GET' && ($pathInfo === '/api/address/page' || $pathInfo === '/api/address/search')) {
-        $controller->page($req)->send();
+    if ('POST' === $method && '/api/address' === $pathInfo) {
+        $controller->create($request)->send();
         exit(0);
     }
 
-    if ($method === 'GET' && preg_match('#^/api/address/([0-9A-HJKMNP-TV-Z]{26})$#', $pathInfo, $m) === 1) {
-        $controller->get($req, $m[1])->send();
+    if ('GET' === $method && ('/api/address/page' === $pathInfo || '/api/address/search' === $pathInfo)) {
+        $controller->page($request)->send();
         exit(0);
     }
 
-    if ($method === 'DELETE' && preg_match('#^/api/address/([0-9A-HJKMNP-TV-Z]{26})$#', $pathInfo, $m) === 1) {
-        $controller->delete($req, $m[1])->send();
+    if ('GET' === $method && '/api/address/queue-summary' === $pathInfo) {
+        $controller->queueSummary($request)->send();
         exit(0);
     }
 
-    if ($method === 'POST' && preg_match('#^/api/address/([0-9A-HJKMNP-TV-Z]{26})/validated$#', $pathInfo, $m) === 1) {
-        $controller->applyValidated($req, $m[1])->send();
+    if ('GET' === $method && '/api/address/country-portfolio' === $pathInfo) {
+        $controller->countryPortfolioSummary($request)->send();
+        exit(0);
+    }
+
+    if ('GET' === $method && '/api/address/source-portfolio' === $pathInfo) {
+        $controller->sourcePortfolioSummary($request)->send();
+        exit(0);
+    }
+
+    if ('GET' === $method && '/api/address/validation-portfolio' === $pathInfo) {
+        $controller->validationPortfolioSummary($request)->send();
+        exit(0);
+    }
+
+    if ('GET' === $method && '/api/address/normalization-portfolio' === $pathInfo) {
+        $controller->normalizationPortfolioSummary($request)->send();
+        exit(0);
+    }
+
+    if ('POST' === $method && '/api/address/operational-batch' === $pathInfo) {
+        $controller->patchOperationalBatch($request)->send();
+        exit(0);
+    }
+
+    if (1 === preg_match('#^/api/address/([0-9A-HJKMNP-TV-Z]{26}|demo-[0-9]{4})$#', $pathInfo, $matches)) {
+        if ('GET' === $method) {
+            $controller->get($request, $matches[1])->send();
+            exit(0);
+        }
+
+        if ('DELETE' === $method) {
+            $controller->markDeleted($request, $matches[1])->send();
+            exit(0);
+        }
+
+        if ('PATCH' === $method) {
+            $controller->patchOperational($request, $matches[1])->send();
+            exit(0);
+        }
+    }
+
+    if (1 === preg_match('#^/api/address/([0-9A-HJKMNP-TV-Z]{26}|demo-[0-9]{4})/validated$#', $pathInfo, $matches) && 'POST' === $method) {
+        $controller->applyValidated($request, $matches[1])->send();
+        exit(0);
+    }
+
+    if (1 === preg_match('#^/api/address/([0-9A-HJKMNP-TV-Z]{26}|demo-[0-9]{4})/governance-cluster$#', $pathInfo, $matches) && 'GET' === $method) {
+        $controller->governanceClusterSummary($request, $matches[1])->send();
         exit(0);
     }
 
     (new JsonResponse(['error' => 'not_found'], 404))->send();
-} catch (RuntimeException $e) {
-    $code = $e->getMessage();
-    if ($code === 'not_found') {
-        ErrorMap::emit(404, $code);
+} catch (RuntimeException $exception) {
+    $code = $exception->getMessage();
+
+    if ('not_found' === $code) {
+        ErrorMap::emit(404, $code, $code);
         exit(0);
     }
-    if (str_starts_with($code, 'missing_') || str_starts_with($code, 'invalid_')) {
-        ErrorMap::emit(400, $code);
+
+    if (str_starts_with($code, 'missing_') || str_starts_with($code, 'invalid_') || 'tenant_scope_required' === $code) {
+        ErrorMap::emit(400, $code, $code);
         exit(0);
     }
-    ErrorMap::emit(500, 'runtime', ['message' => $code]);
-} catch (Throwable $e) {
-    ErrorMap::emit(500, 'unhandled', (string)['message' => $e->getMessage()]);
+
+    ErrorMap::emit(500, 'runtime', $code);
+} catch (Throwable $exception) {
+    ErrorMap::emit(500, 'unhandled', $exception->getMessage());
 }

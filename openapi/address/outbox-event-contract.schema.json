@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smartresponsor.local/address/outbox-event-contract.schema.json",
+  "title": "Address Outbox Event Contract",
+  "type": "object",
+  "required": ["eventName", "schemaVersion", "eventVersion", "occurredAt"],
+  "properties": {
+    "eventName": {
+      "type": "string",
+      "enum": [
+        "AddressCreated",
+        "AddressUpdated",
+        "AddressDeleted",
+        "AddressOperationalPatched",
+        "AddressValidatedApplied"
+      ]
+    },
+    "schemaVersion": {
+      "type": "string",
+      "const": "address-outbox.v1"
+    },
+    "eventVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": true
+}

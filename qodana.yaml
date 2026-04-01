@@ -1,0 +1,7 @@
+version: "1.0"
+linter: jetbrains/qodana-php:2025.3
+php:
+  version: "8.4"
+bootstrap: composer install --no-interaction --no-progress --prefer-dist
+profile:
+  name: qodana.recommended

@@ -1,0 +1,38 @@
+Inspection report
+mode: collect
+verdict: collect-only
+dominant severity: high
+dominant risk: medium
+findings: 14
+fail: 4 | warn: 0
+
+Top categories
+ - tooling: 3
+ - config: 6
+ - runtime: 1
+ - style: 1
+ - typing: 1
+ - quality: 1
+ - architecture: 1
+
+Normalized findings
+ - [ok][tooling][low/low] composer install preflight :: vendor stack already present :: vendor/autoload.php found
+ - [ok][tooling][medium/low] bootstrap packages :: install missing dev packages :: friendsofphp/php-cs-fixer deptrac/deptrac phpstan/phpstan-symfony phpstan/phpstan-doctrine
+ - [ok][config][low/low] create config file :: config created :: D:/PhpstormProjects/www/Addressing/phpstan.neon.dist
+ - [ok][config][low/low] preserve custom file :: custom config preserved :: D:/PhpstormProjects/www/Addressing/rector.php
+ - [ok][config][low/low] create config file :: config created :: D:/PhpstormProjects/www/Addressing/.php-cs-fixer.dist.php
+ - [ok][config][low/low] create config file :: config created :: D:/PhpstormProjects/www/Addressing/deptrac.yaml
+ - [ok][config][low/low] create config file :: config created :: D:/PhpstormProjects/www/Addressing/tests/object-manager.php
+ - [ok][config][low/low] create config file :: config created :: D:/PhpstormProjects/www/Addressing/tests/console-application.php
+ - [ok][tooling][low/low] composer scripts added :: composer scripts ready :: qa:phpstan,qa:rector,qa:deptrac,qa:cs,qa,inspection,inspection:bootstrap,inspection:run,inspection:latest,inspection:chat,inspection:baseline,inspection:compare
+ - [ok][runtime][low/low] symfony cache warmup :: skip cache warmup for package/component repo :: bin/console not found
+ - [fail][style][medium/medium] php-cs-fixer :: review php-cs-fixer output and fix findings :: failed
+ - [fail][typing][high/medium] phpstan :: review phpstan output and fix findings :: failed
+ - [fail][quality][medium/medium] rector :: review rector output and fix findings :: failed
+ - [fail][architecture][high/medium] deptrac :: review deptrac output and fix findings :: failed
+
+Artifact
+ - log: D:/PhpstormProjects/www/Addressing/.commanding/logs/inspection/latest.log
+ - summary: D:/PhpstormProjects/www/Addressing/.commanding/logs/inspection/latest.summary.txt
+ - json: D:/PhpstormProjects/www/Addressing/.commanding/logs/inspection/latest.summary.json
+ - findings: D:/PhpstormProjects/www/Addressing/.commanding/logs/inspection/latest.findings.ndjson

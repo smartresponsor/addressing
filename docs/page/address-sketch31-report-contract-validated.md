@@ -2,7 +2,7 @@ Address-sketch31-7 (contract boundary)
 
 What changed
 
-- Added stable payload contract: App\Contract\Address\AddressValidated
+- Added stable payload contract: App\Contract\Message\Address\AddressValidated
 - AddressValidatedApplierInterface now accepts AddressValidated instead of raw array
 - Outbox event name standardized: address.validated.applied (v1)
 - Added HTTP endpoint: POST /api/address/validated/apply

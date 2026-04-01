@@ -2,7 +2,7 @@
 
 name = "__DOMAIN__-agent-trigger"
 main = "src/index.js"
-compatibility_date = "2025-01-01"
+compatibility_date = "__COMPAT_DATE__"
 
 [vars]
 GH_OWNER = "__OWNER__"

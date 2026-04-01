@@ -4,14 +4,14 @@
 
 - [x] Рефакторинг `Format/Contract/Factory/Strategy` — чистая архитектура.
 - [x] Фасад `AddressFormatter` подключён к новым namespace.
-- [x] Unit, Integration, E2E, Behat тесты покрывают основные сценарии.
+- [x] Unit, Integration и E2E тесты покрывают основные сценарии.
 - [x] Pre-commit hook защищает от сырого кода.
 
 ## 2. CI/CD
 
 - [x] **GitHub Actions**
-    - PHPUnit, Behat, E2E.
-    - Allure Reports (JUnit + Behat).
+    - PHPUnit, Integration, E2E.
+    - Allure Reports.
     - Static analysis (PHPStan, Psalm).
     - Codecov (coverage).
     - SonarCloud (quality gates).
@@ -19,7 +19,7 @@
 
 - [x] **GitLab CI**
     - Тесты.
-    - Behat + Allure.
+    - Allure.
     - Sonar.
     - Coverage → Codecov.
 

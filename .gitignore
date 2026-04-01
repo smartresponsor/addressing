@@ -1,6 +1,6 @@
 # Composer
 /vendor/
-composer.lock
+/report/
 
 # Logs and caches
 /var/logs/
@@ -30,3 +30,13 @@ Thumbs.db
 # Node
 node_modules/
 **/node_modules/
+playwright-report/
+test-results/
+
+# AI
+/Domain/Ai/agent-trigger/worker/.dev.vars
+/Domain/Ai/agent-trigger/worker/.dev.vars.*
+!/Domain/Ai/agent-trigger/worker/.dev.vars.example
+
+docs/site/
+var/

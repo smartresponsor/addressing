@@ -1,5 +1,8 @@
+-- Migration: address validation verdict storage.
+-- Version: 002
+-- Depends on: 001_address
+-- Idempotent: yes (IF NOT EXISTS)
 -- AddressData: store provider raw response and normalized verdict.
--- Safe to re-run (idempotent via IF NOT EXISTS).
 
 ALTER TABLE address_entity
     ADD COLUMN IF NOT EXISTS validation_raw         JSONB       NULL,

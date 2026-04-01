@@ -1,7 +1,5 @@
 <?php
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- */
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Http\Middleware;
@@ -16,7 +14,6 @@ namespace App\Http\Middleware;
 final class RequestId
 {
     /**
-     * @return string
      * @throws \Exception
      */
     public static function ensure(): string

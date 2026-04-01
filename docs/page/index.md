@@ -18,6 +18,4 @@ This repository is the reference component for end-to-end automation in SmartRes
 ## Docs
 
 - [Address business flows](address-business-flows.md)
-- [Address data model](address-data-model.md)
-- [Address outbox event contracts](address-outbox-events.md)
 - [Address demo data](address-demo-data.md)

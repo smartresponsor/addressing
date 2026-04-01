@@ -23,7 +23,7 @@ function Get-SuggestedRepo([string]$RelativePath)
 {
     $p = $RelativePath -replace "\\\\", "/"
 
-    if ($p -match "^src/Http/AddressApi/" -or $p -match "^src/Service/Address/" -or $p -match "^src/Repository/Address/" -or $p -match "^src/Entity/Address/" -or $p -match "^src/EntityInterface/Address/" -or $p -match "^src/RepositoryInterface/Address/" -or $p -match "^src/ServiceInterface/Address/")
+    if ($p -match "^src/Http/AddressApi/" -or $p -match "^src/Service/Application/Address/" -or $p -match "^src/Repository/Address/" -or $p -match "^src/Entity/Address/" -or $p -match "^src/EntityInterface/Address/" -or $p -match "^src/RepositoryInterface/Address/" -or $p -match "^src/ServiceInterface/Application/Address/")
     {
         return "address-data"
     }

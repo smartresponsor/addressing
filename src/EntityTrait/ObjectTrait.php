@@ -1,8 +1,6 @@
 <?php
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- */
 
 
 namespace App\EntityTrait;
@@ -34,54 +32,31 @@ trait ObjectTrait
     #[Assert\Length(min: 6, minMessage: 'object.en.gb.too.short')]
     private string $lastTitle = 'last_title';
 
-    /**
-     * @return string
-     */
     public function getFirstTitle(): string
     {
         return $this->firstTitle;
     }
 
-    /**
-     * @param string $firstTitle
-     * @return void
-     */
     public function setFirstTitle(string $firstTitle): void
     {
         $this->firstTitle = $firstTitle;
     }
     #
-
-    /**
-     * @return string
-     */
     public function getMiddleTitle(): string
     {
         return $this->middleTitle;
     }
 
-    /**
-     * @param string $middleTitle
-     * @return void
-     */
     public function setMiddleTitle(string $middleTitle): void
     {
         $this->middleTitle = $middleTitle;
     }
     #
-
-    /**
-     * @return string
-     */
     public function getLastTitle(): string
     {
         return $this->lastTitle;
     }
 
-    /**
-     * @param string $lastTitle
-     * @return void
-     */
     public function setLastTitle(string $lastTitle): void
     {
         $this->lastTitle = $lastTitle;

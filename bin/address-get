@@ -1,0 +1,40 @@
+#!/usr/bin/env php
+<?php
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+declare(strict_types=1);
+
+require __DIR__.'/../vendor/autoload.php';
+
+use App\Repository\Persistence\AddressRepository;
+use App\Service\Application\AddressService;
+
+$id = $argv[1] ?? null;
+$ownerId = $argv[2] ?? null;
+$vendorId = $argv[3] ?? null;
+
+if (!is_string($id) || $id === '') {
+    fwrite(STDERR, "Usage: address-get <id> [ownerId|null] [vendorId|null]\n");
+    exit(2);
+}
+
+$pdo = new PDO((string) getenv('PG_DSN'), (string) getenv('PG_USER'), (string) getenv('PG_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$service = new AddressService(new AddressRepository($pdo));
+$address = $service->get($id, ($ownerId === 'null' ? null : $ownerId), ($vendorId === 'null' ? null : $vendorId));
+
+if ($address === null) {
+    fwrite(STDOUT, "null\n");
+    exit(0);
+}
+
+fwrite(STDOUT, json_encode([
+    'id' => $address->id(),
+    'ownerId' => $address->ownerId(),
+    'vendorId' => $address->vendorId(),
+    'line1' => $address->line1(),
+    'line2' => $address->line2(),
+    'city' => $address->city(),
+    'region' => $address->region(),
+    'postalCode' => $address->postalCode(),
+    'countryCode' => $address->countryCode(),
+    'dedupeKey' => $address->dedupeKey(),
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n");

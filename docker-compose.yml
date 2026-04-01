@@ -1,21 +1,23 @@
-version: '3.8'
-
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
     volumes:
-      - .:/app
-    depends_on:
-      - db
-    command: vendor/bin/phpunit --coverage-html build/coverage-html
-
-  db:
-    image: mysql:8.0
-    restart: always
+      - .:/var/www/html
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: testdb
-      MYSQL_USER: test
-      MYSQL_PASSWORD: test
+      APP_ENV: dev
+      APP_DEBUG: 1
+      APP_VAR_DIR: /tmp/addressing-var
+      ADDRESS_DB_DSN: sqlite:/tmp/addressing-docker.sqlite
+      ADDRESS_RATE_LIMIT_DSN: sqlite:/tmp/addressing-rate-limit.sqlite
+      RATE_LIMIT_DISABLED: 1
+      PANTHER_CHROME_BINARY: /usr/bin/chromium
+      PANTHER_NO_SANDBOX: 1
     ports:
-      - "3306:3306"
+      - '${APP_PORT:-8081}:80'
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit((int) !@file_get_contents('http://127.0.0.1/address/manage'));"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

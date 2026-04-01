@@ -1,0 +1,113 @@
+# Managed by Commanding inspection
+deptrac:
+  paths:
+    - ./src
+
+  exclude_files:
+    - '#.*Test.*#'
+    - '#.*Kernel.php#'
+
+  layers:
+    - name: HttpController
+      collectors:
+        - type: className
+          regex: '^App\\Http\\Controller\\.*'
+
+    - name: Http
+      collectors:
+        - type: className
+          regex: '^App\\Http\\(?!Controller\\).*'
+
+    - name: ServiceInterface
+      collectors:
+        - type: className
+          regex: '^App\\ServiceInterface\\.*'
+
+    - name: Service
+      collectors:
+        - type: className
+          regex: '^App\\Service\\.*'
+
+    - name: RepositoryInterface
+      collectors:
+        - type: className
+          regex: '^App\\RepositoryInterface\\.*'
+
+    - name: Repository
+      collectors:
+        - type: className
+          regex: '^App\\Repository\\.*'
+
+    - name: Integration
+      collectors:
+        - type: className
+          regex: '^App\\Integration\\.*'
+
+    - name: Contract
+      collectors:
+        - type: className
+          regex: '^App\\Contract\\.*'
+
+    - name: EntityInterface
+      collectors:
+        - type: className
+          regex: '^App\\EntityInterface\\.*'
+
+    - name: Entity
+      collectors:
+        - type: className
+          regex: '^App\\Entity\\.*'
+
+    - name: Value
+      collectors:
+        - type: className
+          regex: '^App\\Value\\.*'
+
+  ruleset:
+    HttpController:
+      - Http
+      - Service
+      - ServiceInterface
+      - RepositoryInterface
+      - Contract
+      - EntityInterface
+      - Value
+
+    Http:
+      - Service
+      - ServiceInterface
+      - RepositoryInterface
+      - Contract
+      - EntityInterface
+      - Value
+
+    Service:
+      - ServiceInterface
+      - RepositoryInterface
+      - Repository
+      - Contract
+      - EntityInterface
+      - Entity
+      - Value
+      - Integration
+
+    Repository:
+      - RepositoryInterface
+      - Contract
+      - EntityInterface
+      - Entity
+      - Value
+      - Integration
+
+    Integration:
+      - Contract
+      - EntityInterface
+      - Entity
+      - Value
+
+    Contract: ~
+    ServiceInterface: ~
+    RepositoryInterface: ~
+    EntityInterface: ~
+    Entity: ~
+    Value: ~

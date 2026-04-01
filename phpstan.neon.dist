@@ -1,0 +1,40 @@
+# Managed by Commanding inspection
+includes:
+    - vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-symfony/rules.neon
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-doctrine/rules.neon
+
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+
+    tmpDir: var/phpstan
+
+    excludePaths:
+        analyse:
+            - var/*
+            - vendor/*
+            - public/*
+            - migrations/*
+            - tests/Fixture/*
+            - tests/Fixtures/*
+
+    symfony:
+        containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
+        consoleApplicationLoader: tests/console-application.php
+
+    doctrine:
+        objectManagerLoader: tests/object-manager.php
+
+    scanDirectories:
+        - var/cache/dev/Symfony/Config
+
+    scanFiles:
+        - vendor/symfony/dependency-injection/Loader/Configurator/ContainerConfigurator.php
+
+    checkMissingIterableValueType: true
+    checkGenericClassInNonGenericObjectType: true
+    reportUnmatchedIgnoredErrors: true

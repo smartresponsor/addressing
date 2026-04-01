@@ -1,0 +1,101 @@
+Inspection full started
+Installing missing dev packages in D:/PhpstormProjects/www/Addressing: friendsofphp/php-cs-fixer deptrac/deptrac phpstan/phpstan-symfony phpstan/phpstan-doctrine
+[32m./composer.json has been updated[39m
+[32mRunning composer update friendsofphp/php-cs-fixer deptrac/deptrac phpstan/phpstan-symfony phpstan/phpstan-doctrine[39m
+[32mLoading composer repositories with package information[39m
+[32mUpdating dependencies[39m
+[32mLock file operations: 18 installs, 0 updates, 0 removals[39m
+  - Locking [32mclue/ndjson-react[39m ([33mv1.3.0[39m)
+  - Locking [32mdeptrac/deptrac[39m ([33m3.0.0[39m)
+  - Locking [32mevenement/evenement[39m ([33mv3.0.2[39m)
+  - Locking [32mfriendsofphp/php-cs-fixer[39m ([33mv3.94.2[39m)
+  - Locking [32mphpstan/phpstan-doctrine[39m ([33m1.5.7[39m)
+  - Locking [32mphpstan/phpstan-symfony[39m ([33m1.4.16[39m)
+  - Locking [32mreact/cache[39m ([33mv1.2.0[39m)
+  - Locking [32mreact/child-process[39m ([33mv0.6.7[39m)
+  - Locking [32mreact/dns[39m ([33mv1.14.0[39m)
+  - Locking [32mreact/event-loop[39m ([33mv1.6.0[39m)
+  - Locking [32mreact/promise[39m ([33mv3.3.0[39m)
+  - Locking [32mreact/socket[39m ([33mv1.17.0[39m)
+  - Locking [32mreact/stream[39m ([33mv1.4.0[39m)
+  - Locking [32msymfony/options-resolver[39m ([33mv8.0.0[39m)
+  - Locking [32msymfony/polyfill-php80[39m ([33mv1.33.0[39m)
+  - Locking [32msymfony/polyfill-php81[39m ([33mv1.33.0[39m)
+  - Locking [32msymfony/process[39m ([33mv8.0.5[39m)
+  - Locking [32msymfony/stopwatch[39m ([33mv8.0.0[39m)
+[32mWriting lock file[39m
+[32mInstalling dependencies from lock file (including require-dev)[39m
+[32mPackage operations: 18 installs, 0 updates, 0 removals[39m
+  - Downloading [32mdeptrac/deptrac[39m ([33m3.0.0[39m)
+  - Installing [32mdeptrac/deptrac[39m ([33m3.0.0[39m): Extracting archive
+  - Installing [32msymfony/stopwatch[39m ([33mv8.0.0[39m): Extracting archive
+  - Installing [32msymfony/process[39m ([33mv8.0.5[39m): Extracting archive
+  - Installing [32msymfony/polyfill-php81[39m ([33mv1.33.0[39m): Extracting archive
+  - Installing [32msymfony/polyfill-php80[39m ([33mv1.33.0[39m): Extracting archive
+  - Installing [32msymfony/options-resolver[39m ([33mv8.0.0[39m): Extracting archive
+  - Installing [32mreact/event-loop[39m ([33mv1.6.0[39m): Extracting archive
+  - Installing [32mevenement/evenement[39m ([33mv3.0.2[39m): Extracting archive
+  - Installing [32mreact/stream[39m ([33mv1.4.0[39m): Extracting archive
+  - Installing [32mreact/promise[39m ([33mv3.3.0[39m): Extracting archive
+  - Installing [32mreact/cache[39m ([33mv1.2.0[39m): Extracting archive
+  - Installing [32mreact/dns[39m ([33mv1.14.0[39m): Extracting archive
+  - Installing [32mreact/socket[39m ([33mv1.17.0[39m): Extracting archive
+  - Installing [32mreact/child-process[39m ([33mv0.6.7[39m): Extracting archive
+  - Installing [32mclue/ndjson-react[39m ([33mv1.3.0[39m): Extracting archive
+  - Installing [32mfriendsofphp/php-cs-fixer[39m ([33mv3.94.2[39m): Extracting archive
+  - Installing [32mphpstan/phpstan-doctrine[39m ([33m1.5.7[39m): Extracting archive
+  - Installing [32mphpstan/phpstan-symfony[39m ([33m1.4.16[39m): Extracting archive
+[32m1 package suggestions were added by new dependencies, use `composer suggest` to see details.[39m
+[32mGenerating autoload files[39m
+[32m102 packages you are using are looking for funding.[39m
+[32mUse the `composer fund` command to find out more![39m
+[32mNo security vulnerability advisories found.[39m
+Using version [32m^3.94[39m for [32mfriendsofphp/php-cs-fixer[39m
+Using version [32m^3.0[39m for [32mdeptrac/deptrac[39m
+Using version [32m^1.4[39m for [32mphpstan/phpstan-symfony[39m
+Using version [32m^1.5[39m for [32mphpstan/phpstan-doctrine[39m
+Running php-cs-fixer in D:/PhpstormProjects/www/Addressing
+
+[33mIn Finder.php line 648:[39m
+[37;41m                                                                             [39;49m
+[37;41m  The "D:\PhpstormProjects\www\Addressing/config" directory does not exist.  [39;49m
+[37;41m                                                                             [39;49m
+
+[32mfix [--path-mode PATH-MODE] [--allow-risky ALLOW-RISKY] [--config CONFIG] [--dry-run] [--rules RULES] [--using-cache USING-CACHE] [--allow-unsupported-php-version ALLOW-UNSUPPORTED-PHP-VERSION] [--cache-file CACHE-FILE] [--diff] [--format FORMAT] [--stop-on-violation] [--show-progress SHOW-PROGRESS] [--sequential] [--] [<path>...][39m
+
+Running phpstan in D:/PhpstormProjects/www/Addressing
+
+[33mIn FileFinder.php line 47:[39m
+[37;41m                                                                                       [39;49m
+[37;41m  Path D:\PhpstormProjects\www\Addressing\var\cache\dev\Symfony\Config does not exist  [39;49m
+[37;41m                                                                                       [39;49m
+
+[32manalyse [-c|--configuration CONFIGURATION] [-l|--level LEVEL] [--no-progress] [--debug] [-a|--autoload-file AUTOLOAD-FILE] [--error-format ERROR-FORMAT] [-b|--generate-baseline [GENERATE-BASELINE]] [--allow-empty-baseline] [--memory-limit MEMORY-LIMIT] [--xdebug] [--tmp-file TMP-FILE] [--instead-of INSTEAD-OF] [--fix] [--watch] [--pro] [--fail-without-result-cache] [--] [<paths>...][39m
+
+Running rector in D:/PhpstormProjects/www/Addressing
+
+[37;41m                                                                                                   [39;49m
+[37;41m [ERROR] Class "Rector\Set\ValueObject\TypeDeclarationSetList" not found                           [39;49m
+[37;41m                                                                                                   [39;49m
+
+Running deptrac in D:/PhpstormProjects/www/Addressing
+  0/50 [>---------------------------]   0%[1G[2K  5/50 [==>-------------------------]  10%[1G[2K 10/50 [=====>----------------------]  20%[1G[2K 25/50 [==============>-------------]  50%[1G[2K 30/50 [================>-----------]  60%[1G[2K 35/50 [===================>--------]  70%[1G[2K 50/50 [============================] 100%
+
+[37;41m                                                                                                   [39;49m
+[37;41m [ERROR] Analysis finished with an Exception.                                                      [39;49m
+[37;41m                                                                                                   [39;49m
+[37;41m         Invalid collector definition.                                                             [39;49m
+[37;41m                                                                                                   [39;49m
+[37;41m         Could not find a collector for type "className". Supported types: "attribute", "bool",    [39;49m
+[37;41m         "class", "classLike", "classNameRegex", "composer", "directory", "extends",               [39;49m
+[37;41m         "functionName", "glob", "implements", "inheritanceLevel", "inherits", "interface",        [39;49m
+[37;41m         "layer", "method", "php_internal", "superglobal", "tagValueRegex", "trait", "uses".       [39;49m
+[37;41m                                                                                                   [39;49m
+[37;41m         Service "className" not found: the container inside                                       [39;49m
+[37;41m         "Deptrac\Deptrac\Core\Layer\Collector\CollectorProvider" is a smaller service locator that[39;49m
+[37;41m         only knows about the "attribute", "bool", "class", "classLike", "classNameRegex",         [39;49m
+[37;41m         "composer", "directory", "extends", "functionName", "glob", "implements",                 [39;49m
+[37;41m         "inheritanceLevel", "inherits", "interface", "layer", "method", "php_internal",           [39;49m
+[37;41m         "superglobal", "tagValueRegex", "trait" and "uses" services.                              [39;49m
+[37;41m                                                                                                   [39;49m
+

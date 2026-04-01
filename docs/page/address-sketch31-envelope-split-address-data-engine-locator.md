@@ -101,7 +101,7 @@ Goal
 - sql/mysql/**
 - src/Entity/**
 - src/Repository/**
-- src/Service/Address/AddressProjection.php
+- src/Service/Application/Address/AddressProjection.php
   Paths
 - sql/**
 - src/Entity/**

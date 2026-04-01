@@ -1,7 +1,5 @@
 <?php
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- */
+# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Http\Middleware;
@@ -15,9 +13,6 @@ namespace App\Http\Middleware;
  */
 final class SecurityHeaders
 {
-    /**
-     * @return void
-     */
     public static function apply(): void
     {
         $csp = getenv('CSP') ?: "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";

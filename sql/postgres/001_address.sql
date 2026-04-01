@@ -1,5 +1,8 @@
+-- Migration: address data domain schema (Postgres)
+-- Version: 001
+-- Depends on: none
+-- Idempotent: yes (IF NOT EXISTS / CREATE OR REPLACE)
 -- Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
--- Address data domain schema (Postgres)
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
@@ -27,6 +30,18 @@ CREATE TABLE IF NOT EXISTS address_entity
     validation_status   VARCHAR(16)      NOT NULL DEFAULT 'unknown',
     validation_provider VARCHAR(64)      NULL,
     validated_at        TIMESTAMPTZ      NULL,
+    source_system       VARCHAR(64)      NULL,
+    source_type         VARCHAR(32)      NULL,
+    source_reference    VARCHAR(128)     NULL,
+    normalization_version VARCHAR(64)    NULL,
+    raw_input_snapshot  JSONB            NULL,
+    normalized_snapshot JSONB            NULL,
+    provider_digest     VARCHAR(64)      NULL,
+    governance_status   VARCHAR(16)      NOT NULL DEFAULT 'canonical',
+    duplicate_of_id     CHAR(26)         NULL,
+    superseded_by_id    CHAR(26)         NULL,
+    alias_of_id         CHAR(26)         NULL,
+    conflict_with_id    CHAR(26)         NULL,
 
     dedupe_key          VARCHAR(128)     NULL,
 
@@ -34,6 +49,17 @@ CREATE TABLE IF NOT EXISTS address_entity
     updated_at          TIMESTAMPTZ      NULL,
     deleted_at          TIMESTAMPTZ      NULL
 );
+
+DO
+$$
+BEGIN
+    ALTER TABLE address_entity
+        ADD CONSTRAINT address_tenant_scope_chk CHECK (owner_id IS NOT NULL OR vendor_id IS NOT NULL);
+EXCEPTION
+    WHEN duplicate_object THEN
+        NULL;
+END
+$$;
 
 CREATE INDEX IF NOT EXISTS address_owner_idx ON address_entity (owner_id);
 CREATE INDEX IF NOT EXISTS address_vendor_idx ON address_entity (vendor_id);
@@ -67,10 +93,45 @@ CREATE TABLE IF NOT EXISTS address_outbox
     event_version INT         NOT NULL DEFAULT 1,
     payload       JSONB       NOT NULL,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    published_at  TIMESTAMPTZ NULL
+    published_at  TIMESTAMPTZ NULL,
+    locked_at     TIMESTAMPTZ NULL,
+    locked_by     VARCHAR(64) NULL
 );
 
 CREATE INDEX IF NOT EXISTS address_outbox_pub_idx ON address_outbox (published_at);
+
+
+CREATE TABLE IF NOT EXISTS address_evidence_snapshot
+(
+    id                    CHAR(32) PRIMARY KEY,
+    address_id            CHAR(26)         NOT NULL REFERENCES address_entity (id) ON DELETE CASCADE,
+    owner_id              VARCHAR(64)      NULL,
+    vendor_id             VARCHAR(64)      NULL,
+    source_system         VARCHAR(64)      NULL,
+    source_type           VARCHAR(32)      NULL,
+    source_reference      VARCHAR(128)     NULL,
+    validated_by          VARCHAR(64)      NULL,
+    validated_at          TIMESTAMPTZ      NULL,
+    normalization_version VARCHAR(64)      NULL,
+    raw_input_snapshot    JSONB            NULL,
+    normalized_snapshot   JSONB            NULL,
+    validation_status     VARCHAR(16)      NOT NULL DEFAULT 'unknown',
+    validation_score      INT              NULL,
+    validation_issues     JSONB            NULL,
+    provider_digest       VARCHAR(64)      NULL,
+    created_at            TIMESTAMPTZ      NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS address_evidence_snapshot_address_idx
+    ON address_evidence_snapshot (address_id, created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS address_evidence_snapshot_owner_idx ON address_evidence_snapshot (owner_id);
+CREATE INDEX IF NOT EXISTS address_evidence_snapshot_vendor_idx ON address_evidence_snapshot (vendor_id);
+
+ALTER TABLE address_evidence_snapshot
+    ADD CONSTRAINT address_evidence_source_type_chk CHECK (source_type IS NULL OR source_type IN ('manual', 'import', 'partner', 'validator', 'override', 'migration'));
+
+ALTER TABLE address_evidence_snapshot
+    ADD CONSTRAINT address_evidence_validation_status_chk CHECK (validation_status IN ('unknown', 'pending', 'normalized', 'validated', 'rejected', 'uncertain', 'overridden'));
 
 
 -- Checks for validation_status and country_code
@@ -78,7 +139,19 @@ ALTER TABLE address_entity
     ADD CONSTRAINT address_country_len_chk CHECK (char_length(country_code) = 2);
 
 ALTER TABLE address_entity
-    ADD CONSTRAINT address_validation_status_chk CHECK (validation_status IN ('unknown', 'normalized', 'validated'));
+    ADD CONSTRAINT address_validation_status_chk CHECK (validation_status IN ('unknown', 'pending', 'normalized', 'validated', 'rejected', 'uncertain', 'overridden'));
+
+ALTER TABLE address_entity
+    ADD CONSTRAINT address_source_type_chk CHECK (source_type IS NULL OR source_type IN ('manual', 'import', 'partner', 'validator', 'override', 'migration'));
+
+ALTER TABLE address_entity
+    ADD CONSTRAINT address_governance_status_chk CHECK (governance_status IN ('canonical', 'duplicate', 'superseded', 'alias', 'conflict'));
+
+ALTER TABLE address_entity
+    ADD CONSTRAINT address_revalidation_policy_chk CHECK (revalidation_policy IS NULL OR revalidation_policy IN ('manual', 'on-change', 'daily', 'weekly', 'monthly', 'quarterly', 'semiannual', 'annual'));
+
+ALTER TABLE address_entity
+    ADD CONSTRAINT address_last_validation_status_chk CHECK (last_validation_status IS NULL OR last_validation_status IN ('normalized', 'validated', 'rejected', 'uncertain', 'overridden'));
 
 -- Canonical key generator: produce stable dedupe string from normalized fields if present
 CREATE OR REPLACE FUNCTION address_canonical_key(
@@ -199,5 +272,27 @@ CREATE INDEX IF NOT EXISTS address_validation_fp_idx ON address_entity (validati
 
 -- Outbox: attempts and last error for robust draining
 ALTER TABLE IF EXISTS address_outbox
+    ADD COLUMN IF NOT EXISTS locked_at        TIMESTAMPTZ NULL,
+    ADD COLUMN IF NOT EXISTS locked_by        VARCHAR(64) NULL,
     ADD COLUMN IF NOT EXISTS published_attempt INT  NOT NULL DEFAULT 0,
     ADD COLUMN IF NOT EXISTS last_error        TEXT NULL;
+
+
+CREATE INDEX IF NOT EXISTS address_governance_status_idx ON address_entity (governance_status);
+CREATE INDEX IF NOT EXISTS address_revalidation_due_at_idx ON address_entity (revalidation_due_at);
+
+CREATE INDEX IF NOT EXISTS address_evidence_snapshot_validation_status_created_idx
+    ON address_evidence_snapshot (validation_status, created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS address_evidence_snapshot_address_validation_status_idx
+    ON address_evidence_snapshot (address_id, validation_status, created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS address_entity_review_queue_idx
+    ON address_entity (deleted_at, governance_status, revalidation_due_at, id);
+CREATE INDEX IF NOT EXISTS address_entity_validation_review_idx
+    ON address_entity (deleted_at, validation_status, last_validation_status, id);
+CREATE INDEX IF NOT EXISTS address_entity_normalization_version_idx
+    ON address_entity (deleted_at, normalization_version, id);
+CREATE INDEX IF NOT EXISTS address_last_validation_status_idx ON address_entity (last_validation_status);
+CREATE INDEX IF NOT EXISTS address_duplicate_of_idx ON address_entity (duplicate_of_id) WHERE duplicate_of_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS address_superseded_by_idx ON address_entity (superseded_by_id) WHERE superseded_by_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS address_alias_of_idx ON address_entity (alias_of_id) WHERE alias_of_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS address_conflict_with_idx ON address_entity (conflict_with_id) WHERE conflict_with_id IS NOT NULL;

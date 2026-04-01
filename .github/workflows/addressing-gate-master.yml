@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: [ "8.2" ]
+        php-version: [ "8.4" ]
 
     services:
       mysql:
@@ -76,6 +76,8 @@ jobs:
     env:
       SR_DOMAIN: "addressing"
       MIN_COVERAGE: "80"
+      PANTHER_EXTERNAL_BASE_URI: "http://127.0.0.1:8000"
+      APP_ENV: "test"
 
       PG_DSN: pgsql:host=127.0.0.1;port=5432;dbname=smartresponsor
       PG_USER: smartresponsor
@@ -114,12 +116,16 @@ jobs:
         run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Domain gate (strict)
-        shell: pwsh
+        shell: bash
         env:
           SR_CANON_REQUIRED: "1"
           SR_GATE_STRICT: "1"
         run: |
-          pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "${SR_DOMAIN}"
+          if [ -f "Domain/Tool/github-gate.ps1" ]; then
+            pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "${SR_DOMAIN}"
+          else
+            echo "Skipping domain gate: Domain/Tool/github-gate.ps1 is not present in this repository."
+          fi
 
       - name: Quality checks
         run: |
@@ -129,6 +135,13 @@ jobs:
 
       - name: Unit tests with coverage threshold
         run: |
+          export APP_VAR_DIR="$RUNNER_TEMP/symfony-var"
+          mkdir -p "$APP_VAR_DIR" build/logs
+          php -S 127.0.0.1:8000 -t public > build/logs/php-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID' EXIT
+          sleep 2
+
           vendor/bin/phpunit --coverage-clover build/logs/clover.xml --coverage-text | tee build/logs/coverage.txt
 
           COVERAGE=$(grep -Eo 'Lines:\s+[0-9]+(\.[0-9]+)?%' build/logs/coverage.txt | awk '{print $2}' | tr -d '%')
@@ -138,6 +151,9 @@ jobs:
             echo "Coverage below ${MIN_COVERAGE}%"
             exit 1
           fi
+
+          kill $SERVER_PID
+          trap - EXIT
 
       - name: Migration smoke check
         run: |

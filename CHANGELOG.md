@@ -7,7 +7,7 @@
 - Address domain entities, repositories, validators.
 - AddressEngine with strategies (UA, CA, AU).
 - AddressFormatter facade + factory + contract.
-- PHPUnit, Behat, Integration, E2E tests.
+- PHPUnit, Integration, and E2E tests.
 - CI/CD: GitHub Actions + GitLab CI.
 - Quality: SonarCloud, PHPStan, Psalm, Allure, Codecov.
 - Pre-commit hooks.

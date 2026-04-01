@@ -1,9 +1,8 @@
 parameters:
-  level: 7
+  level: max
   paths:
     - src
-  reportUnmatchedIgnoredErrors: true
-  parallel:
-    processTimeout: 300.0
-includes:
-  - phpstan-baseline.neon
+    - tests
+  checkGenericClassInNonGenericObjectType: true
+  checkMissingIterableValueType: true
+  inferPrivatePropertyTypeFromConstructor: true

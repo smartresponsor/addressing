@@ -1,0 +1,126 @@
+{
+  "name": "composer install preflight",
+  "status": "ok",
+  "category": "tooling",
+  "severity": "low",
+  "risk": "low",
+  "action": "vendor stack already present",
+  "detail": "vendor/autoload.php found"
+}
+{
+  "name": "bootstrap packages",
+  "status": "ok",
+  "category": "tooling",
+  "severity": "medium",
+  "risk": "low",
+  "action": "install missing dev packages",
+  "detail": "friendsofphp/php-cs-fixer deptrac/deptrac phpstan/phpstan-symfony phpstan/phpstan-doctrine"
+}
+{
+  "name": "create config file",
+  "status": "ok",
+  "category": "config",
+  "severity": "low",
+  "risk": "low",
+  "action": "config created",
+  "detail": "D:/PhpstormProjects/www/Addressing/phpstan.neon.dist"
+}
+{
+  "name": "preserve custom file",
+  "status": "ok",
+  "category": "config",
+  "severity": "low",
+  "risk": "low",
+  "action": "custom config preserved",
+  "detail": "D:/PhpstormProjects/www/Addressing/rector.php"
+}
+{
+  "name": "create config file",
+  "status": "ok",
+  "category": "config",
+  "severity": "low",
+  "risk": "low",
+  "action": "config created",
+  "detail": "D:/PhpstormProjects/www/Addressing/.php-cs-fixer.dist.php"
+}
+{
+  "name": "create config file",
+  "status": "ok",
+  "category": "config",
+  "severity": "low",
+  "risk": "low",
+  "action": "config created",
+  "detail": "D:/PhpstormProjects/www/Addressing/deptrac.yaml"
+}
+{
+  "name": "create config file",
+  "status": "ok",
+  "category": "config",
+  "severity": "low",
+  "risk": "low",
+  "action": "config created",
+  "detail": "D:/PhpstormProjects/www/Addressing/tests/object-manager.php"
+}
+{
+  "name": "create config file",
+  "status": "ok",
+  "category": "config",
+  "severity": "low",
+  "risk": "low",
+  "action": "config created",
+  "detail": "D:/PhpstormProjects/www/Addressing/tests/console-application.php"
+}
+{
+  "name": "composer scripts added",
+  "status": "ok",
+  "category": "tooling",
+  "severity": "low",
+  "risk": "low",
+  "action": "composer scripts ready",
+  "detail": "qa:phpstan,qa:rector,qa:deptrac,qa:cs,qa,inspection,inspection:bootstrap,inspection:run,inspection:latest,inspection:chat,inspection:baseline,inspection:compare"
+}
+{
+  "name": "symfony cache warmup",
+  "status": "ok",
+  "category": "runtime",
+  "severity": "low",
+  "risk": "low",
+  "action": "skip cache warmup for package/component repo",
+  "detail": "bin/console not found"
+}
+{
+  "name": "php-cs-fixer",
+  "status": "fail",
+  "category": "style",
+  "severity": "medium",
+  "risk": "medium",
+  "action": "review php-cs-fixer output and fix findings",
+  "detail": "failed"
+}
+{
+  "name": "phpstan",
+  "status": "fail",
+  "category": "typing",
+  "severity": "high",
+  "risk": "medium",
+  "action": "review phpstan output and fix findings",
+  "detail": "failed"
+}
+{
+  "name": "rector",
+  "status": "fail",
+  "category": "quality",
+  "severity": "medium",
+  "risk": "medium",
+  "action": "review rector output and fix findings",
+  "detail": "failed"
+}
+{
+  "name": "deptrac",
+  "status": "fail",
+  "category": "architecture",
+  "severity": "high",
+  "risk": "medium",
+  "action": "review deptrac output and fix findings",
+  "detail": "failed"
+}
