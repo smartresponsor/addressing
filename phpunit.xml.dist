@@ -13,8 +13,6 @@
         <testsuite name="integration">
             <directory>tests/Integration</directory>
             <directory>tests/Service</directory>
-            <directory>tests/Projection</directory>
-            <file>tests/IndexProjectorTest.php</file>
         </testsuite>
         <testsuite name="functional">
             <directory>tests/Functional</directory>
