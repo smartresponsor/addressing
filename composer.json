@@ -129,6 +129,7 @@
         "report:runtime-sync": "@php tools/php/php84.php tools/inspection/AddressRuntimeSyncSummary.php",
         "report:test-support": "@php tools/php/php84.php tools/inspection/AddressTestSupportSurfaceReport.php",
         "report:package-surface": "@php tools/php/php84.php tools/inspection/AddressPackageSurfaceReport.php",
+        "report:validated-applier-surface": "@php tools/php/php84.php tools/inspection/AddressValidatedApplierSurfaceReport.php",
         "test:security": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite security",
         "security:composer-audit": "composer audit --locked --no-interaction",
         "security:importmap-audit": "@php tools/qa/ImportmapAudit.php",
