@@ -8,6 +8,7 @@ use App\Contract\Message\AddressOutboxEventContract;
 use App\Contract\Message\AddressRecordPolicy;
 use App\Contract\Message\AddressValidated;
 use App\Integration\Persistence\AddressTenantScopeSqlHelper;
+use App\Integration\Persistence\AddressValidatedMutationPlanBuilder;
 use App\ServiceInterface\Application\AddressValidatedApplierServiceInterface;
 
 final readonly class AddressValidatedApplierService implements AddressValidatedApplierServiceInterface
@@ -16,6 +17,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         private \PDO $pdo,
         private AddressTenantScopeSqlHelper $addressTenantScopeSqlHelper,
         private AddressValidatedPayloadFactory $addressValidatedPayloadFactory,
+        private AddressValidatedMutationPlanBuilder $addressValidatedMutationPlanBuilder,
     ) {
     }
 
@@ -48,153 +50,11 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 return;
             }
 
-            $fields = [];
+            $plan = $this->addressValidatedMutationPlanBuilder->build($id, $addressValidated, $fingerprint, $now, $validatedAt);
 
-            $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($addressValidated->governanceStatus);
-            $duplicateOfId = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->duplicateOfId, $id);
-            $supersededById = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->supersededById, $id);
-            $aliasOfId = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->aliasOfId, $id);
-            $conflictWithId = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->conflictWithId, $id);
-            $normalizedSnapshot = $this->addressValidatedPayloadFactory->normalizedSnapshot($addressValidated);
-            $providerDigest = $this->addressValidatedPayloadFactory->providerDigest($addressValidated);
-
-            $params = array_merge([
-                ':id' => $id,
-                ':updated_at' => $now->format('Y-m-d H:i:sP'),
-                ':validation_provider' => $addressValidated->validationProvider,
-                ':validation_status' => 'validated',
-                ':validated_at' => $validatedAt->format('Y-m-d H:i:sP'),
-                ':dedupe_key' => $addressValidated->dedupeKey,
-                ':validation_fingerprint' => $fingerprint,
-            ], $scopeParams);
-
-            if (null !== $addressValidated->line1Norm) {
-                $fields[] = 'line1_norm = :line1_norm';
-                $params[':line1_norm'] = $addressValidated->line1Norm;
-            }
-            if (null !== $addressValidated->cityNorm) {
-                $fields[] = 'city_norm = :city_norm';
-                $params[':city_norm'] = $addressValidated->cityNorm;
-            }
-            if (null !== $addressValidated->regionNorm) {
-                $fields[] = 'region_norm = :region_norm';
-                $params[':region_norm'] = $addressValidated->regionNorm;
-            }
-            if (null !== $addressValidated->postalCodeNorm) {
-                $fields[] = 'postal_code_norm = :postal_code_norm';
-                $params[':postal_code_norm'] = $addressValidated->postalCodeNorm;
-            }
-            if (null !== $addressValidated->latitude) {
-                $fields[] = 'latitude = :latitude';
-                $params[':latitude'] = $addressValidated->latitude;
-            }
-            if (null !== $addressValidated->longitude) {
-                $fields[] = 'longitude = :longitude';
-                $params[':longitude'] = $addressValidated->longitude;
-            }
-            if (null !== $addressValidated->geohash) {
-                $fields[] = 'geohash = :geohash';
-                $params[':geohash'] = $addressValidated->geohash;
-            }
-
-            if (null !== $addressValidated->raw) {
-                $fields[] = $this->jsonAssignment('validation_raw', ':validation_raw');
-                $rawJson = $this->encodePayload($addressValidated->raw);
-                $params[':validation_raw'] = $rawJson;
-                $params[':validation_raw_sha256'] = hash('sha256', $rawJson);
-            }
-            if ($addressValidated->addressValidationVerdict instanceof \App\Contract\Message\AddressValidationVerdict) {
-                $fields[] = $this->jsonAssignment('validation_verdict', ':validation_verdict');
-                $params[':validation_verdict'] = $this->encodePayload($addressValidated->addressValidationVerdict->jsonSerialize());
-
-                if (null !== $addressValidated->addressValidationVerdict->deliverable) {
-                    $fields[] = 'validation_deliverable = :validation_deliverable';
-                    $params[':validation_deliverable'] = $addressValidated->addressValidationVerdict->deliverable ? 1 : 0;
-                }
-                if (null !== $addressValidated->addressValidationVerdict->granularity) {
-                    $fields[] = 'validation_granularity = :validation_granularity';
-                    $params[':validation_granularity'] = $addressValidated->addressValidationVerdict->granularity;
-                }
-                if (null !== $addressValidated->addressValidationVerdict->quality) {
-                    $fields[] = 'validation_quality = :validation_quality';
-                    $params[':validation_quality'] = $addressValidated->addressValidationVerdict->quality;
-                }
-            }
-
-            if (null !== $addressValidated->sourceSystem) {
-                $fields[] = 'source_system = :source_system';
-                $params[':source_system'] = $addressValidated->sourceSystem;
-            }
-            if (null !== $addressValidated->sourceType) {
-                $fields[] = 'source_type = :source_type';
-                $params[':source_type'] = AddressRecordPolicy::normalizeSourceType($addressValidated->sourceType);
-            }
-            if (null !== $addressValidated->sourceReference) {
-                $fields[] = 'source_reference = :source_reference';
-                $params[':source_reference'] = $addressValidated->sourceReference;
-            }
-            if (null !== $addressValidated->normalizationVersion) {
-                $fields[] = 'normalization_version = :normalization_version';
-                $params[':normalization_version'] = $addressValidated->normalizationVersion;
-            }
-            if (null !== $addressValidated->rawInput) {
-                $fields[] = $this->jsonAssignment('raw_input_snapshot', ':raw_input_snapshot');
-                $params[':raw_input_snapshot'] = $this->encodePayload($addressValidated->rawInput);
-            }
-            if (null !== $normalizedSnapshot) {
-                $fields[] = $this->jsonAssignment('normalized_snapshot', ':normalized_snapshot');
-                $params[':normalized_snapshot'] = $this->encodePayload($normalizedSnapshot);
-            }
-            if (null !== $providerDigest) {
-                $fields[] = 'provider_digest = :provider_digest';
-                $params[':provider_digest'] = $providerDigest;
-            }
-
-            $lastValidationProvider = $addressValidated->lastValidationProvider ?? $addressValidated->validationProvider;
-            $lastValidationStatus = $addressValidated->lastValidationStatus ?? 'validated';
-            $lastValidationScore = is_int($addressValidated->lastValidationScore)
-                ? $addressValidated->lastValidationScore
-                : $addressValidated->addressValidationVerdict?->quality;
-            if ($addressValidated->revalidationDueAt instanceof \DateTimeImmutable) {
-                $fields[] = 'revalidation_due_at = :revalidation_due_at';
-                $params[':revalidation_due_at'] = $addressValidated->revalidationDueAt->format('Y-m-d H:i:sP');
-            }
-            if (null !== $addressValidated->revalidationPolicy) {
-                $fields[] = 'revalidation_policy = :revalidation_policy';
-                $params[':revalidation_policy'] = AddressRecordPolicy::normalizeRevalidationPolicy($addressValidated->revalidationPolicy);
-            }
-            if (null !== $lastValidationProvider) {
-                $fields[] = 'last_validation_provider = :last_validation_provider';
-                $params[':last_validation_provider'] = $lastValidationProvider;
-            }
-            $fields[] = 'last_validation_status = :last_validation_status';
-            $params[':last_validation_status'] = $lastValidationStatus;
-            if (null !== $lastValidationScore) {
-                $fields[] = 'last_validation_score = :last_validation_score';
-                $params[':last_validation_score'] = $lastValidationScore;
-            }
-
-            $fields[] = 'governance_status = :governance_status';
-            $params[':governance_status'] = $governanceStatus;
-            $fields[] = 'duplicate_of_id = :duplicate_of_id';
-            $params[':duplicate_of_id'] = $duplicateOfId;
-            $fields[] = 'superseded_by_id = :superseded_by_id';
-            $params[':superseded_by_id'] = $supersededById;
-            $fields[] = 'alias_of_id = :alias_of_id';
-            $params[':alias_of_id'] = $aliasOfId;
-            $fields[] = 'conflict_with_id = :conflict_with_id';
-            $params[':conflict_with_id'] = $conflictWithId;
-
-            $fields[] = 'validation_provider = :validation_provider';
-            $fields[] = 'validation_status = :validation_status';
-            $fields[] = 'validated_at = :validated_at';
-            $fields[] = 'dedupe_key = :dedupe_key';
-            $fields[] = 'validation_fingerprint = :validation_fingerprint';
-            $fields[] = 'updated_at = :updated_at';
-
-            $sql = 'UPDATE address_entity SET '.implode(', ', $fields).' WHERE id = :id AND '.$scopeWhere;
+            $sql = 'UPDATE address_entity SET '.$plan->setClause().' WHERE id = :id AND '.$scopeWhere;
             $stmt = $this->prepare($sql);
-            $ok = $stmt->execute($params);
+            $ok = $stmt->execute(array_merge($plan->params, $scopeParams));
 
             if (!$ok) {
                 $this->pdo->rollBack();
@@ -210,10 +70,10 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 $ownerId,
                 $vendorId,
                 $addressValidated,
-                $lastValidationStatus,
-                $lastValidationScore,
-                $normalizedSnapshot,
-                $providerDigest,
+                $plan->lastValidationStatus,
+                $plan->lastValidationScore,
+                $plan->normalizedSnapshot,
+                $plan->providerDigest,
             );
 
             $this->appendOutbox(
@@ -224,18 +84,18 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                     $fingerprint,
                     $addressValidated,
                     $validatedAt,
-                    $params[':validation_raw_sha256'] ?? null,
-                    $governanceStatus,
-                    $duplicateOfId,
-                    $supersededById,
-                    $aliasOfId,
-                    $conflictWithId,
-                    $params[':revalidation_due_at'] ?? null,
-                    $params[':revalidation_policy'] ?? null,
-                    $lastValidationStatus,
-                    $lastValidationScore,
+                    $plan->rawSha256,
+                    $plan->governanceStatus,
+                    $plan->duplicateOfId,
+                    $plan->supersededById,
+                    $plan->aliasOfId,
+                    $plan->conflictWithId,
+                    $plan->revalidationDueAt,
+                    $plan->revalidationPolicy,
+                    $plan->lastValidationStatus,
+                    $plan->lastValidationScore,
                     $evidenceSnapshotId,
-                    $providerDigest,
+                    $plan->providerDigest,
                 )
             );
 
@@ -338,15 +198,6 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         }
 
         return $json;
-    }
-
-    private function jsonAssignment(string $field, string $placeholder): string
-    {
-        if ($this->isPgsql()) {
-            return $field.' = '.$placeholder.'::jsonb';
-        }
-
-        return $field.' = '.$placeholder;
     }
 
     private function isPgsql(): bool
