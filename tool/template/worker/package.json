@@ -7,7 +7,7 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "wrangler": "^4.54.0"
+    "wrangler": "^4.75.0"
   },
   "scripts": {
     "deploy": "wrangler deploy",
