@@ -31,7 +31,9 @@ $validatedApplierContent = is_file($validatedApplierPath) ? (string) file_get_co
 
 fwrite(STDOUT, json_encode([
     'component' => 'Addressing',
-    'status' => in_array(false, $checks, true) ? 'incomplete' : 'ready',
+    'status' => [] === $missingChecks ? 'ready' : 'incomplete',
+    'missingCheckCount' => count($missingChecks),
+    'missingChecks' => $missingChecks,
     'checks' => $checks,
     'signals' => [
         'controllerInjectsAddressApiPayloadFactory' => str_contains($controllerContent, 'private AddressApiPayloadFactory $addressApiPayloadFactory'),
