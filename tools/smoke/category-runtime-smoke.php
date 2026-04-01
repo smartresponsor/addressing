@@ -1,30 +1,36 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 use App\Http\Controller\AddressController;
 use App\Kernel;
-use Symfony\Component\Dotenv\Dotenv;
 
-require __DIR__.'/../../vendor/autoload.php';
+require_once dirname(__DIR__).'/../support/AddressRuntimeBootstrap.php';
 
-if (class_exists(Dotenv::class) && file_exists(__DIR__.'/../../.env')) {
-    (new Dotenv())->bootEnv(__DIR__.'/../../.env');
+$kernel = AddressRuntimeBootstrap::bootKernel();
+$controller = AddressRuntimeBootstrap::service(AddressController::class);
+$pdo = AddressRuntimeBootstrap::pdo();
+$driver = $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+
+$ok = $kernel instanceof Kernel
+    && $controller instanceof AddressController
+    && $pdo instanceof \PDO
+    && is_string($driver)
+    && '' !== $driver;
+
+fwrite(STDOUT, json_encode([
+    'component' => 'Addressing',
+    'check' => 'runtime',
+    'status' => $ok ? 'ready' : 'incomplete',
+    'driver' => $driver,
+    'services' => [
+        Kernel::class => $kernel instanceof Kernel,
+        AddressController::class => $controller instanceof AddressController,
+        \PDO::class => $pdo instanceof \PDO,
+    ],
+], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
+
+if (!$ok) {
+    throw new RuntimeException('runtime_smoke_failed');
 }
-
-$_SERVER['APP_ENV'] ??= 'dev';
-$_SERVER['APP_DEBUG'] ??= '1';
-
-$debug = filter_var((string) $_SERVER['APP_DEBUG'], FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
-$kernel = new Kernel(
-    (string) $_SERVER['APP_ENV'],
-    null === $debug ? '1' === (string) $_SERVER['APP_DEBUG'] : $debug,
-);
-$kernel->boot();
-
-$controller = $kernel->getContainer()->get(AddressController::class);
-if (!$controller instanceof AddressController) {
-    throw new RuntimeException('address_controller_not_available');
-}
-
-fwrite(STDOUT, "runtime smoke ok\n");
