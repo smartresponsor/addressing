@@ -15,6 +15,10 @@ final class AddressApiPantherE2ETest extends TestCase
             self::markTestSkipped('Panther is not installed.');
         }
 
+        if (!self::hasChromeDriverBinary()) {
+            self::markTestSkipped('chromedriver binary is not available in the host environment.');
+        }
+
         $baseUri = getenv('PANTHER_EXTERNAL_BASE_URI') ?: 'http://127.0.0.1';
         $chromeBinary = getenv('PANTHER_CHROME_BINARY');
         if (is_string($chromeBinary) && $chromeBinary !== '') {
@@ -48,5 +52,30 @@ final class AddressApiPantherE2ETest extends TestCase
         $client->submit($form);
         self::assertStringContainsString('Address created successfully:', $client->getPageSource());
         self::assertStringContainsString($line1, $client->getPageSource());
+    }
+
+    private static function hasChromeDriverBinary(): bool
+    {
+        $configured = getenv('PANTHER_CHROME_DRIVER_BINARY') ?: ($_SERVER['PANTHER_CHROME_DRIVER_BINARY'] ?? null);
+        if (is_string($configured) && $configured !== '' && is_file($configured)) {
+            return true;
+        }
+
+        $commands = [
+            'chromedriver --version',
+            'where chromedriver',
+            'command -v chromedriver',
+        ];
+
+        foreach ($commands as $command) {
+            $output = [];
+            $exitCode = 0;
+            @exec($command.' 2>&1', $output, $exitCode);
+            if (0 === $exitCode && $output !== []) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

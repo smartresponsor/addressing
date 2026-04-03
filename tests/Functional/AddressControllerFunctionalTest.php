@@ -14,14 +14,20 @@ use Tests\Support\TestRuntimeEnvironment;
 final class AddressControllerFunctionalTest extends TestCase
 {
     private ?string $sqlitePath = null;
+    private ?Kernel $kernel = null;
 
     protected function tearDown(): void
     {
+        if ($this->kernel instanceof Kernel) {
+            $this->kernel->shutdown();
+        }
+
         TestRuntimeEnvironment::clearSqliteAddressRuntime();
         if (is_string($this->sqlitePath) && is_file($this->sqlitePath)) {
             unlink($this->sqlitePath);
         }
         $this->sqlitePath = null;
+        $this->kernel = null;
     }
 
     public function testCreateAndGetAddressFlow(): void
@@ -75,11 +81,11 @@ final class AddressControllerFunctionalTest extends TestCase
 
         TestRuntimeEnvironment::configureSqliteAddressRuntime($this->sqlitePath);
 
-        $kernel = new Kernel('test', false);
-        $kernel->boot();
+        $this->kernel = new Kernel('test', false);
+        $this->kernel->boot();
 
         /** @var AddressController $controller */
-        $controller = $kernel->getContainer()->get(AddressController::class);
+        $controller = $this->kernel->getContainer()->get(AddressController::class);
 
         return $controller;
     }
