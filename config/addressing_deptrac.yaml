@@ -1,7 +1,7 @@
 # Managed by Commanding inspection
 deptrac:
   paths:
-    - ./src
+    - ../src
 
   exclude_files:
     - '#.*Test.*#'
@@ -10,58 +10,58 @@ deptrac:
   layers:
     - name: HttpController
       collectors:
-        - type: className
-          regex: '^App\\Http\\Controller\\.*'
+        - type: classNameRegex
+          value: '#^App\\Http\\Controller\\.*#'
 
     - name: Http
       collectors:
-        - type: className
-          regex: '^App\\Http\\(?!Controller\\).*'
+        - type: classNameRegex
+          value: '#^App\\Http\\(?!Controller\\).*#'
 
     - name: ServiceInterface
       collectors:
-        - type: className
-          regex: '^App\\ServiceInterface\\.*'
+        - type: classNameRegex
+          value: '#^App\\ServiceInterface\\.*#'
 
     - name: Service
       collectors:
-        - type: className
-          regex: '^App\\Service\\.*'
+        - type: classNameRegex
+          value: '#^App\\Service\\.*#'
 
     - name: RepositoryInterface
       collectors:
-        - type: className
-          regex: '^App\\RepositoryInterface\\.*'
+        - type: classNameRegex
+          value: '#^App\\RepositoryInterface\\.*#'
 
     - name: Repository
       collectors:
-        - type: className
-          regex: '^App\\Repository\\.*'
+        - type: classNameRegex
+          value: '#^App\\Repository\\.*#'
 
     - name: Integration
       collectors:
-        - type: className
-          regex: '^App\\Integration\\.*'
+        - type: classNameRegex
+          value: '#^App\\Integration\\.*#'
 
     - name: Contract
       collectors:
-        - type: className
-          regex: '^App\\Contract\\.*'
+        - type: classNameRegex
+          value: '#^App\\Contract\\.*#'
 
     - name: EntityInterface
       collectors:
-        - type: className
-          regex: '^App\\EntityInterface\\.*'
+        - type: classNameRegex
+          value: '#^App\\EntityInterface\\.*#'
 
     - name: Entity
       collectors:
-        - type: className
-          regex: '^App\\Entity\\.*'
+        - type: classNameRegex
+          value: '#^App\\Entity\\.*#'
 
     - name: Value
       collectors:
-        - type: className
-          regex: '^App\\Value\\.*'
+        - type: classNameRegex
+          value: '#^App\\Value\\.*#'
 
   ruleset:
     HttpController:
@@ -79,6 +79,7 @@ deptrac:
       - RepositoryInterface
       - Contract
       - EntityInterface
+      - Entity
       - Value
 
     Service:
@@ -98,16 +99,30 @@ deptrac:
       - Entity
       - Value
       - Integration
+      - Service
 
     Integration:
       - Contract
       - EntityInterface
       - Entity
       - Value
+      - Service
+      - ServiceInterface
+      - Repository
+      - RepositoryInterface
+      - Http
 
     Contract: ~
-    ServiceInterface: ~
-    RepositoryInterface: ~
+    ServiceInterface:
+      - Contract
+      - EntityInterface
+      - Value
+    RepositoryInterface:
+      - EntityInterface
+      - Contract
+      - Value
     EntityInterface: ~
-    Entity: ~
+    Entity:
+      - EntityInterface
+      - Value
     Value: ~

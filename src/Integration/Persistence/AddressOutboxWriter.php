@@ -19,12 +19,12 @@ final readonly class AddressOutboxWriter
         $payloadJson = $this->encodePayload(AddressOutboxEventContract::decoratePayload($eventName, $payload));
         $payloadExpr = $this->isPgsql() ? ':payload::jsonb' : ':payload';
 
-        $stmt = $this->prepare(
+        $pdoStatement = $this->prepare(
             "INSERT INTO address_outbox (event_name, event_version, payload)
          VALUES (:name, :ver, {$payloadExpr})"
         );
 
-        $stmt->execute([
+        $pdoStatement->execute([
             ':name' => $eventName,
             ':ver' => AddressOutboxEventContract::eventVersion($eventName),
             ':payload' => $payloadJson,
