@@ -12,10 +12,13 @@ if (!AddressRuntimeBootstrap::hasPdoDriver()) {
     exit(2);
 }
 
+$port = random_int(18000, 19999);
+$baseUrl = sprintf('http://127.0.0.1:%d', $port);
+
 $command = [
     PHP_BINARY,
     '-S',
-    '127.0.0.1:8000',
+    sprintf('127.0.0.1:%d', $port),
     '-t',
     'public',
     'public/router.php',
@@ -40,8 +43,21 @@ if (!is_resource($process)) {
 
 try {
     require __DIR__.'/wait-for-url.php';
-    if (!waitForUrl('http://127.0.0.1:8000/address/manage', 30)) {
-        throw new RuntimeException('local_server_not_ready');
+    if (!waitForUrl($baseUrl.'/address/manage', 30)) {
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+
+        fwrite(STDOUT, json_encode([
+            'component' => 'Addressing',
+            'check' => 'dry_run_server',
+            'status' => 'failed',
+            'reason' => 'local_server_not_ready',
+            'baseUrl' => $baseUrl,
+            'stdout' => $stdout === false ? '' : $stdout,
+            'stderr' => $stderr === false ? '' : $stderr,
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
+
+        exit(1);
     }
 } catch (Throwable $exception) {
     foreach ($pipes as $pipe) {
@@ -66,8 +82,23 @@ $signaled = $status['signaled'];
 proc_close($process);
 
 if ($exitCode > 0 && !$signaled) {
-    fwrite(STDERR, $stdout.$stderr);
+    fwrite(STDOUT, json_encode([
+        'component' => 'Addressing',
+        'check' => 'dry_run_server',
+        'status' => 'failed',
+        'reason' => 'local_server_exit_non_zero',
+        'baseUrl' => $baseUrl,
+        'exitCode' => $exitCode,
+        'stdout' => $stdout,
+        'stderr' => $stderr,
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
+
     exit($exitCode);
 }
 
-fwrite(STDOUT, "Local server boot dry-run succeeded.\n");
+fwrite(STDOUT, json_encode([
+    'component' => 'Addressing',
+    'check' => 'dry_run_server',
+    'status' => 'ready',
+    'baseUrl' => $baseUrl,
+], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);

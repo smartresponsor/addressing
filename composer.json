@@ -1,6 +1,6 @@
 {
     "name": "smartresponsor/addressing",
-    "description": "Addressing \u2014 Symfony-oriented address operations and governance component",
+    "description": "Addressing — Symfony-oriented address operations and governance component",
     "type": "library",
     "license": "MIT",
     "require": {
@@ -26,7 +26,7 @@
         "doctrine/orm": "^2.15 || ^3.0",
         "fakerphp/faker": "^1.23",
         "friendsofphp/php-cs-fixer": "^3.94",
-        "phpmd/phpmd": "^2.5",
+        "phpmd/phpmd": "^2.15",
         "phpstan/phpstan": "^1.12",
         "phpstan/phpstan-doctrine": "^1.5",
         "phpstan/phpstan-phpunit": "^1.4",
