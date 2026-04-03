@@ -5,7 +5,12 @@ declare(strict_types=1);
 namespace Tests\Service;
 
 use App\Contract\Message\AddressValidated;
+use App\Integration\Persistence\AddressEvidenceSnapshotWriter;
+use App\Integration\Persistence\AddressOutboxWriter;
+use App\Integration\Persistence\AddressTenantScopeSqlHelper;
+use App\Integration\Persistence\AddressValidatedMutationPlanBuilder;
 use App\Service\Application\AddressValidatedApplierService;
+use App\Service\Application\AddressValidatedPayloadFactory;
 use PHPUnit\Framework\TestCase;
 
 final class AddressValidatedApplierTest extends TestCase
@@ -18,7 +23,15 @@ final class AddressValidatedApplierTest extends TestCase
         $this->pdo = new \PDO('sqlite::memory:');
         $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $this->pdo->exec($this->schemaSql());
-        $this->applier = new AddressValidatedApplierService($this->pdo);
+        $payloadFactory = new AddressValidatedPayloadFactory();
+        $this->applier = new AddressValidatedApplierService(
+            $this->pdo,
+            new AddressTenantScopeSqlHelper(),
+            $payloadFactory,
+            new AddressValidatedMutationPlanBuilder($this->pdo, $payloadFactory),
+            new AddressEvidenceSnapshotWriter($this->pdo, $payloadFactory),
+            new AddressOutboxWriter($this->pdo),
+        );
     }
 
     public function testApplyWorksOnSqliteWithoutPgsqlLockSyntax(): void
@@ -47,39 +60,33 @@ final class AddressValidatedApplierTest extends TestCase
 
         $this->applier->apply('addr-1', $validated, 'owner-1', 'vendor-1');
 
-        $row = $this->pdo->query("SELECT validation_status, line1_norm, source_system, source_type, provider_digest, governance_status, superseded_by_id, revalidation_due_at, revalidation_policy, last_validation_provider, last_validation_status, last_validation_score FROM address_entity WHERE id = 'addr-1'")
-            ->fetch(\PDO::FETCH_ASSOC);
-        self::assertIsArray($row);
-        self::assertSame('validated', $row['validation_status']);
-        self::assertSame('main st', $row['line1_norm']);
-        self::assertSame('validator-suite', $row['source_system']);
-        self::assertSame('validator', $row['source_type']);
-        self::assertSame('digest-1', $row['provider_digest']);
-        self::assertSame('superseded', $row['governance_status']);
-        self::assertSame('addr-2', $row['superseded_by_id']);
-        self::assertStringStartsWith('2025-03-01', (string) $row['revalidation_due_at']);
-        self::assertSame('quarterly', $row['revalidation_policy']);
-        self::assertSame('unit', $row['last_validation_provider']);
-        self::assertSame('validated', $row['last_validation_status']);
-        self::assertSame(87, (int) $row['last_validation_score']);
+        $row = $this->fetchAssocRow("SELECT validation_status, line1_norm, source_system, source_type, provider_digest, governance_status, superseded_by_id, revalidation_due_at, revalidation_policy, last_validation_provider, last_validation_status, last_validation_score FROM address_entity WHERE id = 'addr-1'");
+        self::assertSame('validated', $this->stringField($row, 'validation_status'));
+        self::assertSame('main st', $this->stringField($row, 'line1_norm'));
+        self::assertSame('validator-suite', $this->stringField($row, 'source_system'));
+        self::assertSame('validator', $this->stringField($row, 'source_type'));
+        self::assertSame('digest-1', $this->stringField($row, 'provider_digest'));
+        self::assertSame('superseded', $this->stringField($row, 'governance_status'));
+        self::assertSame('addr-2', $this->stringField($row, 'superseded_by_id'));
+        self::assertStringStartsWith('2025-03-01', $this->stringField($row, 'revalidation_due_at'));
+        self::assertSame('quarterly', $this->stringField($row, 'revalidation_policy'));
+        self::assertSame('unit', $this->stringField($row, 'last_validation_provider'));
+        self::assertSame('validated', $this->stringField($row, 'last_validation_status'));
+        self::assertSame(87, $this->intField($row, 'last_validation_score'));
 
-        $snapshot = $this->pdo->query("SELECT source_system, source_type, source_reference, validated_by, validation_status, validation_score, provider_digest FROM address_evidence_snapshot WHERE address_id = 'addr-1' ORDER BY created_at DESC, id DESC LIMIT 1")
-            ->fetch(\PDO::FETCH_ASSOC);
-        self::assertIsArray($snapshot);
-        self::assertSame('validator-suite', $snapshot['source_system']);
-        self::assertSame('validator', $snapshot['source_type']);
-        self::assertSame('run-1', $snapshot['source_reference']);
-        self::assertSame('unit', $snapshot['validated_by']);
-        self::assertSame('validated', $snapshot['validation_status']);
-        self::assertSame(87, (int) $snapshot['validation_score']);
-        self::assertSame('digest-1', $snapshot['provider_digest']);
+        $snapshot = $this->fetchAssocRow("SELECT source_system, source_type, source_reference, validated_by, validation_status, validation_score, provider_digest FROM address_evidence_snapshot WHERE address_id = 'addr-1' ORDER BY created_at DESC, id DESC LIMIT 1");
+        self::assertSame('validator-suite', $this->stringField($snapshot, 'source_system'));
+        self::assertSame('validator', $this->stringField($snapshot, 'source_type'));
+        self::assertSame('run-1', $this->stringField($snapshot, 'source_reference'));
+        self::assertSame('unit', $this->stringField($snapshot, 'validated_by'));
+        self::assertSame('validated', $this->stringField($snapshot, 'validation_status'));
+        self::assertSame(87, $this->intField($snapshot, 'validation_score'));
+        self::assertSame('digest-1', $this->stringField($snapshot, 'provider_digest'));
 
-        $outbox = $this->pdo->query('SELECT event_name, event_version, payload FROM address_outbox ORDER BY id DESC LIMIT 1')
-            ->fetch(\PDO::FETCH_ASSOC);
-        self::assertIsArray($outbox);
-        self::assertSame('AddressValidatedApplied', $outbox['event_name']);
-        self::assertSame(1, (int) $outbox['event_version']);
-        $payload = json_decode((string) $outbox['payload'], true);
+        $outbox = $this->fetchAssocRow('SELECT event_name, event_version, payload FROM address_outbox ORDER BY id DESC LIMIT 1');
+        self::assertSame('AddressValidatedApplied', $this->stringField($outbox, 'event_name'));
+        self::assertSame(1, $this->intField($outbox, 'event_version'));
+        $payload = $this->decodeJsonObject($this->stringField($outbox, 'payload'));
         self::assertSame('AddressValidatedApplied', $payload['eventName'] ?? null);
         self::assertSame('address-outbox.v1', $payload['schemaVersion'] ?? null);
         self::assertSame(1, $payload['eventVersion'] ?? null);
@@ -131,6 +138,51 @@ final class AddressValidatedApplierTest extends TestCase
             ':validation_status' => 'pending',
             ':created_at' => '2025-01-01 00:00:00+00:00',
         ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function fetchAssocRow(string $sql): array
+    {
+        $statement = $this->pdo->query($sql);
+        self::assertInstanceOf(\PDOStatement::class, $statement);
+
+        $row = $statement->fetch(\PDO::FETCH_ASSOC);
+        self::assertIsArray($row);
+
+        return $row;
+    }
+
+    /** @return array<string, mixed> */
+    private function decodeJsonObject(string $json): array
+    {
+        $decoded = json_decode($json, true);
+        self::assertIsArray($decoded);
+
+        return $decoded;
+    }
+
+    /** @param array<string, mixed> $row */
+    private function stringField(array $row, string $key): string
+    {
+        self::assertArrayHasKey($key, $row);
+        self::assertIsString($row[$key]);
+
+        return $row[$key];
+    }
+
+    /** @param array<string, mixed> $row */
+    private function intField(array $row, string $key): int
+    {
+        self::assertArrayHasKey($key, $row);
+        $value = $row[$key];
+        if (is_int($value)) {
+            return $value;
+        }
+
+        self::assertIsString($value);
+        self::assertTrue(is_numeric($value));
+
+        return (int) $value;
     }
 
     private function schemaSql(): string

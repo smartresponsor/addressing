@@ -20,9 +20,15 @@ $checks = [
 ];
 
 $validatedApplierPath = $root.'/src/Service/Application/AddressValidatedApplierService.php';
-$content = is_file($validatedApplierPath) ? (string) file_get_contents($validatedApplierPath) : '';
+$content = '';
+if (is_file($validatedApplierPath)) {
+    $validatedApplierContent = file_get_contents($validatedApplierPath);
+    if (false !== $validatedApplierContent) {
+        $content = $validatedApplierContent;
+    }
+}
 
-fwrite(STDOUT, json_encode([
+$payload = json_encode([
     'component' => 'Addressing',
     'status' => in_array(false, $checks, true) ? 'incomplete' : 'ready',
     'checks' => $checks,
@@ -32,4 +38,9 @@ fwrite(STDOUT, json_encode([
         'noInlineSnapshotInsert' => !str_contains($content, 'address_evidence_snapshot'),
         'noInlineOutboxInsert' => !str_contains($content, 'address_outbox'),
     ],
-], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+if (false === $payload) {
+    throw new RuntimeException('report_payload_encode_failed');
+}
+
+fwrite(STDOUT, $payload);

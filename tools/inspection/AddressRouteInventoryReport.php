@@ -11,8 +11,8 @@ if (is_file($index)) {
     preg_match_all('/\$_SERVER\[\'REQUEST_METHOD\'\]\s*===\s*\'([A-Z]+)\'/m', $content, $methodMatches);
     preg_match_all('/\$_SERVER\[\'REQUEST_URI\'\].*?(\/[^\'\"]+)/m', $content, $uriMatches);
     $routes = [
-        'method_tokens' => array_values(array_unique($methodMatches[1] ?? [])),
-        'uri_tokens' => array_values(array_unique($uriMatches[1] ?? [])),
+        'method_tokens' => array_values(array_unique($methodMatches[1])),
+        'uri_tokens' => array_values(array_unique($uriMatches[1])),
     ];
 }
 

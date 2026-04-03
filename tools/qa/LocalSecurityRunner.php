@@ -93,6 +93,7 @@ function runSemgrepCommunityEdition(string $projectRoot): int
     return 1;
 }
 
+/** @param list<string> $candidates */
 function findBinary(array $candidates): ?string
 {
     foreach ($candidates as $candidate) {

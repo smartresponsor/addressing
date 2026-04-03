@@ -33,7 +33,7 @@ fwrite(STDOUT, json_encode([
     'signals' => [
         'schemaManagerDefinesTenantScopeConstraint' => str_contains($schemaManagerContent, 'address_tenant_scope_chk'),
         'schemaManagerDefinesEvidenceScopeConstraint' => str_contains($schemaManagerContent, 'address_evidence_snapshot_scope_chk'),
-        'schemaManagerDefinesOutboxStreamColumn' => str_contains($schemaManagerContent, 'stream TEXT NOT NULL DEFAULT ''address'''),
+        'schemaManagerDefinesOutboxStreamColumn' => str_contains($schemaManagerContent, "stream TEXT NOT NULL DEFAULT ''address''"),
         'schemaManagerDefinesDedupeTriggers' => str_contains($schemaManagerContent, 'trg_address_dedupe_autofill') && str_contains($schemaManagerContent, 'trg_address_dedupe_autofill_update'),
         'testDatabaseDelegatesToSchemaManager' => str_contains($testDatabaseContent, 'AddressSchemaManager::resetSchema('),
         'testDatabaseProvidesFreshSqlitePath' => str_contains($testDatabaseContent, 'freshSqlitePath('),

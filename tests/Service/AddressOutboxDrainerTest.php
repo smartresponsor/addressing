@@ -66,8 +66,9 @@ final class AddressOutboxDrainerTest extends TestCase
         sort($published);
         static::assertSame(['addr-1', 'addr-2'], $published);
 
-        $rows = $pdo1->query('SELECT published_at FROM address_outbox ORDER BY id ASC')
-            ->fetchAll(\PDO::FETCH_COLUMN);
+        $rowsStmt = $pdo1->query('SELECT published_at FROM address_outbox ORDER BY id ASC');
+        static::assertInstanceOf(\PDOStatement::class, $rowsStmt);
+        $rows = $rowsStmt->fetchAll(\PDO::FETCH_COLUMN);
         static::assertCount(2, $rows);
         static::assertNotEmpty($rows[0]);
         static::assertNotEmpty($rows[1]);

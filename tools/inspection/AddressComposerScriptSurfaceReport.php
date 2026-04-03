@@ -35,7 +35,7 @@ foreach ($scripts as $name => $definition) {
             $matches
         );
 
-        foreach ($matches[1] ?? [] as $path) {
+        foreach ($matches[1] as $path) {
             $normalized = ltrim($path, './');
             if (!in_array($normalized, $paths, true)) {
                 $paths[] = $normalized;

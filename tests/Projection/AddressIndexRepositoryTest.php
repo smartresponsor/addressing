@@ -24,6 +24,7 @@ final class AddressIndexRepositoryTest extends TestCase
         $pdo = new PDO('sqlite::memory:');
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $sql = file_get_contents(__DIR__ . '/../../src/Projection/AddressIndex/schema.sqlite.sql');
+        self::assertNotFalse($sql);
         $pdo->exec($sql);
         $this->repo = new PdoRepository($pdo);
     }

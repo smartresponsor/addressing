@@ -52,7 +52,7 @@ fclose($pipes[2]);
 $status = proc_get_status($process);
 proc_close($process);
 
-if (($status['exitcode'] ?? 0) > 0 && !($status['signaled'] ?? false)) {
+if ($status['exitcode'] > 0 && !$status['signaled']) {
     fwrite(STDERR, $stdout.$stderr);
     exit((int) $status['exitcode']);
 }

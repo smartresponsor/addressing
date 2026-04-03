@@ -508,10 +508,9 @@ final class AddressServiceTest extends TestCase
         self::assertSame('validated', $saved->lastValidationStatus());
         self::assertSame(97, $saved->lastValidationScore());
 
-        $row = $this->pdo->query('SELECT event_name, payload FROM address_outbox ORDER BY id DESC LIMIT 1')->fetch(\PDO::FETCH_ASSOC);
-        self::assertIsArray($row);
-        self::assertSame('AddressOperationalPatched', $row['event_name']);
-        $payload = json_decode((string) $row['payload'], true);
+        $row = $this->fetchAssocRow('SELECT event_name, payload FROM address_outbox ORDER BY id DESC LIMIT 1');
+        self::assertSame('AddressOperationalPatched', $this->stringField($row, 'event_name'));
+        $payload = $this->decodeJsonObject($this->stringField($row, 'payload'));
         self::assertSame('superseded', $payload['governanceStatus'] ?? null);
         self::assertSame('addr-master-1', $payload['governanceLinkId'] ?? null);
         self::assertSame('quarterly', $payload['revalidationPolicy'] ?? null);
@@ -533,13 +532,11 @@ final class AddressServiceTest extends TestCase
     {
         $this->service->create($this->makeAddress('addr-6'));
 
-        $row = $this->pdo->query('SELECT event_name, event_version, payload FROM address_outbox ORDER BY id ASC')
-            ->fetch(\PDO::FETCH_ASSOC);
+        $row = $this->fetchAssocRow('SELECT event_name, event_version, payload FROM address_outbox ORDER BY id ASC');
 
-        static::assertNotFalse($row);
-        static::assertSame('AddressCreated', $row['event_name']);
-        static::assertSame(1, (int) $row['event_version']);
-        $payload = json_decode((string) $row['payload'], true);
+        static::assertSame('AddressCreated', $this->stringField($row, 'event_name'));
+        static::assertSame(1, $this->intField($row, 'event_version'));
+        $payload = $this->decodeJsonObject($this->stringField($row, 'payload'));
         static::assertSame('addr-6', $payload['id'] ?? null);
         static::assertSame('AddressCreated', $payload['eventName'] ?? null);
         static::assertSame('address-outbox.v1', $payload['schemaVersion'] ?? null);
@@ -781,11 +778,13 @@ final class AddressServiceTest extends TestCase
 
     private function outboxCount(): int
     {
-        $count = $this->pdo->query('SELECT COUNT(*) FROM address_outbox')->fetchColumn();
-
-        return (int) $count;
+        return $this->fetchScalarInt('SELECT COUNT(*) FROM address_outbox');
     }
 
+    /**
+     * @param array<string, mixed>|null $validationRaw
+     * @param array<string, mixed>|null $validationVerdict
+     */
     private function makeAddress(
         string $id,
         string $ownerId = 'owner-1',
@@ -852,6 +851,11 @@ final class AddressServiceTest extends TestCase
             $providerDigest = 'sha256:'.$id;
         }
 
+        $sourceReferenceValue = $this->optionalStringValue($sourceReference, 'sourceReference');
+        $rawInputSnapshotValue = $this->optionalArrayValue($rawInputSnapshot, 'rawInputSnapshot');
+        $normalizedSnapshotValue = $this->optionalArrayValue($normalizedSnapshot, 'normalizedSnapshot');
+        $providerDigestValue = $this->optionalStringValue($providerDigest, 'providerDigest');
+
         return new AddressData(
             $id,
             $ownerId,
@@ -884,11 +888,11 @@ final class AddressServiceTest extends TestCase
             $validationQuality,
             $sourceSystem,
             $sourceType,
-            $sourceReference,
+            $sourceReferenceValue,
             $normalizationVersion,
-            $rawInputSnapshot,
-            $normalizedSnapshot,
-            $providerDigest,
+            $rawInputSnapshotValue,
+            $normalizedSnapshotValue,
+            $providerDigestValue,
             $governanceStatus,
             $duplicateOfId,
             $supersededById,
@@ -901,4 +905,78 @@ final class AddressServiceTest extends TestCase
             $lastValidationScore
         );
     }
+
+
+    private function fetchScalarInt(string $sql): int
+    {
+        $statement = $this->pdo->query($sql);
+        self::assertInstanceOf(\PDOStatement::class, $statement);
+
+        return (int) $statement->fetchColumn();
+    }
+
+    /** @return array<string, mixed> */
+    private function fetchAssocRow(string $sql): array
+    {
+        $statement = $this->pdo->query($sql);
+        self::assertInstanceOf(\PDOStatement::class, $statement);
+
+        $row = $statement->fetch(\PDO::FETCH_ASSOC);
+        self::assertIsArray($row);
+
+        return $row;
+    }
+
+    /** @param array<string, mixed> $row */
+    private function stringField(array $row, string $key): string
+    {
+        self::assertArrayHasKey($key, $row);
+        self::assertIsString($row[$key]);
+
+        return $row[$key];
+    }
+
+    /** @param array<string, mixed> $row */
+    private function intField(array $row, string $key): int
+    {
+        self::assertArrayHasKey($key, $row);
+        $value = $row[$key];
+        if (is_int($value)) {
+            return $value;
+        }
+
+        self::assertIsString($value);
+        self::assertTrue(is_numeric($value));
+
+        return (int) $value;
+    }
+
+    /** @return array<string, mixed> */
+    private function decodeJsonObject(string $json): array
+    {
+        $decoded = json_decode($json, true);
+        self::assertIsArray($decoded);
+
+        return $decoded;
+    }
+
+    private function optionalStringValue(mixed $value, string $field): ?string
+    {
+        if (null === $value || is_string($value)) {
+            return $value;
+        }
+
+        throw new \InvalidArgumentException($field.'_must_be_string_or_null');
+    }
+
+    /** @return array<string, mixed>|null */
+    private function optionalArrayValue(mixed $value, string $field): ?array
+    {
+        if (null === $value || is_array($value)) {
+            return $value;
+        }
+
+        throw new \InvalidArgumentException($field.'_must_be_array_or_null');
+    }
+
 }

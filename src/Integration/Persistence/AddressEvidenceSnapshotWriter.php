@@ -16,6 +16,7 @@ final readonly class AddressEvidenceSnapshotWriter
     ) {
     }
 
+    /** @param array<string, mixed>|null $normalizedSnapshot */
     public function write(
         string $addressId,
         ?string $ownerId,

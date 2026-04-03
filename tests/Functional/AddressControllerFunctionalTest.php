@@ -28,13 +28,16 @@ final class AddressControllerFunctionalTest extends TestCase
     {
         $controller = $this->bootController(__FUNCTION__);
 
-        $request = new Request([], [], [], [], [], [], json_encode([
+        $payloadJson = json_encode([
             'ownerId' => 'owner-1',
             'vendorId' => 'vendor-1',
             'line1' => 'Main street 10',
             'city' => 'Austin',
             'countryCode' => 'us',
-        ], JSON_UNESCAPED_UNICODE));
+        ], JSON_UNESCAPED_UNICODE);
+        self::assertNotFalse($payloadJson);
+
+        $request = new Request([], [], [], [], [], [], $payloadJson);
 
         $createResponse = $controller->create($request);
         self::assertSame(201, $createResponse->getStatusCode());

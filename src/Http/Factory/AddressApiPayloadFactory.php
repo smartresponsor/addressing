@@ -24,6 +24,7 @@ final readonly class AddressApiPayloadFactory
         return $data;
     }
 
+    /** @param array<string, mixed> $in */
     public function createAddressData(array $in): AddressData
     {
         $id = (string) new Ulid();
@@ -79,6 +80,7 @@ final readonly class AddressApiPayloadFactory
         );
     }
 
+    /** @param array<string, mixed> $in */
     public function createAddressValidated(array $in): AddressValidated
     {
         return AddressValidated::fromArray([

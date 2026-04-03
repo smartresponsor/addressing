@@ -14,7 +14,11 @@ $fixtureService = AddressRuntimeBootstrap::service(AddressDemoFixtureService::cl
 $loaded = $fixtureService->resetAndLoad($count);
 
 $pdo = AddressRuntimeBootstrap::pdo();
-$rowCount = (int) $pdo->query('SELECT COUNT(*) FROM address_entity')->fetchColumn();
+$rowCountStatement = $pdo->query('SELECT COUNT(*) FROM address_entity');
+if (!$rowCountStatement instanceof \PDOStatement) {
+    throw new RuntimeException('fixture_load_row_count_query_failed');
+}
+$rowCount = (int) $rowCountStatement->fetchColumn();
 
 $ok = $loaded === $count && $rowCount === $count;
 
