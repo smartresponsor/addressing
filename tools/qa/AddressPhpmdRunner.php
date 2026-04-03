@@ -17,7 +17,24 @@ function readComposerLock(string $root): ?array
     return is_array($decoded) ? $decoded : null;
 }
 
+
 /**
+ * @return array<string, mixed>|null
+ */
+function readComposerJson(string $root): ?array
+{
+    $composerPath = $root.'/composer.json';
+    if (!is_file($composerPath)) {
+        return null;
+    }
+
+    $decoded = json_decode((string) file_get_contents($composerPath), true);
+
+    return is_array($decoded) ? $decoded : null;
+}
+
+/**
+ * @param array<string, mixed>|null $lock
  * @return string|null
  */
 function packageVersion(?array $lock, string $package): ?string
@@ -44,6 +61,26 @@ function packageVersion(?array $lock, string $package): ?string
     }
 
     return null;
+}
+
+
+/**
+ * @param array<string, mixed>|null $composerJson
+ */
+function requiresModernPhpmd(?array $composerJson): bool
+{
+    if (!is_array($composerJson)) {
+        return false;
+    }
+
+    $requireDev = $composerJson['require-dev'] ?? null;
+    if (!is_array($requireDev)) {
+        return false;
+    }
+
+    $constraint = $requireDev['phpmd/phpmd'] ?? null;
+
+    return is_string($constraint) && str_contains($constraint, '2.15');
 }
 
 function normalizeVersion(string $version): string
@@ -106,6 +143,7 @@ if (!is_file($binary)) {
     ]);
 }
 
+$composerJson = readComposerJson($root);
 $lock = readComposerLock($root);
 $phpmdVersion = packageVersion($lock, 'phpmd/phpmd');
 $pdependVersion = packageVersion($lock, 'pdepend/pdepend');
@@ -116,7 +154,9 @@ if (isPhpmdToolingIncompatible($phpmdVersion, $pdependVersion)) {
         'tool' => 'phpmd',
         'target' => $target,
         'status' => 'blocked',
-        'reason' => 'vendor_phpmd_tooling_incompatible_with_current_symfony_runtime',
+        'reason' => requiresModernPhpmd($composerJson)
+            ? 'vendor_phpmd_lock_or_vendor_stale_after_constraint_upgrade'
+            : 'vendor_phpmd_tooling_incompatible_with_current_symfony_runtime',
         'phpmdVersion' => $phpmdVersion,
         'pdependVersion' => $pdependVersion,
         'minimumSupported' => [
