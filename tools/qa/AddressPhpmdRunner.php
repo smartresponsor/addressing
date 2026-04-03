@@ -15,6 +15,20 @@ if (!is_string($target) || '' === trim($target)) {
     exit(64);
 }
 
+
+if (!function_exists('simplexml_load_string')) {
+    fwrite(STDOUT, json_encode([
+        'component' => 'Addressing',
+        'tool' => 'phpmd',
+        'target' => $target,
+        'status' => 'blocked',
+        'reason' => 'php_simplexml_extension_missing',
+        'functionExpected' => 'simplexml_load_string',
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
+
+    exit(2);
+}
+
 if (!is_file($binary)) {
     fwrite(STDOUT, json_encode([
         'component' => 'Addressing',

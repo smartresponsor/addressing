@@ -40,3 +40,5 @@ test-results/
 
 docs/site/
 var/
+/config/reference.php
+/phpstan-full.log

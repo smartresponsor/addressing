@@ -19,17 +19,48 @@ $reports = [
     'tools/inspection/AddressPersistenceWriteSurfaceReport.php',
 ];
 
+$allowedStatuses = ['ready', 'report', 'reference'];
 $results = [];
+$overallStatus = 'ready';
+
 foreach ($reports as $report) {
     $path = $root.'/'.$report;
+    if (!is_file($path)) {
+        $results[] = [
+            'file' => $report,
+            'exists' => false,
+            'status' => 'missing',
+        ];
+        $overallStatus = 'partial';
+        continue;
+    }
+
+    $command = escapeshellarg(PHP_BINARY).' '.escapeshellarg($path);
+    $outputLines = [];
+    $exitCode = 0;
+    exec($command.' 2>&1', $outputLines, $exitCode);
+    $output = implode("\n", $outputLines);
+    $decoded = json_decode($output, true);
+    $status = is_array($decoded) && isset($decoded['status']) && is_string($decoded['status'])
+        ? $decoded['status']
+        : 'invalid';
+    $isReady = $exitCode === 0 && in_array($status, $allowedStatuses, true);
+
+    if (!$isReady) {
+        $overallStatus = 'partial';
+    }
+
     $results[] = [
         'file' => $report,
-        'exists' => is_file($path),
+        'exists' => true,
+        'exitCode' => $exitCode,
+        'status' => $status,
+        'rawOutput' => is_array($decoded) ? null : $output,
     ];
 }
 
 fwrite(STDOUT, json_encode([
     'component' => 'Addressing',
-    'status' => in_array(false, array_column($results, 'exists'), true) ? 'partial' : 'ready',
+    'status' => $overallStatus,
     'reports' => $results,
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
