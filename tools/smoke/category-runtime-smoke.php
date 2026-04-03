@@ -1,12 +1,22 @@
 <?php
 
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
 declare(strict_types=1);
 
 use App\Http\Controller\AddressController;
 use App\Kernel;
 
-require_once dirname(__DIR__).'/../support/AddressRuntimeBootstrap.php';
+require_once dirname(__DIR__).'/support/AddressRuntimeBootstrap.php';
+
+if (!AddressRuntimeBootstrap::hasPdoDriver()) {
+    fwrite(STDOUT, json_encode(
+        AddressRuntimeBootstrap::blockedHostPayload('runtime', 'no_pdo_driver_available_in_host_php'),
+        JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES,
+    ).PHP_EOL);
+
+    exit(2);
+}
 
 $kernel = AddressRuntimeBootstrap::bootKernel();
 $controller = AddressRuntimeBootstrap::service(AddressController::class);

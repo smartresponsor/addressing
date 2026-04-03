@@ -1,6 +1,17 @@
 <?php
 declare(strict_types=1);
 
+require_once dirname(__DIR__).'/support/AddressRuntimeBootstrap.php';
+
+if (!AddressRuntimeBootstrap::hasPdoDriver()) {
+    fwrite(STDOUT, json_encode(
+        AddressRuntimeBootstrap::blockedHostPayload('dry_run_server', 'no_pdo_driver_available_in_host_php'),
+        JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES,
+    ).PHP_EOL);
+
+    exit(2);
+}
+
 $command = [
     PHP_BINARY,
     '-S',
@@ -50,11 +61,13 @@ $stderr = stream_get_contents($pipes[2]);
 fclose($pipes[1]);
 fclose($pipes[2]);
 $status = proc_get_status($process);
+$exitCode = (int) $status['exitcode'];
+$signaled = $status['signaled'];
 proc_close($process);
 
-if ($status['exitcode'] > 0 && !$status['signaled']) {
+if ($exitCode > 0 && !$signaled) {
     fwrite(STDERR, $stdout.$stderr);
-    exit((int) $status['exitcode']);
+    exit($exitCode);
 }
 
 fwrite(STDOUT, "Local server boot dry-run succeeded.\n");

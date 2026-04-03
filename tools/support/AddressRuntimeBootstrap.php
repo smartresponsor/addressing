@@ -1,9 +1,11 @@
 <?php
 
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
 declare(strict_types=1);
 
 use App\Kernel;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Dotenv\Dotenv;
 
@@ -12,6 +14,7 @@ require_once dirname(__DIR__, 2).'/vendor/autoload.php';
 final class AddressRuntimeBootstrap
 {
     private static ?Kernel $kernel = null;
+    private static ?Application $consoleApplication = null;
 
     public static function projectRoot(): string
     {
@@ -48,6 +51,18 @@ final class AddressRuntimeBootstrap
         return self::container()->get($id);
     }
 
+    public static function consoleApplication(): Application
+    {
+        if (self::$consoleApplication instanceof Application) {
+            return self::$consoleApplication;
+        }
+
+        self::$consoleApplication = new Application(self::bootKernel());
+        self::$consoleApplication->setAutoExit(false);
+
+        return self::$consoleApplication;
+    }
+
     public static function pdo(): \PDO
     {
         $pdo = self::service(\PDO::class);
@@ -56,6 +71,71 @@ final class AddressRuntimeBootstrap
         }
 
         return $pdo;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function availablePdoDrivers(): array
+    {
+        /** @var list<string> $drivers */
+        $drivers = \PDO::getAvailableDrivers();
+
+        return $drivers;
+    }
+
+    public static function hasPdoDriver(): bool
+    {
+        return self::availablePdoDrivers() !== [];
+    }
+
+    /**
+     * @return array{
+     *     phpBinary: string,
+     *     phpVersion: string,
+     *     pdoDrivers: list<string>,
+     *     extensions: list<string>,
+     *     ready: bool
+     * }
+     */
+    public static function hostReadiness(): array
+    {
+        $extensions = get_loaded_extensions();
+        sort($extensions, SORT_STRING);
+
+        return [
+            'phpBinary' => PHP_BINARY,
+            'phpVersion' => PHP_VERSION,
+            'pdoDrivers' => self::availablePdoDrivers(),
+            'extensions' => array_values($extensions),
+            'ready' => self::hasPdoDriver(),
+        ];
+    }
+
+    /**
+     * @return array{
+     *     component: string,
+     *     check: string,
+     *     status: string,
+     *     reason: string,
+     *     host: array{
+     *         phpBinary: string,
+     *         phpVersion: string,
+     *         pdoDrivers: list<string>,
+     *         extensions: list<string>,
+     *         ready: bool
+     *     }
+     * }
+     */
+    public static function blockedHostPayload(string $check, string $reason): array
+    {
+        return [
+            'component' => 'Addressing',
+            'check' => $check,
+            'status' => 'blocked',
+            'reason' => $reason,
+            'host' => self::hostReadiness(),
+        ];
     }
 
     private static function debugFlag(): bool

@@ -1,30 +1,31 @@
 <?php
 
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
 declare(strict_types=1);
 
-use App\Http\Controller\AddressController;
-use Symfony\Component\Form\FormFactoryInterface;
-use Twig\Environment;
+use App\Kernel;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\Routing\RouterInterface;
 
-require_once dirname(__DIR__).'/../support/AddressRuntimeBootstrap.php';
+require_once dirname(__DIR__).'/support/AddressRuntimeBootstrap.php';
 
-$formFactory = AddressRuntimeBootstrap::service(FormFactoryInterface::class);
-$twig = AddressRuntimeBootstrap::service(Environment::class);
-$controller = AddressRuntimeBootstrap::service(AddressController::class);
+$kernel = AddressRuntimeBootstrap::bootKernel();
+$router = AddressRuntimeBootstrap::service('router');
+$httpKernel = AddressRuntimeBootstrap::service('http_kernel');
 
-$ok = $formFactory instanceof FormFactoryInterface
-    && $twig instanceof Environment
-    && $controller instanceof AddressController;
+$ok = $kernel instanceof Kernel
+    && $router instanceof RouterInterface
+    && $httpKernel instanceof HttpKernelInterface;
 
 fwrite(STDOUT, json_encode([
     'component' => 'Addressing',
     'check' => 'container_boot',
     'status' => $ok ? 'ready' : 'incomplete',
     'services' => [
-        FormFactoryInterface::class => $formFactory instanceof FormFactoryInterface,
-        Environment::class => $twig instanceof Environment,
-        AddressController::class => $controller instanceof AddressController,
+        Kernel::class => $kernel instanceof Kernel,
+        RouterInterface::class => $router instanceof RouterInterface,
+        HttpKernelInterface::class => $httpKernel instanceof HttpKernelInterface,
     ],
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
 

@@ -1,6 +1,6 @@
 {
     "name": "smartresponsor/addressing",
-    "description": "Addressing — Symfony-oriented address operations and governance component",
+    "description": "Addressing \u2014 Symfony-oriented address operations and governance component",
     "type": "library",
     "license": "MIT",
     "require": {
@@ -26,8 +26,10 @@
         "doctrine/orm": "^2.15 || ^3.0",
         "fakerphp/faker": "^1.23",
         "friendsofphp/php-cs-fixer": "^3.94",
-        "phpstan/phpstan": "^1.11",
+        "phpmd/phpmd": "^2.5",
+        "phpstan/phpstan": "^1.12",
         "phpstan/phpstan-doctrine": "^1.5",
+        "phpstan/phpstan-phpunit": "^1.4",
         "phpstan/phpstan-symfony": "^1.4",
         "phpunit/phpunit": "^10.5",
         "rector/rector": "^1.2",
@@ -154,7 +156,9 @@
         "fixtures:demo": "php bin/address-demo-reset 50",
         "app:server": "php -S 127.0.0.1:8000 -t public public/router.php",
         "app:server:wait": "@php tools/e2e/wait-for-url.php http://127.0.0.1:8000/address/manage",
-        "app:server:dry-run": "@php tools/e2e/dry-run-server.php"
+        "app:server:dry-run": "@php tools/e2e/dry-run-server.php",
+        "smoke:host-readiness": "@php tools/php/php84.php tools/smoke/category-host-readiness-smoke.php",
+        "report:execution-readiness": "@php tools/php/php84.php tools/qa/AddressExecutionReadinessReport.php"
     },
     "config": {
         "sort-packages": true,
