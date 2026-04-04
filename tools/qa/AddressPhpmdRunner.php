@@ -169,6 +169,10 @@ if (isPhpmdToolingIncompatible($phpmdVersion, $pdependVersion)) {
 
 $command = [
     PHP_BINARY,
+    '-d',
+    'error_reporting=8191',
+    '-d',
+    'display_errors=stderr',
     $binary,
     $target,
     $format,
