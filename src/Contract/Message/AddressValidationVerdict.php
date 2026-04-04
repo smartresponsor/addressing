@@ -4,7 +4,23 @@ declare(strict_types=1);
 
 namespace App\Contract\Message;
 
-final readonly class AddressValidationVerdict implements \JsonSerializable
+use JsonSerializable;
+
+use function array_key_exists;
+use function in_array;
+use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_numeric;
+use function is_string;
+use function max;
+use function min;
+use function round;
+use function strtolower;
+use function trim;
+
+final readonly class AddressValidationVerdict implements JsonSerializable
 {
     /**
      * @param array<string, mixed> $signal
@@ -29,16 +45,16 @@ final readonly class AddressValidationVerdict implements \JsonSerializable
 
         $deliverable = null;
         if (array_key_exists('deliverable', $data)) {
-            $v = $data['deliverable'];
-            if (is_bool($v)) {
-                $deliverable = $v;
-            } elseif (is_int($v) || is_float($v)) {
-                $deliverable = ((int) $v) === 1;
-            } elseif (is_string($v)) {
-                $vv = strtolower(trim($v));
-                if (in_array($vv, ['1', 'true', 'yes'], true)) {
+            $deliverableValue = $data['deliverable'];
+            if (is_bool($deliverableValue)) {
+                $deliverable = $deliverableValue;
+            } elseif (is_int($deliverableValue) || is_float($deliverableValue)) {
+                $deliverable = ((int) $deliverableValue) === 1;
+            } elseif (is_string($deliverableValue)) {
+                $normalizedDeliverableValue = strtolower(trim($deliverableValue));
+                if (in_array($normalizedDeliverableValue, ['1', 'true', 'yes'], true)) {
                     $deliverable = true;
-                } elseif (in_array($vv, ['0', 'false', 'no'], true)) {
+                } elseif (in_array($normalizedDeliverableValue, ['0', 'false', 'no'], true)) {
                     $deliverable = false;
                 }
             }
@@ -46,19 +62,19 @@ final readonly class AddressValidationVerdict implements \JsonSerializable
 
         $granularity = null;
         if (array_key_exists('granularity', $data) && is_string($data['granularity'])) {
-            $g = trim($data['granularity']);
-            $granularity = '' === $g ? null : $g;
+            $trimmedGranularity = trim($data['granularity']);
+            $granularity = '' === $trimmedGranularity ? null : $trimmedGranularity;
         }
 
         $quality = null;
         if (array_key_exists('quality', $data)) {
-            $q = $data['quality'];
-            if (is_int($q)) {
-                $quality = $q;
-            } elseif (is_float($q)) {
-                $quality = (int) round($q);
-            } elseif (is_string($q) && is_numeric($q)) {
-                $quality = (int) round((float) $q);
+            $qualityValue = $data['quality'];
+            if (is_int($qualityValue)) {
+                $quality = $qualityValue;
+            } elseif (is_float($qualityValue)) {
+                $quality = (int) round($qualityValue);
+            } elseif (is_string($qualityValue) && is_numeric($qualityValue)) {
+                $quality = (int) round((float) $qualityValue);
             }
             if (null !== $quality) {
                 $quality = max(0, min(100, $quality));

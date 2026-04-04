@@ -9,6 +9,11 @@ declare(strict_types=1);
 
 namespace App\Contract\Message;
 
+use DateTimeImmutable;
+use InvalidArgumentException;
+
+use const DATE_ATOM;
+
 final class AddressOutboxEventContract
 {
     public const string SCHEMA_VERSION = 'address-outbox.v1';
@@ -25,7 +30,7 @@ final class AddressOutboxEventContract
     public static function eventVersion(string $eventName): int
     {
         if (!isset(self::EVENT_VERSIONS[$eventName])) {
-            throw new \InvalidArgumentException('unknown_address_event_name');
+            throw new InvalidArgumentException('unknown_address_event_name');
         }
 
         return self::EVENT_VERSIONS[$eventName];
@@ -44,7 +49,7 @@ final class AddressOutboxEventContract
             'eventName' => $eventName,
             'schemaVersion' => self::SCHEMA_VERSION,
             'eventVersion' => $version,
-            'occurredAt' => (new \DateTimeImmutable())->format(DATE_ATOM),
+            'occurredAt' => (new DateTimeImmutable())->format(DATE_ATOM),
         ] + $payload;
     }
 

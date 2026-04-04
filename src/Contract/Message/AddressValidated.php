@@ -4,7 +4,29 @@ declare(strict_types=1);
 
 namespace App\Contract\Message;
 
-final readonly class AddressValidated implements \JsonSerializable
+use DateTimeImmutable;
+use DateTimeInterface;
+use JsonSerializable;
+use Stringable;
+use Throwable;
+
+use const DATE_ATOM;
+use const JSON_UNESCAPED_SLASHES;
+use const JSON_UNESCAPED_UNICODE;
+
+use function array_key_exists;
+use function hash;
+use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_numeric;
+use function is_string;
+use function json_encode;
+use function preg_match;
+use function trim;
+
+final readonly class AddressValidated implements JsonSerializable
 {
     public function __construct(
         public ?string $line1Norm,
@@ -15,7 +37,7 @@ final readonly class AddressValidated implements \JsonSerializable
         public ?float $longitude,
         public ?string $geohash,
         public ?string $validationProvider,
-        public ?\DateTimeImmutable $validatedAt,
+        public ?DateTimeImmutable $validatedAt,
         public ?string $dedupeKey,
         /** @var array<string, mixed>|null */
         public ?array $raw = null,
@@ -34,7 +56,7 @@ final readonly class AddressValidated implements \JsonSerializable
         public ?string $supersededById = null,
         public ?string $aliasOfId = null,
         public ?string $conflictWithId = null,
-        public ?\DateTimeImmutable $revalidationDueAt = null,
+        public ?DateTimeImmutable $revalidationDueAt = null,
         public ?string $revalidationPolicy = null,
         public ?string $lastValidationProvider = null,
         public ?string $lastValidationStatus = null,
@@ -242,80 +264,80 @@ final readonly class AddressValidated implements \JsonSerializable
         return $json;
     }
 
-    private static function asNullableString(mixed $v): ?string
+    private static function asNullableString(mixed $value): ?string
     {
-        if (null === $v) {
+        if (null === $value) {
             return null;
         }
-        if (is_string($v)) {
-            $s = trim($v);
+        if (is_string($value)) {
+            $trimmedValue = trim($value);
 
-            return '' === $s ? null : $s;
+            return '' === $trimmedValue ? null : $trimmedValue;
         }
-        if (is_int($v) || is_float($v) || is_bool($v) || $v instanceof \Stringable) {
-            $s = trim((string) $v);
+        if (is_int($value) || is_float($value) || is_bool($value) || $value instanceof Stringable) {
+            $trimmedValue = trim((string) $value);
 
-            return '' === $s ? null : $s;
+            return '' === $trimmedValue ? null : $trimmedValue;
         }
 
         return null;
     }
 
-    private static function asNullableFloat(mixed $v): ?float
+    private static function asNullableFloat(mixed $value): ?float
     {
-        if (null === $v || '' === $v) {
+        if (null === $value || '' === $value) {
             return null;
         }
-        if (is_float($v) || is_int($v)) {
-            return (float) $v;
+        if (is_float($value) || is_int($value)) {
+            return (float) $value;
         }
-        if (is_string($v) && is_numeric($v)) {
-            return (float) $v;
+        if (is_string($value) && is_numeric($value)) {
+            return (float) $value;
         }
 
         return null;
     }
 
-    private static function asNullableInt(mixed $v): ?int
+    private static function asNullableInt(mixed $value): ?int
     {
-        if (null === $v || '' === $v) {
+        if (null === $value || '' === $value) {
             return null;
         }
-        if (is_int($v)) {
-            return $v;
+        if (is_int($value)) {
+            return $value;
         }
-        if (is_float($v)) {
-            return (int) $v;
+        if (is_float($value)) {
+            return (int) $value;
         }
-        if (is_string($v)) {
-            $s = trim($v);
-            if ('' === $s) {
+        if (is_string($value)) {
+            $trimmedValue = trim($value);
+            if ('' === $trimmedValue) {
                 return null;
             }
-            if (1 === preg_match('/^-?\d+$/', $s)) {
-                return (int) $s;
+            if (1 === preg_match('/^-?\d+$/', $trimmedValue)) {
+                return (int) $trimmedValue;
             }
         }
 
         return null;
     }
 
-    private static function asNullableDate(mixed $v): ?\DateTimeImmutable
+    private static function asNullableDate(mixed $value): ?DateTimeImmutable
     {
-        if (null === $v || '' === $v) {
+        if (null === $value || '' === $value) {
             return null;
         }
         try {
-            if ($v instanceof \DateTimeInterface) {
-                return \DateTimeImmutable::createFromInterface($v);
+            if ($value instanceof DateTimeInterface) {
+                return DateTimeImmutable::createFromInterface($value);
             }
-            if (is_string($v)) {
-                return new \DateTimeImmutable($v);
+            if (is_string($value)) {
+                return new DateTimeImmutable($value);
             }
-            if (is_int($v)) {
-                return new \DateTimeImmutable('@'.$v);
+            if (is_int($value)) {
+                return new DateTimeImmutable('@'.$value);
             }
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return null;
         }
 
