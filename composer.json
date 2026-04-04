@@ -90,6 +90,7 @@
             "@app:server:wait",
             "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite e2e"
         ],
+        "test:e2e:panther:local": "@php tools/e2e/panther-local-run.php",
         "test:e2e:playwright": "npm run test:e2e",
         "test:e2e:full": [
             "@test:e2e:panther",

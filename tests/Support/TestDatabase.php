@@ -54,9 +54,10 @@ final class TestDatabase
 
     public static function freshSqlitePath(string $suffix): string
     {
-        $path = self::projectRoot().'/var/'.preg_replace('/[^A-Za-z0-9_-]/', '-', $suffix).'.sqlite';
-        if (is_file($path)) {
-            unlink($path);
+        $prefix = preg_replace('/[^A-Za-z0-9_-]/', '-', $suffix).'-';
+        $path = tempnam(self::projectRoot().'/var', substr($prefix, 0, 32));
+        if (false === $path) {
+            throw new \RuntimeException('failed_to_allocate_sqlite_test_path');
         }
 
         return $path;

@@ -21,13 +21,13 @@ final class AddressControllerFunctionalTest extends TestCase
         if ($this->kernel instanceof Kernel) {
             $this->kernel->shutdown();
         }
+        $this->kernel = null;
 
         TestRuntimeEnvironment::clearSqliteAddressRuntime();
         if (is_string($this->sqlitePath) && is_file($this->sqlitePath)) {
-            unlink($this->sqlitePath);
+            @unlink($this->sqlitePath);
         }
         $this->sqlitePath = null;
-        $this->kernel = null;
     }
 
     public function testCreateAndGetAddressFlow(): void
@@ -78,6 +78,7 @@ final class AddressControllerFunctionalTest extends TestCase
         $this->sqlitePath = TestDatabase::freshSqlitePath($suffix);
         $pdo = TestDatabase::createSqlitePdo($this->sqlitePath);
         TestDatabase::resetAddressSchema($pdo);
+        unset($pdo);
 
         TestRuntimeEnvironment::configureSqliteAddressRuntime($this->sqlitePath);
 
