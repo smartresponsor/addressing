@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace App\Service\Application;
 
 use App\Contract\Message\AddressRecordPolicy;
+use RuntimeException;
 
 final class AddressGovernancePolicy
 {
@@ -38,7 +39,7 @@ final class AddressGovernancePolicy
         $currentStatus = AddressRecordPolicy::normalizeGovernanceStatus($currentStatus);
 
         if (!in_array($targetStatus, self::ALLOWED_TRANSITIONS[$currentStatus] ?? ['canonical'], true)) {
-            throw new \RuntimeException(sprintf('Invalid governance transition from "%s" to "%s".', $currentStatus, $targetStatus));
+            throw new RuntimeException(sprintf('Invalid governance transition from "%s" to "%s".', $currentStatus, $targetStatus));
         }
 
         $normalized = [
@@ -63,7 +64,7 @@ final class AddressGovernancePolicy
         [$column, $inputKey] = $linkMap[$targetStatus];
         $linkId = self::sanitizeLink(self::asNullableString($patch[$inputKey] ?? null), $currentId);
         if (null === $linkId) {
-            throw new \RuntimeException(sprintf('Governance status "%s" requires a non-self link id.', $targetStatus));
+            throw new RuntimeException(sprintf('Governance status "%s" requires a non-self link id.', $targetStatus));
         }
 
         $normalized[$column] = $linkId;

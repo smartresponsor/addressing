@@ -11,11 +11,16 @@ use App\Integration\Persistence\AddressOutboxWriter;
 use App\Integration\Persistence\AddressTenantScopeSqlHelper;
 use App\Integration\Persistence\AddressValidatedMutationPlanBuilder;
 use App\ServiceInterface\Application\AddressValidatedApplierServiceInterface;
+use DateTimeImmutable;
+use PDO;
+use PDOStatement;
+use RuntimeException;
+use Throwable;
 
 final readonly class AddressValidatedApplierService implements AddressValidatedApplierServiceInterface
 {
     public function __construct(
-        private \PDO $pdo,
+        private PDO $pdo,
         private AddressTenantScopeSqlHelper $addressTenantScopeSqlHelper,
         private AddressValidatedPayloadFactory $addressValidatedPayloadFactory,
         private AddressValidatedMutationPlanBuilder $addressValidatedMutationPlanBuilder,
@@ -28,7 +33,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
     public function apply(string $id, AddressValidated $addressValidated, ?string $ownerId = null, ?string $vendorId = null): void
     {
         $fingerprint = $addressValidated->fingerprint();
-        $now = new \DateTimeImmutable('now');
+        $now = new DateTimeImmutable('now');
         $validatedAt = $addressValidated->validatedAt ?? $now;
         $scopeParams = $this->addressTenantScopeSqlHelper->params($ownerId, $vendorId);
         $scopeWhere = $this->addressTenantScopeSqlHelper->whereClause($ownerId, $vendorId);
@@ -42,7 +47,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
             $row = $stmt->fetch(\PDO::FETCH_ASSOC);
             if (!is_array($row)) {
                 $this->pdo->rollBack();
-                throw new \RuntimeException('not_found');
+                throw new RuntimeException('not_found');
             }
 
             /** @var array<string, mixed> $row */
@@ -61,11 +66,11 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
 
             if (!$ok) {
                 $this->pdo->rollBack();
-                throw new \RuntimeException('apply_failed');
+                throw new RuntimeException('apply_failed');
             }
             if ($stmt->rowCount() < 1) {
                 $this->pdo->rollBack();
-                throw new \RuntimeException('not_found');
+                throw new RuntimeException('not_found');
             }
 
             $evidenceSnapshotId = $this->addressEvidenceSnapshotWriter->write(
@@ -103,12 +108,12 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
             );
 
             $this->pdo->commit();
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $this->rollbackIfActive();
             throw $e;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $this->rollbackIfActive();
-            throw new \RuntimeException('apply_failed');
+            throw new RuntimeException('apply_failed');
         }
     }
 
@@ -126,11 +131,11 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         }
     }
 
-    private function prepare(string $sql): \PDOStatement
+    private function prepare(string $sql): PDOStatement
     {
         $stmt = $this->pdo->prepare($sql);
         if (false === $stmt) {
-            throw new \RuntimeException('prepare_failed');
+            throw new RuntimeException('prepare_failed');
         }
 
         return $stmt;

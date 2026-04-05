@@ -6,6 +6,25 @@ declare(strict_types=1);
 namespace App\Service\Application;
 
 use App\ServiceInterface\Application\AddressOutboxDrainerServiceInterface;
+use PDO;
+use PDOStatement;
+use RuntimeException;
+use function bin2hex;
+use function curl_close;
+use function curl_errno;
+use function curl_exec;
+use function curl_getinfo;
+use function curl_init;
+use function curl_setopt_array;
+use function is_array;
+use function is_int;
+use function is_numeric;
+use function is_string;
+use function json_decode;
+use function json_encode;
+use function random_bytes;
+use function sprintf;
+use function usleep;
 
 final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceInterface
 {
@@ -14,7 +33,7 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
      */
     private $sender;
 
-    public function __construct(private readonly \PDO $pdo, ?callable $sender = null)
+    public function __construct(private readonly PDO $pdo, ?callable $sender = null)
     {
         $this->sender = $sender;
     }

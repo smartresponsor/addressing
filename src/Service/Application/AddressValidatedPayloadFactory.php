@@ -5,6 +5,14 @@ declare(strict_types=1);
 namespace App\Service\Application;
 
 use App\Contract\Message\AddressValidated;
+use App\Contract\Message\AddressValidationVerdict;
+use DateTimeImmutable;
+use RuntimeException;
+use function array_filter;
+use function hash;
+use function is_string;
+use function json_encode;
+use function trim;
 
 final readonly class AddressValidatedPayloadFactory
 {
@@ -14,7 +22,7 @@ final readonly class AddressValidatedPayloadFactory
             || null !== $addressValidated->normalizedSnapshot
             || null !== $addressValidated->providerDigest
             || null !== $addressValidated->raw
-            || $addressValidated->addressValidationVerdict instanceof \App\Contract\Message\AddressValidationVerdict;
+            || $addressValidated->addressValidationVerdict instanceof AddressValidationVerdict;
     }
 
     /** @return array<string, mixed>|null */
@@ -95,7 +103,7 @@ final readonly class AddressValidatedPayloadFactory
         ?string $vendorId,
         string $fingerprint,
         AddressValidated $addressValidated,
-        \DateTimeImmutable $validatedAt,
+        DateTimeImmutable $validatedAt,
         ?string $rawSha256,
         string $governanceStatus,
         ?string $duplicateOfId,
@@ -138,7 +146,7 @@ final readonly class AddressValidatedPayloadFactory
     {
         $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if (false === $json) {
-            throw new \RuntimeException('payload_encode_failed');
+            throw new RuntimeException('payload_encode_failed');
         }
 
         return $json;

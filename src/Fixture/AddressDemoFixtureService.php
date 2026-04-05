@@ -9,6 +9,7 @@ use App\Http\Dto\AddressInputFactory;
 use App\Http\Dto\AddressManageDto;
 use App\Integration\Persistence\AddressSchemaManager;
 use App\Service\Application\AddressService;
+use PDO;
 use Faker\Factory;
 use Faker\Generator;
 
@@ -17,7 +18,7 @@ final readonly class AddressDemoFixtureService
     private Generator $generator;
 
     public function __construct(
-        private \PDO $pdo,
+        private PDO $pdo,
         private AddressService $addressService,
         private AddressInputFactory $addressInputFactory,
     ) {
