@@ -11,11 +11,17 @@ use App\Integration\Persistence\AddressOutboxWriter;
 use App\Integration\Persistence\AddressTenantScopeSqlHelper;
 use App\Integration\Persistence\AddressValidatedMutationPlanBuilder;
 use App\ServiceInterface\Application\AddressValidatedApplierServiceInterface;
+use DateTimeImmutable;
+use PDO;
+use PDOStatement;
+use RuntimeException;
+use Throwable;
+use Override;
 
 final readonly class AddressValidatedApplierService implements AddressValidatedApplierServiceInterface
 {
     public function __construct(
-        private \PDO $pdo,
+        private PDO $pdo,
         private AddressTenantScopeSqlHelper $addressTenantScopeSqlHelper,
         private AddressValidatedPayloadFactory $addressValidatedPayloadFactory,
         private AddressValidatedMutationPlanBuilder $addressValidatedMutationPlanBuilder,
@@ -24,25 +30,25 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
     ) {
     }
 
-    #[\Override]
-    public function apply(string $id, AddressValidated $addressValidated, ?string $ownerId = null, ?string $vendorId = null): void
+    #[Override]
+    public function apply(string $id, AddressValidated $address_validated, ?string $owner_id = null, ?string $vendor_id = null): void
     {
-        $fingerprint = $addressValidated->fingerprint();
-        $now = new \DateTimeImmutable('now');
-        $validatedAt = $addressValidated->validatedAt ?? $now;
-        $scopeParams = $this->addressTenantScopeSqlHelper->params($ownerId, $vendorId);
-        $scopeWhere = $this->addressTenantScopeSqlHelper->whereClause($ownerId, $vendorId);
-        $lockClause = $this->isPgsql() ? ' FOR UPDATE' : '';
+        $fingerprint = $address_validated->fingerprint();
+        $now = new DateTimeImmutable('now');
+        $validated_at = $address_validated->validatedAt ?? $now;
+        $scope_params = $this->addressTenantScopeSqlHelper->params($owner_id, $vendor_id);
+        $scope_where = $this->addressTenantScopeSqlHelper->whereClause($owner_id, $vendor_id);
+        $lock_clause = $this->isPgsql() ? ' FOR UPDATE' : '';
 
         try {
             $this->pdo->beginTransaction();
 
-            $stmt = $this->prepare('SELECT validation_fingerprint FROM address_entity WHERE id = :id AND '.$scopeWhere.$lockClause);
-            $stmt->execute(array_merge([':id' => $id], $scopeParams));
-            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $stmt = $this->prepare('SELECT validation_fingerprint FROM address_entity WHERE id = :id AND '.$scope_where.$lock_clause);
+            $stmt->execute(array_merge([':id' => $id], $scope_params));
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!is_array($row)) {
                 $this->pdo->rollBack();
-                throw new \RuntimeException('not_found');
+                throw new RuntimeException('not_found');
             }
 
             /** @var array<string, mixed> $row */
@@ -53,26 +59,26 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 return;
             }
 
-            $plan = $this->addressValidatedMutationPlanBuilder->build($id, $addressValidated, $fingerprint, $now, $validatedAt);
+            $plan = $this->addressValidatedMutationPlanBuilder->build($id, $address_validated, $fingerprint, $now, $validated_at);
 
-            $sql = 'UPDATE address_entity SET '.$plan->setClause().' WHERE id = :id AND '.$scopeWhere;
+            $sql = 'UPDATE address_entity SET '.$plan->setClause().' WHERE id = :id AND '.$scope_where;
             $stmt = $this->prepare($sql);
-            $ok = $stmt->execute(array_merge($plan->params, $scopeParams));
+            $ok = $stmt->execute(array_merge($plan->params, $scope_params));
 
             if (!$ok) {
                 $this->pdo->rollBack();
-                throw new \RuntimeException('apply_failed');
+                throw new RuntimeException('apply_failed');
             }
             if ($stmt->rowCount() < 1) {
                 $this->pdo->rollBack();
-                throw new \RuntimeException('not_found');
+                throw new RuntimeException('not_found');
             }
 
-            $evidenceSnapshotId = $this->addressEvidenceSnapshotWriter->write(
+            $evidence_snapshot_id = $this->addressEvidenceSnapshotWriter->write(
                 $id,
-                $ownerId,
-                $vendorId,
-                $addressValidated,
+                $owner_id,
+                $vendor_id,
+                $address_validated,
                 $plan->lastValidationStatus,
                 $plan->lastValidationScore,
                 $plan->normalizedSnapshot,
@@ -82,11 +88,11 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
             $this->addressOutboxWriter->write(
                 $this->addressValidatedPayloadFactory->outboxPayload(
                     $id,
-                    $ownerId,
-                    $vendorId,
+                    $owner_id,
+                    $vendor_id,
                     $fingerprint,
-                    $addressValidated,
-                    $validatedAt,
+                    $address_validated,
+                    $validated_at,
                     $plan->rawSha256,
                     $plan->governanceStatus,
                     $plan->duplicateOfId,
@@ -97,26 +103,26 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                     $plan->revalidationPolicy,
                     $plan->lastValidationStatus,
                     $plan->lastValidationScore,
-                    $evidenceSnapshotId,
+                    $evidence_snapshot_id,
                     $plan->providerDigest,
                 )
             );
 
             $this->pdo->commit();
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $this->rollbackIfActive();
             throw $e;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $this->rollbackIfActive();
-            throw new \RuntimeException('apply_failed');
+            throw new RuntimeException('apply_failed');
         }
     }
 
     private function isPgsql(): bool
     {
-        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $driver_attr = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
 
-        return is_string($driverAttr) && 'pgsql' === $driverAttr;
+        return is_string($driver_attr) && 'pgsql' === $driver_attr;
     }
 
     private function rollbackIfActive(): void
@@ -126,11 +132,11 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         }
     }
 
-    private function prepare(string $sql): \PDOStatement
+    private function prepare(string $sql): PDOStatement
     {
         $stmt = $this->pdo->prepare($sql);
         if (false === $stmt) {
-            throw new \RuntimeException('prepare_failed');
+            throw new RuntimeException('prepare_failed');
         }
 
         return $stmt;

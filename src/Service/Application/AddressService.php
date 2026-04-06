@@ -2,7 +2,6 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-
 namespace App\Service\Application;
 
 use App\EntityInterface\Record\AddressEvidenceSnapshotInterface;
@@ -31,21 +30,21 @@ final readonly class AddressService
      * @return array{items: list<AddressInterface>, nextCursor: ?string}
      */
     public function search(
-        ?string $ownerId,
-        ?string $vendorId,
-        ?string $countryCode,
-        ?string $q,
+        ?string $owner_id,
+        ?string $vendor_id,
+        ?string $country_code,
+        ?string $query,
         int $limit,
         ?string $cursor,
         array $filters = [],
     ): array {
-        return $this->addressRepository->findPage($ownerId, $vendorId, $countryCode, $q, $limit, $cursor, $filters);
+        return $this->addressRepository->findPage($owner_id, $vendor_id, $country_code, $query, $limit, $cursor, $filters);
     }
 
     /** @param array<string, mixed> $patch */
-    public function patchOperational(string $id, ?string $ownerId, ?string $vendorId, array $patch): bool
+    public function patchOperational(string $id, ?string $owner_id, ?string $vendor_id, array $patch): bool
     {
-        return $this->addressRepository->patchOperational($id, $ownerId, $vendorId, $patch);
+        return $this->addressRepository->patchOperational($id, $owner_id, $vendor_id, $patch);
     }
 
     public function appendEvidenceSnapshot(AddressInterface $address): ?AddressEvidenceSnapshotInterface
@@ -53,17 +52,17 @@ final readonly class AddressService
         return $this->addressRepository->appendEvidenceSnapshot($address);
     }
 
-    public function getLatestEvidenceSnapshot(string $addressId, ?string $ownerId, ?string $vendorId): ?AddressEvidenceSnapshotInterface
+    public function getLatestEvidenceSnapshot(string $addressId, ?string $owner_id, ?string $vendorId): ?AddressEvidenceSnapshotInterface
     {
-        return $this->addressRepository->getLatestEvidenceSnapshot($addressId, $ownerId, $vendorId);
+        return $this->addressRepository->getLatestEvidenceSnapshot($address_id, $owner_id, $vendor_id);
     }
 
     /**
      * @return array{items: list<AddressEvidenceSnapshotInterface>, nextCursor: ?string}
      */
-    public function evidenceHistory(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array
+    public function evidenceHistory(string $addressId, ?string $owner_id, ?string $vendor_id, int $limit, ?string $cursor): array
     {
-        return $this->addressRepository->findEvidenceHistoryPage($addressId, $ownerId, $vendorId, $limit, $cursor);
+        return $this->addressRepository->findEvidenceHistoryPage($address_id, $owner_id, $vendor_id, $limit, $cursor);
     }
 
     /**
@@ -77,13 +76,13 @@ final readonly class AddressService
      *   latestCreatedAt:?string
      * }
      */
-    public function evidenceHistorySummary(string $addressId, ?string $ownerId, ?string $vendorId): array
+    public function evidenceHistorySummary(string $addressId, ?string $owner_id, ?string $vendorId): array
     {
         $cursor = null;
         $items = [];
 
         do {
-            $page = $this->addressRepository->findEvidenceHistoryPage($addressId, $ownerId, $vendorId, 200, $cursor);
+            $page = $this->addressRepository->findEvidenceHistoryPage($address_id, $owner_id, $vendor_id, 200, $cursor);
             foreach ($page['items'] as $item) {
                 $items[] = $item;
             }
@@ -91,20 +90,20 @@ final readonly class AddressService
         } while (null !== $cursor);
 
         $providers = [];
-        $latestValidatedAt = null;
-        $latestCreatedAt = null;
-        $statusPending = 0;
-        $statusValidated = 0;
-        $statusRejected = 0;
+        $latest_validated_at = null;
+        $latest_created_at = null;
+        $status_pending = 0;
+        $status_validated = 0;
+        $status_rejected = 0;
 
         foreach ($items as $item) {
             $status = $item->validationStatus();
             if ('pending' === $status) {
-                ++$statusPending;
+                ++$status_pending;
             } elseif ('validated' === $status) {
-                ++$statusValidated;
+                ++$status_validated;
             } elseif ('rejected' === $status) {
-                ++$statusRejected;
+                ++$status_rejected;
             }
 
             $provider = $item->validatedBy();
@@ -113,44 +112,44 @@ final readonly class AddressService
             }
 
             $validatedAt = $item->validatedAt();
-            if (null !== $validatedAt && (null === $latestValidatedAt || $validatedAt > $latestValidatedAt)) {
-                $latestValidatedAt = $validatedAt;
+            if (null !== $validatedAt && (null === $latest_validated_at || $validatedAt > $latest_validated_at)) {
+                $latest_validated_at = $validatedAt;
             }
 
             $createdAt = $item->createdAt();
-            if (null === $latestCreatedAt || $createdAt > $latestCreatedAt) {
-                $latestCreatedAt = $createdAt;
+            if (null === $latest_created_at || $createdAt > $latest_created_at) {
+                $latest_created_at = $createdAt;
             }
         }
 
         return [
             'totalSnapshots' => count($items),
-            'statusPending' => $statusPending,
-            'statusValidated' => $statusValidated,
-            'statusRejected' => $statusRejected,
+            'statusPending' => $status_pending,
+            'statusValidated' => $status_validated,
+            'statusRejected' => $status_rejected,
             'distinctProviders' => count($providers),
-            'latestValidatedAt' => $latestValidatedAt,
-            'latestCreatedAt' => $latestCreatedAt,
+            'latestValidatedAt' => $latest_validated_at,
+            'latestCreatedAt' => $latest_created_at,
         ];
     }
 
-    public function dedupe(?string $dedupeKey): ?AddressInterface
+    public function dedupe(?string $dedupe_key): ?AddressInterface
     {
-        if (null === $dedupeKey) {
+        if (null === $dedupe_key) {
             return null;
         }
 
-        return $this->addressRepository->findByDedupeKey($dedupeKey);
+        return $this->addressRepository->findByDedupeKey($dedupe_key);
     }
 
-    public function get(string $id, ?string $ownerId, ?string $vendorId): ?AddressInterface
+    public function get(string $id, ?string $owner_id, ?string $vendorId): ?AddressInterface
     {
-        return $this->addressRepository->get($id, $ownerId, $vendorId);
+        return $this->addressRepository->get($id, $owner_id, $vendor_id);
     }
 
-    public function markDeleted(string $id, ?string $ownerId, ?string $vendorId): void
+    public function markDeleted(string $id, ?string $owner_id, ?string $vendorId): void
     {
-        $this->addressRepository->delete($id, $ownerId, $vendorId);
+        $this->addressRepository->delete($id, $owner_id, $vendor_id);
     }
 
     /**
@@ -168,9 +167,9 @@ final readonly class AddressService
      *   relatedAddressIds:list<string>
      * }
      */
-    public function governanceClusterSummary(string $addressId, ?string $ownerId, ?string $vendorId): array
+    public function governanceClusterSummary(string $addressId, ?string $owner_id, ?string $vendorId): array
     {
-        return $this->addressRepository->summarizeGovernanceCluster($addressId, $ownerId, $vendorId);
+        return $this->addressRepository->summarizeGovernanceCluster($address_id, $owner_id, $vendor_id);
     }
 
     /**
@@ -187,10 +186,10 @@ final readonly class AddressService
      * }
      */
     public function operationalQueueSummary(
-        ?string $ownerId,
-        ?string $vendorId,
-        ?string $countryCode,
-        ?string $q,
+        ?string $owner_id,
+        ?string $vendor_id,
+        ?string $country_code,
+        ?string $query,
         array $filters = [],
     ): array {
         /** @var array{
@@ -203,7 +202,7 @@ final readonly class AddressService
          *   staleNormalizationVersion:int
          * } $summary
          */
-        $summary = $this->addressRepository->summarizeOperationalQueues($ownerId, $vendorId, $countryCode, $q, $filters);
+        $summary = $this->addressRepository->summarizeOperationalQueues($owner_id, $vendor_id, $country_code, $query, $filters);
 
         return $summary;
     }
@@ -226,12 +225,12 @@ final readonly class AddressService
      * }>
      */
     public function countryPortfolioSummary(
-        ?string $ownerId,
-        ?string $vendorId,
+        ?string $owner_id,
+        ?string $vendor_id,
         ?string $q = null,
         array $filters = [],
     ): array {
-        return $this->addressRepository->summarizeCountryPortfolio($ownerId, $vendorId, $q, $filters);
+        return $this->addressRepository->summarizeCountryPortfolio($owner_id, $vendor_id, $query, $filters);
     }
 
     /**
@@ -253,10 +252,10 @@ final readonly class AddressService
      * }>
      */
     public function sourcePortfolioSummary(
-        ?string $ownerId,
-        ?string $vendorId,
-        ?string $countryCode,
-        ?string $q,
+        ?string $owner_id,
+        ?string $vendor_id,
+        ?string $country_code,
+        ?string $query,
         array $filters = [],
     ): array {
         return $this->addressRepository->summarizeSourcePortfolio($ownerId, $vendorId, $countryCode, $q, $filters);
@@ -281,10 +280,10 @@ final readonly class AddressService
      * }>
      */
     public function validationPortfolioSummary(
-        ?string $ownerId,
-        ?string $vendorId,
-        ?string $countryCode,
-        ?string $q,
+        ?string $owner_id,
+        ?string $vendor_id,
+        ?string $country_code,
+        ?string $query,
         array $filters = [],
     ): array {
         return $this->addressRepository->summarizeValidationPortfolio($ownerId, $vendorId, $countryCode, $q, $filters);
@@ -310,10 +309,10 @@ final readonly class AddressService
      * }>
      */
     public function normalizationPortfolioSummary(
-        ?string $ownerId,
-        ?string $vendorId,
-        ?string $countryCode,
-        ?string $q,
+        ?string $owner_id,
+        ?string $vendor_id,
+        ?string $country_code,
+        ?string $query,
         array $filters = [],
     ): array {
         return $this->addressRepository->summarizeNormalizationPortfolio($ownerId, $vendorId, $countryCode, $q, $filters);

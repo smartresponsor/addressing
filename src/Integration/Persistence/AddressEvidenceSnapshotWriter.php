@@ -7,34 +7,40 @@ namespace App\Integration\Persistence;
 use App\Contract\Message\AddressRecordPolicy;
 use App\Contract\Message\AddressValidated;
 use App\Service\Application\AddressValidatedPayloadFactory;
+use DateTimeImmutable;
+use PDO;
+use PDOStatement;
+use RuntimeException;
 
+/** Persists evidence snapshots derived from address validation messages. */
 final readonly class AddressEvidenceSnapshotWriter
 {
     public function __construct(
-        private \PDO $pdo,
+        private PDO $pdo,
         private AddressValidatedPayloadFactory $addressValidatedPayloadFactory,
     ) {
     }
 
+    /** @param array<string, mixed>|null $normalizedSnapshot */
     public function write(
         string $addressId,
-        ?string $ownerId,
-        ?string $vendorId,
-        AddressValidated $addressValidated,
+        ?string $owner_id,
+        ?string $vendor_id,
+        AddressValidated $address_validated,
         string $validationStatus,
         ?int $validationScore,
         ?array $normalizedSnapshot,
         ?string $providerDigest,
     ): ?string {
-        if (!$this->addressValidatedPayloadFactory->hasEvidence($addressValidated)) {
+        if (!$this->addressValidatedPayloadFactory->hasEvidence($address_validated)) {
             return null;
         }
 
         $snapshotId = bin2hex(random_bytes(16));
-        $createdAt = ($addressValidated->validatedAt ?? new \DateTimeImmutable())->format('Y-m-d H:i:sP');
-        $validationIssues = $addressValidated->addressValidationVerdict?->jsonSerialize();
+        $created_at = ($address_validated->validatedAt ?? new DateTimeImmutable())->format('Y-m-d H:i:sP');
+        $validation_issues = $address_validated->addressValidationVerdict?->jsonSerialize();
 
-        $pdoStatement = $this->prepare(
+        $pdo_statement = $this->prepare(
             'INSERT INTO address_evidence_snapshot (
                 id, address_id, owner_id, vendor_id, source_system, source_type, source_reference, validated_by, validated_at,
                 normalization_version, raw_input_snapshot, normalized_snapshot, validation_status, validation_score, validation_issues, provider_digest, created_at
@@ -44,24 +50,24 @@ final readonly class AddressEvidenceSnapshotWriter
             )'
         );
 
-        $pdoStatement->execute([
+        $pdo_statement->execute([
             ':id' => $snapshotId,
             ':address_id' => $addressId,
-            ':owner_id' => $ownerId,
-            ':vendor_id' => $vendorId,
-            ':source_system' => $addressValidated->sourceSystem,
-            ':source_type' => AddressRecordPolicy::normalizeSourceType($addressValidated->sourceType),
-            ':source_reference' => $addressValidated->sourceReference,
-            ':validated_by' => $addressValidated->validationProvider ?? $addressValidated->lastValidationProvider,
-            ':validated_at' => $addressValidated->validatedAt?->format('Y-m-d H:i:sP'),
-            ':normalization_version' => $addressValidated->normalizationVersion,
-            ':raw_input_snapshot' => $this->encodePayloadNullable($addressValidated->rawInput),
+            ':owner_id' => $owner_id,
+            ':vendor_id' => $vendor_id,
+            ':source_system' => $address_validated->sourceSystem,
+            ':source_type' => AddressRecordPolicy::normalizeSourceType($address_validated->sourceType),
+            ':source_reference' => $address_validated->sourceReference,
+            ':validated_by' => $address_validated->validationProvider ?? $address_validated->lastValidationProvider,
+            ':validated_at' => $address_validated->validatedAt?->format('Y-m-d H:i:sP'),
+            ':normalization_version' => $address_validated->normalizationVersion,
+            ':raw_input_snapshot' => $this->encodePayloadNullable($address_validated->rawInput),
             ':normalized_snapshot' => $this->encodePayloadNullable($normalizedSnapshot),
             ':validation_status' => AddressRecordPolicy::normalizeValidationStatus($validationStatus),
             ':validation_score' => $validationScore,
-            ':validation_issues' => $this->encodePayloadNullable($validationIssues),
+            ':validation_issues' => $this->encodePayloadNullable($validation_issues),
             ':provider_digest' => $providerDigest,
-            ':created_at' => $createdAt,
+            ':created_at' => $created_at,
         ]);
 
         return $snapshotId;
@@ -76,17 +82,17 @@ final readonly class AddressEvidenceSnapshotWriter
 
         $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if (false === $json) {
-            throw new \RuntimeException('payload_encode_failed');
+            throw new RuntimeException('payload_encode_failed');
         }
 
         return $json;
     }
 
-    private function prepare(string $sql): \PDOStatement
+    private function prepare(string $sql): PDOStatement
     {
         $stmt = $this->pdo->prepare($sql);
         if (false === $stmt) {
-            throw new \RuntimeException('prepare_failed');
+            throw new RuntimeException('prepare_failed');
         }
 
         return $stmt;

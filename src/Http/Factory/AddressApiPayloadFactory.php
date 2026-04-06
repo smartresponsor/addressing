@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Factory;
 
+use DateTimeImmutable;
+use RuntimeException;
+
 use App\Contract\Message\AddressRecordPolicy;
 use App\Contract\Message\AddressValidated;
 use App\Entity\Record\AddressData;
@@ -18,16 +21,17 @@ final readonly class AddressApiPayloadFactory
         $raw = $request->getContent();
         $data = json_decode($raw, true);
         if (!is_array($data)) {
-            throw new \RuntimeException('invalid_json');
+            throw new RuntimeException('invalid_json');
         }
 
         return $data;
     }
 
+    /** @param array<string, mixed> $in */
     public function createAddressData(array $in): AddressData
     {
         $id = (string) new Ulid();
-        $now = (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
+        $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
 
         return new AddressData(
             $id,
@@ -79,6 +83,7 @@ final readonly class AddressApiPayloadFactory
         );
     }
 
+    /** @param array<string, mixed> $in */
     public function createAddressValidated(array $in): AddressValidated
     {
         return AddressValidated::fromArray([
@@ -152,19 +157,19 @@ final readonly class AddressApiPayloadFactory
     public function requireStringList(array $in, string $key): array
     {
         if (!array_key_exists($key, $in) || !is_array($in[$key])) {
-            throw new \RuntimeException('missing_'.$key);
+            throw new RuntimeException('missing_'.$key);
         }
 
         $values = [];
         foreach ($in[$key] as $item) {
             if (!is_string($item) || '' === trim($item)) {
-                throw new \RuntimeException('invalid_'.$key);
+                throw new RuntimeException('invalid_'.$key);
             }
             $values[] = trim($item);
         }
 
         if ([] === $values) {
-            throw new \RuntimeException('invalid_'.$key);
+            throw new RuntimeException('invalid_'.$key);
         }
 
         return array_values(array_unique($values));
@@ -174,7 +179,7 @@ final readonly class AddressApiPayloadFactory
     private function reqStr(array $in, string $key): string
     {
         if (!array_key_exists($key, $in) || !is_string($in[$key]) || '' === trim($in[$key])) {
-            throw new \RuntimeException('missing_'.$key);
+            throw new RuntimeException('missing_'.$key);
         }
 
         return trim($in[$key]);
@@ -187,7 +192,7 @@ final readonly class AddressApiPayloadFactory
             return null;
         }
         if (!is_string($in[$key])) {
-            throw new \RuntimeException('invalid_'.$key);
+            throw new RuntimeException('invalid_'.$key);
         }
         $v = trim($in[$key]);
 
@@ -205,7 +210,7 @@ final readonly class AddressApiPayloadFactory
             return null;
         }
         if (!is_array($in[$key])) {
-            throw new \RuntimeException('invalid_'.$key);
+            throw new RuntimeException('invalid_'.$key);
         }
 
         return $in[$key];
@@ -223,7 +228,7 @@ final readonly class AddressApiPayloadFactory
         if (is_string($in[$key]) && is_numeric($in[$key])) {
             return (int) $in[$key];
         }
-        throw new \RuntimeException('invalid_'.$key);
+        throw new RuntimeException('invalid_'.$key);
     }
 
     /** @param array<string, mixed> $in */
@@ -238,6 +243,6 @@ final readonly class AddressApiPayloadFactory
         if (is_string($in[$key]) && is_numeric($in[$key])) {
             return (float) $in[$key];
         }
-        throw new \RuntimeException('invalid_'.$key);
+        throw new RuntimeException('invalid_'.$key);
     }
 }

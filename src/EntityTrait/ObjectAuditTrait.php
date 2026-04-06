@@ -194,7 +194,7 @@ trait ObjectAuditTrait
     #[ORM\PreUpdate]
     public function onPreUpdate(): void
     {
-        $this->updatedAt = new DateTimeImmutable();
+        $this->modifiedAt = new DateTimeImmutable();
     }
 
     public function getId(): ?int

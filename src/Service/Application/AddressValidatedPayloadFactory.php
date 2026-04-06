@@ -5,33 +5,42 @@ declare(strict_types=1);
 namespace App\Service\Application;
 
 use App\Contract\Message\AddressValidated;
+use App\Contract\Message\AddressValidationVerdict;
+use DateTimeImmutable;
+use RuntimeException;
+use function array_filter;
+use function hash;
+use function is_string;
+use function json_encode;
+use function trim;
 
+/** Builds normalized payload fragments from address validation messages. */
 final readonly class AddressValidatedPayloadFactory
 {
-    public function hasEvidence(AddressValidated $addressValidated): bool
+    public function hasEvidence(AddressValidated $address_validated): bool
     {
-        return null !== $addressValidated->rawInput
-            || null !== $addressValidated->normalizedSnapshot
-            || null !== $addressValidated->providerDigest
-            || null !== $addressValidated->raw
-            || $addressValidated->addressValidationVerdict instanceof \App\Contract\Message\AddressValidationVerdict;
+        return null !== $address_validated->rawInput
+            || null !== $address_validated->normalizedSnapshot
+            || null !== $address_validated->providerDigest
+            || null !== $address_validated->raw
+            || $address_validated->addressValidationVerdict instanceof AddressValidationVerdict;
     }
 
     /** @return array<string, mixed>|null */
-    public function normalizedSnapshot(AddressValidated $addressValidated): ?array
+    public function normalizedSnapshot(AddressValidated $address_validated): ?array
     {
-        if (null !== $addressValidated->normalizedSnapshot) {
-            return $addressValidated->normalizedSnapshot;
+        if (null !== $address_validated->normalizedSnapshot) {
+            return $address_validated->normalizedSnapshot;
         }
 
         $snapshot = array_filter([
-            'line1Norm' => $addressValidated->line1Norm,
-            'cityNorm' => $addressValidated->cityNorm,
-            'regionNorm' => $addressValidated->regionNorm,
-            'postalCodeNorm' => $addressValidated->postalCodeNorm,
-            'latitude' => $addressValidated->latitude,
-            'longitude' => $addressValidated->longitude,
-            'geohash' => $addressValidated->geohash,
+            'line1Norm' => $address_validated->line1Norm,
+            'cityNorm' => $address_validated->cityNorm,
+            'regionNorm' => $address_validated->regionNorm,
+            'postalCodeNorm' => $address_validated->postalCodeNorm,
+            'latitude' => $address_validated->latitude,
+            'longitude' => $address_validated->longitude,
+            'geohash' => $address_validated->geohash,
         ], static fn (mixed $value): bool => null !== $value);
 
         if ([] === $snapshot) {
@@ -41,18 +50,18 @@ final readonly class AddressValidatedPayloadFactory
         return $snapshot;
     }
 
-    public function providerDigest(AddressValidated $addressValidated): ?string
+    public function providerDigest(AddressValidated $address_validated): ?string
     {
-        if (null !== $addressValidated->providerDigest) {
-            return $addressValidated->providerDigest;
+        if (null !== $address_validated->providerDigest) {
+            return $address_validated->providerDigest;
         }
 
         $payload = array_filter([
-            'provider' => $addressValidated->validationProvider,
-            'validatedAt' => $addressValidated->validatedAt?->format(DATE_ATOM),
-            'raw' => $addressValidated->raw,
-            'verdict' => $addressValidated->addressValidationVerdict?->jsonSerialize(),
-            'normalizedSnapshot' => $this->normalizedSnapshot($addressValidated),
+            'provider' => $address_validated->validationProvider,
+            'validatedAt' => $address_validated->validatedAt?->format(DATE_ATOM),
+            'raw' => $address_validated->raw,
+            'verdict' => $address_validated->addressValidationVerdict?->jsonSerialize(),
+            'normalizedSnapshot' => $this->normalizedSnapshot($address_validated),
         ], static fn (mixed $value): bool => null !== $value);
 
         if ([] === $payload) {
@@ -94,8 +103,8 @@ final readonly class AddressValidatedPayloadFactory
         ?string $ownerId,
         ?string $vendorId,
         string $fingerprint,
-        AddressValidated $addressValidated,
-        \DateTimeImmutable $validatedAt,
+        AddressValidated $address_validated,
+        DateTimeImmutable $validatedAt,
         ?string $rawSha256,
         string $governanceStatus,
         ?string $duplicateOfId,
@@ -114,15 +123,15 @@ final readonly class AddressValidatedPayloadFactory
             'ownerId' => $ownerId,
             'vendorId' => $vendorId,
             'fingerprint' => $fingerprint,
-            'provider' => $addressValidated->validationProvider,
+            'provider' => $address_validated->validationProvider,
             'validatedAt' => $validatedAt->format(DATE_ATOM),
-            'deliverable' => $addressValidated->addressValidationVerdict?->deliverable,
-            'granularity' => $addressValidated->addressValidationVerdict?->granularity,
-            'quality' => $addressValidated->addressValidationVerdict?->quality,
+            'deliverable' => $address_validated->addressValidationVerdict?->deliverable,
+            'granularity' => $address_validated->addressValidationVerdict?->granularity,
+            'quality' => $address_validated->addressValidationVerdict?->quality,
             'rawSha256' => $rawSha256,
-            'sourceType' => $addressValidated->sourceType,
+            'sourceType' => $address_validated->sourceType,
             'providerDigest' => $providerDigest,
-            'hasEvidence' => $this->hasEvidence($addressValidated),
+            'hasEvidence' => $this->hasEvidence($address_validated),
             'governanceStatus' => $governanceStatus,
             'governanceLinkId' => $this->governanceLinkId($governanceStatus, $duplicateOfId, $supersededById, $aliasOfId, $conflictWithId),
             'revalidationDueAt' => $revalidationDueAt,
@@ -138,7 +147,7 @@ final readonly class AddressValidatedPayloadFactory
     {
         $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if (false === $json) {
-            throw new \RuntimeException('payload_encode_failed');
+            throw new RuntimeException('payload_encode_failed');
         }
 
         return $json;

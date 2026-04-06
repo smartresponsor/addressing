@@ -6,6 +6,8 @@ namespace App\Service\Application\Event;
 
 use App\ServiceInterface\Application\Event\AddressEventDispatcherServiceInterface;
 use App\ServiceInterface\Application\Event\AddressEventInterface;
+use Override;
+use Throwable;
 
 /**
  * In-memory event dispatcher.
@@ -21,12 +23,12 @@ final class AddressInMemoryEventDispatcherService implements AddressEventDispatc
     /**
      * @var array<list<callable(AddressEventInterface): void>>
      */
-    private array $listener = [];
+    private array $listeners = [];
 
-    #[\Override]
-    public function subscribe(string $eventName, callable $listener): void
+    #[Override]
+    public function subscribe(string $eventName, callable $listener_handler): void
     {
-        $this->listener[$eventName][] = $listener;
+        $this->listeners[$eventName][] = $listener_handler;
     }
 
     /**
@@ -35,15 +37,15 @@ final class AddressInMemoryEventDispatcherService implements AddressEventDispatc
      * Absolute rule:
      * dispatcher must never throw or affect business flow.
      */
-    #[\Override]
+    #[Override]
     public function dispatch(AddressEventInterface $addressEvent): void
     {
         $name = $addressEvent->name();
 
-        foreach ($this->listener[$name] ?? [] as $listener) {
+        foreach ($this->listeners[$name] ?? [] as $listener_handler) {
             try {
-                $listener($addressEvent);
-            } catch (\Throwable) {
+                $listener_handler($addressEvent);
+            } catch (Throwable) {
                 // intentionally ignored:
                 // dispatcher must never break the main flow
             }

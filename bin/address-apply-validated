@@ -6,6 +6,7 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use App\Contract\Message\AddressValidated;
+use App\Kernel;
 use App\Service\Application\AddressValidatedApplierService;
 use JetBrains\PhpStorm\NoReturn;
 
@@ -20,10 +21,10 @@ if (!$arg) {
     usage();
 }
 
-$pdo = new PDO((string)getenv('PG_DSN'), (string)getenv('PG_USER'), (string)getenv('PG_PASS'), [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-]);
-$applier = new AddressValidatedApplierService($pdo);
+$kernel = new Kernel((string) ($_SERVER['APP_ENV'] ?? getenv('APP_ENV') ?: 'dev'), (bool) ($_SERVER['APP_DEBUG'] ?? getenv('APP_DEBUG') ?: true));
+$kernel->boot();
+/** @var AddressValidatedApplierService $applier */
+$applier = $kernel->getContainer()->get(AddressValidatedApplierService::class);
 
 $handle = ($arg === '-') ? STDIN : fopen($arg, 'r');
 if (!$handle) {
@@ -78,14 +79,14 @@ foreach ($dataSet as $event) {
             continue;
         }
 
-        $ownerId = isset($event['ownerId']) && is_string($event['ownerId']) && $event['ownerId'] !== '' ? $event['ownerId'] : null;
-        $vendorId = isset($event['vendorId']) && is_string($event['vendorId']) && $event['vendorId'] !== '' ? $event['vendorId'] : null;
+        $owner_id = isset($event['owner_id']) && is_string($event['owner_id']) && $event['owner_id'] !== '' ? $event['owner_id'] : (isset($event['ownerId']) && is_string($event['ownerId']) && $event['ownerId'] !== '' ? $event['ownerId'] : null);
+        $vendor_id = isset($event['vendor_id']) && is_string($event['vendor_id']) && $event['vendor_id'] !== '' ? $event['vendor_id'] : (isset($event['vendorId']) && is_string($event['vendorId']) && $event['vendorId'] !== '' ? $event['vendorId'] : null);
 
         $payload = $event;
-        unset($payload['id'], $payload['ownerId'], $payload['vendorId']);
+        unset($payload['id'], $payload['ownerId'], $payload['vendorId'], $payload['owner_id'], $payload['vendor_id']);
 
         $validated = AddressValidated::fromArray($payload);
-        $applier->apply($id, $validated, $ownerId, $vendorId);
+        $applier->apply($id, $validated, $owner_id, $vendor_id);
         $ok++;
     } catch (Throwable $exception) {
         $fail++;

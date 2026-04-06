@@ -7,6 +7,8 @@ namespace App\Integration\Console\Command;
 
 use App\Contract\Message\AddressValidated;
 use App\Service\Application\AddressValidatedApplierService;
+use Override;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -23,7 +25,7 @@ final class AddressValidatedApplyCommand extends Command
         parent::__construct();
     }
 
-    #[\Override]
+    #[Override]
     protected function configure(): void
     {
         $this
@@ -33,13 +35,13 @@ final class AddressValidatedApplyCommand extends Command
             ->addOption('vendor-id', null, InputOption::VALUE_OPTIONAL);
     }
 
-    #[\Override]
+    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $symfonyStyle = new SymfonyStyle($input, $output);
         $payload = json_decode($this->requiredArgument($input, 'payload-json'), true);
         if (!is_array($payload)) {
-            throw new \RuntimeException('invalid_json');
+            throw new RuntimeException('invalid_json');
         }
 
         $addressValidated = AddressValidated::fromArray($payload);
@@ -60,7 +62,7 @@ final class AddressValidatedApplyCommand extends Command
         $value = $input->getArgument($name);
 
         if (!is_string($value)) {
-            throw new \RuntimeException('invalid_argument_'.$name);
+            throw new RuntimeException('invalid_argument_'.$name);
         }
 
         return $value;
