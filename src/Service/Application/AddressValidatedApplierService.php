@@ -31,20 +31,20 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
     }
 
     #[Override]
-    public function apply(string $id, AddressValidated $address_validated, ?string $owner_id = null, ?string $vendor_id = null): void
+    public function apply(string $id, AddressValidated $addressValidated, ?string $ownerId = null, ?string $vendorId = null): void
     {
-        $fingerprint = $address_validated->fingerprint();
+        $fingerprint = $addressValidated->fingerprint();
         $now = new DateTimeImmutable('now');
-        $validated_at = $address_validated->validatedAt ?? $now;
-        $scope_params = $this->addressTenantScopeSqlHelper->params($owner_id, $vendor_id);
-        $scope_where = $this->addressTenantScopeSqlHelper->whereClause($owner_id, $vendor_id);
-        $lock_clause = $this->isPgsql() ? ' FOR UPDATE' : '';
+        $validatedAt = $addressValidated->validatedAt ?? $now;
+        $scopeParams = $this->addressTenantScopeSqlHelper->params($ownerId, $vendorId);
+        $scopeWhere = $this->addressTenantScopeSqlHelper->whereClause($ownerId, $vendorId);
+        $lockClause = $this->isPgsql() ? ' FOR UPDATE' : '';
 
         try {
             $this->pdo->beginTransaction();
 
-            $stmt = $this->prepare('SELECT validation_fingerprint FROM address_entity WHERE id = :id AND '.$scope_where.$lock_clause);
-            $stmt->execute(array_merge([':id' => $id], $scope_params));
+            $stmt = $this->prepare('SELECT validation_fingerprint FROM address_entity WHERE id = :id AND '.$scopeWhere.$lockClause);
+            $stmt->execute(array_merge([':id' => $id], $scopeParams));
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!is_array($row)) {
                 $this->pdo->rollBack();
@@ -59,11 +59,11 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 return;
             }
 
-            $plan = $this->addressValidatedMutationPlanBuilder->build($id, $address_validated, $fingerprint, $now, $validated_at);
+            $plan = $this->addressValidatedMutationPlanBuilder->build($id, $addressValidated, $fingerprint, $now, $validatedAt);
 
-            $sql = 'UPDATE address_entity SET '.$plan->setClause().' WHERE id = :id AND '.$scope_where;
+            $sql = 'UPDATE address_entity SET '.$plan->setClause().' WHERE id = :id AND '.$scopeWhere;
             $stmt = $this->prepare($sql);
-            $ok = $stmt->execute(array_merge($plan->params, $scope_params));
+            $ok = $stmt->execute(array_merge($plan->params, $scopeParams));
 
             if (!$ok) {
                 $this->pdo->rollBack();
@@ -74,11 +74,11 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 throw new RuntimeException('not_found');
             }
 
-            $evidence_snapshot_id = $this->addressEvidenceSnapshotWriter->write(
+            $evidenceSnapshotId = $this->addressEvidenceSnapshotWriter->write(
                 $id,
-                $owner_id,
-                $vendor_id,
-                $address_validated,
+                $ownerId,
+                $vendorId,
+                $addressValidated,
                 $plan->lastValidationStatus,
                 $plan->lastValidationScore,
                 $plan->normalizedSnapshot,
@@ -88,11 +88,11 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
             $this->addressOutboxWriter->write(
                 $this->addressValidatedPayloadFactory->outboxPayload(
                     $id,
-                    $owner_id,
-                    $vendor_id,
+                    $ownerId,
+                    $vendorId,
                     $fingerprint,
-                    $address_validated,
-                    $validated_at,
+                    $addressValidated,
+                    $validatedAt,
                     $plan->rawSha256,
                     $plan->governanceStatus,
                     $plan->duplicateOfId,
@@ -103,7 +103,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                     $plan->revalidationPolicy,
                     $plan->lastValidationStatus,
                     $plan->lastValidationScore,
-                    $evidence_snapshot_id,
+                    $evidenceSnapshotId,
                     $plan->providerDigest,
                 )
             );

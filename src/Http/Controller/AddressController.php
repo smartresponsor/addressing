@@ -72,7 +72,7 @@ final readonly class AddressController
     public function get(Request $request, string $id): JsonResponse
     {
         [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
-        $address = $this->addressService->get($id, $owner_id, $vendor_id);
+        $address = $this->addressService->get($id, $ownerId, $vendorId);
         if (!$address instanceof \App\EntityInterface\Record\AddressInterface) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }
@@ -83,7 +83,7 @@ final readonly class AddressController
     public function markDeleted(Request $request, string $id): JsonResponse
     {
         [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
-        $this->addressService->markDeleted($id, $owner_id, $vendor_id);
+        $this->addressService->markDeleted($id, $ownerId, $vendorId);
 
         return new JsonResponse(['ok' => true]);
     }
@@ -160,7 +160,7 @@ final readonly class AddressController
     public function governanceClusterSummary(Request $request, string $id): JsonResponse
     {
         [$ownerId, $vendorId] = $this->addressQueryFilterFactory->tenantFromQuery($request);
-        $summary = $this->addressService->governanceClusterSummary($id, $owner_id, $vendor_id);
+        $summary = $this->addressService->governanceClusterSummary($id, $ownerId, $vendorId);
         if (0 === $summary['clusterSize']) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }
@@ -175,7 +175,7 @@ final readonly class AddressController
         $patch = $this->addressApiPayloadFactory->operationalPatch($payload);
 
         try {
-            $ok = $this->addressService->patchOperational($id, $owner_id, $vendor_id, $patch);
+            $ok = $this->addressService->patchOperational($id, $ownerId, $vendorId, $patch);
         } catch (\RuntimeException $exception) {
             return new JsonResponse(['error' => 'invalid_governance_transition', 'message' => $exception->getMessage()], 422);
         }
@@ -184,7 +184,7 @@ final readonly class AddressController
             return new JsonResponse(['error' => 'not_found_or_not_patched'], 404);
         }
 
-        $address = $this->addressService->get($id, $owner_id, $vendor_id);
+        $address = $this->addressService->get($id, $ownerId, $vendorId);
         if (!$address instanceof \App\EntityInterface\Record\AddressInterface) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }
@@ -199,12 +199,12 @@ final readonly class AddressController
         $ids = $this->addressApiPayloadFactory->requireStringList($payload, 'ids');
         $patch = $this->addressApiPayloadFactory->operationalPatch($payload);
 
-        $patched_ids = [];
+        $patchedIds = [];
         $failed = [];
         foreach ($ids as $id) {
             try {
-                if ($this->addressService->patchOperational($id, $owner_id, $vendor_id, $patch)) {
-                    $patched_ids[] = $id;
+                if ($this->addressService->patchOperational($id, $ownerId, $vendorId, $patch)) {
+                    $patchedIds[] = $id;
                 }
             } catch (\RuntimeException $exception) {
                 $failed[] = ['id' => $id, 'error' => $exception->getMessage()];
@@ -213,8 +213,8 @@ final readonly class AddressController
 
         return new JsonResponse([
             'requestedCount' => count($ids),
-            'patchedCount' => count($patched_ids),
-            'patchedIds' => $patched_ids,
+            'patchedCount' => count($patchedIds),
+            'patchedIds' => $patchedIds,
             'failed' => $failed,
         ]);
     }
@@ -227,7 +227,7 @@ final readonly class AddressController
 
         $this->addressValidatedApplierService->apply($id, $addressValidated, $ownerId, $vendorId);
 
-        $address = $this->addressService->get($id, $owner_id, $vendor_id);
+        $address = $this->addressService->get($id, $ownerId, $vendorId);
         if (!$address instanceof \App\EntityInterface\Record\AddressInterface) {
             return new JsonResponse(['error' => 'not_found'], 404);
         }

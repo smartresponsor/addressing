@@ -24,23 +24,27 @@ final readonly class AddressEvidenceSnapshotWriter
     /** @param array<string, mixed>|null $normalizedSnapshot */
     public function write(
         string $addressId,
-        ?string $owner_id,
-        ?string $vendor_id,
-        AddressValidated $address_validated,
+        ?string $ownerId,
+        ?string $vendorId,
+        AddressValidated $addressValidated,
         string $validationStatus,
         ?int $validationScore,
         ?array $normalizedSnapshot,
         ?string $providerDigest,
     ): ?string {
-        if (!$this->addressValidatedPayloadFactory->hasEvidence($address_validated)) {
+        if (!$this->addressValidatedPayloadFactory->hasEvidence($addressValidated)) {
             return null;
         }
 
-        $snapshotId = bin2hex(random_bytes(16));
-        $created_at = ($address_validated->validatedAt ?? new DateTimeImmutable())->format('Y-m-d H:i:sP');
-        $validation_issues = $address_validated->addressValidationVerdict?->jsonSerialize();
+        try {
+            $snapshotId = bin2hex(random_bytes(16));
+        } catch (\Throwable $exception) {
+            throw new RuntimeException('address_evidence_snapshot_id_failed', 0, $exception);
+        }
+        $createdAt = ($addressValidated->validatedAt ?? new DateTimeImmutable())->format('Y-m-d H:i:sP');
+        $validationIssues = $addressValidated->addressValidationVerdict?->jsonSerialize();
 
-        $pdo_statement = $this->prepare(
+        $pdoStatement = $this->prepare(
             'INSERT INTO address_evidence_snapshot (
                 id, address_id, owner_id, vendor_id, source_system, source_type, source_reference, validated_by, validated_at,
                 normalization_version, raw_input_snapshot, normalized_snapshot, validation_status, validation_score, validation_issues, provider_digest, created_at
@@ -50,24 +54,24 @@ final readonly class AddressEvidenceSnapshotWriter
             )'
         );
 
-        $pdo_statement->execute([
+        $pdoStatement->execute([
             ':id' => $snapshotId,
             ':address_id' => $addressId,
-            ':owner_id' => $owner_id,
-            ':vendor_id' => $vendor_id,
-            ':source_system' => $address_validated->sourceSystem,
-            ':source_type' => AddressRecordPolicy::normalizeSourceType($address_validated->sourceType),
-            ':source_reference' => $address_validated->sourceReference,
-            ':validated_by' => $address_validated->validationProvider ?? $address_validated->lastValidationProvider,
-            ':validated_at' => $address_validated->validatedAt?->format('Y-m-d H:i:sP'),
-            ':normalization_version' => $address_validated->normalizationVersion,
-            ':raw_input_snapshot' => $this->encodePayloadNullable($address_validated->rawInput),
+            ':owner_id' => $ownerId,
+            ':vendor_id' => $vendorId,
+            ':source_system' => $addressValidated->sourceSystem,
+            ':source_type' => AddressRecordPolicy::normalizeSourceType($addressValidated->sourceType),
+            ':source_reference' => $addressValidated->sourceReference,
+            ':validated_by' => $addressValidated->validationProvider ?? $addressValidated->lastValidationProvider,
+            ':validated_at' => $addressValidated->validatedAt?->format('Y-m-d H:i:sP'),
+            ':normalization_version' => $addressValidated->normalizationVersion,
+            ':raw_input_snapshot' => $this->encodePayloadNullable($addressValidated->rawInput),
             ':normalized_snapshot' => $this->encodePayloadNullable($normalizedSnapshot),
             ':validation_status' => AddressRecordPolicy::normalizeValidationStatus($validationStatus),
             ':validation_score' => $validationScore,
-            ':validation_issues' => $this->encodePayloadNullable($validation_issues),
+            ':validation_issues' => $this->encodePayloadNullable($validationIssues),
             ':provider_digest' => $providerDigest,
-            ':created_at' => $created_at,
+            ':created_at' => $createdAt,
         ]);
 
         return $snapshotId;

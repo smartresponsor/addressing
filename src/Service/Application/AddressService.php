@@ -54,7 +54,7 @@ final readonly class AddressService
 
     public function getLatestEvidenceSnapshot(string $addressId, ?string $owner_id, ?string $vendorId): ?AddressEvidenceSnapshotInterface
     {
-        return $this->addressRepository->getLatestEvidenceSnapshot($address_id, $owner_id, $vendor_id);
+        return $this->addressRepository->getLatestEvidenceSnapshot($addressId, $owner_id, $vendorId);
     }
 
     /**
@@ -62,7 +62,7 @@ final readonly class AddressService
      */
     public function evidenceHistory(string $addressId, ?string $owner_id, ?string $vendor_id, int $limit, ?string $cursor): array
     {
-        return $this->addressRepository->findEvidenceHistoryPage($address_id, $owner_id, $vendor_id, $limit, $cursor);
+        return $this->addressRepository->findEvidenceHistoryPage($addressId, $owner_id, $vendor_id, $limit, $cursor);
     }
 
     /**
@@ -82,7 +82,7 @@ final readonly class AddressService
         $items = [];
 
         do {
-            $page = $this->addressRepository->findEvidenceHistoryPage($address_id, $owner_id, $vendor_id, 200, $cursor);
+            $page = $this->addressRepository->findEvidenceHistoryPage($addressId, $owner_id, $vendorId, 200, $cursor);
             foreach ($page['items'] as $item) {
                 $items[] = $item;
             }
@@ -144,12 +144,12 @@ final readonly class AddressService
 
     public function get(string $id, ?string $owner_id, ?string $vendorId): ?AddressInterface
     {
-        return $this->addressRepository->get($id, $owner_id, $vendor_id);
+        return $this->addressRepository->get($id, $owner_id, $vendorId);
     }
 
     public function markDeleted(string $id, ?string $owner_id, ?string $vendorId): void
     {
-        $this->addressRepository->delete($id, $owner_id, $vendor_id);
+        $this->addressRepository->delete($id, $owner_id, $vendorId);
     }
 
     /**
@@ -169,7 +169,7 @@ final readonly class AddressService
      */
     public function governanceClusterSummary(string $addressId, ?string $owner_id, ?string $vendorId): array
     {
-        return $this->addressRepository->summarizeGovernanceCluster($address_id, $owner_id, $vendor_id);
+        return $this->addressRepository->summarizeGovernanceCluster($addressId, $owner_id, $vendorId);
     }
 
     /**
@@ -258,7 +258,7 @@ final readonly class AddressService
         ?string $query,
         array $filters = [],
     ): array {
-        return $this->addressRepository->summarizeSourcePortfolio($ownerId, $vendorId, $countryCode, $q, $filters);
+        return $this->addressRepository->summarizeSourcePortfolio($owner_id, $vendor_id, $country_code, $query, $filters);
     }
 
     /**
@@ -286,7 +286,7 @@ final readonly class AddressService
         ?string $query,
         array $filters = [],
     ): array {
-        return $this->addressRepository->summarizeValidationPortfolio($ownerId, $vendorId, $countryCode, $q, $filters);
+        return $this->addressRepository->summarizeValidationPortfolio($owner_id, $vendor_id, $country_code, $query, $filters);
     }
 
     /**
@@ -315,6 +315,6 @@ final readonly class AddressService
         ?string $query,
         array $filters = [],
     ): array {
-        return $this->addressRepository->summarizeNormalizationPortfolio($ownerId, $vendorId, $countryCode, $q, $filters);
+        return $this->addressRepository->summarizeNormalizationPortfolio($owner_id, $vendor_id, $country_code, $query, $filters);
     }
 }

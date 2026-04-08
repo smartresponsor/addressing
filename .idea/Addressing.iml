@@ -5,6 +5,12 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" packagePrefix="App\" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" packagePrefix="Tests\" />
       <sourceFolder url="file://$MODULE_DIR$/spec" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/tests/E2E" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/tests/Functional" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/tests/Integration" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/tests/Security" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/tests/Service" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/tests/Unit" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/amphp/amp" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/amphp/byte-stream" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/amphp/cache" />

@@ -1271,7 +1271,11 @@ SQL
 
     private function newSnapshotId(): string
     {
-        return bin2hex(random_bytes(16));
+        try {
+            return bin2hex(random_bytes(16));
+        } catch (\Throwable $exception) {
+            throw new \RuntimeException('address_snapshot_id_failed', 0, $exception);
+        }
     }
 
     private function encodeEvidenceCursor(string $createdAt, string $id): string

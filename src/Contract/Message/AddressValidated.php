@@ -14,38 +14,38 @@ use Throwable;
 final readonly class AddressValidated implements JsonSerializable
 {
     public function __construct(
-        public ?string $line1_norm,
-        public ?string $city_norm,
-        public ?string $region_norm,
-        public ?string $postal_code_norm,
+        public ?string $line1Norm,
+        public ?string $cityNorm,
+        public ?string $regionNorm,
+        public ?string $postalCodeNorm,
         public ?float $latitude,
         public ?float $longitude,
         public ?string $geohash,
-        public ?string $validation_provider,
-        public ?DateTimeImmutable $validated_at,
-        public ?string $dedupe_key,
+        public ?string $validationProvider,
+        public ?DateTimeImmutable $validatedAt,
+        public ?string $dedupeKey,
         /** @var array<string, mixed>|null */
         public ?array $raw = null,
         public ?AddressValidationVerdict $addressValidationVerdict = null,
-        public ?string $source_system = null,
-        public ?string $source_type = null,
-        public ?string $source_reference = null,
-        public ?string $normalization_version = null,
+        public ?string $sourceSystem = null,
+        public ?string $sourceType = null,
+        public ?string $sourceReference = null,
+        public ?string $normalizationVersion = null,
         /** @var array<string, mixed>|null */
-        public ?array $raw_input = null,
+        public ?array $rawInput = null,
         /** @var array<string, mixed>|null */
-        public ?array $normalized_snapshot = null,
-        public ?string $provider_digest = null,
-        public ?string $governance_status = null,
-        public ?string $duplicate_of_id = null,
-        public ?string $superseded_by_id = null,
-        public ?string $alias_of_id = null,
-        public ?string $conflict_with_id = null,
-        public ?DateTimeImmutable $revalidation_due_at = null,
-        public ?string $revalidation_policy = null,
-        public ?string $last_validation_provider = null,
-        public ?string $last_validation_status = null,
-        public ?int $last_validation_score = null,
+        public ?array $normalizedSnapshot = null,
+        public ?string $providerDigest = null,
+        public ?string $governanceStatus = null,
+        public ?string $duplicateOfId = null,
+        public ?string $supersededById = null,
+        public ?string $aliasOfId = null,
+        public ?string $conflictWithId = null,
+        public ?DateTimeImmutable $revalidationDueAt = null,
+        public ?string $revalidationPolicy = null,
+        public ?string $lastValidationProvider = null,
+        public ?string $lastValidationStatus = null,
+        public ?int $lastValidationScore = null,
     ) {
     }
 
@@ -54,16 +54,16 @@ final readonly class AddressValidated implements JsonSerializable
      */
     public static function fromArray(array $data): self
     {
-        $line1_norm = self::asNullableString($data['line1Norm'] ?? null);
-        $city_norm = self::asNullableString($data['cityNorm'] ?? null);
-        $region_norm = self::asNullableString($data['regionNorm'] ?? null);
-        $postal_code_norm = self::asNullableString($data['postalCodeNorm'] ?? null);
+        $line1Norm = self::asNullableString($data['line1Norm'] ?? null);
+        $cityNorm = self::asNullableString($data['cityNorm'] ?? null);
+        $regionNorm = self::asNullableString($data['regionNorm'] ?? null);
+        $postalCodeNorm = self::asNullableString($data['postalCodeNorm'] ?? null);
         $latitude = self::asNullableFloat($data['latitude'] ?? null);
         $longitude = self::asNullableFloat($data['longitude'] ?? null);
         $geohash = self::asNullableString($data['geohash'] ?? null);
-        $validation_provider = self::asNullableString($data['validationProvider'] ?? null);
-        $validated_at = self::asNullableDate($data['validatedAt'] ?? null);
-        $dedupe_key = self::asNullableString($data['dedupeKey'] ?? null);
+        $validationProvider = self::asNullableString($data['validationProvider'] ?? null);
+        $validatedAt = self::asNullableDate($data['validatedAt'] ?? null);
+        $dedupeKey = self::asNullableString($data['dedupeKey'] ?? null);
 
         $raw = null;
         if (array_key_exists('raw', $data) && is_array($data['raw'])) {
@@ -82,64 +82,64 @@ final readonly class AddressValidated implements JsonSerializable
 
         $verdict = AddressValidationVerdict::fromArray($validation_verdict_data);
 
-        $source_system = self::asNullableString($data['sourceSystem'] ?? null);
-        $source_type = AddressRecordPolicy::normalizeSourceType(self::asNullableString($data['sourceType'] ?? null));
-        $source_reference = self::asNullableString($data['sourceReference'] ?? null);
-        $normalization_version = self::asNullableString($data['normalizationVersion'] ?? null);
-        $provider_digest = self::asNullableString($data['providerDigest'] ?? null);
-        $governance_status = AddressRecordPolicy::normalizeGovernanceStatus(self::asNullableString($data['governanceStatus'] ?? null));
-        $duplicate_of_id = self::asNullableString($data['duplicateOfId'] ?? null);
-        $superseded_by_id = self::asNullableString($data['supersededById'] ?? null);
-        $alias_of_id = self::asNullableString($data['aliasOfId'] ?? null);
-        $conflict_with_id = self::asNullableString($data['conflictWithId'] ?? null);
-        $revalidation_due_at = self::asNullableDate($data['revalidationDueAt'] ?? null);
-        $revalidation_policy = AddressRecordPolicy::normalizeRevalidationPolicy(self::asNullableString($data['revalidationPolicy'] ?? null));
-        $last_validation_provider = self::asNullableString($data['lastValidationProvider'] ?? null);
-        $last_validation_status = AddressRecordPolicy::normalizeLastValidationStatus(self::asNullableString($data['lastValidationStatus'] ?? null));
-        $last_validation_score = self::asNullableInt($data['lastValidationScore'] ?? null);
+        $sourceSystem = self::asNullableString($data['sourceSystem'] ?? null);
+        $sourceType = AddressRecordPolicy::normalizeSourceType(self::asNullableString($data['sourceType'] ?? null));
+        $sourceReference = self::asNullableString($data['sourceReference'] ?? null);
+        $normalizationVersion = self::asNullableString($data['normalizationVersion'] ?? null);
+        $providerDigest = self::asNullableString($data['providerDigest'] ?? null);
+        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus(self::asNullableString($data['governanceStatus'] ?? null));
+        $duplicateOfId = self::asNullableString($data['duplicateOfId'] ?? null);
+        $supersededById = self::asNullableString($data['supersededById'] ?? null);
+        $aliasOfId = self::asNullableString($data['aliasOfId'] ?? null);
+        $conflictWithId = self::asNullableString($data['conflictWithId'] ?? null);
+        $revalidationDueAt = self::asNullableDate($data['revalidationDueAt'] ?? null);
+        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy(self::asNullableString($data['revalidationPolicy'] ?? null));
+        $lastValidationProvider = self::asNullableString($data['lastValidationProvider'] ?? null);
+        $lastValidationStatus = AddressRecordPolicy::normalizeLastValidationStatus(self::asNullableString($data['lastValidationStatus'] ?? null));
+        $lastValidationScore = self::asNullableInt($data['lastValidationScore'] ?? null);
 
-        $raw_input = null;
+        $rawInput = null;
         if (array_key_exists('rawInput', $data) && is_array($data['rawInput'])) {
             /** @var array<string, mixed> $raw_input */
-            $raw_input = $data['rawInput'];
+            $rawInput = $data['rawInput'];
         }
 
-        $normalized_snapshot = null;
+        $normalizedSnapshot = null;
         if (array_key_exists('normalizedSnapshot', $data) && is_array($data['normalizedSnapshot'])) {
             /** @var array<string, mixed> $normalized_snapshot */
-            $normalized_snapshot = $data['normalizedSnapshot'];
+            $normalizedSnapshot = $data['normalizedSnapshot'];
         }
 
         return new self(
-            $line1_norm,
-            $city_norm,
-            $region_norm,
-            $postal_code_norm,
+            $line1Norm,
+            $cityNorm,
+            $regionNorm,
+            $postalCodeNorm,
             $latitude,
             $longitude,
             $geohash,
-            $validation_provider,
-            $validated_at,
-            $dedupe_key,
+            $validationProvider,
+            $validatedAt,
+            $dedupeKey,
             $raw,
             $verdict,
-            $source_system,
-            $source_type,
-            $source_reference,
-            $normalization_version,
-            $raw_input,
-            $normalized_snapshot,
-            $provider_digest,
-            $governance_status,
-            $duplicate_of_id,
-            $superseded_by_id,
-            $alias_of_id,
-            $conflict_with_id,
-            $revalidation_due_at,
-            $revalidation_policy,
-            $last_validation_provider,
-            $last_validation_status,
-            $last_validation_score,
+            $sourceSystem,
+            $sourceType,
+            $sourceReference,
+            $normalizationVersion,
+            $rawInput,
+            $normalizedSnapshot,
+            $providerDigest,
+            $governanceStatus,
+            $duplicateOfId,
+            $supersededById,
+            $aliasOfId,
+            $conflictWithId,
+            $revalidationDueAt,
+            $revalidationPolicy,
+            $lastValidationProvider,
+            $lastValidationStatus,
+            $lastValidationScore,
         );
     }
 
