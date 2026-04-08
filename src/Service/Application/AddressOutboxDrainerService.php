@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace App\Service\Application;
 
 use App\ServiceInterface\Application\AddressOutboxDrainerServiceInterface;
+use Override;
 
 final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceInterface
 {
@@ -19,7 +20,7 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
         $this->sender = $sender;
     }
 
-    #[\Override]
+    #[Override]
     public function drain(string $url, int $limit, int $retryLimit, int $timeoutSec, int $backoffMs): int
     {
         $lockId = bin2hex(random_bytes(16));

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Value;
 
 use InvalidArgumentException;
+use Override;
 
 /**
  *
@@ -36,7 +37,7 @@ final readonly class Subdivision implements \Stringable
         return $this->code === $other->code;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->code;

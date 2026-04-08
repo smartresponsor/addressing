@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Override;
 
 #[AsCommand(name: 'address:search', description: 'Search canonical addresses with operational filters.')]
 final class AddressSearchCommand extends Command
@@ -22,7 +23,7 @@ final class AddressSearchCommand extends Command
         parent::__construct();
     }
 
-    #[\Override]
+    #[Override]
     protected function configure(): void
     {
         $this
@@ -40,7 +41,7 @@ final class AddressSearchCommand extends Command
             ->addOption('expected-normalization-version', null, InputOption::VALUE_OPTIONAL);
     }
 
-    #[\Override]
+    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $symfonyStyle = new SymfonyStyle($input, $output);

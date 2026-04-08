@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Value\Common;
 
 use InvalidArgumentException;
+use Override;
 
 /**
  *
@@ -40,7 +41,7 @@ final readonly class Country implements \Stringable
         return $this->code;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->code;

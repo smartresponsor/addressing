@@ -14,6 +14,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Override;
 
 #[AsCommand(name: 'address:create', description: 'Create a canonical address record from CLI inputs.')]
 final class AddressCreateCommand extends Command
@@ -25,7 +26,7 @@ final class AddressCreateCommand extends Command
         parent::__construct();
     }
 
-    #[\Override]
+    #[Override]
     protected function configure(): void
     {
         $this
@@ -41,7 +42,7 @@ final class AddressCreateCommand extends Command
             ->addOption('source-reference', null, InputOption::VALUE_OPTIONAL, default: 'address:create');
     }
 
-    #[\Override]
+    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $symfonyStyle = new SymfonyStyle($input, $output);

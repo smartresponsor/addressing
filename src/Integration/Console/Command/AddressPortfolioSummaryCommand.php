@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Override;
 
 #[AsCommand(name: 'address:summary:portfolio', description: 'Summarize country/source/validation/normalization portfolios.')]
 final class AddressPortfolioSummaryCommand extends Command
@@ -22,7 +23,7 @@ final class AddressPortfolioSummaryCommand extends Command
         parent::__construct();
     }
 
-    #[\Override]
+    #[Override]
     protected function configure(): void
     {
         $this
@@ -33,7 +34,7 @@ final class AddressPortfolioSummaryCommand extends Command
             ->addOption('query', 'q', InputOption::VALUE_OPTIONAL);
     }
 
-    #[\Override]
+    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $symfonyStyle = new SymfonyStyle($input, $output);

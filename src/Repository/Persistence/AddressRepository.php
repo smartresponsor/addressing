@@ -12,6 +12,7 @@ use App\EntityInterface\Record\AddressEvidenceSnapshotInterface;
 use App\EntityInterface\Record\AddressInterface;
 use App\RepositoryInterface\Persistence\AddressRepositoryInterface;
 use App\Service\Application\AddressGovernancePolicy;
+use Override;
 
 final readonly class AddressRepository implements AddressRepositoryInterface
 {
@@ -19,7 +20,7 @@ final readonly class AddressRepository implements AddressRepositoryInterface
     {
     }
 
-    #[\Override]
+    #[Override]
     public function create(AddressInterface $address): void
     {
         $this->pdo->beginTransaction();
@@ -78,7 +79,7 @@ SQL;
         }
     }
 
-    #[\Override]
+    #[Override]
     public function update(AddressInterface $address): void
     {
         $this->ensureTenantScope($address->ownerId(), $address->vendorId());
@@ -135,7 +136,7 @@ SQL;
         }
     }
 
-    #[\Override]
+    #[Override]
     public function appendEvidenceSnapshot(AddressInterface $address): ?AddressEvidenceSnapshotInterface
     {
         if (!$this->hasEvidence($address)) {
@@ -158,7 +159,7 @@ SQL
         return $addressEvidenceSnapshot;
     }
 
-    #[\Override]
+    #[Override]
     public function getLatestEvidenceSnapshot(string $addressId, ?string $ownerId, ?string $vendorId): ?AddressEvidenceSnapshotInterface
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -176,7 +177,7 @@ SQL
     /**
      * @return array{items: list<AddressEvidenceSnapshotInterface>, nextCursor: ?string}
      */
-    #[\Override]
+    #[Override]
     public function findEvidenceHistoryPage(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -221,7 +222,7 @@ SQL
         return ['items' => $items, 'nextCursor' => $nextCursor];
     }
 
-    #[\Override]
+    #[Override]
     public function get(string $id, ?string $ownerId, ?string $vendorId): ?AddressInterface
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -241,7 +242,7 @@ SQL
         return $this->map($row);
     }
 
-    #[\Override]
+    #[Override]
     public function delete(string $id, ?string $ownerId, ?string $vendorId): void
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -272,7 +273,7 @@ SQL
         }
     }
 
-    #[\Override]
+    #[Override]
     public function findByDedupeKey(string $dedupeKey): ?AddressInterface
     {
         $dedupeKey = trim($dedupeKey);
@@ -300,7 +301,7 @@ SQL
     /**
      * @param array<string, mixed> $patch
      */
-    #[\Override]
+    #[Override]
     public function patchOperational(string $id, ?string $ownerId, ?string $vendorId, array $patch): bool
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -379,7 +380,7 @@ SQL
      *
      * @return array{items: AddressInterface[], nextCursor: ?string}
      */
-    #[\Override]
+    #[Override]
     public function findPage(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, int $limit, ?string $cursor, array $filters = []): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -514,7 +515,7 @@ SQL
      *   relatedAddressIds:list<string>
      * }
      */
-    #[\Override]
+    #[Override]
     public function summarizeGovernanceCluster(string $addressId, ?string $ownerId, ?string $vendorId): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -607,7 +608,7 @@ SQL
      *   staleNormalizationVersion:int
      * }
      */
-    #[\Override]
+    #[Override]
     public function summarizeOperationalQueues(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -724,7 +725,7 @@ SQL
      *   uncertainValidation:int
      * }>
      */
-    #[\Override]
+    #[Override]
     public function summarizeCountryPortfolio(?string $ownerId, ?string $vendorId, ?string $q, array $filters = []): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -824,7 +825,7 @@ SQL
      *   uncertainValidation:int
      * }>
      */
-    #[\Override]
+    #[Override]
     public function summarizeSourcePortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -936,7 +937,7 @@ SQL
      *   uncertainValidation:int
      * }>
      */
-    #[\Override]
+    #[Override]
     public function summarizeValidationPortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -1732,7 +1733,7 @@ SQL
      *   staleNormalization:int
      * }>
      */
-    #[\Override]
+    #[Override]
     public function summarizeNormalizationPortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);

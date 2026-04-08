@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Override;
 
 #[AsCommand(name: 'address:summary:governance-cluster', description: 'Summarize linked governance relationships for an address.')]
 final class AddressGovernanceClusterSummaryCommand extends Command
@@ -22,7 +23,7 @@ final class AddressGovernanceClusterSummaryCommand extends Command
         parent::__construct();
     }
 
-    #[\Override]
+    #[Override]
     protected function configure(): void
     {
         $this
@@ -31,7 +32,7 @@ final class AddressGovernanceClusterSummaryCommand extends Command
             ->addOption('vendor-id', null, InputOption::VALUE_OPTIONAL);
     }
 
-    #[\Override]
+    #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $symfonyStyle = new SymfonyStyle($input, $output);

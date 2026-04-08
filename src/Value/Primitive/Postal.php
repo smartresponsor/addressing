@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace App\Value\Primitive;
+use Override;
 
 final readonly class Postal implements \Stringable
 {
@@ -28,7 +29,7 @@ final readonly class Postal implements \Stringable
         return $normalized;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->v;

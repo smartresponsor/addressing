@@ -7,17 +7,10 @@ namespace App\EntityTrait;
 
 use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
-/**
- *
- */
-
-/**
- *
- */
 trait ObjectAuditTrait
 {
     #[ORM\Id]
@@ -35,8 +28,8 @@ trait ObjectAuditTrait
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?DateTimeImmutable $deletedAt = null;
 
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
-    private ?DateTimeImmutable $deletedBy = null;
+    #[ORM\Column(name: 'deleted_by', type: 'integer', nullable: true)]
+    private ?int $deletedBy = null;
 
     #[ORM\Column(name: 'slug', type: 'string', unique: true)]
     private string $slug;
@@ -185,18 +178,6 @@ trait ObjectAuditTrait
         $this->deletedAt = new DateTimeImmutable();
     }
 
-    #[ORM\PrePersist]
-    public function onPrePersist(): void
-    {
-        $this->createdAt = new DateTimeImmutable();
-    }
-
-    #[ORM\PreUpdate]
-    public function onPreUpdate(): void
-    {
-        $this->modifiedAt = new DateTimeImmutable();
-    }
-
     public function getId(): ?int
     {
         return $this->id;
@@ -237,12 +218,12 @@ trait ObjectAuditTrait
         $this->deletedAt = $deletedAt;
     }
 
-    public function getDeletedBy(): ?DateTimeImmutable
+    public function getDeletedBy(): ?int
     {
         return $this->deletedBy;
     }
 
-    public function setDeletedBy(?DateTimeImmutable $deletedBy): void
+    public function setDeletedBy(?int $deletedBy): void
     {
         $this->deletedBy = $deletedBy;
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Projection\AddressIndex;
 
 use PDO;
+use Override;
 
 /**
  *
@@ -20,7 +21,7 @@ final readonly class PdoRepository implements RepositoryInterface
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
-    #[\Override]
+    #[Override]
     public function upsert(IndexRecord $indexRecord): void
     {
         $sql = 'INSERT INTO address_index
@@ -41,7 +42,7 @@ final readonly class PdoRepository implements RepositoryInterface
         ]);
     }
 
-    #[\Override]
+    #[Override]
     public function getByDigest(string $digest): ?IndexRecord
     {
         $pdoStatement = $this->prepare('SELECT * FROM address_index WHERE digest = :d LIMIT 1');
@@ -57,7 +58,7 @@ final readonly class PdoRepository implements RepositoryInterface
     /**
      * @return array<\App\Projection\AddressIndex\IndexRecord>
      */
-    #[\Override]
+    #[Override]
     public function search(string $prefix, ?string $country = null, int $limit = 20): array
     {
         $like = $prefix . '%';

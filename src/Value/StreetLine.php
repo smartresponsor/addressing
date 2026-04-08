@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Value;
 
 use InvalidArgumentException;
+use Override;
 
 /**
  *
@@ -39,7 +40,7 @@ final readonly class StreetLine implements \Stringable
         return $this->value === $other->value;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->value;

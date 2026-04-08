@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Value;
 
 use InvalidArgumentException;
+use Override;
 
 /**
  *
@@ -50,7 +51,7 @@ final readonly class GeoPoint implements \Stringable
         return sprintf('%+.6f,%+.6f', $this->lat, $this->lon);
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return $this->toKey();
