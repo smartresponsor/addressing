@@ -24,7 +24,7 @@ interface AddressRepositoryInterface
     public function getLatestEvidenceSnapshot(string $addressId, ?string $ownerId, ?string $vendorId): ?AddressEvidenceSnapshotInterface;
 
     /**
-     * @return array{items: list<AddressEvidenceSnapshotInterface>, nextCursor: ?string}
+     * @return array{'items': list<AddressEvidenceSnapshotInterface>, 'nextCursor': ?string}
      */
     public function findEvidenceHistoryPage(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array;
 
@@ -36,7 +36,7 @@ interface AddressRepositoryInterface
     /**
      * @param array<string, mixed> $filters
      *
-     * @return array{items: list<AddressInterface>, nextCursor: ?string}
+     * @return array{'items': list<AddressInterface>, 'nextCursor': ?string}
      */
     public function findPage(
         ?string $ownerId,
@@ -52,29 +52,29 @@ interface AddressRepositoryInterface
      * @param array<string, mixed> $filters
      *
      * @return array{
-     *   total:int,
-     *   dueForRevalidation:int,
-     *   evidenceMissing:int,
-     *   uncertainValidation:int,
-     *   conflictReview:int,
-     *   duplicateReview:int,
-     *   staleNormalizationVersion:int
+     *   'total':int,
+     *   'dueForRevalidation':int,
+     *   'evidenceMissing':int,
+     *   'uncertainValidation':int,
+     *   'conflictReview':int,
+     *   'duplicateReview':int,
+     *   'staleNormalizationVersion':int
      * }
      */
 
     /**
      * @return array{
-     *   addressId:string,
-     *   governanceStatus:?string,
-     *   primaryLinkId:?string,
-     *   linkedToAnother:bool,
-     *   duplicateChildren:int,
-     *   supersededChildren:int,
-     *   aliasChildren:int,
-     *   conflictPeers:int,
-     *   inboundLinkedTotal:int,
-     *   clusterSize:int,
-     *   relatedAddressIds:list<string>
+     *   'addressId':string,
+     *   'governanceStatus':?string,
+     *   'primaryLinkId':?string,
+     *   'linkedToAnother':bool,
+     *   'duplicateChildren':int,
+     *   'supersededChildren':int,
+     *   'aliasChildren':int,
+     *   'conflictPeers':int,
+     *   'inboundLinkedTotal':int,
+     *   'clusterSize':int,
+     *   'relatedAddressIds':list<string>
      * }
      */
     public function summarizeGovernanceCluster(string $addressId, ?string $ownerId, ?string $vendorId): array;
@@ -83,13 +83,13 @@ interface AddressRepositoryInterface
      * @param array<string, mixed> $filters
      *
      * @return array{
-     *   total:int,
-     *   dueForRevalidation:int,
-     *   evidenceMissing:int,
-     *   uncertainValidation:int,
-     *   conflictReview:int,
-     *   duplicateReview:int,
-     *   staleNormalizationVersion:int
+     *   'total':int,
+     *   'dueForRevalidation':int,
+     *   'evidenceMissing':int,
+     *   'uncertainValidation':int,
+     *   'conflictReview':int,
+     *   'duplicateReview':int,
+     *   'staleNormalizationVersion':int
      * }
      */
     public function summarizeOperationalQueues(
@@ -105,16 +105,16 @@ interface AddressRepositoryInterface
      *
      * @return list<array{
      *   countryCode:string,
-     *   total:int,
+     *   'total':int,
      *   canonical:int,
      *   duplicate:int,
      *   superseded:int,
      *   alias:int,
      *   conflict:int,
      *   evidenceBacked:int,
-     *   evidenceMissing:int,
-     *   dueForRevalidation:int,
-     *   uncertainValidation:int
+     *   'evidenceMissing':int,
+     *   'dueForRevalidation':int,
+     *   'uncertainValidation':int
      * }>
      */
     public function summarizeCountryPortfolio(
@@ -130,16 +130,16 @@ interface AddressRepositoryInterface
      * @return list<array{
      *   sourceSystem:string,
      *   sourceType:string,
-     *   total:int,
+     *   'total':int,
      *   canonical:int,
      *   duplicate:int,
      *   superseded:int,
      *   alias:int,
      *   conflict:int,
      *   evidenceBacked:int,
-     *   evidenceMissing:int,
-     *   dueForRevalidation:int,
-     *   uncertainValidation:int
+     *   'evidenceMissing':int,
+     *   'dueForRevalidation':int,
+     *   'uncertainValidation':int
      * }>
      */
     public function summarizeSourcePortfolio(
@@ -156,16 +156,16 @@ interface AddressRepositoryInterface
      * @return list<array{
      *   validationProvider:string,
      *   validationStatus:string,
-     *   total:int,
+     *   'total':int,
      *   canonical:int,
      *   duplicate:int,
      *   superseded:int,
      *   alias:int,
      *   conflict:int,
      *   evidenceBacked:int,
-     *   evidenceMissing:int,
-     *   dueForRevalidation:int,
-     *   uncertainValidation:int
+     *   'evidenceMissing':int,
+     *   'dueForRevalidation':int,
+     *   'uncertainValidation':int
      * }>
      */
     public function summarizeValidationPortfolio(
@@ -182,16 +182,16 @@ interface AddressRepositoryInterface
      * @return list<array{
      *   normalizationVersion:string,
      *   validationStatus:string,
-     *   total:int,
+     *   'total':int,
      *   canonical:int,
      *   duplicate:int,
      *   superseded:int,
      *   alias:int,
      *   conflict:int,
      *   evidenceBacked:int,
-     *   evidenceMissing:int,
-     *   dueForRevalidation:int,
-     *   uncertainValidation:int,
+     *   'evidenceMissing':int,
+     *   'dueForRevalidation':int,
+     *   'uncertainValidation':int,
      *   staleNormalization:int
      * }>
      */

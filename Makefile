@@ -3,21 +3,21 @@
 .PHONY: test coverage up down build clean
 
 test:
-	docker-compose run --rm app vendor/bin/phpunit
+    docker-compose run --rm app vendor/bin/phpunit
 
 coverage:
-	docker-compose run --rm app vendor/bin/phpunit --coverage-html build/coverage-html
+    docker-compose run --rm app vendor/bin/phpunit --coverage-html build/coverage-html
 
 up:
-	docker-compose up -d
+    docker-compose up -d
 
 down:
-	docker-compose down
+    docker-compose down
 
 build:
-	docker-compose build
+    docker-compose build
 
 clean:
-	docker-compose down -v --remove-orphans
-	rm -rf build/coverage-html/*
-	rm -rf build/logs/*
+    docker-compose down -v --remove-orphans
+    rm -rf build/coverage-html/*
+    rm -rf build/logs/*

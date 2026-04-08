@@ -121,15 +121,15 @@ final readonly class AddressApiPayloadFactory
      * @param array<string, mixed> $in
      *
      * @return array{
-     *   governanceStatus:?string,
-     *   duplicateOfId:?string,
-     *   supersededById:?string,
-     *   aliasOfId:?string,
-     *   conflictWithId:?string,
-     *   revalidationDueAt:?string,
-     *   revalidationPolicy:?string,
-     *   lastValidationProvider:?string,
-     *   lastValidationStatus:?string,
+     *   'governanceStatus':?string,
+     *   'duplicateOfId':?string,
+     *   'supersededById':?string,
+     *   'aliasOfId':?string,
+     *   'conflictWithId':?string,
+     *   'revalidationDueAt':?string,
+     *   'revalidationPolicy':?string,
+     *   'lastValidationProvider':?string,
+     *   'lastValidationStatus':?string,
      *   lastValidationScore:?int
      * }
      */

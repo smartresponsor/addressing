@@ -175,7 +175,7 @@ SQL
     }
 
     /**
-     * @return array{items: list<AddressEvidenceSnapshotInterface>, nextCursor: ?string}
+     * @return array{'items': list<AddressEvidenceSnapshotInterface>, 'nextCursor': ?string}
      */
     #[Override]
     public function findEvidenceHistoryPage(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array
@@ -378,7 +378,7 @@ SQL
     /**
      * @param array<string, mixed> $filters
      *
-     * @return array{items: AddressInterface[], nextCursor: ?string}
+     * @return array{'items': AddressInterface[], 'nextCursor': ?string}
      */
     #[Override]
     public function findPage(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, int $limit, ?string $cursor, array $filters = []): array
@@ -502,17 +502,17 @@ SQL
 
     /**
      * @return array{
-     *   addressId:string,
-     *   governanceStatus:?string,
-     *   primaryLinkId:?string,
-     *   linkedToAnother:bool,
-     *   duplicateChildren:int,
-     *   supersededChildren:int,
-     *   aliasChildren:int,
-     *   conflictPeers:int,
-     *   inboundLinkedTotal:int,
-     *   clusterSize:int,
-     *   relatedAddressIds:list<string>
+     *   'addressId':string,
+     *   'governanceStatus':?string,
+     *   'primaryLinkId':?string,
+     *   'linkedToAnother':bool,
+     *   'duplicateChildren':int,
+     *   'supersededChildren':int,
+     *   'aliasChildren':int,
+     *   'conflictPeers':int,
+     *   'inboundLinkedTotal':int,
+     *   'clusterSize':int,
+     *   'relatedAddressIds':list<string>
      * }
      */
     #[Override]
@@ -599,13 +599,13 @@ SQL
      * @param array<string, mixed> $filters
      *
      * @return array{
-     *   total:int,
-     *   dueForRevalidation:int,
-     *   evidenceMissing:int,
-     *   uncertainValidation:int,
-     *   conflictReview:int,
-     *   duplicateReview:int,
-     *   staleNormalizationVersion:int
+     *   'total':int,
+     *   'dueForRevalidation':int,
+     *   'evidenceMissing':int,
+     *   'uncertainValidation':int,
+     *   'conflictReview':int,
+     *   'duplicateReview':int,
+     *   'staleNormalizationVersion':int
      * }
      */
     #[Override]
@@ -713,16 +713,16 @@ SQL
      *
      * @return list<array{
      *   countryCode:string,
-     *   total:int,
+     *   'total':int,
      *   canonical:int,
      *   duplicate:int,
      *   superseded:int,
      *   alias:int,
      *   conflict:int,
      *   evidenceBacked:int,
-     *   evidenceMissing:int,
-     *   dueForRevalidation:int,
-     *   uncertainValidation:int
+     *   'evidenceMissing':int,
+     *   'dueForRevalidation':int,
+     *   'uncertainValidation':int
      * }>
      */
     #[Override]
@@ -813,16 +813,16 @@ SQL
      * @return list<array{
      *   sourceSystem:string,
      *   sourceType:string,
-     *   total:int,
+     *   'total':int,
      *   canonical:int,
      *   duplicate:int,
      *   superseded:int,
      *   alias:int,
      *   conflict:int,
      *   evidenceBacked:int,
-     *   evidenceMissing:int,
-     *   dueForRevalidation:int,
-     *   uncertainValidation:int
+     *   'evidenceMissing':int,
+     *   'dueForRevalidation':int,
+     *   'uncertainValidation':int
      * }>
      */
     #[Override]
@@ -925,16 +925,16 @@ SQL
      * @return list<array{
      *   validationProvider:string,
      *   validationStatus:string,
-     *   total:int,
+     *   'total':int,
      *   canonical:int,
      *   duplicate:int,
      *   superseded:int,
      *   alias:int,
      *   conflict:int,
      *   evidenceBacked:int,
-     *   evidenceMissing:int,
-     *   dueForRevalidation:int,
-     *   uncertainValidation:int
+     *   'evidenceMissing':int,
+     *   'dueForRevalidation':int,
+     *   'uncertainValidation':int
      * }>
      */
     #[Override]
@@ -1720,16 +1720,16 @@ SQL
      * @return list<array{
      *   normalizationVersion:string,
      *   validationStatus:string,
-     *   total:int,
+     *   'total':int,
      *   canonical:int,
      *   duplicate:int,
      *   superseded:int,
      *   alias:int,
      *   conflict:int,
      *   evidenceBacked:int,
-     *   evidenceMissing:int,
-     *   dueForRevalidation:int,
-     *   uncertainValidation:int,
+     *   'evidenceMissing':int,
+     *   'dueForRevalidation':int,
+     *   'uncertainValidation':int,
      *   staleNormalization:int
      * }>
      */

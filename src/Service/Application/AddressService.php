@@ -27,7 +27,7 @@ final readonly class AddressService
     /**
      * @param array<string, mixed> $filters
      *
-     * @return array{items: list<AddressInterface>, nextCursor: ?string}
+     * @return array{'items': list<AddressInterface>, 'nextCursor': ?string}
      */
     public function search(
         ?string $ownerId,
@@ -58,7 +58,7 @@ final readonly class AddressService
     }
 
     /**
-     * @return array{items: list<AddressEvidenceSnapshotInterface>, nextCursor: ?string}
+     * @return array{'items': list<AddressEvidenceSnapshotInterface>, 'nextCursor': ?string}
      */
     public function evidenceHistory(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array
     {
@@ -67,13 +67,13 @@ final readonly class AddressService
 
     /**
      * @return array{
-     *   totalSnapshots:int,
-     *   statusPending:int,
-     *   statusValidated:int,
-     *   statusRejected:int,
-     *   distinctProviders:int,
-     *   latestValidatedAt:?string,
-     *   latestCreatedAt:?string
+     *   'totalSnapshots':int,
+     *   'statusPending':int,
+     *   'statusValidated':int,
+     *   'statusRejected':int,
+     *   'distinctProviders':int,
+     *   'latestValidatedAt':?string,
+     *   'latestCreatedAt':?string
      * }
      */
     public function evidenceHistorySummary(string $addressId, ?string $ownerId, ?string $vendorId): array
@@ -154,17 +154,17 @@ final readonly class AddressService
 
     /**
      * @return array{
-     *   addressId:string,
-     *   governanceStatus:?string,
-     *   primaryLinkId:?string,
-     *   linkedToAnother:bool,
-     *   duplicateChildren:int,
-     *   supersededChildren:int,
-     *   aliasChildren:int,
-     *   conflictPeers:int,
-     *   inboundLinkedTotal:int,
-     *   clusterSize:int,
-     *   relatedAddressIds:list<string>
+     *   'addressId':string,
+     *   'governanceStatus':?string,
+     *   'primaryLinkId':?string,
+     *   'linkedToAnother':bool,
+     *   'duplicateChildren':int,
+     *   'supersededChildren':int,
+     *   'aliasChildren':int,
+     *   'conflictPeers':int,
+     *   'inboundLinkedTotal':int,
+     *   'clusterSize':int,
+     *   'relatedAddressIds':list<string>
      * }
      */
     public function governanceClusterSummary(string $addressId, ?string $ownerId, ?string $vendorId): array
@@ -176,13 +176,13 @@ final readonly class AddressService
      * @param array<string, mixed> $filters
      *
      * @return array{
-     *   total:int,
-     *   dueForRevalidation:int,
-     *   evidenceMissing:int,
-     *   uncertainValidation:int,
-     *   conflictReview:int,
-     *   duplicateReview:int,
-     *   staleNormalizationVersion:int
+     *   'total':int,
+     *   'dueForRevalidation':int,
+     *   'evidenceMissing':int,
+     *   'uncertainValidation':int,
+     *   'conflictReview':int,
+     *   'duplicateReview':int,
+     *   'staleNormalizationVersion':int
      * }
      */
     public function operationalQueueSummary(
@@ -193,13 +193,13 @@ final readonly class AddressService
         array $filters = [],
     ): array {
         /** @var array{
-         *   total:int,
-         *   dueForRevalidation:int,
-         *   evidenceMissing:int,
-         *   uncertainValidation:int,
-         *   conflictReview:int,
-         *   duplicateReview:int,
-         *   staleNormalizationVersion:int
+         *   'total':int,
+         *   'dueForRevalidation':int,
+         *   'evidenceMissing':int,
+         *   'uncertainValidation':int,
+         *   'conflictReview':int,
+         *   'duplicateReview':int,
+         *   'staleNormalizationVersion':int
          * } $summary
          */
         $summary = $this->addressRepository->summarizeOperationalQueues($ownerId, $vendorId, $countryCode, $query, $filters);
@@ -212,16 +212,16 @@ final readonly class AddressService
      *
      * @return list<array{
      *   countryCode:string,
-     *   total:int,
+     *   'total':int,
      *   canonical:int,
      *   duplicate:int,
      *   superseded:int,
      *   alias:int,
      *   conflict:int,
      *   evidenceBacked:int,
-     *   evidenceMissing:int,
-     *   dueForRevalidation:int,
-     *   uncertainValidation:int
+     *   'evidenceMissing':int,
+     *   'dueForRevalidation':int,
+     *   'uncertainValidation':int
      * }>
      */
     public function countryPortfolioSummary(
@@ -239,16 +239,16 @@ final readonly class AddressService
      * @return list<array{
      *   sourceSystem:string,
      *   sourceType:string,
-     *   total:int,
+     *   'total':int,
      *   canonical:int,
      *   duplicate:int,
      *   superseded:int,
      *   alias:int,
      *   conflict:int,
      *   evidenceBacked:int,
-     *   evidenceMissing:int,
-     *   dueForRevalidation:int,
-     *   uncertainValidation:int
+     *   'evidenceMissing':int,
+     *   'dueForRevalidation':int,
+     *   'uncertainValidation':int
      * }>
      */
     public function sourcePortfolioSummary(
@@ -267,16 +267,16 @@ final readonly class AddressService
      * @return list<array{
      *   validationProvider:string,
      *   validationStatus:string,
-     *   total:int,
+     *   'total':int,
      *   canonical:int,
      *   duplicate:int,
      *   superseded:int,
      *   alias:int,
      *   conflict:int,
      *   evidenceBacked:int,
-     *   evidenceMissing:int,
-     *   dueForRevalidation:int,
-     *   uncertainValidation:int
+     *   'evidenceMissing':int,
+     *   'dueForRevalidation':int,
+     *   'uncertainValidation':int
      * }>
      */
     public function validationPortfolioSummary(
@@ -295,16 +295,16 @@ final readonly class AddressService
      * @return list<array{
      *   normalizationVersion:string,
      *   validationStatus:string,
-     *   total:int,
+     *   'total':int,
      *   canonical:int,
      *   duplicate:int,
      *   superseded:int,
      *   alias:int,
      *   conflict:int,
      *   evidenceBacked:int,
-     *   evidenceMissing:int,
-     *   dueForRevalidation:int,
-     *   uncertainValidation:int,
+     *   'evidenceMissing':int,
+     *   'dueForRevalidation':int,
+     *   'uncertainValidation':int,
      *   staleNormalization:int
      * }>
      */
