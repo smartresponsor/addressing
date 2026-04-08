@@ -6,12 +6,16 @@ namespace App\Integration\Persistence;
 
 use App\Contract\Message\AddressRecordPolicy;
 use App\Contract\Message\AddressValidated;
+use App\Contract\Message\AddressValidationVerdict;
 use App\Service\Application\AddressValidatedPayloadFactory;
+use DateTimeImmutable;
+use PDO;
+use RuntimeException;
 
 final readonly class AddressValidatedMutationPlanBuilder
 {
     public function __construct(
-        private \PDO $pdo,
+        private PDO $pdo,
         private AddressValidatedPayloadFactory $addressValidatedPayloadFactory,
     ) {
     }
@@ -20,18 +24,18 @@ final readonly class AddressValidatedMutationPlanBuilder
         string $id,
         AddressValidated $addressValidated,
         string $fingerprint,
-        \DateTimeImmutable $now,
-        \DateTimeImmutable $validated_at,
+        DateTimeImmutable $now,
+        DateTimeImmutable $validated_at,
     ): AddressValidatedMutationPlan {
-        $update_assignments = [];
+        $updates = [];
 
-        $governance_status = AddressRecordPolicy::normalizeGovernanceStatus($addressValidated->governanceStatus);
-        $duplicate_of_id = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->duplicateOfId, $id);
-        $superseded_by_id = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->supersededById, $id);
-        $alias_of_id = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->aliasOfId, $id);
-        $conflict_with_id = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->conflictWithId, $id);
-        $normalized_snapshot = $this->addressValidatedPayloadFactory->normalizedSnapshot($addressValidated);
-        $provider_digest = $this->addressValidatedPayloadFactory->providerDigest($addressValidated);
+        $gov_status = AddressRecordPolicy::normalizeGovernanceStatus($addressValidated->governanceStatus);
+        $dup_of_id = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->duplicateOfId, $id);
+        $sup_by_id = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->supersededById, $id);
+        $alias_id = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->aliasOfId, $id);
+        $conflict_id = $this->addressValidatedPayloadFactory->sanitizeGovernanceLink($addressValidated->conflictWithId, $id);
+        $norm_snapshot = $this->addressValidatedPayloadFactory->normalizedSnapshot($addressValidated);
+        $prov_digest = $this->addressValidatedPayloadFactory->providerDigest($addressValidated);
 
         $params = [
             ':id' => $id,
@@ -44,152 +48,155 @@ final readonly class AddressValidatedMutationPlanBuilder
         ];
 
         if (null !== $addressValidated->line1Norm) {
-            $update_assignments[] = 'line1_norm = :line1_norm';
+            $updates[] = 'line1_norm = :line1_norm';
             $params[':line1_norm'] = $addressValidated->line1Norm;
         }
         if (null !== $addressValidated->cityNorm) {
-            $update_assignments[] = 'city_norm = :city_norm';
+            $updates[] = 'city_norm = :city_norm';
             $params[':city_norm'] = $addressValidated->cityNorm;
         }
         if (null !== $addressValidated->regionNorm) {
-            $update_assignments[] = 'region_norm = :region_norm';
+            $updates[] = 'region_norm = :region_norm';
             $params[':region_norm'] = $addressValidated->regionNorm;
         }
         if (null !== $addressValidated->postalCodeNorm) {
-            $update_assignments[] = 'postal_code_norm = :postal_code_norm';
+            $updates[] = 'postal_code_norm = :postal_code_norm';
             $params[':postal_code_norm'] = $addressValidated->postalCodeNorm;
         }
         if (null !== $addressValidated->latitude) {
-            $update_assignments[] = 'latitude = :latitude';
+            $updates[] = 'latitude = :latitude';
             $params[':latitude'] = $addressValidated->latitude;
         }
         if (null !== $addressValidated->longitude) {
-            $update_assignments[] = 'longitude = :longitude';
+            $updates[] = 'longitude = :longitude';
             $params[':longitude'] = $addressValidated->longitude;
         }
         if (null !== $addressValidated->geohash) {
-            $update_assignments[] = 'geohash = :geohash';
+            $updates[] = 'geohash = :geohash';
             $params[':geohash'] = $addressValidated->geohash;
         }
 
-        $raw_sha256 = null;
+        $raw_hash = null;
         if (null !== $addressValidated->raw) {
-            $update_assignments[] = $this->jsonAssignment('validation_raw', ':validation_raw');
-            $raw_json = $this->encodePayload($addressValidated->raw);
-            $params[':validation_raw'] = $raw_json;
-            $raw_sha256 = hash('sha256', $raw_json);
+            $updates[] = $this->jsonAssignment('validation_raw', ':validation_raw');
+            $raw_payload = $this->encodePayload($addressValidated->raw);
+            $params[':validation_raw'] = $raw_payload;
+            $raw_hash = hash('sha256', $raw_payload);
         }
-        if ($addressValidated->addressValidationVerdict instanceof \App\Contract\Message\AddressValidationVerdict) {
-            $update_assignments[] = $this->jsonAssignment('validation_verdict', ':validation_verdict');
+        if ($addressValidated->addressValidationVerdict instanceof AddressValidationVerdict) {
+            $updates[] = $this->jsonAssignment('validation_verdict', ':validation_verdict');
             $params[':validation_verdict'] = $this->encodePayload($addressValidated->addressValidationVerdict->jsonSerialize());
 
             if (null !== $addressValidated->addressValidationVerdict->deliverable) {
-                $update_assignments[] = 'validation_deliverable = :validation_deliverable';
+                $updates[] = 'validation_deliverable = :validation_deliverable';
                 $params[':validation_deliverable'] = $addressValidated->addressValidationVerdict->deliverable ? 1 : 0;
             }
             if (null !== $addressValidated->addressValidationVerdict->granularity) {
-                $update_assignments[] = 'validation_granularity = :validation_granularity';
+                $updates[] = 'validation_granularity = :validation_granularity';
                 $params[':validation_granularity'] = $addressValidated->addressValidationVerdict->granularity;
             }
             if (null !== $addressValidated->addressValidationVerdict->quality) {
-                $update_assignments[] = 'validation_quality = :validation_quality';
+                $updates[] = 'validation_quality = :validation_quality';
                 $params[':validation_quality'] = $addressValidated->addressValidationVerdict->quality;
             }
         }
 
         if (null !== $addressValidated->sourceSystem) {
-            $update_assignments[] = 'source_system = :source_system';
+            $updates[] = 'source_system = :source_system';
             $params[':source_system'] = $addressValidated->sourceSystem;
         }
         if (null !== $addressValidated->sourceType) {
-            $update_assignments[] = 'source_type = :source_type';
+            $updates[] = 'source_type = :source_type';
             $params[':source_type'] = AddressRecordPolicy::normalizeSourceType($addressValidated->sourceType);
         }
         if (null !== $addressValidated->sourceReference) {
-            $update_assignments[] = 'source_reference = :source_reference';
+            $updates[] = 'source_reference = :source_reference';
             $params[':source_reference'] = $addressValidated->sourceReference;
         }
         if (null !== $addressValidated->normalizationVersion) {
-            $update_assignments[] = 'normalization_version = :normalization_version';
+            $updates[] = 'normalization_version = :normalization_version';
             $params[':normalization_version'] = $addressValidated->normalizationVersion;
         }
         if (null !== $addressValidated->rawInput) {
-            $update_assignments[] = $this->jsonAssignment('raw_input_snapshot', ':raw_input_snapshot');
+            $updates[] = $this->jsonAssignment('raw_input_snapshot', ':raw_input_snapshot');
             $params[':raw_input_snapshot'] = $this->encodePayload($addressValidated->rawInput);
         }
-        if (null !== $normalized_snapshot) {
-            $update_assignments[] = $this->jsonAssignment('normalized_snapshot', ':normalized_snapshot');
-            $params[':normalized_snapshot'] = $this->encodePayload($normalized_snapshot);
+        if (null !== $norm_snapshot) {
+            $updates[] = $this->jsonAssignment('normalized_snapshot', ':normalized_snapshot');
+            $params[':normalized_snapshot'] = $this->encodePayload($norm_snapshot);
         }
-        if (null !== $provider_digest) {
-            $update_assignments[] = 'provider_digest = :provider_digest';
-            $params[':provider_digest'] = $provider_digest;
+        if (null !== $prov_digest) {
+            $updates[] = 'provider_digest = :provider_digest';
+            $params[':provider_digest'] = $prov_digest;
         }
 
-        $lastValidationProvider = $addressValidated->lastValidationProvider ?? $addressValidated->validationProvider;
-        $lastValidationStatus = $addressValidated->lastValidationStatus ?? 'validated';
-        $lastValidationScore = is_int($addressValidated->lastValidationScore)
+        $last_provider = $addressValidated->lastValidationProvider ?? $addressValidated->validationProvider;
+        $last_status = $addressValidated->lastValidationStatus ?? 'validated';
+        $last_score = is_int($addressValidated->lastValidationScore)
             ? $addressValidated->lastValidationScore
             : $addressValidated->addressValidationVerdict?->quality;
-        $revalidationDueAt = null;
+        $due_at = null;
         if ($addressValidated->revalidationDueAt instanceof \DateTimeImmutable) {
-            $revalidationDueAt = $addressValidated->revalidationDueAt->format('Y-m-d H:i:sP');
-            $update_assignments[] = 'revalidation_due_at = :revalidation_due_at';
-            $params[':revalidation_due_at'] = $revalidationDueAt;
+            $due_at = $addressValidated->revalidationDueAt->format('Y-m-d H:i:sP');
+            $updates[] = 'revalidation_due_at = :revalidation_due_at';
+            $params[':revalidation_due_at'] = $due_at;
         }
-        $revalidation_policy = null;
+        $reval_policy = null;
         if (null !== $addressValidated->revalidationPolicy) {
-            $revalidation_policy = AddressRecordPolicy::normalizeRevalidationPolicy($addressValidated->revalidationPolicy);
-            $update_assignments[] = 'revalidation_policy = :revalidation_policy';
-            $params[':revalidation_policy'] = $revalidation_policy;
+            $reval_policy = AddressRecordPolicy::normalizeRevalidationPolicy($addressValidated->revalidationPolicy);
+            $updates[] = 'revalidation_policy = :revalidation_policy';
+            $params[':revalidation_policy'] = $reval_policy;
         }
-        if (null !== $lastValidationProvider) {
-            $update_assignments[] = 'last_validation_provider = :last_validation_provider';
-            $params[':last_validation_provider'] = $lastValidationProvider;
+        if (null !== $last_provider) {
+            $updates[] = 'last_validation_provider = :last_validation_provider';
+            $params[':last_validation_provider'] = $last_provider;
         }
-        $update_assignments[] = 'last_validation_status = :last_validation_status';
-        $params[':last_validation_status'] = $lastValidationStatus;
-        if (null !== $lastValidationScore) {
-            $update_assignments[] = 'last_validation_score = :last_validation_score';
-            $params[':last_validation_score'] = $lastValidationScore;
+        $updates[] = 'last_validation_status = :last_validation_status';
+        $params[':last_validation_status'] = $last_status;
+        if (null !== $last_score) {
+            $updates[] = 'last_validation_score = :last_validation_score';
+            $params[':last_validation_score'] = $last_score;
         }
 
-        $update_assignments[] = 'governance_status = :governance_status';
-        $params[':governance_status'] = $governance_status;
-        $update_assignments[] = 'duplicate_of_id = :duplicate_of_id';
-        $params[':duplicate_of_id'] = $duplicate_of_id;
-        $update_assignments[] = 'superseded_by_id = :superseded_by_id';
-        $params[':superseded_by_id'] = $superseded_by_id;
-        $update_assignments[] = 'alias_of_id = :alias_of_id';
-        $params[':alias_of_id'] = $alias_of_id;
-        $update_assignments[] = 'conflict_with_id = :conflict_with_id';
-        $params[':conflict_with_id'] = $conflict_with_id;
+        $updates[] = 'governance_status = :governance_status';
+        $params[':governance_status'] = $gov_status;
+        $updates[] = 'duplicate_of_id = :duplicate_of_id';
+        $params[':duplicate_of_id'] = $dup_of_id;
+        $updates[] = 'superseded_by_id = :superseded_by_id';
+        $params[':superseded_by_id'] = $sup_by_id;
+        $updates[] = 'alias_of_id = :alias_of_id';
+        $params[':alias_of_id'] = $alias_id;
+        $updates[] = 'conflict_with_id = :conflict_with_id';
+        $params[':conflict_with_id'] = $conflict_id;
 
-        $update_assignments[] = 'validation_provider = :validation_provider';
-        $update_assignments[] = 'validation_status = :validation_status';
-        $update_assignments[] = 'validated_at = :validated_at';
-        $update_assignments[] = 'dedupe_key = :dedupe_key';
-        $update_assignments[] = 'validation_fingerprint = :validation_fingerprint';
-        $update_assignments[] = 'updated_at = :updated_at';
+        $updates[] = 'validation_provider = :validation_provider';
+        $updates[] = 'validation_status = :validation_status';
+        $updates[] = 'validated_at = :validated_at';
+        $updates[] = 'dedupe_key = :dedupe_key';
+        $updates[] = 'validation_fingerprint = :validation_fingerprint';
+        $updates[] = 'updated_at = :updated_at';
 
         return new AddressValidatedMutationPlan(
-            $update_assignments,
+            $updates,
             $params,
-            $governance_status,
-            $duplicate_of_id,
-            $superseded_by_id,
-            $alias_of_id,
-            $conflict_with_id,
-            $normalized_snapshot,
-            $provider_digest,
-            $lastValidationStatus,
-            $lastValidationScore,
-            $revalidationDueAt,
-            $revalidation_policy,
-            $raw_sha256,
+            $gov_status,
+            $dup_of_id,
+            $sup_by_id,
+            $alias_id,
+            $conflict_id,
+            $norm_snapshot,
+            $prov_digest,
+            $last_status,
+            $last_score,
+            $due_at,
+            $reval_policy,
+            $raw_hash,
         );
     }
 
+    /**
+     * Creates the assignment fragment for JSON-capable columns.
+     */
     private function jsonAssignment(string $field, string $placeholder): string
     {
         if ($this->isPgsql()) {
@@ -199,21 +206,28 @@ final readonly class AddressValidatedMutationPlanBuilder
         return $field.' = '.$placeholder;
     }
 
-    /** @param array<string, mixed> $payload */
+    /**
+     * Encodes a payload for persistence.
+     *
+     * @param array<string, mixed> $payload
+     */
     private function encodePayload(array $payload): string
     {
         $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if (false === $json) {
-            throw new \RuntimeException('payload_encode_failed');
+            throw new RuntimeException('payload_encode_failed');
         }
 
         return $json;
     }
 
+    /**
+     * Detects whether the current connection uses PostgreSQL.
+     */
     private function isPgsql(): bool
     {
-        $driver_attr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $driver = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
 
-        return is_string($driver_attr) && 'pgsql' === $driver_attr;
+        return is_string($driver) && 'pgsql' === $driver;
     }
 }
