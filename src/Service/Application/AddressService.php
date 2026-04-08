@@ -230,7 +230,7 @@ final readonly class AddressService
         ?string $q = null,
         array $filters = [],
     ): array {
-        return $this->addressRepository->summarizeCountryPortfolio($owner_id, $vendor_id, $query, $filters);
+        return $this->addressRepository->summarizeCountryPortfolio($owner_id, $vendor_id, $q, $filters);
     }
 
     /**
