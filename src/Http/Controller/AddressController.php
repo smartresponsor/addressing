@@ -25,7 +25,7 @@ use Twig\Environment;
 final readonly class AddressController
 {
     public function __construct(
-        private AddressValidatedApplierService $address_validatedApplierService,
+        private AddressValidatedApplierService $addressValidatedApplierService,
         private AddressService $addressService,
         private FormFactoryInterface $formFactory,
         private Environment $twigEnvironment,

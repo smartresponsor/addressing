@@ -100,13 +100,13 @@ final readonly class AddressValidated implements JsonSerializable
 
         $rawInput = null;
         if (array_key_exists('rawInput', $data) && is_array($data['rawInput'])) {
-            /** @var array<string, mixed> $raw_input */
+            /** @var array<string, mixed> $rawInput */
             $rawInput = $data['rawInput'];
         }
 
         $normalizedSnapshot = null;
         if (array_key_exists('normalizedSnapshot', $data) && is_array($data['normalizedSnapshot'])) {
-            /** @var array<string, mixed> $normalized_snapshot */
+            /** @var array<string, mixed> $normalizedSnapshot */
             $normalizedSnapshot = $data['normalizedSnapshot'];
         }
 
