@@ -1,17 +1,17 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Value\Primitive;
-use Override;
 
 final readonly class Line implements \Stringable
 {
-    private string $v;
+    private string $value;
 
-    public function __construct(string $s)
+    public function __construct(string $input)
     {
-        $this->v = self::norm($s);
+        $this->value = self::norm($input);
     }
 
     public static function norm(string $s): string
@@ -24,9 +24,9 @@ final readonly class Line implements \Stringable
         return trim($normalized);
     }
 
-    #[Override]
+    #[\Override]
     public function __toString(): string
     {
-        return $this->v;
+        return $this->value;
     }
 }

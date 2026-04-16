@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace Tests\Integration;
@@ -27,10 +28,14 @@ final class AddressDemoFixtureIntegrationTest extends TestCase
 
         self::assertSame(5, $loaded);
 
-        $count = (int) $pdo->query('SELECT COUNT(*) FROM address_entity')->fetchColumn();
+        $countStatement = $pdo->query('SELECT COUNT(*) FROM address_entity');
+        self::assertInstanceOf(\PDOStatement::class, $countStatement);
+        $count = (int) $countStatement->fetchColumn();
         self::assertSame(5, $count);
 
-        $outboxCount = (int) $pdo->query('SELECT COUNT(*) FROM address_outbox')->fetchColumn();
+        $outboxCountStatement = $pdo->query('SELECT COUNT(*) FROM address_outbox');
+        self::assertInstanceOf(\PDOStatement::class, $outboxCountStatement);
+        $outboxCount = (int) $outboxCountStatement->fetchColumn();
         self::assertSame(5, $outboxCount);
     }
 }

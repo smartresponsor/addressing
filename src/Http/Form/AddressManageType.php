@@ -18,6 +18,8 @@ final class AddressManageType extends AbstractType
     #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        parent::buildForm($builder, $options);
+
         $builder
             ->add('line1', TextType::class, ['label' => 'Address line 1'])
             ->add('line2', TextType::class, ['label' => 'Address line 2', 'required' => false])
@@ -37,6 +39,8 @@ final class AddressManageType extends AbstractType
     #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
+        parent::configureOptions($resolver);
+
         $resolver->setDefaults([
             'data_class' => AddressManageDto::class,
         ]);

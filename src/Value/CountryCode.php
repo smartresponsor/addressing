@@ -1,19 +1,10 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Value;
 
-use InvalidArgumentException;
-use Override;
-
-/**
- *
- */
-
-/**
- *
- */
 final readonly class CountryCode implements \Stringable
 {
     private string $value;
@@ -22,7 +13,7 @@ final readonly class CountryCode implements \Stringable
     {
         $value = strtoupper(trim($value));
         if (!preg_match('/^[A-Z]{2}$/', $value)) {
-            throw new InvalidArgumentException('CountryCode must be ISO 3166-1 alpha-2');
+            throw new \InvalidArgumentException('CountryCode must be ISO 3166-1 alpha-2');
         }
         $this->value = $value;
     }
@@ -37,7 +28,7 @@ final readonly class CountryCode implements \Stringable
         return $this->value === $other->value;
     }
 
-    #[Override]
+    #[\Override]
     public function __toString(): string
     {
         return $this->value;

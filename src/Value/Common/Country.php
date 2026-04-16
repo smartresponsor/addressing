@@ -1,19 +1,10 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Value\Common;
 
-use InvalidArgumentException;
-use Override;
-
-/**
- *
- */
-
-/**
- *
- */
 final readonly class Country implements \Stringable
 {
     private string $code;
@@ -21,14 +12,14 @@ final readonly class Country implements \Stringable
     public function __construct(string $alpha2)
     {
         $filtered = preg_replace('/[^A-Za-z]/', '', $alpha2);
-        if ($filtered === null) {
+        if (null === $filtered) {
             $filtered = '';
         }
-        $c = strtoupper($filtered);
-        if (strlen($c) !== 2) {
-            throw new InvalidArgumentException('Country must be 2 letters');
+        $countryCode = strtoupper($filtered);
+        if (2 !== strlen($countryCode)) {
+            throw new \InvalidArgumentException('Country must be 2 letters');
         }
-        $this->code = $c;
+        $this->code = $countryCode;
     }
 
     public static function from(?string $alpha2): self
@@ -41,7 +32,7 @@ final readonly class Country implements \Stringable
         return $this->code;
     }
 
-    #[Override]
+    #[\Override]
     public function __toString(): string
     {
         return $this->code;

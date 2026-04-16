@@ -17,7 +17,7 @@ services:
     ports:
       - '${APP_PORT:-8081}:80'
     healthcheck:
-      test: ["CMD", "php", "-r", "exit((int) !@file_get_contents('http://127.0.0.1/address/manage'));"]
+      test: [ "CMD", "php", "-r", "exit((int) !@file_get_contents('http://127.0.0.1/address/manage'));" ]
       interval: 5s
       timeout: 5s
       retries: 10

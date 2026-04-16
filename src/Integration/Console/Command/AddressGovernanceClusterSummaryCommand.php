@@ -13,7 +13,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Override;
 
 #[AsCommand(name: 'address:summary:governance-cluster', description: 'Summarize linked governance relationships for an address.')]
 final class AddressGovernanceClusterSummaryCommand extends Command
@@ -23,21 +22,23 @@ final class AddressGovernanceClusterSummaryCommand extends Command
         parent::__construct();
     }
 
-    #[Override]
+    #[\Override]
     protected function configure(): void
     {
+        parent::configure();
         $this
             ->addArgument('address-id', InputArgument::REQUIRED)
             ->addOption('owner-id', null, InputOption::VALUE_OPTIONAL)
             ->addOption('vendor-id', null, InputOption::VALUE_OPTIONAL);
     }
 
-    #[Override]
+    /** @noinspection PhpMissingParentCallCommonInspection */
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $symfonyStyle = new SymfonyStyle($input, $output);
         $summary = $this->addressService->governanceClusterSummary(
-            $this->requiredArgument($input, 'address-id'),
+            $this->addressId($input),
             $this->nullable($input->getOption('owner-id')),
             $this->nullable($input->getOption('vendor-id')),
         );
@@ -52,12 +53,12 @@ final class AddressGovernanceClusterSummaryCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function requiredArgument(InputInterface $input, string $name): string
+    private function addressId(InputInterface $input): string
     {
-        $value = $input->getArgument($name);
+        $value = $input->getArgument('address-id');
 
         if (!is_string($value)) {
-            throw new \RuntimeException('invalid_argument_'.$name);
+            throw new \RuntimeException('invalid_argument_address-id');
         }
 
         return $value;

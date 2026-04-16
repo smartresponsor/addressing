@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Http\Schema;
@@ -62,7 +63,6 @@ final class Validator
         return ['ok' => true];
     }
 
-    /** @param 'string'|'int'|'float'|'bool'|'array' $expectedType */
     private function isExpectedType(mixed $value, string $expectedType): bool
     {
         return match ($expectedType) {
@@ -71,6 +71,7 @@ final class Validator
             'float' => is_float($value),
             'bool' => is_bool($value),
             'array' => is_array($value),
+            default => false,
         };
     }
 }

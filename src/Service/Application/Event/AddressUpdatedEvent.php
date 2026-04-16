@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Service\Application\Event;
@@ -8,7 +9,7 @@ use App\ServiceInterface\Application\Event\AddressEventInterface;
 
 final readonly class AddressUpdatedEvent implements AddressEventInterface
 {
-    private \DateTimeImmutable $dateTimeImmutable;
+    private \DateTimeImmutable $occurredAt;
 
     public function __construct(
         public string $line1,
@@ -18,13 +19,13 @@ final readonly class AddressUpdatedEvent implements AddressEventInterface
         public string $postal,
         public string $country,
     ) {
-        $this->dateTimeImmutable = new \DateTimeImmutable('now');
+        $this->occurredAt = new \DateTimeImmutable('now');
     }
 
     #[\Override]
     public function occurredAt(): \DateTimeImmutable
     {
-        return $this->dateTimeImmutable;
+        return $this->occurredAt;
     }
 
     #[\Override]

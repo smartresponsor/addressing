@@ -24,34 +24,48 @@ use JetBrains\PhpStorm\NoReturn;
  * @param int $default
  * @return int
  */
-function readIntOpt(array $argv, string $prefix, int $default): int
+function read_int_opt(array $argv, string $prefix, int $default): int
 {
-    foreach ($argv as $a) {
-        if (str_starts_with($a, $prefix . '=')) {
-            $val = substr($a, strlen($prefix) + 1);
-            if (is_numeric($val)) {
-                return (int)$val;
+    foreach ($argv as $arg) {
+        if (str_starts_with($arg, $prefix . '=')) {
+            $value = substr($arg, strlen($prefix) + 1);
+            if (is_numeric($value)) {
+                return (int) $value;
             }
         }
     }
+
     return $default;
 }
 
+/** @return array{limit: int, retry: int, timeout: int, backoff: int} */
+function drain_opts(array $argv): array
+{
+    return [
+        'limit' => read_int_opt($argv, '--limit', 200),
+        'retry' => read_int_opt($argv, '--retry', 3),
+        'timeout' => read_int_opt($argv, '--timeout', 5),
+        'backoff' => read_int_opt($argv, '--backoff', 100),
+    ];
+}
+
 $url = $argv[1] ?? null;
-if (!is_string($url) || $url === '' || str_starts_with($url, '--')) {
+if (!is_string($url) || '' === $url || str_starts_with($url, '--')) {
     usage();
 }
 
-$limit = readIntOpt($argv, '--limit', 200);
-$retry = readIntOpt($argv, '--retry', 3);
-$timeout = readIntOpt($argv, '--timeout', 5);
-$backoff = readIntOpt($argv, '--backoff', 100);
-
-$pdo = new PDO((string)getenv('PG_DSN'), (string)getenv('PG_USER'), (string)getenv('PG_PASS'), [
+$options = drain_opts($argv);
+$pdo = new PDO((string) getenv('PG_DSN'), (string) getenv('PG_USER'), (string) getenv('PG_PASS'), [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
 ]);
 
 $drainer = new AddressOutboxDrainerService($pdo);
-$count = $drainer->drain($url, $limit, $retry, $timeout, $backoff);
+$count = $drainer->drain(
+    $url,
+    $options['limit'],
+    $options['retry'],
+    $options['timeout'],
+    $options['backoff'],
+);
 
-fwrite(STDOUT, "Drained: {$count}\n");
+fwrite(STDOUT, 'Drained: ' . $count . "\n");

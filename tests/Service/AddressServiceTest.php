@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace Tests\Service;
@@ -508,10 +509,13 @@ final class AddressServiceTest extends TestCase
         self::assertSame('validated', $saved->lastValidationStatus());
         self::assertSame(97, $saved->lastValidationScore());
 
-        $row = $this->pdo->query('SELECT event_name, payload FROM address_outbox ORDER BY id DESC LIMIT 1')->fetch(\PDO::FETCH_ASSOC);
+        $statement = $this->pdo->query('SELECT event_name, payload FROM address_outbox ORDER BY id DESC LIMIT 1');
+        self::assertInstanceOf(\PDOStatement::class, $statement);
+        $row = $statement->fetch(\PDO::FETCH_ASSOC);
         self::assertIsArray($row);
         self::assertSame('AddressOperationalPatched', $row['event_name']);
         $payload = json_decode((string) $row['payload'], true);
+        self::assertIsArray($payload);
         self::assertSame('superseded', $payload['governanceStatus'] ?? null);
         self::assertSame('addr-master-1', $payload['governanceLinkId'] ?? null);
         self::assertSame('quarterly', $payload['revalidationPolicy'] ?? null);
@@ -533,13 +537,15 @@ final class AddressServiceTest extends TestCase
     {
         $this->service->create($this->makeAddress('addr-6'));
 
-        $row = $this->pdo->query('SELECT event_name, event_version, payload FROM address_outbox ORDER BY id ASC')
-            ->fetch(\PDO::FETCH_ASSOC);
+        $statement = $this->pdo->query('SELECT event_name, event_version, payload FROM address_outbox ORDER BY id ASC');
+        self::assertInstanceOf(\PDOStatement::class, $statement);
+        $row = $statement->fetch(\PDO::FETCH_ASSOC);
 
-        static::assertNotFalse($row);
+        static::assertIsArray($row);
         static::assertSame('AddressCreated', $row['event_name']);
         static::assertSame(1, (int) $row['event_version']);
         $payload = json_decode((string) $row['payload'], true);
+        static::assertIsArray($payload);
         static::assertSame('addr-6', $payload['id'] ?? null);
         static::assertSame('AddressCreated', $payload['eventName'] ?? null);
         static::assertSame('address-outbox.v1', $payload['schemaVersion'] ?? null);
@@ -781,11 +787,17 @@ final class AddressServiceTest extends TestCase
 
     private function outboxCount(): int
     {
-        $count = $this->pdo->query('SELECT COUNT(*) FROM address_outbox')->fetchColumn();
+        $statement = $this->pdo->query('SELECT COUNT(*) FROM address_outbox');
+        self::assertInstanceOf(\PDOStatement::class, $statement);
+        $count = $statement->fetchColumn();
 
         return (int) $count;
     }
 
+    /**
+     * @param array<string, mixed>|null $validationRaw
+     * @param array<string, mixed>|null $validationVerdict
+     */
     private function makeAddress(
         string $id,
         string $ownerId = 'owner-1',
@@ -851,6 +863,22 @@ final class AddressServiceTest extends TestCase
         if ('__DEFAULT__' === $providerDigest) {
             $providerDigest = 'sha256:'.$id;
         }
+        if (null !== $sourceReference && !is_string($sourceReference)) {
+            self::fail('Expected source reference to resolve to string|null.');
+        }
+        if (null !== $rawInputSnapshot && !is_array($rawInputSnapshot)) {
+            self::fail('Expected raw input snapshot to resolve to array|null.');
+        }
+        if (null !== $normalizedSnapshot && !is_array($normalizedSnapshot)) {
+            self::fail('Expected normalized snapshot to resolve to array|null.');
+        }
+        if (null !== $providerDigest && !is_string($providerDigest)) {
+            self::fail('Expected provider digest to resolve to string|null.');
+        }
+        /* @var string|null $sourceReference */
+        /* @var array<string, mixed>|null $rawInputSnapshot */
+        /* @var array<string, mixed>|null $normalizedSnapshot */
+        /* @var string|null $providerDigest */
 
         return new AddressData(
             $id,

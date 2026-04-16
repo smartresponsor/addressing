@@ -12,37 +12,40 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Override;
 
 #[AsCommand(name: 'address:demo:load', description: 'Reset schema and load Symfony/Faker demo fixtures.')]
 final class AddressDemoLoadCommand extends Command
 {
+    private const int DEFAULT_COUNT = 50;
+
     public function __construct(private readonly AddressDemoFixtureService $addressDemoFixtureService)
     {
         parent::__construct();
     }
 
-    #[Override]
+    #[\Override]
     protected function configure(): void
     {
-        $this->addOption('count', null, InputOption::VALUE_OPTIONAL, default: '50');
+        parent::configure();
+        $this->addOption('count', null, InputOption::VALUE_OPTIONAL, default: (string) self::DEFAULT_COUNT);
     }
 
-    #[Override]
+    /** @noinspection PhpMissingParentCallCommonInspection */
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $symfonyStyle = new SymfonyStyle($input, $output);
-        $count = max(1, $this->intOption($input, 'count', 50));
+        $io = new SymfonyStyle($input, $output);
+        $count = max(1, $this->countOption($input));
         $loaded = $this->addressDemoFixtureService->resetAndLoad($count);
 
-        $symfonyStyle->success(sprintf('Loaded %d demo addresses.', $loaded));
+        $io->success(sprintf('Loaded %d demo addresses.', $loaded));
 
         return Command::SUCCESS;
     }
 
-    private function intOption(InputInterface $input, string $name, int $default): int
+    private function countOption(InputInterface $input): int
     {
-        $value = $input->getOption($name);
+        $value = $input->getOption('count');
         if (is_int($value)) {
             return $value;
         }
@@ -50,6 +53,6 @@ final class AddressDemoLoadCommand extends Command
             return (int) $value;
         }
 
-        return $default;
+        return self::DEFAULT_COUNT;
     }
 }

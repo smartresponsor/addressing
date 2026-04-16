@@ -17,14 +17,13 @@ final readonly class AddressOutboxWriter
     {
         $eventName = 'AddressValidatedApplied';
         $payloadJson = $this->encodePayload(AddressOutboxEventContract::decoratePayload($eventName, $payload));
-        $payloadExpr = $this->isPgsql() ? ':payload::jsonb' : ':payload';
 
-        $stmt = $this->prepare(
-            "INSERT INTO address_outbox (event_name, event_version, payload)
-         VALUES (:name, :ver, {$payloadExpr})"
+        $statement = $this->prepare(
+            'INSERT INTO address_outbox (event_name, event_version, payload)'
+            .' VALUES (:name, :ver, '.$this->payloadExpression().')'
         );
 
-        $stmt->execute([
+        $statement->execute([
             ':name' => $eventName,
             ':ver' => AddressOutboxEventContract::eventVersion($eventName),
             ':payload' => $payloadJson,
@@ -44,18 +43,23 @@ final readonly class AddressOutboxWriter
 
     private function isPgsql(): bool
     {
-        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $driverName = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
 
-        return is_string($driverAttr) && 'pgsql' === $driverAttr;
+        return is_string($driverName) && 'pgsql' === $driverName;
+    }
+
+    private function payloadExpression(): string
+    {
+        return $this->isPgsql() ? ':payload::jsonb' : ':payload';
     }
 
     private function prepare(string $sql): \PDOStatement
     {
-        $stmt = $this->pdo->prepare($sql);
-        if (false === $stmt) {
+        $statement = $this->pdo->prepare($sql);
+        if (false === $statement) {
             throw new \RuntimeException('prepare_failed');
         }
 
-        return $stmt;
+        return $statement;
     }
 }

@@ -5,36 +5,26 @@ declare(strict_types=1);
 
 $pg = new PDO(getenv('PG_DSN'), getenv('PG_USER'), getenv('PG_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
-$pending = (int)$pg->query('SELECT count(*) FROM address_outbox WHERE published_at IS NULL')->fetchColumn();
-$published = (int)$pg->query('SELECT count(*) FROM address_outbox WHERE published_at IS NOT NULL')->fetchColumn();
-$failed = (int)$pg->query('SELECT count(*) FROM address_outbox WHERE published_at IS NULL AND published_attempt > 0 AND last_error IS NOT NULL')->fetchColumn();
+$pending = (int) $pg->query('SELECT count(*) FROM address_outbox WHERE published_at IS NULL')->fetchColumn();
+$published = (int) $pg->query('SELECT count(*) FROM address_outbox WHERE published_at IS NOT NULL')->fetchColumn();
+$failed = (int) $pg->query('SELECT count(*) FROM address_outbox WHERE published_at IS NULL AND published_attempt > 0 AND last_error IS NOT NULL')->fetchColumn();
 
-$total = (int)$pg->query('SELECT count(*) FROM address_entity')->fetchColumn();
-$validated = (int)$pg->query("SELECT count(*) FROM address_entity WHERE validation_status = 'validated'")->fetchColumn();
-$normalized = (int)$pg->query("SELECT count(*) FROM address_entity WHERE validation_status = 'normalized'")->fetchColumn();
+$total = (int) $pg->query('SELECT count(*) FROM address_entity')->fetchColumn();
+$validated = (int) $pg->query("SELECT count(*) FROM address_entity WHERE validation_status = 'validated'")->fetchColumn();
+$normalized = (int) $pg->query("SELECT count(*) FROM address_entity WHERE validation_status = 'normalized'")->fetchColumn();
 
 header('Content-Type: text/plain');
 
-echo "# HELP address_outbox_pending_total Pending events in outbox\n";
-echo "# TYPE address_outbox_pending_total gauge\n";
-echo "address_outbox_pending_total {$pending}\n";
+emit_metric('address_outbox_pending_total', 'Pending events in outbox', 'gauge', $pending);
+emit_metric('address_outbox_published_total', 'Published events in outbox', 'counter', $published);
+emit_metric('address_outbox_failed_total', 'Failed events awaiting retry', 'gauge', $failed);
+emit_metric('address_entity_total', 'Total address entity rows', 'gauge', $total);
+emit_metric('address_entity_validated_total', 'Address rows with validated status', 'gauge', $validated);
+emit_metric('address_entity_normalized_total', 'Address rows with normalized status', 'gauge', $normalized);
 
-echo "# HELP address_outbox_published_total Published events in outbox\n";
-echo "# TYPE address_outbox_published_total counter\n";
-echo "address_outbox_published_total {$published}\n";
-
-echo "# HELP address_outbox_failed_total Failed events awaiting retry\n";
-echo "# TYPE address_outbox_failed_total gauge\n";
-echo "address_outbox_failed_total {$failed}\n";
-
-echo "# HELP address_entity_total Total address entity rows\n";
-echo "# TYPE address_entity_total gauge\n";
-echo "address_entity_total {$total}\n";
-
-echo "# HELP address_entity_validated_total Address rows with validated status\n";
-echo "# TYPE address_entity_validated_total gauge\n";
-echo "address_entity_validated_total {$validated}\n";
-
-echo "# HELP address_entity_normalized_total Address rows with normalized status\n";
-echo "# TYPE address_entity_normalized_total gauge\n";
-echo "address_entity_normalized_total {$normalized}\n";
+function emit_metric(string $name, string $help, string $type, int $value): void
+{
+    echo '# HELP '.$name.' '.$help."\n";
+    echo '# TYPE '.$name.' '.$type."\n";
+    echo $name.' '.$value."\n";
+}

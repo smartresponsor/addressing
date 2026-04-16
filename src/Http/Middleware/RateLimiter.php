@@ -1,22 +1,13 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
-use PDO;
-use Throwable;
-
-/**
- *
- */
-
-/**
- *
- */
 final readonly class RateLimiter
 {
-    public function __construct(private ?PDO $pdo, private int $limitPerMinute = 60, private int $burst = 30)
+    public function __construct(private ?\PDO $pdo, private int $limitPerMinute = 60, private int $burst = 30)
     {
         if ($this->pdo instanceof \PDO) {
             $this->init();
@@ -36,7 +27,7 @@ final readonly class RateLimiter
                 cnt INTEGER NOT NULL,
                 PRIMARY KEY (client, rkey)
             )');
-        } catch (Throwable) {
+        } catch (\Throwable) {
         }
     }
 
@@ -51,11 +42,12 @@ final readonly class RateLimiter
 
         $stmt = $this->prepare($pdo, 'SELECT ts, cnt FROM rate_limit WHERE client = :c AND rkey = :k');
         $stmt->execute([':c' => $client, ':k' => $key]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!is_array($row)) {
             $stmt = $this->prepare($pdo, 'INSERT OR REPLACE INTO rate_limit (client,rkey,ts,cnt) VALUES (:c,:k,:t,1)');
             $stmt->execute([':c' => $client, ':k' => $key, ':t' => $now]);
+
             return true;
         }
 
@@ -67,6 +59,7 @@ final readonly class RateLimiter
             // New window
             $stmt = $this->prepare($pdo, 'UPDATE rate_limit SET ts = :t, cnt = 1 WHERE client = :c AND rkey = :k');
             $stmt->execute([':t' => $now, ':c' => $client, ':k' => $key]);
+
             return true;
         }
 
@@ -78,6 +71,7 @@ final readonly class RateLimiter
 
         $stmt = $this->prepare($pdo, 'UPDATE rate_limit SET cnt = :n WHERE client = :c AND rkey = :k');
         $stmt->execute([':n' => $cnt + 1, ':c' => $client, ':k' => $key]);
+
         return true;
     }
 
@@ -87,20 +81,22 @@ final readonly class RateLimiter
             return $value;
         }
         if (is_string($value) && is_numeric($value)) {
-            return (int)$value;
+            return (int) $value;
         }
         if (is_float($value)) {
-            return (int)$value;
+            return (int) $value;
         }
+
         return 0;
     }
 
-    private function prepare(PDO $pdo, string $sql): \PDOStatement
+    private function prepare(\PDO $pdo, string $sql): \PDOStatement
     {
         $stmt = $pdo->prepare($sql);
-        if ($stmt === false) {
+        if (false === $stmt) {
             throw new \RuntimeException('prepare_failed');
         }
+
         return $stmt;
     }
 }

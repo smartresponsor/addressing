@@ -1,17 +1,11 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Contract\Message;
 
-use DateTimeImmutable;
-use DateTimeInterface;
-use JsonSerializable;
-use Override;
-use Stringable;
-use Throwable;
-
-final readonly class AddressValidated implements JsonSerializable
+final readonly class AddressValidated implements \JsonSerializable
 {
     public function __construct(
         public ?string $line1Norm,
@@ -22,7 +16,7 @@ final readonly class AddressValidated implements JsonSerializable
         public ?float $longitude,
         public ?string $geohash,
         public ?string $validationProvider,
-        public ?DateTimeImmutable $validatedAt,
+        public ?\DateTimeImmutable $validatedAt,
         public ?string $dedupeKey,
         /** @var array<string, mixed>|null */
         public ?array $raw = null,
@@ -41,7 +35,7 @@ final readonly class AddressValidated implements JsonSerializable
         public ?string $supersededById = null,
         public ?string $aliasOfId = null,
         public ?string $conflictWithId = null,
-        public ?DateTimeImmutable $revalidationDueAt = null,
+        public ?\DateTimeImmutable $revalidationDueAt = null,
         public ?string $revalidationPolicy = null,
         public ?string $lastValidationProvider = null,
         public ?string $lastValidationStatus = null,
@@ -71,16 +65,16 @@ final readonly class AddressValidated implements JsonSerializable
             $raw = $data['raw'];
         }
 
-        $validation_verdict_data = null;
+        $validationVerdictData = null;
         if (array_key_exists('verdict', $data) && is_array($data['verdict'])) {
-            /** @var array<string, mixed> $validation_verdict_data */
-            $validation_verdict_data = $data['verdict'];
+            /** @var array<string, mixed> $validationVerdictData */
+            $validationVerdictData = $data['verdict'];
         } elseif (array_key_exists('validationVerdict', $data) && is_array($data['validationVerdict'])) {
-            /** @var array<string, mixed> $validation_verdict_data */
-            $validation_verdict_data = $data['validationVerdict'];
+            /** @var array<string, mixed> $validationVerdictData */
+            $validationVerdictData = $data['validationVerdict'];
         }
 
-        $verdict = AddressValidationVerdict::fromArray($validation_verdict_data);
+        $verdict = AddressValidationVerdict::fromArray($validationVerdictData);
 
         $sourceSystem = self::asNullableString($data['sourceSystem'] ?? null);
         $sourceType = AddressRecordPolicy::normalizeSourceType(self::asNullableString($data['sourceType'] ?? null));
@@ -157,7 +151,7 @@ final readonly class AddressValidated implements JsonSerializable
     /** @return array<string, mixed> */
     public function toDbArray(): array
     {
-        $verdict_data = $this->addressValidationVerdict?->jsonSerialize();
+        $verdictData = $this->addressValidationVerdict?->jsonSerialize();
 
         return [
             'line1_norm' => $this->line1Norm,
@@ -171,7 +165,7 @@ final readonly class AddressValidated implements JsonSerializable
             'validated_at' => $this->validatedAt?->format(DATE_ATOM),
             'dedupe_key' => $this->dedupeKey,
             'validation_raw' => $this->encodeJsonNullable($this->raw),
-            'validation_verdict' => $this->encodeJsonNullable($verdict_data),
+            'validation_verdict' => $this->encodeJsonNullable($verdictData),
             'validation_deliverable' => $this->addressValidationVerdict?->deliverable,
             'validation_granularity' => $this->addressValidationVerdict?->granularity,
             'validation_quality' => $this->addressValidationVerdict?->quality,
@@ -196,7 +190,7 @@ final readonly class AddressValidated implements JsonSerializable
     }
 
     /** @return array<string, mixed> */
-    #[Override]
+    #[\Override]
     public function jsonSerialize(): array
     {
         return [
@@ -255,14 +249,14 @@ final readonly class AddressValidated implements JsonSerializable
             return null;
         }
         if (is_string($value)) {
-            $string_value = trim($value);
+            $stringValue = trim($value);
 
-            return '' === $string_value ? null : $string_value;
+            return '' === $stringValue ? null : $stringValue;
         }
-        if (is_int($value) || is_float($value) || is_bool($value) || $value instanceof Stringable) {
-            $string_value = trim((string) $value);
+        if (is_int($value) || is_float($value) || is_bool($value) || $value instanceof \Stringable) {
+            $stringValue = trim((string) $value);
 
-            return '' === $string_value ? null : $string_value;
+            return '' === $stringValue ? null : $stringValue;
         }
 
         return null;
@@ -295,34 +289,34 @@ final readonly class AddressValidated implements JsonSerializable
             return (int) $value;
         }
         if (is_string($value)) {
-            $string_value = trim($value);
-            if ('' === $string_value) {
+            $stringValue = trim($value);
+            if ('' === $stringValue) {
                 return null;
             }
-            if (1 === preg_match('/^-?\d+$/', $string_value)) {
-                return (int) $string_value;
+            if (1 === preg_match('/^-?\d+$/', $stringValue)) {
+                return (int) $stringValue;
             }
         }
 
         return null;
     }
 
-    private static function asNullableDate(mixed $value): ?DateTimeImmutable
+    private static function asNullableDate(mixed $value): ?\DateTimeImmutable
     {
         if (null === $value || '' === $value) {
             return null;
         }
         try {
-            if ($value instanceof DateTimeInterface) {
-                return DateTimeImmutable::createFromInterface($value);
+            if ($value instanceof \DateTimeInterface) {
+                return \DateTimeImmutable::createFromInterface($value);
             }
             if (is_string($value)) {
-                return new DateTimeImmutable($value);
+                return new \DateTimeImmutable($value);
             }
             if (is_int($value)) {
-                return new DateTimeImmutable('@'.$value);
+                return new \DateTimeImmutable('@'.$value);
             }
-        } catch (Throwable) {
+        } catch (\Throwable) {
             return null;
         }
 

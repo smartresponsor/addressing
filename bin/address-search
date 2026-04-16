@@ -11,7 +11,7 @@ use App\Service\Application\AddressService;
 $ownerId = $argv[1] ?? null;
 $vendorId = $argv[2] ?? null;
 $countryCode = $argv[3] ?? null;
-$q = $argv[4] ?? null;
+$query = $argv[4] ?? null;
 $limit = isset($argv[5]) && is_numeric($argv[5]) ? (int) $argv[5] : 25;
 $cursor = $argv[6] ?? null;
 
@@ -22,7 +22,7 @@ $result = $service->search(
     $ownerId === 'null' ? null : $ownerId,
     $vendorId === 'null' ? null : $vendorId,
     $countryCode === 'null' ? null : $countryCode,
-    $q === 'null' ? null : $q,
+    $query === 'null' ? null : $query,
     $limit,
     $cursor === 'null' ? null : $cursor,
 );

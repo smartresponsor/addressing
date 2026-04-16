@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\Request;
 require_once dirname(__DIR__).'/vendor/autoload.php';
 
 if (class_exists(Dotenv::class) && file_exists(dirname(__DIR__).'/.env')) {
-    (new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
+    new Dotenv()->bootEnv(dirname(__DIR__).'/.env');
 }
 
 $_SERVER['APP_ENV'] ??= 'dev';
@@ -28,7 +28,12 @@ $request = Request::createFromGlobals();
 $method = $request->getMethod();
 $pathInfo = $request->getPathInfo();
 
-RequestId::ensure();
+try {
+    RequestId::ensure();
+} catch (Throwable) {
+    ErrorMap::emit(500, 'server_error', 'request_id_failed');
+    exit(1);
+}
 Cors::handle($request, $method);
 SecurityHeaders::apply();
 
@@ -123,7 +128,7 @@ try {
         exit(0);
     }
 
-    (new JsonResponse(['error' => 'not_found'], 404))->send();
+    new JsonResponse(['error' => 'not_found'], 404)->send();
 } catch (RuntimeException $exception) {
     $code = $exception->getMessage();
 

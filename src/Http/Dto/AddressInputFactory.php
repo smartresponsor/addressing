@@ -11,7 +11,6 @@ use App\Value\CountryCode;
 use App\Value\PostalCode;
 use App\Value\StreetLine;
 use App\Value\Subdivision;
-use DateTimeImmutable;
 use Symfony\Component\Uid\Ulid;
 
 final class AddressInputFactory
@@ -19,89 +18,73 @@ final class AddressInputFactory
     /**
      * @param array<string, mixed> $overrides
      */
-    public function fromManageDto(AddressManageDto $address_manage_dto, array $overrides = []): AddressData
+    public function fromManageDto(AddressManageDto $addressManageDto, array $overrides = []): AddressData
     {
-        $now = $this->stringOverride($overrides, 'createdAt') ?? (new DateTimeImmutable())->format('Y-m-d H:i:sP');
-        $line1 = (string) new StreetLine($address_manage_dto->line1);
-        $country_code = (string) new CountryCode($address_manage_dto->countryCode);
-        $postal_code = null;
-        if (null !== $address_manage_dto->postalCode && '' !== trim($address_manage_dto->postalCode)) {
-            $postal_code = (string) new PostalCode($address_manage_dto->postalCode);
-        }
-
-        $region = null;
-        if (null !== $address_manage_dto->region && '' !== trim($address_manage_dto->region)) {
-            $region = (string) new Subdivision($address_manage_dto->region);
-        }
-
-        $city = trim($address_manage_dto->city);
-        $owner_id = $this->nullableTrimmed($address_manage_dto->ownerId);
-        $vendor_id = $this->nullableTrimmed($address_manage_dto->vendorId);
-        $line2 = $this->nullableTrimmed($address_manage_dto->line2);
-
-        $line1_norm = strtolower($line1);
-        $city_norm = strtolower($city);
-        $region_norm = null !== $region ? strtolower($region) : null;
-        $postal_norm = null !== $postal_code ? strtolower(str_replace(' ', '', $postal_code)) : null;
-        $dedupe_key = implode('|', array_filter([
-            $line1_norm,
-            $city_norm,
-            $region_norm,
-            $postal_norm,
-            strtolower($country_code),
-            $owner_id,
-            $vendor_id,
-        ], static fn (?string $value): bool => null !== $value && '' !== $value));
+        $createdAt = new \DateTimeImmutable();
+        $now = $this->stringOverride($overrides, 'createdAt') ?? $createdAt->format('Y-m-d H:i:sP');
+        $line1 = (string) new StreetLine($addressManageDto->line1);
+        $countryCode = (string) new CountryCode($addressManageDto->countryCode);
+        $postalCode = $this->postalCode($addressManageDto);
+        $region = $this->region($addressManageDto);
+        $city = trim($addressManageDto->city);
+        $ownerId = $this->nullableTrimmed($addressManageDto->ownerId);
+        $vendorId = $this->nullableTrimmed($addressManageDto->vendorId);
+        $line2 = $this->nullableTrimmed($addressManageDto->line2);
+        $normalized = $this->normalizedAddress($line1, $city, $region, $postalCode);
+        $dedupeKey = $this->dedupeKey($normalized, $countryCode, $ownerId, $vendorId);
+        $validationDeliverable = isset($overrides['validationDeliverable']) && is_bool($overrides['validationDeliverable'])
+            ? $overrides['validationDeliverable']
+            : null;
+        $rawInputSnapshot = isset($overrides['rawInputSnapshot']) && is_array($overrides['rawInputSnapshot'])
+            ? $overrides['rawInputSnapshot']
+            : [
+                'line1' => $line1,
+                'line2' => $line2,
+                'city' => $city,
+                'region' => $region,
+                'postalCode' => $postalCode,
+                'countryCode' => $countryCode,
+            ];
 
         return new AddressData(
             $this->stringOverride($overrides, 'id') ?? (string) new Ulid(),
-            $owner_id,
-            $vendor_id,
+            $ownerId,
+            $vendorId,
             $line1,
             $line2,
             $city,
             $region,
-            $postal_code,
-            $country_code,
-            $line1_norm,
-            $city_norm,
-            $region_norm,
-            $postal_norm,
+            $postalCode,
+            $countryCode,
+            $normalized['line1Norm'],
+            $normalized['cityNorm'],
+            $normalized['regionNorm'],
+            $normalized['postalCodeNorm'],
             $this->floatOverride($overrides, 'latitude'),
             $this->floatOverride($overrides, 'longitude'),
             $this->stringOverride($overrides, 'geohash'),
             AddressRecordPolicy::normalizeValidationStatus($this->stringOverride($overrides, 'validationStatus'), 'pending'),
             $this->stringOverride($overrides, 'validationProvider'),
             $this->stringOverride($overrides, 'validatedAt'),
-            '' !== $dedupe_key ? $dedupe_key : null,
+            '' !== $dedupeKey ? $dedupeKey : null,
             $now,
             $this->stringOverride($overrides, 'updatedAt'),
             $this->stringOverride($overrides, 'deletedAt'),
             $this->stringOverride($overrides, 'validationFingerprint'),
             isset($overrides['validationRaw']) && is_array($overrides['validationRaw']) ? $overrides['validationRaw'] : null,
             isset($overrides['validationVerdict']) && is_array($overrides['validationVerdict']) ? $overrides['validationVerdict'] : null,
-            $this->boolOverride($overrides, 'validationDeliverable'),
+            $validationDeliverable,
             $this->stringOverride($overrides, 'validationGranularity'),
             $this->intOverride($overrides, 'validationQuality'),
             $this->stringOverride($overrides, 'sourceSystem') ?? 'symfony-demo',
             AddressRecordPolicy::normalizeSourceType($this->stringOverride($overrides, 'sourceType') ?? 'manual'),
             $this->stringOverride($overrides, 'sourceReference'),
             $this->stringOverride($overrides, 'normalizationVersion') ?? 'demo-v1',
-            isset($overrides['rawInputSnapshot']) && is_array($overrides['rawInputSnapshot']) ? $overrides['rawInputSnapshot'] : [
-                'line1' => $line1,
-                'line2' => $line2,
-                'city' => $city,
-                'region' => $region,
-                'postalCode' => $postal_code,
-                'countryCode' => $country_code,
-            ],
-            isset($overrides['normalizedSnapshot']) && is_array($overrides['normalizedSnapshot']) ? $overrides['normalizedSnapshot'] : [
-                'line1Norm' => $line1_norm,
-                'cityNorm' => $city_norm,
-                'regionNorm' => $region_norm,
-                'postalCodeNorm' => $postal_norm,
-            ],
-            $this->stringOverride($overrides, 'providerDigest') ?? 'sha256:'.hash('sha256', $line1.'|'.$city.'|'.$country_code),
+            $rawInputSnapshot,
+            isset($overrides['normalizedSnapshot']) && is_array($overrides['normalizedSnapshot'])
+                ? $overrides['normalizedSnapshot']
+                : $normalized,
+            $this->stringOverride($overrides, 'providerDigest') ?? 'sha256:'.hash('sha256', $line1.'|'.$city.'|'.$countryCode),
             AddressRecordPolicy::normalizeGovernanceStatus($this->stringOverride($overrides, 'governanceStatus') ?? 'canonical'),
             $this->stringOverride($overrides, 'duplicateOfId'),
             $this->stringOverride($overrides, 'supersededById'),
@@ -173,16 +156,6 @@ final class AddressInputFactory
     }
 
     /**
-     * Resolves a boolean override.
-     *
-     * @param array<string, mixed> $overrides
-     */
-    private function boolOverride(array $overrides, string $key): ?bool
-    {
-        return isset($overrides[$key]) && is_bool($overrides[$key]) ? $overrides[$key] : null;
-    }
-
-    /**
      * Trims a nullable string and returns null for empty values.
      */
     private function nullableTrimmed(?string $value): ?string
@@ -194,5 +167,53 @@ final class AddressInputFactory
         $value = trim($value);
 
         return '' === $value ? null : $value;
+    }
+
+    private function postalCode(AddressManageDto $addressManageDto): ?string
+    {
+        return null !== $addressManageDto->postalCode && '' !== trim($addressManageDto->postalCode)
+            ? (string) new PostalCode($addressManageDto->postalCode)
+            : null;
+    }
+
+    private function region(AddressManageDto $addressManageDto): ?string
+    {
+        return null !== $addressManageDto->region && '' !== trim($addressManageDto->region)
+            ? (string) new Subdivision($addressManageDto->region)
+            : null;
+    }
+
+    /**
+     * @return array{
+     *     line1Norm: string,
+     *     cityNorm: string,
+     *     regionNorm: ?string,
+     *     postalCodeNorm: ?string
+     * }
+     */
+    private function normalizedAddress(string $line1, string $city, ?string $region, ?string $postalCode): array
+    {
+        return [
+            'line1Norm' => strtolower($line1),
+            'cityNorm' => strtolower($city),
+            'regionNorm' => null !== $region ? strtolower($region) : null,
+            'postalCodeNorm' => null !== $postalCode ? strtolower(str_replace(' ', '', $postalCode)) : null,
+        ];
+    }
+
+    /**
+     * @param array{line1Norm: string, cityNorm: string, regionNorm: ?string, postalCodeNorm: ?string} $normalized
+     */
+    private function dedupeKey(array $normalized, string $countryCode, ?string $ownerId, ?string $vendorId): string
+    {
+        return implode('|', array_filter([
+            $normalized['line1Norm'],
+            $normalized['cityNorm'],
+            $normalized['regionNorm'],
+            $normalized['postalCodeNorm'],
+            strtolower($countryCode),
+            $ownerId,
+            $vendorId,
+        ], static fn (?string $value): bool => null !== $value && '' !== $value));
     }
 }

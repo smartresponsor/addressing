@@ -6,123 +6,151 @@ declare(strict_types=1);
 namespace App\Service\Application;
 
 use App\Contract\Message\AddressValidated;
+use App\Integration\Persistence\AddressEvidenceSnapshotContext;
 use App\Integration\Persistence\AddressEvidenceSnapshotWriter;
 use App\Integration\Persistence\AddressOutboxWriter;
 use App\Integration\Persistence\AddressTenantScopeSqlHelper;
+use App\Integration\Persistence\AddressValidatedMutationPlan;
 use App\Integration\Persistence\AddressValidatedMutationPlanBuilder;
 use App\ServiceInterface\Application\AddressValidatedApplierServiceInterface;
-use DateTimeImmutable;
-use PDO;
-use PDOStatement;
-use RuntimeException;
-use Throwable;
-use Override;
 
 final readonly class AddressValidatedApplierService implements AddressValidatedApplierServiceInterface
 {
+    private AddressTenantScopeSqlHelper $scopeSqlHelper;
+    private AddressValidatedPayloadFactory $payloadFactory;
+    private AddressValidatedMutationPlanBuilder $planBuilder;
+    private AddressEvidenceSnapshotWriter $snapshotWriter;
+    private AddressOutboxWriter $outboxWriter;
+
     public function __construct(
-        private PDO $pdo,
-        private AddressTenantScopeSqlHelper $addressTenantScopeSqlHelper,
-        private AddressValidatedPayloadFactory $addressValidatedPayloadFactory,
-        private AddressValidatedMutationPlanBuilder $addressValidatedMutationPlanBuilder,
-        private AddressEvidenceSnapshotWriter $addressEvidenceSnapshotWriter,
-        private AddressOutboxWriter $addressOutboxWriter,
+        private \PDO $pdo,
+        ?AddressTenantScopeSqlHelper $scopeSqlHelper = null,
+        ?AddressValidatedPayloadFactory $payloadFactory = null,
+        ?AddressValidatedMutationPlanBuilder $planBuilder = null,
+        ?AddressEvidenceSnapshotWriter $snapshotWriter = null,
+        ?AddressOutboxWriter $outboxWriter = null,
     ) {
+        $this->scopeSqlHelper = $scopeSqlHelper ?? new AddressTenantScopeSqlHelper();
+        $this->payloadFactory = $payloadFactory ?? new AddressValidatedPayloadFactory();
+        $this->planBuilder = $planBuilder
+            ?? new AddressValidatedMutationPlanBuilder($pdo, $this->payloadFactory);
+        $this->snapshotWriter = $snapshotWriter
+            ?? new AddressEvidenceSnapshotWriter($pdo, $this->payloadFactory);
+        $this->outboxWriter = $outboxWriter ?? new AddressOutboxWriter($pdo);
     }
 
-    #[Override]
+    #[\Override]
     public function apply(string $id, AddressValidated $addressValidated, ?string $ownerId = null, ?string $vendorId = null): void
     {
         $fingerprint = $addressValidated->fingerprint();
-        $now = new DateTimeImmutable('now');
+        $now = new \DateTimeImmutable('now');
         $validatedAt = $addressValidated->validatedAt ?? $now;
-        $scopeParams = $this->addressTenantScopeSqlHelper->params($ownerId, $vendorId);
-        $scopeWhere = $this->addressTenantScopeSqlHelper->whereClause($ownerId, $vendorId);
+        $scopeParams = $this->scopeSqlHelper->params($ownerId, $vendorId);
+        $scopeWhere = $this->scopeSqlHelper->whereClause($ownerId, $vendorId);
         $lockClause = $this->isPgsql() ? ' FOR UPDATE' : '';
 
         try {
             $this->pdo->beginTransaction();
 
-            $stmt = $this->prepare('SELECT validation_fingerprint FROM address_entity WHERE id = :id AND '.$scopeWhere.$lockClause);
-            $stmt->execute(array_merge([':id' => $id], $scopeParams));
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (!is_array($row)) {
-                $this->pdo->rollBack();
-                throw new RuntimeException('not_found');
-            }
-
-            /** @var array<string, mixed> $row */
-            $prev = $row['validation_fingerprint'] ?? null;
-            if (is_string($prev) && '' !== $prev && $prev === $fingerprint) {
+            $existingFingerprint = $this->loadValidationFingerprint($id, $scopeWhere, $scopeParams, $lockClause);
+            if (null !== $existingFingerprint && $existingFingerprint === $fingerprint) {
                 $this->pdo->commit();
 
                 return;
             }
 
-            $plan = $this->addressValidatedMutationPlanBuilder->build($id, $addressValidated, $fingerprint, $now, $validatedAt);
-
-            $sql = 'UPDATE address_entity SET '.$plan->setClause().' WHERE id = :id AND '.$scopeWhere;
-            $stmt = $this->prepare($sql);
-            $ok = $stmt->execute(array_merge($plan->params, $scopeParams));
-
-            if (!$ok) {
-                $this->pdo->rollBack();
-                throw new RuntimeException('apply_failed');
-            }
-            if ($stmt->rowCount() < 1) {
-                $this->pdo->rollBack();
-                throw new RuntimeException('not_found');
-            }
-
-            $evidenceSnapshotId = $this->addressEvidenceSnapshotWriter->write(
+            $plan = $this->planBuilder->build(
                 $id,
-                $ownerId,
-                $vendorId,
                 $addressValidated,
-                $plan->lastValidationStatus,
-                $plan->lastValidationScore,
-                $plan->normalizedSnapshot,
-                $plan->providerDigest,
+                $fingerprint,
+                $now,
+                $validatedAt,
             );
 
-            $this->addressOutboxWriter->write(
-                $this->addressValidatedPayloadFactory->outboxPayload(
-                    $id,
-                    $ownerId,
-                    $vendorId,
-                    $fingerprint,
+            $this->applyMutation($id, $scopeWhere, $scopeParams, $plan);
+
+            $evidenceSnapshotId = $this->snapshotWriter->write(
+                AddressEvidenceSnapshotContext::fromMutationPlan(
+                    addressId: $id,
+                    ownerId: $ownerId,
+                    vendorId: $vendorId,
+                    addressValidated: $addressValidated,
+                    plan: $plan,
+                )
+            );
+
+            $this->outboxWriter->write(
+                $this->payloadFactory->outboxPayload(
+                    AddressValidatedOutboxContext::fromMutationPlan(
+                        id: $id,
+                        ownerId: $ownerId,
+                        vendorId: $vendorId,
+                        fingerprint: $fingerprint,
+                        validatedAt: $validatedAt,
+                        evidenceSnapshotId: $evidenceSnapshotId,
+                        plan: $plan,
+                    ),
                     $addressValidated,
-                    $validatedAt,
-                    $plan->rawSha256,
-                    $plan->governanceStatus,
-                    $plan->duplicateOfId,
-                    $plan->supersededById,
-                    $plan->aliasOfId,
-                    $plan->conflictWithId,
-                    $plan->revalidationDueAt,
-                    $plan->revalidationPolicy,
-                    $plan->lastValidationStatus,
-                    $plan->lastValidationScore,
-                    $evidenceSnapshotId,
-                    $plan->providerDigest,
                 )
             );
 
             $this->pdo->commit();
-        } catch (RuntimeException $e) {
+        } catch (\RuntimeException $runtimeException) {
             $this->rollbackIfActive();
-            throw $e;
-        } catch (Throwable) {
+            throw $runtimeException;
+        } catch (\Throwable $throwable) {
             $this->rollbackIfActive();
-            throw new RuntimeException('apply_failed');
+            throw new \RuntimeException('apply_failed', previous: $throwable);
+        }
+    }
+
+    /** @param array<string, mixed> $scopeParams */
+    private function loadValidationFingerprint(
+        string $id,
+        string $scopeWhere,
+        array $scopeParams,
+        string $lockClause,
+    ): ?string {
+        $statement = $this->prepare(
+            'SELECT validation_fingerprint FROM address_entity WHERE id = :id AND '.$scopeWhere.$lockClause
+        );
+        $statement->execute(array_merge([':id' => $id], $scopeParams));
+        $row = $statement->fetch(\PDO::FETCH_ASSOC);
+
+        if (!is_array($row)) {
+            throw new \RuntimeException('not_found');
+        }
+
+        $fingerprint = $row['validation_fingerprint'] ?? null;
+
+        return is_string($fingerprint) && '' !== $fingerprint ? $fingerprint : null;
+    }
+
+    /** @param array<string, mixed> $scopeParams */
+    private function applyMutation(
+        string $id,
+        string $scopeWhere,
+        array $scopeParams,
+        AddressValidatedMutationPlan $plan,
+    ): void {
+        $statement = $this->prepare(
+            'UPDATE address_entity SET '.$plan->setClause().' WHERE id = :id AND '.$scopeWhere
+        );
+        $ok = $statement->execute(array_merge([':id' => $id], $plan->params, $scopeParams));
+
+        if (!$ok) {
+            throw new \RuntimeException('apply_failed');
+        }
+        if ($statement->rowCount() < 1) {
+            throw new \RuntimeException('not_found');
         }
     }
 
     private function isPgsql(): bool
     {
-        $driver_attr = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
 
-        return is_string($driver_attr) && 'pgsql' === $driver_attr;
+        return is_string($driverAttr) && 'pgsql' === $driverAttr;
     }
 
     private function rollbackIfActive(): void
@@ -132,13 +160,13 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         }
     }
 
-    private function prepare(string $sql): PDOStatement
+    private function prepare(string $sql): \PDOStatement
     {
-        $stmt = $this->pdo->prepare($sql);
-        if (false === $stmt) {
-            throw new RuntimeException('prepare_failed');
+        $statement = $this->pdo->prepare($sql);
+        if (false === $statement) {
+            throw new \RuntimeException('prepare_failed');
         }
 
-        return $stmt;
+        return $statement;
     }
 }

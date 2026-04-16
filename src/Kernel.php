@@ -24,38 +24,56 @@ final class Kernel extends BaseKernel implements KernelInterface
         yield new TwigBundle();
     }
 
+    /**
+     * @throws \Exception
+     *
+     * @noinspection PhpMissingParentCallCommonInspection
+     */
     protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader): void
     {
         if (!$container->hasParameter('kernel.project_dir')) {
             $container->setParameter('kernel.project_dir', $this->getProjectDir());
         }
 
-        $configDir = $this->getProjectDir().'/config';
-        $loader->load($configDir.'/packages/*.yaml', 'glob');
-        $loader->load($configDir.'/addressing_services.yaml');
+        $projectConfigDir = $this->projectConfigDir();
+        $loader->load($projectConfigDir.'/packages/*.yaml', 'glob');
+        $loader->load($projectConfigDir.'/addressing_services.yaml');
     }
 
     #[\Override]
     public function getCacheDir(): string
     {
-        $baseDir = $this->runtimeVarDir();
+        $runtimeVarDir = $this->configuredRuntimeVarDir();
+        if (null === $runtimeVarDir) {
+            return parent::getCacheDir();
+        }
 
-        return $baseDir.'/cache/'.$this->environment;
+        return $runtimeVarDir.'/cache/'.$this->environment;
     }
 
     #[\Override]
     public function getLogDir(): string
     {
-        return $this->runtimeVarDir().'/log';
-    }
-
-    private function runtimeVarDir(): string
-    {
-        $customDir = $_SERVER['APP_VAR_DIR'] ?? $_ENV['APP_VAR_DIR'] ?? getenv('APP_VAR_DIR');
-        if (is_string($customDir) && '' !== trim($customDir)) {
-            return rtrim($customDir, '/');
+        $runtimeVarDir = $this->configuredRuntimeVarDir();
+        if (null === $runtimeVarDir) {
+            return parent::getLogDir();
         }
 
-        return $this->getProjectDir().'/var';
+        return $runtimeVarDir.'/log';
+    }
+
+    private function projectConfigDir(): string
+    {
+        return $this->getProjectDir().'/config';
+    }
+
+    private function configuredRuntimeVarDir(): ?string
+    {
+        $configuredVarDir = $_SERVER['APP_VAR_DIR'] ?? $_ENV['APP_VAR_DIR'] ?? getenv('APP_VAR_DIR');
+        if (is_string($configuredVarDir) && '' !== trim($configuredVarDir)) {
+            return rtrim($configuredVarDir, '/');
+        }
+
+        return null;
     }
 }

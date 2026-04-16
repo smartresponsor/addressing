@@ -1,11 +1,12 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace Tests\Functional;
 
-use App\Kernel;
 use App\Http\Controller\AddressController;
+use App\Kernel;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Tests\Support\TestDatabase;
@@ -28,13 +29,16 @@ final class AddressControllerFunctionalTest extends TestCase
     {
         $controller = $this->bootController(__FUNCTION__);
 
-        $request = new Request([], [], [], [], [], [], json_encode([
+        $content = json_encode([
             'ownerId' => 'owner-1',
             'vendorId' => 'vendor-1',
             'line1' => 'Main street 10',
             'city' => 'Austin',
             'countryCode' => 'us',
-        ], JSON_UNESCAPED_UNICODE));
+        ], JSON_UNESCAPED_UNICODE);
+        self::assertIsString($content);
+
+        $request = new Request([], [], [], [], [], [], $content);
 
         $createResponse = $controller->create($request);
         self::assertSame(201, $createResponse->getStatusCode());

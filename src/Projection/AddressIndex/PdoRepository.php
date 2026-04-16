@@ -1,27 +1,18 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Projection\AddressIndex;
 
-use PDO;
-use Override;
-
-/**
- *
- */
-
-/**
- *
- */
 final readonly class PdoRepository implements RepositoryInterface
 {
-    public function __construct(private PDO $pdo)
+    public function __construct(private \PDO $pdo)
     {
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     }
 
-    #[Override]
+    #[\Override]
     public function upsert(IndexRecord $indexRecord): void
     {
         $sql = 'INSERT INTO address_index
@@ -42,44 +33,45 @@ final readonly class PdoRepository implements RepositoryInterface
         ]);
     }
 
-    #[Override]
+    #[\Override]
     public function getByDigest(string $digest): ?IndexRecord
     {
         $pdoStatement = $this->prepare('SELECT * FROM address_index WHERE digest = :d LIMIT 1');
         $pdoStatement->execute([':d' => $digest]);
-        $row = $pdoStatement->fetch(PDO::FETCH_ASSOC);
+        $row = $pdoStatement->fetch(\PDO::FETCH_ASSOC);
         if (!is_array($row)) {
             return null;
         }
-        /** @var array<string, mixed> $row */
+
+        /* @var array<string, mixed> $row */
         return $this->hydrate($row);
     }
 
     /**
-     * @return array<\App\Projection\AddressIndex\IndexRecord>
+     * @return array<IndexRecord>
      */
-    #[Override]
+    #[\Override]
     public function search(string $prefix, ?string $country = null, int $limit = 20): array
     {
-        $like = $prefix . '%';
+        $like = $prefix.'%';
         if ($country) {
             $stmt = $this->prepare('SELECT * FROM address_index WHERE country = :c AND (city LIKE :q OR region LIKE :q OR postal LIKE :q OR line1 LIKE :q) ORDER BY updated_at DESC LIMIT :lim');
             $stmt->bindValue(':c', strtoupper($country));
-            $stmt->bindValue(':q', $like);
         } else {
             $stmt = $this->prepare('SELECT * FROM address_index WHERE (city LIKE :q OR region LIKE :q OR postal LIKE :q OR line1 LIKE :q) ORDER BY updated_at DESC LIMIT :lim');
-            $stmt->bindValue(':q', $like);
         }
-        $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':q', $like);
+        $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
         $stmt->execute();
         $out = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
             if (!is_array($row)) {
                 continue;
             }
-            /** @var array<string, mixed> $row */
+            /* @var array<string, mixed> $row */
             $out[] = $this->hydrate($row);
         }
+
         return $out;
     }
 
@@ -113,45 +105,48 @@ final readonly class PdoRepository implements RepositoryInterface
             return $value;
         }
         if (is_int($value) || is_float($value) || is_bool($value)) {
-            return (string)$value;
+            return (string) $value;
         }
-        throw new \RuntimeException('invalid_' . $field);
+        throw new \RuntimeException('invalid_'.$field);
     }
 
     private function asNullableString(mixed $value): ?string
     {
-        if ($value === null) {
+        if (null === $value) {
             return null;
         }
         if (is_string($value)) {
             return $value;
         }
         if (is_int($value) || is_float($value) || is_bool($value)) {
-            return (string)$value;
+            return (string) $value;
         }
+
         return null;
     }
 
     private function asNullableFloat(mixed $value): ?float
     {
-        if ($value === null) {
+        if (null === $value) {
             return null;
         }
         if (is_float($value) || is_int($value)) {
-            return (float)$value;
+            return (float) $value;
         }
         if (is_string($value) && is_numeric($value)) {
-            return (float)$value;
+            return (float) $value;
         }
+
         return null;
     }
 
     private function prepare(string $sql): \PDOStatement
     {
         $stmt = $this->pdo->prepare($sql);
-        if ($stmt === false) {
+        if (false === $stmt) {
             throw new \RuntimeException('prepare_failed');
         }
+
         return $stmt;
     }
 }

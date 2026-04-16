@@ -12,7 +12,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Override;
 
 #[AsCommand(name: 'address:summary:queues', description: 'Summarize operational queues for a tenant slice.')]
 final class AddressQueueSummaryCommand extends Command
@@ -22,9 +21,10 @@ final class AddressQueueSummaryCommand extends Command
         parent::__construct();
     }
 
-    #[Override]
+    #[\Override]
     protected function configure(): void
     {
+        parent::configure();
         $this
             ->addOption('owner-id', null, InputOption::VALUE_OPTIONAL)
             ->addOption('vendor-id', null, InputOption::VALUE_OPTIONAL)
@@ -32,7 +32,8 @@ final class AddressQueueSummaryCommand extends Command
             ->addOption('query', 'q', InputOption::VALUE_OPTIONAL);
     }
 
-    #[Override]
+    /** @noinspection PhpMissingParentCallCommonInspection */
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $symfonyStyle = new SymfonyStyle($input, $output);

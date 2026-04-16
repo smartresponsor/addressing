@@ -1,19 +1,10 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Value;
 
-use InvalidArgumentException;
-use Override;
-
-/**
- *
- */
-
-/**
- *
- */
 final readonly class GeoPoint implements \Stringable
 {
     private float $lat;
@@ -22,10 +13,10 @@ final readonly class GeoPoint implements \Stringable
     public function __construct(float $lat, float $lon)
     {
         if ($lat < -90.0 || $lat > 90.0) {
-            throw new InvalidArgumentException('Latitude out of range');
+            throw new \InvalidArgumentException('Latitude out of range');
         }
         if ($lon < -180.0 || $lon > 180.0) {
-            throw new InvalidArgumentException('Longitude out of range');
+            throw new \InvalidArgumentException('Longitude out of range');
         }
         $this->lat = $lat;
         $this->lon = $lon;
@@ -51,7 +42,7 @@ final readonly class GeoPoint implements \Stringable
         return sprintf('%+.6f,%+.6f', $this->lat, $this->lon);
     }
 
-    #[Override]
+    #[\Override]
     public function __toString(): string
     {
         return $this->toKey();

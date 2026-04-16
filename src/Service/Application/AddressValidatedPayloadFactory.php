@@ -6,13 +6,6 @@ namespace App\Service\Application;
 
 use App\Contract\Message\AddressValidated;
 use App\Contract\Message\AddressValidationVerdict;
-use DateTimeImmutable;
-use RuntimeException;
-use function array_filter;
-use function hash;
-use function is_string;
-use function json_encode;
-use function trim;
 
 /** Builds normalized payload fragments from address validation messages. */
 final readonly class AddressValidatedPayloadFactory
@@ -33,7 +26,7 @@ final readonly class AddressValidatedPayloadFactory
             return $addressValidated->normalizedSnapshot;
         }
 
-        $snapshot = array_filter([
+        $snapshot = \array_filter([
             'line1Norm' => $addressValidated->line1Norm,
             'cityNorm' => $addressValidated->cityNorm,
             'regionNorm' => $addressValidated->regionNorm,
@@ -56,7 +49,7 @@ final readonly class AddressValidatedPayloadFactory
             return $addressValidated->providerDigest;
         }
 
-        $payload = array_filter([
+        $payload = \array_filter([
             'provider' => $addressValidated->validationProvider,
             'validatedAt' => $addressValidated->validatedAt?->format(DATE_ATOM),
             'raw' => $addressValidated->raw,
@@ -68,12 +61,12 @@ final readonly class AddressValidatedPayloadFactory
             return null;
         }
 
-        return hash('sha256', $this->encodePayload($payload));
+        return \hash('sha256', $this->encodePayload($payload));
     }
 
     public function sanitizeGovernanceLink(?string $linkId, string $currentId): ?string
     {
-        $linkId = is_string($linkId) ? trim($linkId) : '';
+        $linkId = \is_string($linkId) ? \trim($linkId) : '';
         if ('' === $linkId || $linkId === $currentId) {
             return null;
         }
@@ -81,73 +74,52 @@ final readonly class AddressValidatedPayloadFactory
         return $linkId;
     }
 
-    public function governanceLinkId(
-        string $governanceStatus,
-        ?string $duplicateOfId,
-        ?string $supersededById,
-        ?string $aliasOfId,
-        ?string $conflictWithId,
-    ): ?string {
-        return match ($governanceStatus) {
-            'duplicate' => $duplicateOfId,
-            'superseded' => $supersededById,
-            'alias' => $aliasOfId,
-            'conflict' => $conflictWithId,
-            default => null,
-        };
-    }
-
     /** @return array<string, mixed> */
     public function outboxPayload(
-        string $id,
-        ?string $ownerId,
-        ?string $vendorId,
-        string $fingerprint,
+        AddressValidatedOutboxContext $context,
         AddressValidated $addressValidated,
-        DateTimeImmutable $validatedAt,
-        ?string $rawSha256,
-        string $governanceStatus,
-        ?string $duplicateOfId,
-        ?string $supersededById,
-        ?string $aliasOfId,
-        ?string $conflictWithId,
-        ?string $revalidationDueAt,
-        ?string $revalidationPolicy,
-        string $lastValidationStatus,
-        ?int $lastValidationScore,
-        ?string $evidenceSnapshotId,
-        ?string $providerDigest,
     ): array {
         return [
-            'id' => $id,
-            'ownerId' => $ownerId,
-            'vendorId' => $vendorId,
-            'fingerprint' => $fingerprint,
+            'id' => $context->id,
+            'ownerId' => $context->ownerId,
+            'vendorId' => $context->vendorId,
+            'fingerprint' => $context->fingerprint,
             'provider' => $addressValidated->validationProvider,
-            'validatedAt' => $validatedAt->format(DATE_ATOM),
+            'validatedAt' => $context->validatedAt->format(DATE_ATOM),
             'deliverable' => $addressValidated->addressValidationVerdict?->deliverable,
             'granularity' => $addressValidated->addressValidationVerdict?->granularity,
             'quality' => $addressValidated->addressValidationVerdict?->quality,
-            'rawSha256' => $rawSha256,
+            'rawSha256' => $context->rawSha256,
             'sourceType' => $addressValidated->sourceType,
-            'providerDigest' => $providerDigest,
+            'providerDigest' => $context->providerDigest,
             'hasEvidence' => $this->hasEvidence($addressValidated),
-            'governanceStatus' => $governanceStatus,
-            'governanceLinkId' => $this->governanceLinkId($governanceStatus, $duplicateOfId, $supersededById, $aliasOfId, $conflictWithId),
-            'revalidationDueAt' => $revalidationDueAt,
-            'revalidationPolicy' => $revalidationPolicy,
-            'lastValidationStatus' => $lastValidationStatus,
-            'lastValidationScore' => $lastValidationScore,
-            'evidenceSnapshotId' => $evidenceSnapshotId,
+            'governanceStatus' => $context->governanceStatus,
+            'governanceLinkId' => $this->governanceLinkId($context),
+            'revalidationDueAt' => $context->revalidationDueAt,
+            'revalidationPolicy' => $context->revalidationPolicy,
+            'lastValidationStatus' => $context->lastValidationStatus,
+            'lastValidationScore' => $context->lastValidationScore,
+            'evidenceSnapshotId' => $context->evidenceSnapshotId,
         ];
+    }
+
+    private function governanceLinkId(AddressValidatedOutboxContext $context): ?string
+    {
+        return match ($context->governanceStatus) {
+            'duplicate' => $context->duplicateOfId,
+            'superseded' => $context->supersededById,
+            'alias' => $context->aliasOfId,
+            'conflict' => $context->conflictWithId,
+            default => null,
+        };
     }
 
     /** @param array<string, mixed> $payload */
     private function encodePayload(array $payload): string
     {
-        $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $json = \json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if (false === $json) {
-            throw new RuntimeException('payload_encode_failed');
+            throw new \RuntimeException('payload_encode_failed');
         }
 
         return $json;

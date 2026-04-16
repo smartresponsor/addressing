@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Repository\Persistence;
@@ -10,9 +11,9 @@ use App\Entity\Record\AddressData;
 use App\Entity\Record\AddressEvidenceSnapshotData;
 use App\EntityInterface\Record\AddressEvidenceSnapshotInterface;
 use App\EntityInterface\Record\AddressInterface;
+use App\RepositoryInterface\Persistence\AddressPageCriteria;
 use App\RepositoryInterface\Persistence\AddressRepositoryInterface;
 use App\Service\Application\AddressGovernancePolicy;
-use Override;
 
 final readonly class AddressRepository implements AddressRepositoryInterface
 {
@@ -20,7 +21,8 @@ final readonly class AddressRepository implements AddressRepositoryInterface
     {
     }
 
-    #[Override]
+    /** @throws \Throwable */
+    #[\Override]
     public function create(AddressInterface $address): void
     {
         $this->pdo->beginTransaction();
@@ -79,7 +81,8 @@ SQL;
         }
     }
 
-    #[Override]
+    /** @throws \Throwable */
+    #[\Override]
     public function update(AddressInterface $address): void
     {
         $this->ensureTenantScope($address->ownerId(), $address->vendorId());
@@ -116,7 +119,7 @@ SQL;
 
             $this->appendOutbox('AddressUpdated', [
                 'id' => $address->id(),
-                'updatedAt' => $address->updatedAt() ?? (new \DateTimeImmutable())->format(DATE_ATOM),
+                'updatedAt' => $address->updatedAt() ?? $this->currentTimestampAtom(),
                 'sourceType' => $address->sourceType(),
                 'validationStatus' => $address->validationStatus(),
                 'hasEvidence' => null !== $address->rawInputSnapshot() || null !== $address->normalizedSnapshot() || null !== $address->providerDigest(),
@@ -136,7 +139,7 @@ SQL;
         }
     }
 
-    #[Override]
+    #[\Override]
     public function appendEvidenceSnapshot(AddressInterface $address): ?AddressEvidenceSnapshotInterface
     {
         if (!$this->hasEvidence($address)) {
@@ -159,7 +162,7 @@ SQL
         return $addressEvidenceSnapshot;
     }
 
-    #[Override]
+    #[\Override]
     public function getLatestEvidenceSnapshot(string $addressId, ?string $ownerId, ?string $vendorId): ?AddressEvidenceSnapshotInterface
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -177,7 +180,7 @@ SQL
     /**
      * @return array{'items': list<AddressEvidenceSnapshotInterface>, 'nextCursor': ?string}
      */
-    #[Override]
+    #[\Override]
     public function findEvidenceHistoryPage(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -195,34 +198,28 @@ SQL
         $sql = 'SELECT * FROM address_evidence_snapshot WHERE '.implode(' AND ', $where)
             .' ORDER BY (validated_at IS NOT NULL) DESC, COALESCE(validated_at, created_at) DESC, created_at DESC, id DESC LIMIT :limit';
         $pdoStatement = $this->prepare($sql);
-        foreach ($params as $k => $v) {
-            $pdoStatement->bindValue($k, $v);
-        }
+        $this->bindStatementValues($pdoStatement, $params);
         $pdoStatement->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $pdoStatement->execute();
-        $rows = $pdoStatement->fetchAll(\PDO::FETCH_ASSOC);
-
-        $safeRows = [];
-        if (is_array($rows)) {
-            foreach ($rows as $row) {
-                if (is_array($row)) {
-                    $safeRows[] = $row;
-                }
-            }
-        }
+        $safeRows = $this->fetchAssocRows($pdoStatement);
 
         $items = array_map(fn (array $row): AddressEvidenceSnapshotInterface => $this->mapEvidenceSnapshot($row), $safeRows);
 
         $nextCursor = null;
         if (count($safeRows) === $limit && [] !== $safeRows) {
             $last = end($safeRows);
-            $nextCursor = $this->encodeEvidenceCursor((string) ($last['created_at'] ?? ''), (string) ($last['id'] ?? ''));
+            if (is_array($last)) {
+                $nextCursor = $this->encodeEvidenceCursor(
+                    $this->stringRowValue($last, 'created_at'),
+                    $this->stringRowValue($last, 'id')
+                );
+            }
         }
 
         return ['items' => $items, 'nextCursor' => $nextCursor];
     }
 
-    #[Override]
+    #[\Override]
     public function get(string $id, ?string $ownerId, ?string $vendorId): ?AddressInterface
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -242,7 +239,8 @@ SQL
         return $this->map($row);
     }
 
-    #[Override]
+    /** @throws \Throwable */
+    #[\Override]
     public function delete(string $id, ?string $ownerId, ?string $vendorId): void
     {
         $this->ensureTenantScope($ownerId, $vendorId);
@@ -262,7 +260,7 @@ SQL
 
             $this->appendOutbox('AddressDeleted', [
                 'id' => $id,
-                'deletedAt' => (new \DateTimeImmutable())->format(DATE_ATOM),
+                'deletedAt' => $this->currentTimestampAtom(),
             ]);
             $this->pdo->commit();
         } catch (\Throwable $exception) {
@@ -273,7 +271,7 @@ SQL
         }
     }
 
-    #[Override]
+    #[\Override]
     public function findByDedupeKey(string $dedupeKey): ?AddressInterface
     {
         $dedupeKey = trim($dedupeKey);
@@ -293,6 +291,7 @@ SQL
         return $this->map($row);
     }
 
+    /** @throws \Throwable */
     public function markDeleted(string $id, ?string $ownerId, ?string $vendorId): void
     {
         $this->delete($id, $ownerId, $vendorId);
@@ -300,13 +299,15 @@ SQL
 
     /**
      * @param array<string, mixed> $patch
+     *
+     * @throws \Throwable
      */
-    #[Override]
+    #[\Override]
     public function patchOperational(string $id, ?string $ownerId, ?string $vendorId, array $patch): bool
     {
         $this->ensureTenantScope($ownerId, $vendorId);
         $current = $this->get($id, $ownerId, $vendorId);
-        if (!$current instanceof \App\EntityInterface\Record\AddressInterface) {
+        if (!$current instanceof AddressInterface) {
             return false;
         }
 
@@ -315,7 +316,7 @@ SQL
             return false;
         }
 
-        $this->assertOperationalGovernanceTargetsExist($normalized, $ownerId, $vendorId);
+        $this->assertGovTargetsExist($normalized, $ownerId, $vendorId);
 
         $tenantWhere = $this->tenantWhereClause($ownerId, $vendorId);
         $params = array_merge([':id' => $id], $this->tenantParams($ownerId, $vendorId));
@@ -326,7 +327,7 @@ SQL
             $params[$placeholder] = $value;
         }
         $set[] = 'updated_at = :updated_at';
-        $params[':updated_at'] = (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
+        $params[':updated_at'] = $this->currentTimestampLiteral();
 
         $this->pdo->beginTransaction();
         try {
@@ -376,128 +377,41 @@ SQL
     }
 
     /**
-     * @param array<string, mixed> $filters
-     *
      * @return array{'items': AddressInterface[], 'nextCursor': ?string}
      */
-    #[Override]
-    public function findPage(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, int $limit, ?string $cursor, array $filters = []): array
+    #[\Override]
+    public function findPage(AddressPageCriteria $criteria): array
     {
-        $this->ensureTenantScope($ownerId, $vendorId);
-        $limit = max(1, min(200, $limit));
-        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
-        $driver = is_string($driverAttr) ? $driverAttr : '';
+        $limit = max(1, min(200, $criteria->limit()));
+        $ownerId = $criteria->ownerId();
+        $vendorId = $criteria->vendorId();
+        $countryCode = $criteria->countryCode();
+        $query = $criteria->query();
+        $cursor = $criteria->cursor();
+        $filters = $criteria->filters();
         $params = $this->tenantParams($ownerId, $vendorId);
-        $where = ['deleted_at IS NULL', $this->tenantWhereClause($ownerId, $vendorId)];
-        if ($countryCode) {
-            $where[] = 'country_code = :country_code';
-            $params[':country_code'] = $countryCode;
-        }
-        if ($q) {
-            $op = 'pgsql' === $driver ? 'ILIKE' : 'LIKE';
-            $where[] = "lower(line1 || ' ' || city || ' ' || coalesce(postal_code,'')) {$op} lower(:q)";
-            $params[':q'] = '%'.$q.'%';
-        }
-        if ($cursor) {
+        $where = $this->buildScopedSearchWhere($ownerId, $vendorId, $countryCode, $query, $params);
+        if (null !== $cursor && '' !== $cursor) {
             $where[] = 'id > :cursor';
             $params[':cursor'] = $cursor;
         }
 
-        $sourceType = AddressRecordPolicy::normalizeSourceType($this->stringFilter($filters, 'sourceType'));
-        if (null !== $sourceType) {
-            $where[] = 'source_type = :source_type';
-            $params[':source_type'] = $sourceType;
-        }
-
-        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($this->stringFilter($filters, 'governanceStatus'));
-        if (('canonical' !== $governanceStatus || null !== $this->stringFilter($filters, 'governanceStatus')) && null !== $this->stringFilter($filters, 'governanceStatus')) {
-            $where[] = 'governance_status = :governance_status';
-            $params[':governance_status'] = $governanceStatus;
-        }
-
-        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy($this->stringFilter($filters, 'revalidationPolicy'));
-        if (null !== $revalidationPolicy) {
-            $where[] = 'revalidation_policy = :revalidation_policy';
-            $params[':revalidation_policy'] = $revalidationPolicy;
-        }
-
-        $hasEvidence = $this->boolFilter($filters, 'hasEvidence');
-        if (true === $hasEvidence) {
-            $where[] = $this->evidencePresenceClause(true);
-        } elseif (false === $hasEvidence) {
-            $where[] = $this->evidencePresenceClause(false);
-        }
-
-        $revalidationDueBefore = $this->stringFilter($filters, 'revalidationDueBefore');
-        if (null !== $revalidationDueBefore) {
-            $where[] = 'revalidation_due_at IS NOT NULL AND revalidation_due_at <= :revalidation_due_before';
-            $params[':revalidation_due_before'] = $revalidationDueBefore;
-        }
-
-        $queue = $this->stringFilter($filters, 'queue');
-        $expectedNormalizationVersion = $this->stringFilter($filters, 'expectedNormalizationVersion');
-        if (null !== $queue) {
-            switch ($queue) {
-                case 'dueForRevalidation':
-                    $dueAt = $revalidationDueBefore ?? $this->currentTimestampLiteral();
-                    $where[] = 'revalidation_due_at IS NOT NULL AND revalidation_due_at <= :queue_due_before';
-                    $params[':queue_due_before'] = $dueAt;
-                    break;
-                case 'evidenceMissing':
-                    $where[] = $this->evidencePresenceClause(false);
-                    break;
-                case 'uncertainValidation':
-                    $where[] = '(validation_status = :queue_validation_status OR last_validation_status = :queue_last_validation_status)';
-                    $params[':queue_validation_status'] = 'uncertain';
-                    $params[':queue_last_validation_status'] = 'uncertain';
-                    break;
-                case 'conflictReview':
-                    $where[] = 'governance_status = :queue_governance_conflict';
-                    $params[':queue_governance_conflict'] = 'conflict';
-                    break;
-                case 'duplicateReview':
-                    $where[] = 'governance_status = :queue_governance_duplicate';
-                    $params[':queue_governance_duplicate'] = 'duplicate';
-                    break;
-                case 'staleNormalizationVersion':
-                    if (null !== $expectedNormalizationVersion) {
-                        $where[] = '(normalization_version IS NULL OR normalization_version <> :expected_normalization_version)';
-                        $params[':expected_normalization_version'] = $expectedNormalizationVersion;
-                    }
-                    break;
-            }
-        }
+        $revalidationDueBefore = $this->applyOperationalPageFilters($where, $params, $filters);
+        $this->applyQueueFilter($where, $params, $filters, $revalidationDueBefore);
 
         $sql = 'SELECT * FROM address_entity WHERE '.implode(' AND ', $where).' ORDER BY id ASC LIMIT :limit';
         $pdoStatement = $this->prepare($sql);
-        foreach ($params as $k => $v) {
-            $pdoStatement->bindValue($k, $v);
-        }
+        $this->bindStatementValues($pdoStatement, $params);
         $pdoStatement->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $pdoStatement->execute();
 
-        $rows = $pdoStatement->fetchAll(\PDO::FETCH_ASSOC);
-        /** @var array<int, array<string, mixed>> $safeRows */
-        $safeRows = [];
-        if (is_array($rows)) {
-            foreach ($rows as $row) {
-                if (is_array($row)) {
-                    /* @var array<string, mixed> $row */
-                    $safeRows[] = $row;
-                }
-            }
-        }
-        $items = array_map(fn (array $r): AddressInterface => $this->map($r), $safeRows);
+        $safeRows = $this->fetchAssocRows($pdoStatement);
+        $items = array_map(fn (array $row): AddressInterface => $this->map($row), $safeRows);
 
-        $nextCursor = null;
-        if (count($safeRows) === $limit && [] !== $safeRows) {
-            $last = end($safeRows);
-            if (isset($last['id'])) {
-                $nextCursor = (string) $last['id'];
-            }
-        }
-
-        return ['items' => $items, 'nextCursor' => $nextCursor];
+        return [
+            'items' => $items,
+            'nextCursor' => $this->pageCursorFromRows($safeRows, $limit),
+        ];
     }
 
     /**
@@ -515,12 +429,12 @@ SQL
      *   'relatedAddressIds':list<string>
      * }
      */
-    #[Override]
+    #[\Override]
     public function summarizeGovernanceCluster(string $addressId, ?string $ownerId, ?string $vendorId): array
     {
         $this->ensureTenantScope($ownerId, $vendorId);
         $current = $this->get($addressId, $ownerId, $vendorId);
-        if (!$current instanceof \App\EntityInterface\Record\AddressInterface) {
+        if (!$current instanceof AddressInterface) {
             return [
                 'addressId' => $addressId,
                 'governanceStatus' => null,
@@ -546,9 +460,7 @@ SQL
             .'SUM(CASE WHEN conflict_with_id = :address_id THEN 1 ELSE 0 END) AS conflict_peers '
             .'FROM address_entity WHERE deleted_at IS NULL AND '.$tenantWhere;
         $pdoStatement = $this->prepare($sql);
-        foreach ($params as $k => $v) {
-            $pdoStatement->bindValue($k, $v);
-        }
+        $this->bindStatementValues($pdoStatement, $params);
         $pdoStatement->execute();
         $row = $pdoStatement->fetch(\PDO::FETCH_ASSOC);
         /** @var array<string, mixed> $summaryRow */
@@ -563,8 +475,8 @@ SQL
         $listSql = 'SELECT id FROM address_entity WHERE deleted_at IS NULL AND '.$tenantWhere
             .' AND (duplicate_of_id = :address_id OR superseded_by_id = :address_id OR alias_of_id = :address_id OR conflict_with_id = :address_id) ORDER BY id ASC';
         $listStmt = $this->prepare($listSql);
-        foreach ($params as $k => $v) {
-            $listStmt->bindValue($k, $v);
+        foreach ($params as $parameterName => $parameterValue) {
+            $listStmt->bindValue($parameterName, $parameterValue);
         }
         $listStmt->execute();
         while (($id = $listStmt->fetchColumn()) !== false) {
@@ -608,58 +520,20 @@ SQL
      *   'staleNormalizationVersion':int
      * }
      */
-    #[Override]
+    #[\Override]
     public function summarizeOperationalQueues(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
-        $this->ensureTenantScope($ownerId, $vendorId);
-        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
-        $driver = is_string($driverAttr) ? $driverAttr : '';
         $params = $this->tenantParams($ownerId, $vendorId);
-        $where = ['deleted_at IS NULL', $this->tenantWhereClause($ownerId, $vendorId)];
-        if ($countryCode) {
-            $where[] = 'country_code = :country_code';
-            $params[':country_code'] = $countryCode;
-        }
-        if ($q) {
-            $op = 'pgsql' === $driver ? 'ILIKE' : 'LIKE';
-            $where[] = "lower(line1 || ' ' || city || ' ' || coalesce(postal_code,'')) {$op} lower(:q)";
-            $params[':q'] = '%'.$q.'%';
-        }
+        $where = $this->buildScopedSearchWhere($ownerId, $vendorId, $countryCode, $q, $params);
+        $this->applyPortfolioFilters($where, $params, $filters);
 
-        $sourceType = AddressRecordPolicy::normalizeSourceType($this->stringFilter($filters, 'sourceType'));
-        if (null !== $sourceType) {
-            $where[] = 'source_type = :source_type';
-            $params[':source_type'] = $sourceType;
-        }
-
-        $governanceStatusRaw = $this->stringFilter($filters, 'governanceStatus');
-        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($governanceStatusRaw);
-        if (null !== $governanceStatusRaw) {
-            $where[] = 'governance_status = :governance_status';
-            $params[':governance_status'] = $governanceStatus;
-        }
-
-        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy($this->stringFilter($filters, 'revalidationPolicy'));
-        if (null !== $revalidationPolicy) {
-            $where[] = 'revalidation_policy = :revalidation_policy';
-            $params[':revalidation_policy'] = $revalidationPolicy;
-        }
-
-        $hasEvidence = $this->boolFilter($filters, 'hasEvidence');
-        if (true === $hasEvidence) {
-            $where[] = $this->evidencePresenceClause(true);
-        } elseif (false === $hasEvidence) {
-            $where[] = $this->evidencePresenceClause(false);
-        }
-
-        $revalidationDueBefore = $this->stringFilter($filters, 'revalidationDueBefore');
+        $revalidationDueBefore = $this->summaryDueBefore($params, $filters, ':queue_due_before');
         if (null !== $revalidationDueBefore) {
             $where[] = 'revalidation_due_at IS NOT NULL AND revalidation_due_at <= :revalidation_due_before';
             $params[':revalidation_due_before'] = $revalidationDueBefore;
         }
 
         $expectedNormalizationVersion = $this->stringFilter($filters, 'expectedNormalizationVersion');
-        $now = $revalidationDueBefore ?? $this->currentTimestampLiteral();
         $baseWhere = implode(' AND ', $where);
         $staleSql = null !== $expectedNormalizationVersion
             ? 'SUM(CASE WHEN normalization_version IS NULL OR normalization_version <> :expected_normalization_version THEN 1 ELSE 0 END)'
@@ -670,7 +544,7 @@ SQL
 
         $sql = 'SELECT '
             .'COUNT(*) AS total, '
-            .'SUM(CASE WHEN revalidation_due_at IS NOT NULL AND revalidation_due_at <= :summary_due_before THEN 1 ELSE 0 END) AS due_for_revalidation, '
+            .'SUM(CASE WHEN revalidation_due_at IS NOT NULL AND revalidation_due_at <= :queue_due_before THEN 1 ELSE 0 END) AS due_for_revalidation, '
             .'SUM(CASE WHEN '.$this->evidencePresenceClause(false).' THEN 1 ELSE 0 END) AS evidence_missing, '
             ."SUM(CASE WHEN validation_status = 'uncertain' OR last_validation_status = 'uncertain' THEN 1 ELSE 0 END) AS uncertain_validation, "
             ."SUM(CASE WHEN governance_status = 'conflict' THEN 1 ELSE 0 END) AS conflict_review, "
@@ -678,11 +552,8 @@ SQL
             .$staleSql.' AS stale_normalization_version '
             .'FROM address_entity WHERE '.$baseWhere;
 
-        $params[':summary_due_before'] = $now;
         $pdoStatement = $this->prepare($sql);
-        foreach ($params as $k => $v) {
-            $pdoStatement->bindValue($k, $v);
-        }
+        $this->bindStatementValues($pdoStatement, $params);
         $pdoStatement->execute();
         $row = $pdoStatement->fetch(\PDO::FETCH_ASSOC);
         if (!is_array($row)) {
@@ -698,13 +569,13 @@ SQL
         }
 
         return [
-            'total' => (int) ($row['total'] ?? 0),
-            'dueForRevalidation' => (int) ($row['due_for_revalidation'] ?? 0),
-            'evidenceMissing' => (int) ($row['evidence_missing'] ?? 0),
-            'uncertainValidation' => (int) ($row['uncertain_validation'] ?? 0),
-            'conflictReview' => (int) ($row['conflict_review'] ?? 0),
-            'duplicateReview' => (int) ($row['duplicate_review'] ?? 0),
-            'staleNormalizationVersion' => (int) ($row['stale_normalization_version'] ?? 0),
+            'total' => $this->intRowValue($row, 'total'),
+            'dueForRevalidation' => $this->intRowValue($row, 'due_for_revalidation'),
+            'evidenceMissing' => $this->intRowValue($row, 'evidence_missing'),
+            'uncertainValidation' => $this->intRowValue($row, 'uncertain_validation'),
+            'conflictReview' => $this->intRowValue($row, 'conflict_review'),
+            'duplicateReview' => $this->intRowValue($row, 'duplicate_review'),
+            'staleNormalizationVersion' => $this->intRowValue($row, 'stale_normalization_version'),
         ];
     }
 
@@ -725,48 +596,13 @@ SQL
      *   'uncertainValidation':int
      * }>
      */
-    #[Override]
+    #[\Override]
     public function summarizeCountryPortfolio(?string $ownerId, ?string $vendorId, ?string $q, array $filters = []): array
     {
-        $this->ensureTenantScope($ownerId, $vendorId);
-        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
-        $driver = is_string($driverAttr) ? $driverAttr : '';
         $params = $this->tenantParams($ownerId, $vendorId);
-        $where = ['deleted_at IS NULL', $this->tenantWhereClause($ownerId, $vendorId)];
-        if ($q) {
-            $op = 'pgsql' === $driver ? 'ILIKE' : 'LIKE';
-            $where[] = "lower(line1 || ' ' || city || ' ' || coalesce(postal_code,'')) {$op} lower(:q)";
-            $params[':q'] = '%'.$q.'%';
-        }
-
-        $sourceType = AddressRecordPolicy::normalizeSourceType($this->stringFilter($filters, 'sourceType'));
-        if (null !== $sourceType) {
-            $where[] = 'source_type = :source_type';
-            $params[':source_type'] = $sourceType;
-        }
-
-        $governanceStatusRaw = $this->stringFilter($filters, 'governanceStatus');
-        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($governanceStatusRaw);
-        if (null !== $governanceStatusRaw) {
-            $where[] = 'governance_status = :governance_status';
-            $params[':governance_status'] = $governanceStatus;
-        }
-
-        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy($this->stringFilter($filters, 'revalidationPolicy'));
-        if (null !== $revalidationPolicy) {
-            $where[] = 'revalidation_policy = :revalidation_policy';
-            $params[':revalidation_policy'] = $revalidationPolicy;
-        }
-
-        $hasEvidence = $this->boolFilter($filters, 'hasEvidence');
-        if (true === $hasEvidence) {
-            $where[] = $this->evidencePresenceClause(true);
-        } elseif (false === $hasEvidence) {
-            $where[] = $this->evidencePresenceClause(false);
-        }
-
-        $revalidationDueBefore = $this->stringFilter($filters, 'revalidationDueBefore');
-        $params[':summary_due_before'] = $revalidationDueBefore ?? $this->currentTimestampLiteral();
+        $where = $this->buildScopedSearchWhere($ownerId, $vendorId, null, $q, $params);
+        $this->applyPortfolioFilters($where, $params, $filters);
+        $this->summaryDueBefore($params, $filters);
 
         $sql = 'SELECT country_code AS country_code, '
             .'COUNT(*) AS total, '
@@ -783,27 +619,22 @@ SQL
             .' GROUP BY country_code ORDER BY total DESC, country_code ASC';
 
         $pdoStatement = $this->prepare($sql);
-        foreach ($params as $k => $v) {
-            $pdoStatement->bindValue($k, $v);
-        }
+        $this->bindStatementValues($pdoStatement, $params);
         $pdoStatement->execute();
-        $rows = $pdoStatement->fetchAll(\PDO::FETCH_ASSOC);
-        if (!is_array($rows)) {
-            return [];
-        }
+        $rows = $this->fetchAssocRows($pdoStatement);
 
-        return array_map(static fn (array $row): array => [
-            'countryCode' => (string) ($row['country_code'] ?? ''),
-            'total' => (int) ($row['total'] ?? 0),
-            'canonical' => (int) ($row['canonical_count'] ?? 0),
-            'duplicate' => (int) ($row['duplicate_count'] ?? 0),
-            'superseded' => (int) ($row['superseded_count'] ?? 0),
-            'alias' => (int) ($row['alias_count'] ?? 0),
-            'conflict' => (int) ($row['conflict_count'] ?? 0),
-            'evidenceBacked' => (int) ($row['evidence_backed_count'] ?? 0),
-            'evidenceMissing' => (int) ($row['evidence_missing_count'] ?? 0),
-            'dueForRevalidation' => (int) ($row['due_for_revalidation_count'] ?? 0),
-            'uncertainValidation' => (int) ($row['uncertain_validation_count'] ?? 0),
+        return array_map(fn (array $row): array => [
+            'countryCode' => $this->stringRowValue($row, 'country_code'),
+            'total' => $this->intRowValue($row, 'total'),
+            'canonical' => $this->intRowValue($row, 'canonical_count'),
+            'duplicate' => $this->intRowValue($row, 'duplicate_count'),
+            'superseded' => $this->intRowValue($row, 'superseded_count'),
+            'alias' => $this->intRowValue($row, 'alias_count'),
+            'conflict' => $this->intRowValue($row, 'conflict_count'),
+            'evidenceBacked' => $this->intRowValue($row, 'evidence_backed_count'),
+            'evidenceMissing' => $this->intRowValue($row, 'evidence_missing_count'),
+            'dueForRevalidation' => $this->intRowValue($row, 'due_for_revalidation_count'),
+            'uncertainValidation' => $this->intRowValue($row, 'uncertain_validation_count'),
         ], $rows);
     }
 
@@ -825,58 +656,13 @@ SQL
      *   'uncertainValidation':int
      * }>
      */
-    #[Override]
+    #[\Override]
     public function summarizeSourcePortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
-        $this->ensureTenantScope($ownerId, $vendorId);
-        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
-        $driver = is_string($driverAttr) ? $driverAttr : '';
         $params = $this->tenantParams($ownerId, $vendorId);
-        $where = ['deleted_at IS NULL', $this->tenantWhereClause($ownerId, $vendorId)];
-        if ($countryCode) {
-            $where[] = 'country_code = :country_code';
-            $params[':country_code'] = $countryCode;
-        }
-        if ($q) {
-            $op = 'pgsql' === $driver ? 'ILIKE' : 'LIKE';
-            $where[] = "lower(line1 || ' ' || city || ' ' || coalesce(postal_code,'')) {$op} lower(:q)";
-            $params[':q'] = '%'.$q.'%';
-        }
-
-        $sourceType = AddressRecordPolicy::normalizeSourceType($this->stringFilter($filters, 'sourceType'));
-        if (null !== $sourceType) {
-            $where[] = 'source_type = :source_type';
-            $params[':source_type'] = $sourceType;
-        }
-
-        $sourceSystem = $this->stringFilter($filters, 'sourceSystem');
-        if (null !== $sourceSystem) {
-            $where[] = 'source_system = :source_system';
-            $params[':source_system'] = $sourceSystem;
-        }
-
-        $governanceStatusRaw = $this->stringFilter($filters, 'governanceStatus');
-        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($governanceStatusRaw);
-        if (null !== $governanceStatusRaw) {
-            $where[] = 'governance_status = :governance_status';
-            $params[':governance_status'] = $governanceStatus;
-        }
-
-        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy($this->stringFilter($filters, 'revalidationPolicy'));
-        if (null !== $revalidationPolicy) {
-            $where[] = 'revalidation_policy = :revalidation_policy';
-            $params[':revalidation_policy'] = $revalidationPolicy;
-        }
-
-        $hasEvidence = $this->boolFilter($filters, 'hasEvidence');
-        if (true === $hasEvidence) {
-            $where[] = $this->evidencePresenceClause(true);
-        } elseif (false === $hasEvidence) {
-            $where[] = $this->evidencePresenceClause(false);
-        }
-
-        $revalidationDueBefore = $this->stringFilter($filters, 'revalidationDueBefore');
-        $params[':summary_due_before'] = $revalidationDueBefore ?? $this->currentTimestampLiteral();
+        $where = $this->buildScopedSearchWhere($ownerId, $vendorId, $countryCode, $q, $params);
+        $this->applyPortfolioFilters($where, $params, $filters, true);
+        $this->summaryDueBefore($params, $filters);
 
         $sql = 'SELECT COALESCE(source_system, "") AS source_system, COALESCE(source_type, "") AS source_type, '
             .'COUNT(*) AS total, '
@@ -894,28 +680,23 @@ SQL
             .' ORDER BY total DESC, source_system ASC, source_type ASC';
 
         $pdoStatement = $this->prepare($sql);
-        foreach ($params as $k => $v) {
-            $pdoStatement->bindValue($k, $v);
-        }
+        $this->bindStatementValues($pdoStatement, $params);
         $pdoStatement->execute();
-        $rows = $pdoStatement->fetchAll(\PDO::FETCH_ASSOC);
-        if (!is_array($rows)) {
-            return [];
-        }
+        $rows = $this->fetchAssocRows($pdoStatement);
 
-        return array_map(static fn (array $row): array => [
-            'sourceSystem' => (string) ($row['source_system'] ?? ''),
-            'sourceType' => (string) ($row['source_type'] ?? ''),
-            'total' => (int) ($row['total'] ?? 0),
-            'canonical' => (int) ($row['canonical_count'] ?? 0),
-            'duplicate' => (int) ($row['duplicate_count'] ?? 0),
-            'superseded' => (int) ($row['superseded_count'] ?? 0),
-            'alias' => (int) ($row['alias_count'] ?? 0),
-            'conflict' => (int) ($row['conflict_count'] ?? 0),
-            'evidenceBacked' => (int) ($row['evidence_backed_count'] ?? 0),
-            'evidenceMissing' => (int) ($row['evidence_missing_count'] ?? 0),
-            'dueForRevalidation' => (int) ($row['due_for_revalidation_count'] ?? 0),
-            'uncertainValidation' => (int) ($row['uncertain_validation_count'] ?? 0),
+        return array_map(fn (array $row): array => [
+            'sourceSystem' => $this->stringRowValue($row, 'source_system'),
+            'sourceType' => $this->stringRowValue($row, 'source_type'),
+            'total' => $this->intRowValue($row, 'total'),
+            'canonical' => $this->intRowValue($row, 'canonical_count'),
+            'duplicate' => $this->intRowValue($row, 'duplicate_count'),
+            'superseded' => $this->intRowValue($row, 'superseded_count'),
+            'alias' => $this->intRowValue($row, 'alias_count'),
+            'conflict' => $this->intRowValue($row, 'conflict_count'),
+            'evidenceBacked' => $this->intRowValue($row, 'evidence_backed_count'),
+            'evidenceMissing' => $this->intRowValue($row, 'evidence_missing_count'),
+            'dueForRevalidation' => $this->intRowValue($row, 'due_for_revalidation_count'),
+            'uncertainValidation' => $this->intRowValue($row, 'uncertain_validation_count'),
         ], $rows);
     }
 
@@ -937,71 +718,13 @@ SQL
      *   'uncertainValidation':int
      * }>
      */
-    #[Override]
+    #[\Override]
     public function summarizeValidationPortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
-        $this->ensureTenantScope($ownerId, $vendorId);
-        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
-        $driver = is_string($driverAttr) ? $driverAttr : '';
         $params = $this->tenantParams($ownerId, $vendorId);
-        $where = ['deleted_at IS NULL', $this->tenantWhereClause($ownerId, $vendorId)];
-        if ($countryCode) {
-            $where[] = 'country_code = :country_code';
-            $params[':country_code'] = $countryCode;
-        }
-        if ($q) {
-            $op = 'pgsql' === $driver ? 'ILIKE' : 'LIKE';
-            $where[] = "lower(line1 || ' ' || city || ' ' || coalesce(postal_code,'')) {$op} lower(:q)";
-            $params[':q'] = '%'.$q.'%';
-        }
-
-        $sourceType = AddressRecordPolicy::normalizeSourceType($this->stringFilter($filters, 'sourceType'));
-        if (null !== $sourceType) {
-            $where[] = 'source_type = :source_type';
-            $params[':source_type'] = $sourceType;
-        }
-
-        $sourceSystem = $this->stringFilter($filters, 'sourceSystem');
-        if (null !== $sourceSystem) {
-            $where[] = 'source_system = :source_system';
-            $params[':source_system'] = $sourceSystem;
-        }
-
-        $validationProvider = $this->stringFilter($filters, 'validationProvider');
-        if (null !== $validationProvider) {
-            $where[] = 'COALESCE(last_validation_provider, validation_provider, "") = :validation_provider';
-            $params[':validation_provider'] = $validationProvider;
-        }
-
-        $validationStatusRaw = $this->stringFilter($filters, 'validationStatus');
-        $validationStatus = AddressRecordPolicy::normalizeValidationStatus($validationStatusRaw);
-        if (null !== $validationStatusRaw) {
-            $where[] = 'COALESCE(last_validation_status, validation_status, "unknown") = :validation_status';
-            $params[':validation_status'] = $validationStatus;
-        }
-
-        $governanceStatusRaw = $this->stringFilter($filters, 'governanceStatus');
-        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($governanceStatusRaw);
-        if (null !== $governanceStatusRaw) {
-            $where[] = 'governance_status = :governance_status';
-            $params[':governance_status'] = $governanceStatus;
-        }
-
-        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy($this->stringFilter($filters, 'revalidationPolicy'));
-        if (null !== $revalidationPolicy) {
-            $where[] = 'revalidation_policy = :revalidation_policy';
-            $params[':revalidation_policy'] = $revalidationPolicy;
-        }
-
-        $hasEvidence = $this->boolFilter($filters, 'hasEvidence');
-        if (true === $hasEvidence) {
-            $where[] = $this->evidencePresenceClause(true);
-        } elseif (false === $hasEvidence) {
-            $where[] = $this->evidencePresenceClause(false);
-        }
-
-        $revalidationDueBefore = $this->stringFilter($filters, 'revalidationDueBefore');
-        $params[':summary_due_before'] = $revalidationDueBefore ?? $this->currentTimestampLiteral();
+        $where = $this->buildScopedSearchWhere($ownerId, $vendorId, $countryCode, $q, $params);
+        $this->applyPortfolioFilters($where, $params, $filters, true, true);
+        $this->summaryDueBefore($params, $filters);
 
         $providerExpr = 'COALESCE(last_validation_provider, validation_provider, "")';
         $statusExpr = 'COALESCE(last_validation_status, validation_status, "unknown")';
@@ -1021,29 +744,260 @@ SQL
             .' ORDER BY total DESC, validation_provider ASC, validation_status ASC';
 
         $pdoStatement = $this->prepare($sql);
-        foreach ($params as $k => $v) {
-            $pdoStatement->bindValue($k, $v);
-        }
+        $this->bindStatementValues($pdoStatement, $params);
         $pdoStatement->execute();
+        $rows = $this->fetchAssocRows($pdoStatement);
+
+        return array_map(fn (array $row): array => [
+            'validationProvider' => $this->stringRowValue($row, 'validation_provider'),
+            'validationStatus' => $this->stringRowValue($row, 'validation_status', 'unknown'),
+            'total' => $this->intRowValue($row, 'total'),
+            'canonical' => $this->intRowValue($row, 'canonical_count'),
+            'duplicate' => $this->intRowValue($row, 'duplicate_count'),
+            'superseded' => $this->intRowValue($row, 'superseded_count'),
+            'alias' => $this->intRowValue($row, 'alias_count'),
+            'conflict' => $this->intRowValue($row, 'conflict_count'),
+            'evidenceBacked' => $this->intRowValue($row, 'evidence_backed_count'),
+            'evidenceMissing' => $this->intRowValue($row, 'evidence_missing_count'),
+            'dueForRevalidation' => $this->intRowValue($row, 'due_for_revalidation_count'),
+            'uncertainValidation' => $this->intRowValue($row, 'uncertain_validation_count'),
+        ], $rows);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     *
+     * @return array<int, string>
+     */
+    private function buildScopedSearchWhere(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $query, array &$params): array
+    {
+        $this->ensureTenantScope($ownerId, $vendorId);
+
+        $where = ['deleted_at IS NULL', $this->tenantWhereClause($ownerId, $vendorId)];
+        if (null !== $countryCode && '' !== $countryCode) {
+            $where[] = 'country_code = :country_code';
+            $params[':country_code'] = $countryCode;
+        }
+
+        $this->appendSearchQueryFilter($where, $params, $this->databaseDriverName(), $query);
+
+        return $where;
+    }
+
+    /**
+     * @param array<int, string>   $where
+     * @param array<string, mixed> $params
+     * @param array<string, mixed> $filters
+     */
+    private function applyPortfolioFilters(
+        array &$where,
+        array &$params,
+        array $filters,
+        bool $includeSourceSystem = false,
+        bool $includeValidation = false,
+    ): void {
+        $sourceType = AddressRecordPolicy::normalizeSourceType($this->stringFilter($filters, 'sourceType'));
+        if (null !== $sourceType) {
+            $where[] = 'source_type = :source_type';
+            $params[':source_type'] = $sourceType;
+        }
+
+        if ($includeSourceSystem) {
+            $sourceSystem = $this->stringFilter($filters, 'sourceSystem');
+            if (null !== $sourceSystem) {
+                $where[] = 'source_system = :source_system';
+                $params[':source_system'] = $sourceSystem;
+            }
+        }
+
+        if ($includeValidation) {
+            $validationProvider = $this->stringFilter($filters, 'validationProvider');
+            if (null !== $validationProvider) {
+                $where[] = 'COALESCE(last_validation_provider, validation_provider, "") = :validation_provider';
+                $params[':validation_provider'] = $validationProvider;
+            }
+
+            $validationStatusRaw = $this->stringFilter($filters, 'validationStatus');
+            $validationStatus = AddressRecordPolicy::normalizeValidationStatus($validationStatusRaw);
+            if (null !== $validationStatusRaw) {
+                $where[] = 'COALESCE(last_validation_status, validation_status, "unknown") = :validation_status';
+                $params[':validation_status'] = $validationStatus;
+            }
+        }
+
+        $governanceStatusRaw = $this->stringFilter($filters, 'governanceStatus');
+        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($governanceStatusRaw);
+        if (null !== $governanceStatusRaw) {
+            $where[] = 'governance_status = :governance_status';
+            $params[':governance_status'] = $governanceStatus;
+        }
+
+        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy($this->stringFilter($filters, 'revalidationPolicy'));
+        if (null !== $revalidationPolicy) {
+            $where[] = 'revalidation_policy = :revalidation_policy';
+            $params[':revalidation_policy'] = $revalidationPolicy;
+        }
+
+        $hasEvidence = $this->hasEvidenceFilter($filters);
+        if (true === $hasEvidence) {
+            $where[] = $this->evidencePresenceClause(true);
+        } elseif (false === $hasEvidence) {
+            $where[] = $this->evidencePresenceClause(false);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @param array<string, mixed> $filters
+     */
+    private function summaryDueBefore(array &$params, array $filters, string $parameter = ':summary_due_before'): ?string
+    {
+        $revalidationDueBefore = $this->stringFilter($filters, 'revalidationDueBefore');
+        $params[$parameter] = $revalidationDueBefore ?? $this->currentTimestampLiteral();
+
+        return $revalidationDueBefore;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function fetchAssocRows(\PDOStatement $pdoStatement): array
+    {
         $rows = $pdoStatement->fetchAll(\PDO::FETCH_ASSOC);
         if (!is_array($rows)) {
             return [];
         }
 
-        return array_map(static fn (array $row): array => [
-            'validationProvider' => (string) ($row['validation_provider'] ?? ''),
-            'validationStatus' => (string) ($row['validation_status'] ?? 'unknown'),
-            'total' => (int) ($row['total'] ?? 0),
-            'canonical' => (int) ($row['canonical_count'] ?? 0),
-            'duplicate' => (int) ($row['duplicate_count'] ?? 0),
-            'superseded' => (int) ($row['superseded_count'] ?? 0),
-            'alias' => (int) ($row['alias_count'] ?? 0),
-            'conflict' => (int) ($row['conflict_count'] ?? 0),
-            'evidenceBacked' => (int) ($row['evidence_backed_count'] ?? 0),
-            'evidenceMissing' => (int) ($row['evidence_missing_count'] ?? 0),
-            'dueForRevalidation' => (int) ($row['due_for_revalidation_count'] ?? 0),
-            'uncertainValidation' => (int) ($row['uncertain_validation_count'] ?? 0),
-        ], $rows);
+        $safeRows = [];
+        foreach ($rows as $row) {
+            if (is_array($row)) {
+                $safeRows[] = $row;
+            }
+        }
+
+        return $safeRows;
+    }
+
+    private function databaseDriverName(): string
+    {
+        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+
+        return is_string($driverAttr) ? $driverAttr : '';
+    }
+
+    private function searchableAddressTextClause(string $driver): string
+    {
+        $operator = 'pgsql' === $driver ? 'ILIKE' : 'LIKE';
+
+        return 'lower(line1 || \' \' || city || \' \' || coalesce(postal_code,\'\')) '.$operator.' lower(:q)';
+    }
+
+    /**
+     * @param array<int, string>   $where
+     * @param array<string, mixed> $params
+     * @param array<string, mixed> $filters
+     */
+    private function applyOperationalPageFilters(array &$where, array &$params, array $filters): ?string
+    {
+        $this->applyPortfolioFilters($where, $params, $filters);
+
+        $revalidationDueBefore = $this->stringFilter($filters, 'revalidationDueBefore');
+        if (null !== $revalidationDueBefore) {
+            $where[] = 'revalidation_due_at IS NOT NULL AND revalidation_due_at <= :revalidation_due_before';
+            $params[':revalidation_due_before'] = $revalidationDueBefore;
+        }
+
+        return $revalidationDueBefore;
+    }
+
+    /**
+     * @param array<int, string>   $where
+     * @param array<string, mixed> $params
+     * @param array<string, mixed> $filters
+     */
+    private function applyQueueFilter(array &$where, array &$params, array $filters, ?string $revalidationDueBefore): void
+    {
+        $queue = $this->stringFilter($filters, 'queue');
+        if (null === $queue) {
+            return;
+        }
+
+        $expectedNormalizationVersion = $this->stringFilter($filters, 'expectedNormalizationVersion');
+        switch ($queue) {
+            case 'dueForRevalidation':
+                $queueDueBefore = $revalidationDueBefore ?? $this->currentTimestampLiteral();
+                $where[] = 'revalidation_due_at IS NOT NULL AND revalidation_due_at <= :queue_due_before';
+                $params[':queue_due_before'] = $queueDueBefore;
+
+                return;
+            case 'evidenceMissing':
+                $where[] = $this->evidencePresenceClause(false);
+
+                return;
+            case 'uncertainValidation':
+                $where[] = '(validation_status = :queue_validation_status OR last_validation_status = :queue_last_validation_status)';
+                $params[':queue_validation_status'] = 'uncertain';
+                $params[':queue_last_validation_status'] = 'uncertain';
+
+                return;
+            case 'conflictReview':
+                $where[] = 'governance_status = :queue_governance_conflict';
+                $params[':queue_governance_conflict'] = 'conflict';
+
+                return;
+            case 'duplicateReview':
+                $where[] = 'governance_status = :queue_governance_duplicate';
+                $params[':queue_governance_duplicate'] = 'duplicate';
+
+                return;
+            case 'staleNormalizationVersion':
+                if (null !== $expectedNormalizationVersion) {
+                    $where[] = '(normalization_version IS NULL OR normalization_version <> :expected_normalization_version)';
+                    $params[':expected_normalization_version'] = $expectedNormalizationVersion;
+                }
+
+                return;
+        }
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     */
+    private function pageCursorFromRows(array $rows, int $limit): ?string
+    {
+        if (count($rows) !== $limit || [] === $rows) {
+            return null;
+        }
+
+        $lastRow = end($rows);
+
+        return is_array($lastRow) && array_key_exists('id', $lastRow)
+            ? $this->stringRowValue($lastRow, 'id')
+            : null;
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @param array<int, string>   $where
+     */
+    private function appendSearchQueryFilter(array &$where, array &$params, string $driver, ?string $query): void
+    {
+        if (null === $query || '' === trim($query)) {
+            return;
+        }
+
+        $where[] = $this->searchableAddressTextClause($driver);
+        $params[':q'] = '%'.$query.'%';
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function bindStatementValues(\PDOStatement $statement, array $params): void
+    {
+        foreach ($params as $name => $value) {
+            $statement->bindValue($name, $value);
+        }
     }
 
     private function bindForCreate(\PDOStatement $pdoStatement, AddressInterface $address): void
@@ -1191,12 +1145,13 @@ SQL
         if (null !== $address->validationRaw()) {
             return true;
         }
+
         return null !== $address->validationVerdict();
     }
 
     private function buildEvidenceSnapshot(AddressInterface $address): AddressEvidenceSnapshotInterface
     {
-        $createdAt = (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
+        $createdAt = $this->currentTimestampLiteral();
         $validatedBy = $address->validationProvider() ?? $address->lastValidationProvider() ?? $address->sourceSystem();
         $validationScore = $address->lastValidationScore() ?? $address->validationQuality();
         $validationIssues = $address->validationVerdict();
@@ -1377,7 +1332,7 @@ SQL
     }
 
     /** @param array<string, mixed> $normalized */
-    private function assertOperationalGovernanceTargetsExist(array $normalized, ?string $ownerId, ?string $vendorId): void
+    private function assertGovTargetsExist(array $normalized, ?string $ownerId, ?string $vendorId): void
     {
         $targets = [
             $normalized['duplicate_of_id'] ?? null,
@@ -1393,7 +1348,7 @@ SQL
             if ('' === trim($target)) {
                 continue;
             }
-            if (!$this->get($target, $ownerId, $vendorId) instanceof \App\EntityInterface\Record\AddressInterface) {
+            if (!$this->get($target, $ownerId, $vendorId) instanceof AddressInterface) {
                 throw new \RuntimeException(sprintf('Governance link target "%s" was not found in the current tenant scope.', $target));
             }
         }
@@ -1452,17 +1407,23 @@ SQL
         return $hasEvidence ? $clause : '(NOT '.$clause.')';
     }
 
+    private function currentTimestampAtom(): string
+    {
+        $now = new \DateTimeImmutable();
+
+        return $now->format(DATE_ATOM);
+    }
+
     private function currentTimestampLiteral(): string
     {
-        return (new \DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
+        $now = new \DateTimeImmutable('now');
+
+        return $now->format('Y-m-d H:i:sP');
     }
 
     private function currentTimestampSql(): string
     {
-        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
-        $driver = is_string($driverAttr) ? $driverAttr : '';
-
-        return 'pgsql' === $driver ? 'now()' : 'CURRENT_TIMESTAMP';
+        return 'pgsql' === $this->databaseDriverName() ? 'now()' : 'CURRENT_TIMESTAMP';
     }
 
     /** @param array<string, mixed>|null $value */
@@ -1478,24 +1439,23 @@ SQL
     }
 
     /** @return array<string, mixed>|null */
-    private function decodeJsonNullable(mixed $v): ?array
+    private function decodeJsonNullable(mixed $value): ?array
     {
-        if (null === $v) {
+        if (null === $value) {
             return null;
         }
-        if (is_array($v)) {
-            /* @var array<string, mixed> $v */
-            return $v;
+        if (is_array($value)) {
+            /* @var array<string, mixed> $value */
+            return $value;
         }
-        if (!is_string($v) && !is_int($v) && !is_float($v) && !is_bool($v)) {
+        if (!is_string($value) && !is_int($value) && !is_float($value) && !is_bool($value)) {
             return null;
         }
-        $s = (string) $v;
-        $s = trim($s);
-        if ('' === $s) {
+        $jsonPayload = trim((string) $value);
+        if ('' === $jsonPayload) {
             return null;
         }
-        $decoded = json_decode($s, true);
+        $decoded = json_decode($jsonPayload, true);
         if (!is_array($decoded)) {
             return null;
         }
@@ -1582,14 +1542,33 @@ SQL
     }
 
     /**
-     * @param non-empty-string $name
-     * @param array<mixed>     $payload
+     * @param non-empty-string     $name
+     * @param array<string, mixed> $payload
      */
     private function appendOutbox(string $name, array $payload = []): void
     {
-        $payload = AddressOutboxEventContract::decoratePayload($name, $payload);
+        $payloadJson = $this->encodedOutboxPayload($name, $payload);
+        $stmt = $this->prepare(
+            'INSERT INTO address_outbox (event_name, event_version, payload) '
+            .'VALUES (:name, :ver, '.$this->outboxPayloadExpression().')'
+        );
+
+        $stmt->execute([
+            ':name' => $name,
+            ':ver' => AddressOutboxEventContract::eventVersion($name),
+            ':payload' => $payloadJson,
+        ]);
+    }
+
+    /**
+     * @param non-empty-string     $name
+     * @param array<string, mixed> $payload
+     */
+    private function encodedOutboxPayload(string $name, array $payload): string
+    {
+        $decoratedPayload = AddressOutboxEventContract::decoratePayload($name, $payload);
         $payloadJson = json_encode(
-            $payload,
+            $decoratedPayload,
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
         );
 
@@ -1597,29 +1576,14 @@ SQL
             throw new \RuntimeException('payload_encode_failed');
         }
 
-        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
-        $driver = is_string($driverAttr) ? $driverAttr : '';
+        return $payloadJson;
+    }
 
-        $payloadExpr = 'pgsql' === $driver
+    private function outboxPayloadExpression(): string
+    {
+        return 'pgsql' === $this->databaseDriverName()
             ? ':payload::jsonb'
             : ':payload';
-
-        $sql = "
-        INSERT INTO address_outbox (event_name, event_version, payload)
-        VALUES (:name, :ver, {$payloadExpr})
-    ";
-
-        $stmt = $this->pdo->prepare($sql);
-
-        if (false === $stmt) {
-            throw new \RuntimeException('outbox_prepare_failed');
-        }
-
-        $stmt->execute([
-            ':name' => $name,
-            ':ver' => AddressOutboxEventContract::eventVersion($name),
-            ':payload' => $payloadJson,
-        ]);
     }
 
     private function prepare(string $sql): \PDOStatement
@@ -1645,9 +1609,9 @@ SQL
     }
 
     /** @param array<string, mixed> $filters */
-    private function boolFilter(array $filters, string $key): ?bool
+    private function hasEvidenceFilter(array $filters): ?bool
     {
-        $value = $filters[$key] ?? null;
+        $value = $filters['hasEvidence'] ?? null;
         if (is_bool($value)) {
             return $value;
         }
@@ -1662,6 +1626,20 @@ SQL
         }
 
         return null;
+    }
+
+    /** @param array<string, mixed> $row */
+    private function stringRowValue(array $row, string $key, string $default = ''): string
+    {
+        $value = $row[$key] ?? null;
+        if (is_string($value)) {
+            return $value;
+        }
+        if (is_int($value) || is_float($value)) {
+            return (string) $value;
+        }
+
+        return $default;
     }
 
     /** @param array<string, mixed> $row */
@@ -1733,72 +1711,15 @@ SQL
      *   staleNormalization:int
      * }>
      */
-    #[Override]
+    #[\Override]
     public function summarizeNormalizationPortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
-        $this->ensureTenantScope($ownerId, $vendorId);
-        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
-        $driver = is_string($driverAttr) ? $driverAttr : '';
         $params = $this->tenantParams($ownerId, $vendorId);
-        $where = ['deleted_at IS NULL', $this->tenantWhereClause($ownerId, $vendorId)];
-        if ($countryCode) {
-            $where[] = 'country_code = :country_code';
-            $params[':country_code'] = $countryCode;
-        }
-        if ($q) {
-            $op = 'pgsql' === $driver ? 'ILIKE' : 'LIKE';
-            $where[] = "lower(line1 || ' ' || city || ' ' || coalesce(postal_code,'')) {$op} lower(:q)";
-            $params[':q'] = '%'.$q.'%';
-        }
-
-        $sourceType = AddressRecordPolicy::normalizeSourceType($this->stringFilter($filters, 'sourceType'));
-        if (null !== $sourceType) {
-            $where[] = 'source_type = :source_type';
-            $params[':source_type'] = $sourceType;
-        }
-
-        $sourceSystem = $this->stringFilter($filters, 'sourceSystem');
-        if (null !== $sourceSystem) {
-            $where[] = 'source_system = :source_system';
-            $params[':source_system'] = $sourceSystem;
-        }
-
-        $validationProvider = $this->stringFilter($filters, 'validationProvider');
-        if (null !== $validationProvider) {
-            $where[] = 'COALESCE(last_validation_provider, validation_provider, "") = :validation_provider';
-            $params[':validation_provider'] = $validationProvider;
-        }
-
-        $validationStatusRaw = $this->stringFilter($filters, 'validationStatus');
-        $validationStatus = AddressRecordPolicy::normalizeValidationStatus($validationStatusRaw);
-        if (null !== $validationStatusRaw) {
-            $where[] = 'COALESCE(last_validation_status, validation_status, "unknown") = :validation_status';
-            $params[':validation_status'] = $validationStatus;
-        }
-
-        $governanceStatusRaw = $this->stringFilter($filters, 'governanceStatus');
-        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($governanceStatusRaw);
-        if (null !== $governanceStatusRaw) {
-            $where[] = 'governance_status = :governance_status';
-            $params[':governance_status'] = $governanceStatus;
-        }
-
-        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy($this->stringFilter($filters, 'revalidationPolicy'));
-        if (null !== $revalidationPolicy) {
-            $where[] = 'revalidation_policy = :revalidation_policy';
-            $params[':revalidation_policy'] = $revalidationPolicy;
-        }
-
-        $hasEvidence = $this->boolFilter($filters, 'hasEvidence');
-        if (true === $hasEvidence) {
-            $where[] = $this->evidencePresenceClause(true);
-        } elseif (false === $hasEvidence) {
-            $where[] = $this->evidencePresenceClause(false);
-        }
+        $where = $this->buildScopedSearchWhere($ownerId, $vendorId, $countryCode, $q, $params);
+        $this->applyPortfolioFilters($where, $params, $filters, true, true);
 
         $expectedNormalizationVersion = $this->stringFilter($filters, 'expectedNormalizationVersion');
-        $revalidationDueBefore = $this->stringFilter($filters, 'revalidationDueBefore');
-        $params[':summary_due_before'] = $revalidationDueBefore ?? $this->currentTimestampLiteral();
+        $this->summaryDueBefore($params, $filters);
         if (null !== $expectedNormalizationVersion) {
             $params[':expected_normalization_version'] = $expectedNormalizationVersion;
         }
@@ -1824,35 +1745,30 @@ SQL
             ."WHEN 'validated' THEN 1 "
             ."WHEN 'rejected' THEN 2 "
             ."WHEN 'pending' THEN 3 "
-            ."ELSE 4 END ASC";
+            .'ELSE 4 END ASC';
 
         $pdoStatement = $this->prepare($sql);
-        foreach ($params as $k => $v) {
-            $pdoStatement->bindValue($k, $v);
-        }
+        $this->bindStatementValues($pdoStatement, $params);
         if (null === $expectedNormalizationVersion) {
             $pdoStatement->bindValue(':expected_normalization_version', null, \PDO::PARAM_NULL);
         }
         $pdoStatement->execute();
-        $rows = $pdoStatement->fetchAll(\PDO::FETCH_ASSOC);
-        if (!is_array($rows)) {
-            return [];
-        }
+        $rows = $this->fetchAssocRows($pdoStatement);
 
-        return array_map(static fn (array $row): array => [
-            'normalizationVersion' => (string) ($row['normalization_version'] ?? ''),
-            'validationStatus' => (string) ($row['validation_status'] ?? 'unknown'),
-            'total' => (int) ($row['total'] ?? 0),
-            'canonical' => (int) ($row['canonical_count'] ?? 0),
-            'duplicate' => (int) ($row['duplicate_count'] ?? 0),
-            'superseded' => (int) ($row['superseded_count'] ?? 0),
-            'alias' => (int) ($row['alias_count'] ?? 0),
-            'conflict' => (int) ($row['conflict_count'] ?? 0),
-            'evidenceBacked' => (int) ($row['evidence_backed_count'] ?? 0),
-            'evidenceMissing' => (int) ($row['evidence_missing_count'] ?? 0),
-            'dueForRevalidation' => (int) ($row['due_for_revalidation_count'] ?? 0),
-            'uncertainValidation' => (int) ($row['uncertain_validation_count'] ?? 0),
-            'staleNormalization' => (int) ($row['stale_normalization_count'] ?? 0),
+        return array_map(fn (array $row): array => [
+            'normalizationVersion' => $this->stringRowValue($row, 'normalization_version'),
+            'validationStatus' => $this->stringRowValue($row, 'validation_status', 'unknown'),
+            'total' => $this->intRowValue($row, 'total'),
+            'canonical' => $this->intRowValue($row, 'canonical_count'),
+            'duplicate' => $this->intRowValue($row, 'duplicate_count'),
+            'superseded' => $this->intRowValue($row, 'superseded_count'),
+            'alias' => $this->intRowValue($row, 'alias_count'),
+            'conflict' => $this->intRowValue($row, 'conflict_count'),
+            'evidenceBacked' => $this->intRowValue($row, 'evidence_backed_count'),
+            'evidenceMissing' => $this->intRowValue($row, 'evidence_missing_count'),
+            'dueForRevalidation' => $this->intRowValue($row, 'due_for_revalidation_count'),
+            'uncertainValidation' => $this->intRowValue($row, 'uncertain_validation_count'),
+            'staleNormalization' => $this->intRowValue($row, 'stale_normalization_count'),
         ], $rows);
     }
 }

@@ -3,145 +3,64 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
+require __DIR__.'/address-projection-common.php';
 
-require __DIR__ . '/../vendor/autoload.php';
-
-use App\Entity\Record\AddressData;
-use App\Service\Application\AddressProjectionService;
-
-/**
- * @param $v
- * @return array|null
- */
-/**
- * @param $v
- * @return array|null
- */
-function decodeJsonNullable($v): ?array
+function state_path(): string
 {
-    if ($v === null) {
-        return null;
+    $path = getenv('ADDRESS_PROJECTION_STATE') ?: '.state/address-projection.watermark';
+    $directory = dirname($path);
+    if (!is_dir($directory) && !mkdir($directory, 0777, true) && !is_dir($directory)) {
+        fwrite(STDERR, 'Cannot create state directory: '.$directory."\n");
+        exit(1);
     }
-    if (!is_string($v) || $v === '') {
-        return null;
-    }
-    $d = json_decode($v, true);
-    return is_array($d) ? $d : null;
+
+    return $path;
 }
 
-/**
- * @param array $r
- * @param string $k
- * @return bool|null
- */
-function toBoolNullable(array $r, string $k): ?bool
+function read_watermark(): string
 {
-    if (!array_key_exists($k, $r) || $r[$k] === null) {
-        return null;
-    }
-    $v = $r[$k];
-    if ($v === true || $v === 1 || $v === '1' || $v === 't' || $v === 'true') {
-        return true;
-    }
-    return false;
-}
-
-/**
- * @return string
- */
-function statePath(): string
-{
-    $p = getenv('ADDRESS_PROJECTION_STATE') ?: '.state/address-projection.watermark';
-    if (!is_dir(dirname($p))) {
-        @mkdir(dirname($p), 0777, true);
-    }
-    return $p;
-}
-
-/**
- * @return string
- */
-function readWatermark(): string
-{
-    $p = statePath();
-    if (!file_exists($p)) {
+    $path = state_path();
+    if (!file_exists($path)) {
         return '1970-01-01T00:00:00Z';
     }
-    $s = trim((string)@file_get_contents($p));
-    return $s !== '' ? $s : '1970-01-01T00:00:00Z';
+
+    $stateContents = file_get_contents($path);
+    $state = false === $stateContents ? '' : trim($stateContents);
+
+    return '' !== $state ? $state : '1970-01-01T00:00:00Z';
 }
 
-/**
- * @param string $v
- * @return void
- */
-function writeWatermark(string $v): void
+function write_watermark(string $watermark): void
 {
-    $p = statePath();
-    file_put_contents($p, $v);
+    file_put_contents(state_path(), $watermark);
 }
 
-$interval = (int)(getenv('ADDRESS_PROJECTION_INTERVAL_SEC') ?: 5);
+$interval = (int) (getenv('ADDRESS_PROJECTION_INTERVAL_SEC') ?: 5);
+$postgres = projection_pdo('PG');
+$projectionService = projection_svc();
 
-$pg = new PDO((string)getenv('PG_DSN'), (string)getenv('PG_USER'), (string)getenv('PG_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-$my = new PDO((string)getenv('MY_DSN'), (string)getenv('MY_USER'), (string)getenv('MY_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-
-$proj = new AddressProjectionService($my);
-
-$wm = readWatermark();
+$watermark = read_watermark();
 while (true) {
     $sql = 'SELECT * FROM address_entity WHERE (updated_at IS NOT NULL AND updated_at > :since) OR (created_at > :since) ORDER BY coalesce(updated_at, created_at) ASC LIMIT 1000';
-    $stmt = $pg->prepare($sql);
-    $stmt->execute([':since' => $wm]);
+    $statement = $postgres->prepare($sql);
+    $statement->execute([':since' => $watermark]);
 
     $count = 0;
-    $newWm = $wm;
-    while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $validationRaw = decodeJsonNullable($r['validation_raw'] ?? null);
-        $validationVerdict = decodeJsonNullable($r['validation_verdict'] ?? null);
-        $validationDeliverable = toBoolNullable($r, 'validation_deliverable');
+    $newWatermark = $watermark;
+    while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+        if (!is_array($row)) {
+            continue;
+        }
 
-        $a = new AddressData(
-            (string)$r['id'],
-            $r['owner_id'] !== null ? (string)$r['owner_id'] : null,
-            $r['vendor_id'] !== null ? (string)$r['vendor_id'] : null,
-            (string)$r['line1'],
-            $r['line2'] !== null ? (string)$r['line2'] : null,
-            (string)$r['city'],
-            $r['region'] !== null ? (string)$r['region'] : null,
-            $r['postal_code'] !== null ? (string)$r['postal_code'] : null,
-            (string)$r['country_code'],
-            $r['line1_norm'] !== null ? (string)$r['line1_norm'] : null,
-            $r['city_norm'] !== null ? (string)$r['city_norm'] : null,
-            $r['region_norm'] !== null ? (string)$r['region_norm'] : null,
-            $r['postal_code_norm'] !== null ? (string)$r['postal_code_norm'] : null,
-            $r['latitude'] !== null ? (float)$r['latitude'] : null,
-            $r['longitude'] !== null ? (float)$r['longitude'] : null,
-            $r['geohash'] !== null ? (string)$r['geohash'] : null,
-            (string)$r['validation_status'],
-            $r['validation_provider'] !== null ? (string)$r['validation_provider'] : null,
-            $r['validated_at'] !== null ? (string)$r['validated_at'] : null,
-            $r['dedupe_key'] !== null ? (string)$r['dedupe_key'] : null,
-            (string)$r['created_at'],
-            $r['updated_at'] !== null ? (string)$r['updated_at'] : null,
-            $r['deleted_at'] !== null ? (string)$r['deleted_at'] : null,
-            $r['validation_fingerprint'] !== null ? (string)$r['validation_fingerprint'] : null,
-            $validationRaw,
-            $validationVerdict,
-            $validationDeliverable,
-            $r['validation_granularity'] !== null ? (string)$r['validation_granularity'] : null,
-            $r['validation_quality'] !== null ? (int)$r['validation_quality'] : null
-        );
-
-        $proj->upsert($a);
-        $ts = $r['updated_at'] ?: $r['created_at'];
-        $newWm = (string)$ts;
-        $count++;
+        $projectionService->upsert(row_address($row));
+        $timestamp = $row['updated_at'] ?? $row['created_at'] ?? $newWatermark;
+        $newWatermark = (string) $timestamp;
+        ++$count;
     }
 
     if ($count > 0) {
-        writeWatermark($newWm);
-        echo "Projected {$count} rows, watermark {$newWm}\n";
+        write_watermark($newWatermark);
+        echo 'Projected ' . $count . ' rows, watermark ' . $newWatermark . "\n";
         continue;
     }
 

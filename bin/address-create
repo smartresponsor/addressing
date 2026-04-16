@@ -24,7 +24,7 @@ if (!is_array($payload)) {
 $pdo = new PDO((string) getenv('PG_DSN'), (string) getenv('PG_USER'), (string) getenv('PG_PASS'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 $service = new AddressService(new AddressRepository($pdo));
 
-$now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:sP');
+$now = new DateTimeImmutable('now')->format('Y-m-d H:i:sP');
 $id = isset($payload['id']) && is_string($payload['id']) && $payload['id'] !== '' ? $payload['id'] : (string) new Ulid();
 
 $address = new AddressData(

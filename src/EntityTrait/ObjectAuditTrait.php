@@ -1,11 +1,10 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
-declare(strict_types=1);
 
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+declare(strict_types=1);
 
 namespace App\EntityTrait;
 
-use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
@@ -26,7 +25,7 @@ trait ObjectAuditTrait
     private bool $isDeleted = false;
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
-    private ?DateTimeImmutable $deletedAt = null;
+    private ?\DateTimeImmutable $deletedAt = null;
 
     #[ORM\Column(name: 'deleted_by', type: 'integer', nullable: true)]
     private ?int $deletedBy = null;
@@ -51,19 +50,19 @@ trait ObjectAuditTrait
     protected array $decryptedConfig = [];
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
-    private ?DateTimeImmutable $lastConfigUpdate = null;
+    private ?\DateTimeImmutable $lastConfigUpdate = null;
 
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
-    private DateTimeImmutable $createdAt;
+    private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(name: 'modified_at', type: 'datetime_immutable')]
-    private DateTimeImmutable $modifiedAt;
+    private \DateTimeImmutable $modifiedAt;
 
     #[ORM\Column(name: 'last_request_date', type: 'datetime_immutable')]
-    private DateTimeImmutable $lastRequestAt;
+    private \DateTimeImmutable $lastRequestAt;
 
     #[ORM\Column(name: 'locked_at', type: 'datetime_immutable')]
-    private DateTimeImmutable $lockedAt;
+    private \DateTimeImmutable $lockedAt;
 
     #[ORM\Column(name: 'created_by', type: 'integer', options: ['default' => 1])]
     private int $createdBy = 1;
@@ -84,25 +83,25 @@ trait ObjectAuditTrait
 
     #[ORM\Column(type: 'datetime_immutable')]
     #[Groups(['read', 'write'])]
-    private ?DateTimeImmutable $expiresAt = null;
+    private ?\DateTimeImmutable $expiresAt = null;
 
     #[ORM\Column(type: 'json', nullable: true)]
     #[Groups(['read', 'write'])]
     private ?array $ipRestriction = [];
 
-    #region Lifecycle
+    // region Lifecycle
     #[ORM\PrePersist]
     /**
      * Initializes audit timestamps on first persistence.
      */
     public function initializeTimestamps(): void
     {
-        $t = new DateTimeImmutable();
-        $this->slug ??= (string)Uuid::v4();
-        $this->createdAt = $t;
-        $this->modifiedAt = $t;
-        $this->lastRequestAt = $t;
-        $this->lockedAt = $t;
+        $timestamp = new \DateTimeImmutable();
+        $this->slug ??= (string) Uuid::v4();
+        $this->createdAt = $timestamp;
+        $this->modifiedAt = $timestamp;
+        $this->lastRequestAt = $timestamp;
+        $this->lockedAt = $timestamp;
         $this->published = true;
     }
 
@@ -112,7 +111,7 @@ trait ObjectAuditTrait
      */
     public function updateTimestamps(): void
     {
-        $this->modifiedAt = new DateTimeImmutable();
+        $this->modifiedAt = new \DateTimeImmutable();
     }
 
     /**
@@ -132,7 +131,7 @@ trait ObjectAuditTrait
     {
         $this->config = $config;
         $this->decryptedConfig = $config;
-        $this->lastConfigUpdate = new DateTimeImmutable();
+        $this->lastConfigUpdate = new \DateTimeImmutable();
     }
 
     /**
@@ -154,7 +153,7 @@ trait ObjectAuditTrait
     /**
      * Returns the expiration timestamp.
      */
-    public function getExpiresAt(): DateTimeImmutable
+    public function getExpiresAt(): \DateTimeImmutable
     {
         return $this->expiresAt;
     }
@@ -162,7 +161,7 @@ trait ObjectAuditTrait
     /**
      * Sets the expiration timestamp.
      */
-    public function setExpiresAt(DateTimeImmutable $expiresAt): void
+    public function setExpiresAt(\DateTimeImmutable $expiresAt): void
     {
         $this->expiresAt = $expiresAt;
     }
@@ -182,7 +181,6 @@ trait ObjectAuditTrait
     {
         $this->token = $token;
     }
-
 
     /**
      * Returns the configured IP allow list.
@@ -208,6 +206,7 @@ trait ObjectAuditTrait
         if (empty($this->ipRestriction)) {
             return true;
         }
+
         return in_array($ip, $this->ipRestriction, true);
     }
 
@@ -217,7 +216,7 @@ trait ObjectAuditTrait
     public function softDelete(): void
     {
         $this->isDeleted = true;
-        $this->deletedAt = new DateTimeImmutable();
+        $this->deletedAt = new \DateTimeImmutable();
     }
 
     /**
@@ -271,7 +270,7 @@ trait ObjectAuditTrait
     /**
      * Returns the deletion timestamp.
      */
-    public function getDeletedAt(): ?DateTimeImmutable
+    public function getDeletedAt(): ?\DateTimeImmutable
     {
         return $this->deletedAt;
     }
@@ -279,7 +278,7 @@ trait ObjectAuditTrait
     /**
      * Sets the deletion timestamp.
      */
-    public function setDeletedAt(?DateTimeImmutable $deletedAt): void
+    public function setDeletedAt(?\DateTimeImmutable $deletedAt): void
     {
         $this->deletedAt = $deletedAt;
     }
@@ -335,7 +334,7 @@ trait ObjectAuditTrait
     /**
      * Returns the creation timestamp.
      */
-    public function getCreatedAt(): DateTimeImmutable
+    public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
     }
@@ -343,7 +342,7 @@ trait ObjectAuditTrait
     /**
      * Sets the creation timestamp.
      */
-    public function setCreatedAt(DateTimeImmutable $createdAt): void
+    public function setCreatedAt(\DateTimeImmutable $createdAt): void
     {
         $this->createdAt = $createdAt;
     }
@@ -351,7 +350,7 @@ trait ObjectAuditTrait
     /**
      * Returns the modification timestamp.
      */
-    public function getModifiedAt(): DateTimeImmutable
+    public function getModifiedAt(): \DateTimeImmutable
     {
         return $this->modifiedAt;
     }
@@ -359,7 +358,7 @@ trait ObjectAuditTrait
     /**
      * Sets the modification timestamp.
      */
-    public function setModifiedAt(DateTimeImmutable $modifiedAt): void
+    public function setModifiedAt(\DateTimeImmutable $modifiedAt): void
     {
         $this->modifiedAt = $modifiedAt;
     }
@@ -367,7 +366,7 @@ trait ObjectAuditTrait
     /**
      * Returns the lock timestamp.
      */
-    public function getLockedAt(): DateTimeImmutable
+    public function getLockedAt(): \DateTimeImmutable
     {
         return $this->lockedAt;
     }
@@ -375,7 +374,7 @@ trait ObjectAuditTrait
     /**
      * Sets the lock timestamp.
      */
-    public function setLockedAt(DateTimeImmutable $lockedAt): void
+    public function setLockedAt(\DateTimeImmutable $lockedAt): void
     {
         $this->lockedAt = $lockedAt;
     }
@@ -427,6 +426,4 @@ trait ObjectAuditTrait
     {
         $this->lockedBy = $lockedBy;
     }
-
-
 }

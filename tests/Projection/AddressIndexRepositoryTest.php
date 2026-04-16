@@ -1,36 +1,26 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
+use App\Projection\AddressIndex\IndexRecord;
+use App\Projection\AddressIndex\PdoRepository;
 use PHPUnit\Framework\TestCase;
-use App\Projection\AddressIndex\{IndexRecord, PdoRepository};
 
-/**
- *
- */
-
-/**
- *
- */
 final class AddressIndexRepositoryTest extends TestCase
 {
     private PdoRepository $repo;
 
-    /**
-     * @return void
-     */
     protected function setUp(): void
     {
         $pdo = new PDO('sqlite::memory:');
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $sql = file_get_contents(__DIR__ . '/../../src/Projection/AddressIndex/schema.sqlite.sql');
+        $sql = file_get_contents(__DIR__.'/../../src/Projection/AddressIndex/schema.sqlite.sql');
+        self::assertIsString($sql);
         $pdo->exec($sql);
         $this->repo = new PdoRepository($pdo);
     }
 
-    /**
-     * @return void
-     */
     public function testUpsertAndFetch(): void
     {
         $r = new IndexRecord(
@@ -52,10 +42,10 @@ final class AddressIndexRepositoryTest extends TestCase
         );
         $this->repo->upsert($r);
         $got = $this->repo->getByDigest($r->digest);
-        AddressIndexRepositoryTest::assertNotNull($got);
-        AddressIndexRepositoryTest::assertSame('US', $got->country);
-        AddressIndexRepositoryTest::assertSame('Houston', $got->city);
+        self::assertNotNull($got);
+        self::assertSame('US', $got->country);
+        self::assertSame('Houston', $got->city);
         $list = $this->repo->search('Hou', 'US', 10);
-        AddressIndexRepositoryTest::assertGreaterThanOrEqual(1, count($list));
+        self::assertGreaterThanOrEqual(1, count($list));
     }
 }

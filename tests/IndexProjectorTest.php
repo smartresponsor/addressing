@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 use App\Projection\AddressIndex\IndexProjector;
@@ -15,9 +16,10 @@ final class IndexProjectorTest extends TestCase
         $pdo = new PDO('sqlite::memory:');
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $sql = file_get_contents(__DIR__.'/../src/Projection/AddressIndex/schema.sqlite.sql');
+        self::assertIsString($sql);
         $pdo->exec($sql);
         $repo = new PdoRepository($pdo);
-        $projector = new IndexProjector($repo, new Normalizer(), null, false);
+        $projector = new IndexProjector($repo, new Normalizer());
 
         $evt = new AddressCreatedEvent('123 Main St', null, 'Houston', 'TX', '77002', 'US');
         $projector->onAddressCreated($evt);

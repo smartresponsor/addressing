@@ -39,12 +39,13 @@ final class AddressOutboxEventContract
     public static function decoratePayload(string $eventName, array $payload): array
     {
         $version = self::eventVersion($eventName);
+        $occurredAt = new \DateTimeImmutable();
 
         return [
             'eventName' => $eventName,
             'schemaVersion' => self::SCHEMA_VERSION,
             'eventVersion' => $version,
-            'occurredAt' => (new \DateTimeImmutable())->format(DATE_ATOM),
+            'occurredAt' => $occurredAt->format(DATE_ATOM),
         ] + $payload;
     }
 

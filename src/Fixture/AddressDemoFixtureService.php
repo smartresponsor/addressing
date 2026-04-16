@@ -42,11 +42,11 @@ final readonly class AddressDemoFixtureService
             $address = $this->addressInputFactory->fromManageDto($dto, [
                 'id' => sprintf('demo-%04d', $index),
                 'createdAt' => $this->generator->dateTimeBetween('-120 days', '-3 days')->format('Y-m-d H:i:sP'),
-                'latitude' => (float) $this->generator->latitude(25, 49),
-                'longitude' => (float) $this->generator->longitude(-124, -67),
+                'latitude' => $this->generator->latitude(25, 49),
+                'longitude' => $this->generator->longitude(-124, -67),
                 'validationStatus' => $validationStatus,
                 'validationProvider' => 'validated' === $validationStatus ? 'faker-validator' : null,
-                'validatedAt' => 'validated' === $validationStatus ? $this->generator->dateTimeBetween('-60 days', 'now')->format('Y-m-d H:i:sP') : null,
+                'validatedAt' => 'validated' === $validationStatus ? $this->generator->dateTimeBetween('-60 days')->format('Y-m-d H:i:sP') : null,
                 'sourceSystem' => 'symfony-fixture',
                 'sourceType' => 0 === $index % 3 ? 'import' : 'manual',
                 'sourceReference' => 'fixture-run-'.$index,
@@ -79,7 +79,7 @@ final readonly class AddressDemoFixtureService
     {
         $addressManageDto = new AddressManageDto();
         $addressManageDto->line1 = $this->generator->streetAddress();
-        $line2 = $this->generator->optional(0.35, null)->randomElement([
+        $line2 = $this->generator->optional(0.35)->randomElement([
             'Suite '.$this->generator->buildingNumber(),
             'Apt '.$this->generator->buildingNumber(),
             'Unit '.$this->generator->buildingNumber(),

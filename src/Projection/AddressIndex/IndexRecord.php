@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Projection\AddressIndex;
@@ -47,7 +48,8 @@ final readonly class IndexRecord
     {
         $lat = $geocodeResult?->lat;
         $lon = $geocodeResult?->lon;
-        $now = (new \DateTimeImmutable('now'))->format('Y-m-d H:i:s');
+        $createdAt = new \DateTimeImmutable('now');
+        $now = $createdAt->format('Y-m-d H:i:s');
 
         return new self(
             $norm['digest'],

@@ -1,7 +1,7 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
-declare(strict_types=1);
 
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+declare(strict_types=1);
 
 namespace App\Service\Application;
 
@@ -124,8 +124,8 @@ SQL;
             ':source_type' => $address->sourceType(),
             ':source_reference' => $address->sourceReference(),
             ':normalization_version' => $address->normalizationVersion(),
-            ':raw_input_snapshot' => ($v = $address->rawInputSnapshot()) === null ? null : json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            ':normalized_snapshot' => ($v = $address->normalizedSnapshot()) === null ? null : json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ':raw_input_snapshot' => ($rawSnapshot = $address->rawInputSnapshot()) === null ? null : json_encode($rawSnapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ':normalized_snapshot' => ($normalizedSnapshot = $address->normalizedSnapshot()) === null ? null : json_encode($normalizedSnapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             ':provider_digest' => $address->providerDigest(),
             ':governance_status' => $address->governanceStatus(),
             ':duplicate_of_id' => $address->duplicateOfId(),

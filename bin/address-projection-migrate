@@ -3,108 +3,142 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-/**
- * @param string $k
- * @param string|null $d
- * @return string|null
- */
-function env(string $k, ?string $d = null): ?string
+function env(string $key, ?string $default = null): ?string
 {
-    $v = getenv($k);
-    return $v === false ? $d : $v;
+    $value = getenv($key);
+
+    return false === $value ? $default : $value;
 }
 
-$dsn = env('MYSQL_DSN');
-$user = env('MYSQL_USER');
-$pass = env('MYSQL_PASS');
-if (!$dsn || !$user) {
-    fwrite(STDERR, "MYSQL_DSN/MYSQL_USER are required\n");
-    exit(2);
+function need_connection(): PDO
+{
+    $dsn = env('MYSQL_DSN');
+    $user = env('MYSQL_USER');
+    $password = env('MYSQL_PASS');
+    if (!$dsn || !$user) {
+        fwrite(STDERR, "MYSQL_DSN/MYSQL_USER are required\n");
+        exit(2);
+    }
+
+    return new PDO($dsn, $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
 }
 
-$pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
+function base_sql(): string
+{
+    $baseSql = file_get_contents(__DIR__ . '/../sql/mysql/001_projection.sql');
+    if (false !== $baseSql) {
+        return $baseSql;
+    }
 
-$baseSql = file_get_contents(__DIR__ . '/../sql/mysql/001_projection.sql');
-if ($baseSql === false) {
     fwrite(STDERR, "missing sql/mysql/001_projection.sql\n");
     exit(2);
 }
-$pdo->exec($baseSql);
 
-/**
- * @param \PDO $pdo
- * @param string $table
- * @param string $column
- * @return bool
- */
-function hasColumn(PDO $pdo, string $table, string $column): bool
+function has_column(PDO $pdo, string $table, string $column): bool
 {
-    $stmt = $pdo->prepare(
+    $statement = $pdo->prepare(
         'SELECT COUNT(*) AS c FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t AND COLUMN_NAME = :c'
     );
-    $stmt->execute([':t' => $table, ':c' => $column]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    return isset($row['c']) && (int)$row['c'] > 0;
+    $statement->execute([':t' => $table, ':c' => $column]);
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+    return isset($row['c']) && (int) $row['c'] > 0;
+}
+
+function has_index(PDO $pdo, string $table, string $index): bool
+{
+    $statement = $pdo->prepare(
+        'SELECT COUNT(*) AS c FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t AND INDEX_NAME = :i'
+    );
+    $statement->execute([':t' => $table, ':i' => $index]);
+    $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+    return isset($row['c']) && (int) $row['c'] > 0;
+}
+
+/** @return array<string, string> */
+function req_columns(string $table): array
+{
+    return [
+        'line1_norm' => add_column_sql($table, 'line1_norm', 'VARCHAR(256) NULL'),
+        'city_norm' => add_column_sql($table, 'city_norm', 'VARCHAR(128) NULL'),
+        'region_norm' => add_column_sql($table, 'region_norm', 'VARCHAR(128) NULL'),
+        'postal_code_norm' => add_column_sql($table, 'postal_code_norm', 'VARCHAR(32) NULL'),
+        'latitude' => add_column_sql($table, 'latitude', 'DOUBLE NULL'),
+        'longitude' => add_column_sql($table, 'longitude', 'DOUBLE NULL'),
+        'geohash' => add_column_sql($table, 'geohash', 'VARCHAR(32) NULL'),
+        'validation_provider' => add_column_sql($table, 'validation_provider', 'VARCHAR(64) NULL'),
+        'validated_at' => add_column_sql($table, 'validated_at', 'DATETIME NULL'),
+        'dedupe_key' => add_column_sql($table, 'dedupe_key', 'VARCHAR(128) NULL'),
+        'validation_fingerprint' => add_column_sql($table, 'validation_fingerprint', 'CHAR(64) NULL'),
+        'validation_deliverable' => add_column_sql($table, 'validation_deliverable', 'TINYINT(1) NULL'),
+        'validation_granularity' => add_column_sql($table, 'validation_granularity', 'VARCHAR(64) NULL'),
+        'validation_quality' => add_column_sql($table, 'validation_quality', 'INT NULL'),
+        'validation_raw' => add_column_sql($table, 'validation_raw', 'JSON NULL'),
+        'validation_verdict' => add_column_sql($table, 'validation_verdict', 'JSON NULL'),
+    ];
+}
+
+/** @return array<string, string> */
+function req_indexes(string $table): array
+{
+    return [
+        'address_projection_country_city_norm_idx' => create_index_sql($table, 'address_projection_country_city_norm_idx', 'country_code, city_norm'),
+        'address_projection_geohash_idx' => create_index_sql($table, 'address_projection_geohash_idx', 'geohash'),
+        'address_projection_validation_status_idx' => create_index_sql($table, 'address_projection_validation_status_idx', 'validation_status'),
+        'address_projection_validation_deliverable_idx' => create_index_sql($table, 'address_projection_validation_deliverable_idx', 'validation_deliverable'),
+    ];
+}
+
+function add_column_sql(string $table, string $column, string $definition): string
+{
+    return 'ALTER TABLE '.$table.' ADD COLUMN '.$column.' '.$definition;
+}
+
+function create_index_sql(string $table, string $indexName, string $columns): string
+{
+    return 'CREATE INDEX '.$indexName.' ON '.$table.' ('.$columns.')';
 }
 
 /**
- * @param \PDO $pdo
- * @param string $table
- * @param string $index
- * @return bool
+ * @param array<string, string> $req_columns
  */
-function hasIndex(PDO $pdo, string $table, string $index): bool
+function apply_columns(PDO $pdo, string $table, array $req_columns): int
 {
-    $stmt = $pdo->prepare(
-        'SELECT COUNT(*) AS c FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t AND INDEX_NAME = :i'
-    );
-    $stmt->execute([':t' => $table, ':i' => $index]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    return isset($row['c']) && (int)$row['c'] > 0;
+    $added = 0;
+
+    foreach ($req_columns as $column => $sql) {
+        if (!has_column($pdo, $table, $column)) {
+            $pdo->exec($sql);
+            ++$added;
+        }
+    }
+
+    return $added;
 }
+
+/**
+ * @param array<string, string> $req_indexes
+ */
+function apply_indexes(PDO $pdo, string $table, array $req_indexes): int
+{
+    $added = 0;
+
+    foreach ($req_indexes as $name => $sql) {
+        if (!has_index($pdo, $table, $name)) {
+            $pdo->exec($sql);
+            ++$added;
+        }
+    }
+
+    return $added;
+}
+
+$pdo = need_connection();
+$pdo->exec(base_sql());
 
 $table = 'address_projection';
+$addedColumns = apply_columns($pdo, $table, req_columns($table));
+$addedIndexes = apply_indexes($pdo, $table, req_indexes($table));
 
-$needColumn = [
-    'line1_norm' => "ALTER TABLE {$table} ADD COLUMN line1_norm VARCHAR(256) NULL",
-    'city_norm' => "ALTER TABLE {$table} ADD COLUMN city_norm VARCHAR(128) NULL",
-    'region_norm' => "ALTER TABLE {$table} ADD COLUMN region_norm VARCHAR(128) NULL",
-    'postal_code_norm' => "ALTER TABLE {$table} ADD COLUMN postal_code_norm VARCHAR(32) NULL",
-    'latitude' => "ALTER TABLE {$table} ADD COLUMN latitude DOUBLE NULL",
-    'longitude' => "ALTER TABLE {$table} ADD COLUMN longitude DOUBLE NULL",
-    'geohash' => "ALTER TABLE {$table} ADD COLUMN geohash VARCHAR(32) NULL",
-    'validation_provider' => "ALTER TABLE {$table} ADD COLUMN validation_provider VARCHAR(64) NULL",
-    'validated_at' => "ALTER TABLE {$table} ADD COLUMN validated_at DATETIME NULL",
-    'dedupe_key' => "ALTER TABLE {$table} ADD COLUMN dedupe_key VARCHAR(128) NULL",
-    'validation_fingerprint' => "ALTER TABLE {$table} ADD COLUMN validation_fingerprint CHAR(64) NULL",
-    'validation_deliverable' => "ALTER TABLE {$table} ADD COLUMN validation_deliverable TINYINT(1) NULL",
-    'validation_granularity' => "ALTER TABLE {$table} ADD COLUMN validation_granularity VARCHAR(64) NULL",
-    'validation_quality' => "ALTER TABLE {$table} ADD COLUMN validation_quality INT NULL",
-    'validation_raw' => "ALTER TABLE {$table} ADD COLUMN validation_raw JSON NULL",
-    'validation_verdict' => "ALTER TABLE {$table} ADD COLUMN validation_verdict JSON NULL",
-];
-
-$added = 0;
-foreach ($needColumn as $col => $sql) {
-    if (!hasColumn($pdo, $table, $col)) {
-        $pdo->exec($sql);
-        $added++;
-    }
-}
-
-$needIndex = [
-    'address_projection_country_city_norm_idx' => "CREATE INDEX address_projection_country_city_norm_idx ON {$table} (country_code, city_norm)",
-    'address_projection_geohash_idx' => "CREATE INDEX address_projection_geohash_idx ON {$table} (geohash)",
-    'address_projection_validation_status_idx' => "CREATE INDEX address_projection_validation_status_idx ON {$table} (validation_status)",
-    'address_projection_validation_deliverable_idx' => "CREATE INDEX address_projection_validation_deliverable_idx ON {$table} (validation_deliverable)",
-];
-
-$idxAdded = 0;
-foreach ($needIndex as $name => $sql) {
-    if (!hasIndex($pdo, $table, $name)) {
-        $pdo->exec($sql);
-        $idxAdded++;
-    }
-}
-
-echo "Address projection schema migrated (column_add={$added}, index_add={$idxAdded}).\n";
+echo 'Address projection schema migrated (column_add=' . $addedColumns . ', index_add=' . $addedIndexes . ").\n";

@@ -1,11 +1,13 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace Tests\E2E;
 
-use Symfony\Component\Panther\Client;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Panther\Client;
+use Symfony\Component\Process\ExecutableFinder;
 
 final class AddressApiPantherE2ETest extends TestCase
 {
@@ -15,9 +17,13 @@ final class AddressApiPantherE2ETest extends TestCase
             self::markTestSkipped('Panther is not installed.');
         }
 
+        if (!$this->hasChromeDriver()) {
+            self::markTestSkipped('chromedriver binary is not available.');
+        }
+
         $baseUri = getenv('PANTHER_EXTERNAL_BASE_URI') ?: 'http://127.0.0.1';
         $chromeBinary = getenv('PANTHER_CHROME_BINARY');
-        if (is_string($chromeBinary) && $chromeBinary !== '') {
+        if (is_string($chromeBinary) && '' !== $chromeBinary) {
             $_SERVER['PANTHER_CHROME_BINARY'] = $chromeBinary;
         }
         $_SERVER['PANTHER_NO_SANDBOX'] = '1';
@@ -48,5 +54,19 @@ final class AddressApiPantherE2ETest extends TestCase
         $client->submit($form);
         self::assertStringContainsString('Address created successfully:', $client->getPageSource());
         self::assertStringContainsString($line1, $client->getPageSource());
+    }
+
+    private function hasChromeDriver(): bool
+    {
+        $configuredDriver = getenv('PANTHER_CHROME_DRIVER_BINARY');
+        if (is_string($configuredDriver) && '' !== $configuredDriver) {
+            return is_file($configuredDriver) || is_executable($configuredDriver);
+        }
+
+        if (!class_exists(ExecutableFinder::class)) {
+            return false;
+        }
+
+        return null !== (new ExecutableFinder())->find('chromedriver');
     }
 }

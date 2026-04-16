@@ -1,19 +1,10 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Value;
 
-use InvalidArgumentException;
-use Override;
-
-/**
- *
- */
-
-/**
- *
- */
 final readonly class Subdivision implements \Stringable
 {
     private string $code;
@@ -21,8 +12,8 @@ final readonly class Subdivision implements \Stringable
     public function __construct(string $code)
     {
         $code = strtoupper(trim($code));
-        if ($code === '' || strlen($code) > 32) {
-            throw new InvalidArgumentException('Subdivision code is invalid');
+        if ('' === $code || strlen($code) > 32) {
+            throw new \InvalidArgumentException('Subdivision code is invalid');
         }
         $this->code = $code;
     }
@@ -37,7 +28,7 @@ final readonly class Subdivision implements \Stringable
         return $this->code === $other->code;
     }
 
-    #[Override]
+    #[\Override]
     public function __toString(): string
     {
         return $this->code;

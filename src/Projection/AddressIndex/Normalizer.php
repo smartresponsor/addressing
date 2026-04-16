@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Projection\AddressIndex;
@@ -12,33 +13,29 @@ use App\Value\StreetLine;
 final class Normalizer
 {
     /**
+     * @param array{line1: string, line2: ?string, city: string, region: string, postal: string, country: string} $address
+     *
      * @return array{line1: StreetLine, line2: ?StreetLine, city: string, region: Region, postal: PostalCode, country: CountryCode, digest: string}
      */
-    public function normalize(
-        string $line1,
-        ?string $line2,
-        string $city,
-        string $region,
-        string $postal,
-        string $country,
-    ): array {
-        $line1Obj = new StreetLine($line1);
+    public function normalize(array $address): array
+    {
+        $line1Obj = new StreetLine($address['line1']);
         $line2Obj = null;
-        if (null !== $line2) {
-            $line2 = trim($line2);
+        if (null !== $address['line2']) {
+            $line2 = trim($address['line2']);
             if ('' !== $line2) {
                 $line2Obj = new StreetLine($line2);
             }
         }
 
-        $city = trim($city);
+        $city = trim($address['city']);
         if ('' === $city) {
             throw new \InvalidArgumentException('City is required');
         }
 
-        $regionObj = new Region($region);
-        $postalCode = new PostalCode($postal);
-        $countryCode = new CountryCode($country);
+        $regionObj = new Region($address['region']);
+        $postalCode = new PostalCode($address['postal']);
+        $countryCode = new CountryCode($address['country']);
 
         $digest = hash('sha256', implode('|', [
             $line1Obj->value(),

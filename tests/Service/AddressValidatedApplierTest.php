@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace Tests\Service;
@@ -47,8 +48,9 @@ final class AddressValidatedApplierTest extends TestCase
 
         $this->applier->apply('addr-1', $validated, 'owner-1', 'vendor-1');
 
-        $row = $this->pdo->query("SELECT validation_status, line1_norm, source_system, source_type, provider_digest, governance_status, superseded_by_id, revalidation_due_at, revalidation_policy, last_validation_provider, last_validation_status, last_validation_score FROM address_entity WHERE id = 'addr-1'")
-            ->fetch(\PDO::FETCH_ASSOC);
+        $statement = $this->pdo->query("SELECT validation_status, line1_norm, source_system, source_type, provider_digest, governance_status, superseded_by_id, revalidation_due_at, revalidation_policy, last_validation_provider, last_validation_status, last_validation_score FROM address_entity WHERE id = 'addr-1'");
+        self::assertInstanceOf(\PDOStatement::class, $statement);
+        $row = $statement->fetch(\PDO::FETCH_ASSOC);
         self::assertIsArray($row);
         self::assertSame('validated', $row['validation_status']);
         self::assertSame('main st', $row['line1_norm']);
@@ -63,8 +65,9 @@ final class AddressValidatedApplierTest extends TestCase
         self::assertSame('validated', $row['last_validation_status']);
         self::assertSame(87, (int) $row['last_validation_score']);
 
-        $snapshot = $this->pdo->query("SELECT source_system, source_type, source_reference, validated_by, validation_status, validation_score, provider_digest FROM address_evidence_snapshot WHERE address_id = 'addr-1' ORDER BY created_at DESC, id DESC LIMIT 1")
-            ->fetch(\PDO::FETCH_ASSOC);
+        $snapshotStatement = $this->pdo->query("SELECT source_system, source_type, source_reference, validated_by, validation_status, validation_score, provider_digest FROM address_evidence_snapshot WHERE address_id = 'addr-1' ORDER BY created_at DESC, id DESC LIMIT 1");
+        self::assertInstanceOf(\PDOStatement::class, $snapshotStatement);
+        $snapshot = $snapshotStatement->fetch(\PDO::FETCH_ASSOC);
         self::assertIsArray($snapshot);
         self::assertSame('validator-suite', $snapshot['source_system']);
         self::assertSame('validator', $snapshot['source_type']);
@@ -74,12 +77,14 @@ final class AddressValidatedApplierTest extends TestCase
         self::assertSame(87, (int) $snapshot['validation_score']);
         self::assertSame('digest-1', $snapshot['provider_digest']);
 
-        $outbox = $this->pdo->query('SELECT event_name, event_version, payload FROM address_outbox ORDER BY id DESC LIMIT 1')
-            ->fetch(\PDO::FETCH_ASSOC);
+        $outboxStatement = $this->pdo->query('SELECT event_name, event_version, payload FROM address_outbox ORDER BY id DESC LIMIT 1');
+        self::assertInstanceOf(\PDOStatement::class, $outboxStatement);
+        $outbox = $outboxStatement->fetch(\PDO::FETCH_ASSOC);
         self::assertIsArray($outbox);
         self::assertSame('AddressValidatedApplied', $outbox['event_name']);
         self::assertSame(1, (int) $outbox['event_version']);
         $payload = json_decode((string) $outbox['payload'], true);
+        self::assertIsArray($payload);
         self::assertSame('AddressValidatedApplied', $payload['eventName'] ?? null);
         self::assertSame('address-outbox.v1', $payload['schemaVersion'] ?? null);
         self::assertSame(1, $payload['eventVersion'] ?? null);

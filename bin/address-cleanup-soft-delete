@@ -24,9 +24,9 @@ try {
         $stmt->execute($ids);
     }
     $pg->commit();
-    echo 'Purged ' . count($ids) . " rows (TTL {$ttlDays} days)\n";
-} catch (Throwable $e) {
+    echo 'Purged ' . count($ids) . ' rows (TTL ' . $ttlDays . " days)\n";
+} catch (Throwable $exception) {
     $pg->rollBack();
-    fwrite(STDERR, 'Error: ' . $e->getMessage() . "\n");
+    fwrite(STDERR, 'Error: ' . $exception->getMessage() . "\n");
     exit(1);
 }

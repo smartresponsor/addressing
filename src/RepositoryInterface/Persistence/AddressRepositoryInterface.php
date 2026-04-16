@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\RepositoryInterface\Persistence;
@@ -34,23 +35,11 @@ interface AddressRepositoryInterface
     public function patchOperational(string $id, ?string $ownerId, ?string $vendorId, array $patch): bool;
 
     /**
-     * @param array<string, mixed> $filters
-     *
      * @return array{'items': list<AddressInterface>, 'nextCursor': ?string}
      */
-    public function findPage(
-        ?string $ownerId,
-        ?string $vendorId,
-        ?string $countryCode,
-        ?string $q,
-        int $limit,
-        ?string $cursor,
-        array $filters = [],
-    ): array;
+    public function findPage(AddressPageCriteria $criteria): array;
 
     /**
-     * @param array<string, mixed> $filters
-     *
      * @return array{
      *   'total':int,
      *   'dueForRevalidation':int,

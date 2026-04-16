@@ -13,7 +13,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Override;
 
 #[AsCommand(name: 'address:search', description: 'Search canonical addresses with operational filters.')]
 final class AddressSearchCommand extends Command
@@ -23,9 +22,10 @@ final class AddressSearchCommand extends Command
         parent::__construct();
     }
 
-    #[Override]
+    #[\Override]
     protected function configure(): void
     {
+        parent::configure();
         $this
             ->addOption('owner-id', null, InputOption::VALUE_OPTIONAL)
             ->addOption('vendor-id', null, InputOption::VALUE_OPTIONAL)
@@ -41,7 +41,8 @@ final class AddressSearchCommand extends Command
             ->addOption('expected-normalization-version', null, InputOption::VALUE_OPTIONAL);
     }
 
-    #[Override]
+    /** @noinspection PhpMissingParentCallCommonInspection */
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $symfonyStyle = new SymfonyStyle($input, $output);
@@ -50,7 +51,7 @@ final class AddressSearchCommand extends Command
             $this->nullable($input->getOption('vendor-id')),
             $this->nullableUpper($input->getOption('country-code')),
             $this->nullable($input->getOption('query')),
-            max(1, $this->intOption($input, 'limit', 25)),
+            max(1, $this->limitOption($input)),
             $this->nullable($input->getOption('cursor')),
             [
                 'sourceType' => AddressRecordPolicy::normalizeSourceType($this->nullable($input->getOption('source-type'))),
@@ -87,9 +88,9 @@ final class AddressSearchCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function intOption(InputInterface $input, string $name, int $default): int
+    private function limitOption(InputInterface $input): int
     {
-        $value = $input->getOption($name);
+        $value = $input->getOption('limit');
         if (is_int($value)) {
             return $value;
         }
@@ -97,7 +98,7 @@ final class AddressSearchCommand extends Command
             return (int) $value;
         }
 
-        return $default;
+        return 25;
     }
 
     private function nullable(mixed $value): ?string

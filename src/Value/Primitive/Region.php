@@ -1,22 +1,22 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Value\Primitive;
-use Override;
 
 final readonly class Region implements \Stringable
 {
-    private string $v;
+    private string $value;
 
-    public function __construct(string $s)
+    public function __construct(string $input)
     {
-        $this->v = strtoupper(trim($s));
+        $this->value = strtoupper(trim($input));
     }
 
-    #[Override]
+    #[\Override]
     public function __toString(): string
     {
-        return $this->v;
+        return $this->value;
     }
 }

@@ -1,16 +1,16 @@
 {
-  "name": "agent-trigger",
-  "private": true,
-  "version": "1.0.0",
-  "description": "Cloudflare Worker trigger for GitHub workflow_dispatch",
-  "engines": {
-    "node": ">=20"
-  },
-  "devDependencies": {
-    "wrangler": "4.75.0"
-  },
-  "scripts": {
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev"
-  }
+    "name": "agent-trigger",
+    "private": true,
+    "version": "1.0.0",
+    "description": "Cloudflare Worker trigger for GitHub workflow_dispatch",
+    "engines": {
+        "node": ">=20"
+    },
+    "devDependencies": {
+        "wrangler": "4.75.0"
+    },
+    "scripts": {
+        "deploy": "wrangler deploy",
+        "dev": "wrangler dev"
+    }
 }

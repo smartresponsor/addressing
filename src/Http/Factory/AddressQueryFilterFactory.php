@@ -46,10 +46,10 @@ final readonly class AddressQueryFilterFactory
         bool $includeExpectedNormalizationVersion = false,
     ): array {
         $filters = [
-            'sourceType' => AddressRecordPolicy::normalizeSourceType($this->queryStringOrNull($request, 'sourceType')),
+            'sourceType' => $this->normalizedSourceType($request),
             'governanceStatus' => $this->normalizedGovernanceStatus($request),
-            'revalidationPolicy' => AddressRecordPolicy::normalizeRevalidationPolicy($this->queryStringOrNull($request, 'revalidationPolicy')),
-            'hasEvidence' => $this->queryBoolOrNull($request, 'hasEvidence'),
+            'revalidationPolicy' => $this->normalizedRevalidationPolicy($request),
+            'hasEvidence' => $this->hasEvidenceQuery($request),
             'revalidationDueBefore' => $this->queryStringOrNull($request, 'revalidationDueBefore'),
         ];
 
@@ -87,25 +87,43 @@ final readonly class AddressQueryFilterFactory
 
     private function normalizedGovernanceStatus(Request $request): ?string
     {
-        $governanceStatus = $this->queryStringOrNull($request, 'governanceStatus');
+        return $this->normalizedQueryStringOrNull(
+            request: $request,
+            key: 'governanceStatus',
+            normalizer: static fn (string $value): string => AddressRecordPolicy::normalizeGovernanceStatus($value),
+        );
+    }
 
-        return null !== $governanceStatus
-            ? AddressRecordPolicy::normalizeGovernanceStatus($governanceStatus)
-            : null;
+    private function normalizedRevalidationPolicy(Request $request): ?string
+    {
+        return $this->normalizedQueryStringOrNull(
+            request: $request,
+            key: 'revalidationPolicy',
+            normalizer: static fn (string $value): ?string => AddressRecordPolicy::normalizeRevalidationPolicy($value),
+        );
+    }
+
+    private function normalizedSourceType(Request $request): ?string
+    {
+        return $this->normalizedQueryStringOrNull(
+            request: $request,
+            key: 'sourceType',
+            normalizer: static fn (string $value): ?string => AddressRecordPolicy::normalizeSourceType($value),
+        );
     }
 
     private function normalizedValidationStatus(Request $request): ?string
     {
-        $validationStatus = $this->queryStringOrNull($request, 'validationStatus');
-
-        return null !== $validationStatus
-            ? AddressRecordPolicy::normalizeValidationStatus($validationStatus)
-            : null;
+        return $this->normalizedQueryStringOrNull(
+            request: $request,
+            key: 'validationStatus',
+            normalizer: static fn (string $value): string => AddressRecordPolicy::normalizeValidationStatus($value),
+        );
     }
 
-    private function queryBoolOrNull(Request $request, string $key): ?bool
+    private function hasEvidenceQuery(Request $request): ?bool
     {
-        $value = $request->query->get($key);
+        $value = $request->query->get('hasEvidence');
         if (!is_string($value)) {
             return null;
         }
@@ -115,5 +133,13 @@ final readonly class AddressQueryFilterFactory
             '0', 'false', 'no' => false,
             default => null,
         };
+    }
+
+    /** @param callable(string): ?string $normalizer */
+    private function normalizedQueryStringOrNull(Request $request, string $key, callable $normalizer): ?string
+    {
+        $value = $this->queryStringOrNull($request, $key);
+
+        return null === $value ? null : $normalizer($value);
     }
 }

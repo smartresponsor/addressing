@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Projection\AddressIndex;
@@ -17,18 +18,34 @@ final readonly class IndexProjector
 
     public function onAddressCreated(AddressCreatedEvent $addressCreatedEvent): void
     {
-        $this->handle($addressCreatedEvent->line1, $addressCreatedEvent->line2, $addressCreatedEvent->city, $addressCreatedEvent->region, $addressCreatedEvent->postal, $addressCreatedEvent->country);
+        $this->handle([
+            'line1' => $addressCreatedEvent->line1,
+            'line2' => $addressCreatedEvent->line2,
+            'city' => $addressCreatedEvent->city,
+            'region' => $addressCreatedEvent->region,
+            'postal' => $addressCreatedEvent->postal,
+            'country' => $addressCreatedEvent->country,
+        ]);
     }
 
     public function onAddressUpdated(AddressUpdatedEvent $addressUpdatedEvent): void
     {
-        $this->handle($addressUpdatedEvent->line1, $addressUpdatedEvent->line2, $addressUpdatedEvent->city, $addressUpdatedEvent->region, $addressUpdatedEvent->postal, $addressUpdatedEvent->country);
+        $this->handle([
+            'line1' => $addressUpdatedEvent->line1,
+            'line2' => $addressUpdatedEvent->line2,
+            'city' => $addressUpdatedEvent->city,
+            'region' => $addressUpdatedEvent->region,
+            'postal' => $addressUpdatedEvent->postal,
+            'country' => $addressUpdatedEvent->country,
+        ]);
     }
 
-    private function handle(string $line1, ?string $line2, string $city, string $region, string $postal, string $country): void
+    /** @param array{line1: string, line2: ?string, city: string, region: string, postal: string, country: string} $payload */
+    private function handle(array $payload): void
     {
-        $norm = $this->normalizer->normalize($line1, $line2, $city, $region, $postal, $country);
-        $indexRecord = (new Projector())->project($norm);
+        $norm = $this->normalizer->normalize($payload);
+        $projector = new Projector();
+        $indexRecord = $projector->project($norm);
         $this->addressIndexRepository->upsert($indexRecord);
     }
 }

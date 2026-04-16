@@ -12,18 +12,21 @@ final readonly class AddressViewArrayFactory
     public function toArray(AddressInterface $address, ?string $expectedNormalizationVersion): array
     {
         $governanceLinkId = $this->primaryGovernanceLinkId($address);
-        $hasEvidence = null !== $address->providerDigest()
-            || null !== $address->rawInputSnapshot()
-            || null !== $address->normalizedSnapshot();
-        $isRevalidationDue = null !== $address->revalidationDueAt()
-            && false !== strtotime($address->revalidationDueAt())
-            && strtotime($address->revalidationDueAt()) <= time();
-        $isEvidenceMissing = !$hasEvidence;
-        $isValidationUncertain = 'uncertain' === $address->validationStatus() || 'uncertain' === $address->lastValidationStatus();
-        $isGovernanceConflict = 'conflict' === $address->governanceStatus();
-        $isNormalizationStale = null !== $expectedNormalizationVersion
-            && $address->normalizationVersion() !== $expectedNormalizationVersion;
-        $reviewReason = $this->reviewReason($isGovernanceConflict, $isValidationUncertain, $isEvidenceMissing, $isRevalidationDue, $isNormalizationStale, $address->governanceStatus());
+        $flags = $this->reviewFlags($address, $expectedNormalizationVersion);
+        $hasEvidence = true === $flags['hasEvidence'];
+        $isEvidenceMissing = true === $flags['isEvidenceMissing'];
+        $isValidationUncertain = true === $flags['isValidationUncertain'];
+        $isGovernanceConflict = true === $flags['isGovernanceConflict'];
+        $isNormalizationStale = true === $flags['isNormalizationStale'];
+        $isRevalidationDue = true === $flags['isRevalidationDue'];
+        $reviewReason = $this->reviewReason([
+            'isGovernanceConflict' => $isGovernanceConflict,
+            'isValidationUncertain' => $isValidationUncertain,
+            'isEvidenceMissing' => $isEvidenceMissing,
+            'isRevalidationDue' => $isRevalidationDue,
+            'isNormalizationStale' => $isNormalizationStale,
+            'governanceStatus' => $address->governanceStatus(),
+        ]);
 
         return [
             'id' => $address->id(),
@@ -79,6 +82,44 @@ final readonly class AddressViewArrayFactory
         ];
     }
 
+    /**
+     * @return array{
+     *   hasEvidence: bool,
+     *   isEvidenceMissing: bool,
+     *   isValidationUncertain: bool,
+     *   isGovernanceConflict: bool,
+     *   isNormalizationStale: bool,
+     *   isRevalidationDue: bool
+     * }
+     */
+    private function reviewFlags(AddressInterface $address, ?string $expectedNormalizationVersion): array
+    {
+        $hasEvidence = null !== $address->providerDigest()
+            || null !== $address->rawInputSnapshot()
+            || null !== $address->normalizedSnapshot();
+
+        return [
+            'hasEvidence' => $hasEvidence,
+            'isEvidenceMissing' => !$hasEvidence,
+            'isValidationUncertain' => 'uncertain' === $address->validationStatus() || 'uncertain' === $address->lastValidationStatus(),
+            'isGovernanceConflict' => 'conflict' === $address->governanceStatus(),
+            'isNormalizationStale' => null !== $expectedNormalizationVersion
+                && $address->normalizationVersion() !== $expectedNormalizationVersion,
+            'isRevalidationDue' => $this->isRevalidationDue($address->revalidationDueAt()),
+        ];
+    }
+
+    private function isRevalidationDue(?string $revalidationDueAt): bool
+    {
+        if (null === $revalidationDueAt) {
+            return false;
+        }
+
+        $timestamp = strtotime($revalidationDueAt);
+
+        return false !== $timestamp && $timestamp <= time();
+    }
+
     /** @return array{id: string, line1: string, city: string, countryCode: string, governanceStatus: string, validationStatus: string} */
     public function previewRow(AddressInterface $address): array
     {
@@ -92,30 +133,34 @@ final readonly class AddressViewArrayFactory
         ];
     }
 
-    private function reviewReason(
-        bool $isGovernanceConflict,
-        bool $isValidationUncertain,
-        bool $isEvidenceMissing,
-        bool $isRevalidationDue,
-        bool $isNormalizationStale,
-        string $governanceStatus,
-    ): ?string {
-        if ($isGovernanceConflict) {
+    /**
+     * @param array{
+     *   isGovernanceConflict: bool,
+     *   isValidationUncertain: bool,
+     *   isEvidenceMissing: bool,
+     *   isRevalidationDue: bool,
+     *   isNormalizationStale: bool,
+     *   governanceStatus: string
+     * } $flags
+     */
+    private function reviewReason(array $flags): ?string
+    {
+        if ($flags['isGovernanceConflict']) {
             return 'governanceConflict';
         }
-        if ('duplicate' === $governanceStatus) {
+        if ('duplicate' === $flags['governanceStatus']) {
             return 'duplicateReview';
         }
-        if ($isValidationUncertain) {
+        if ($flags['isValidationUncertain']) {
             return 'uncertainValidation';
         }
-        if ($isEvidenceMissing) {
+        if ($flags['isEvidenceMissing']) {
             return 'evidenceMissing';
         }
-        if ($isRevalidationDue) {
+        if ($flags['isRevalidationDue']) {
             return 'dueForRevalidation';
         }
-        if ($isNormalizationStale) {
+        if ($flags['isNormalizationStale']) {
             return 'staleNormalizationVersion';
         }
 
@@ -124,12 +169,6 @@ final readonly class AddressViewArrayFactory
 
     private function primaryGovernanceLinkId(AddressInterface $address): ?string
     {
-        foreach ([$address->duplicateOfId(), $address->supersededById(), $address->aliasOfId(), $address->conflictWithId()] as $candidate) {
-            if (null !== $candidate && '' !== $candidate) {
-                return $candidate;
-            }
-        }
-
-        return null;
+        return array_find([$address->duplicateOfId(), $address->supersededById(), $address->aliasOfId(), $address->conflictWithId()], fn ($candidate) => null !== $candidate && '' !== $candidate);
     }
 }

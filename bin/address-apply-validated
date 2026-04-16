@@ -16,6 +16,71 @@ use JetBrains\PhpStorm\NoReturn;
     exit(2);
 }
 
+/**
+ * @return list<array<string, mixed>>
+ */
+function parse_dataset(string $input): array
+{
+    $dataset = [];
+    if (str_contains($input, "\n")) {
+        foreach (explode("\n", $input) as $line) {
+            $line = trim($line);
+            if ('' === $line) {
+                continue;
+            }
+
+            $decoded = json_decode($line, true);
+            if (is_array($decoded)) {
+                $dataset[] = $decoded;
+            }
+        }
+
+        return $dataset;
+    }
+
+    $decoded = json_decode($input, true);
+    if (!is_array($decoded)) {
+        fwrite(STDERR, "Invalid JSON\n");
+        exit(2);
+    }
+
+    if (isset($decoded[0]) && is_array($decoded[0])) {
+        foreach ($decoded as $item) {
+            if (is_array($item)) {
+                $dataset[] = $item;
+            }
+        }
+
+        return $dataset;
+    }
+
+    return [$decoded];
+}
+
+function event_id_opt(array $event, string $camelCaseKey, string $snakeCaseKey): ?string
+{
+    if (isset($event[$snakeCaseKey]) && is_string($event[$snakeCaseKey]) && '' !== $event[$snakeCaseKey]) {
+        return $event[$snakeCaseKey];
+    }
+
+    return isset($event[$camelCaseKey]) && is_string($event[$camelCaseKey]) && '' !== $event[$camelCaseKey]
+        ? $event[$camelCaseKey]
+        : null;
+}
+
+/**
+ * @param array<string, mixed> $event
+ *
+ * @return array<string, mixed>
+ */
+function valid_payload(array $event): array
+{
+    $payload = $event;
+    unset($payload['id'], $payload['ownerId'], $payload['vendorId'], $payload['owner_id'], $payload['vendor_id']);
+
+    return $payload;
+}
+
 $arg = $argv[1] ?? null;
 if (!$arg) {
     usage();
@@ -26,72 +91,39 @@ $kernel->boot();
 /** @var AddressValidatedApplierService $applier */
 $applier = $kernel->getContainer()->get(AddressValidatedApplierService::class);
 
-$handle = ($arg === '-') ? STDIN : fopen($arg, 'r');
+$handle = ('-' === $arg) ? STDIN : fopen($arg, 'r');
 if (!$handle) {
     fwrite(STDERR, "Cannot open input\n");
     exit(2);
 }
 
-$buf = stream_get_contents($handle);
-$trim = trim((string)$buf);
-if ($trim === '') {
+$buffer = stream_get_contents($handle);
+$trimmedInput = trim((string) $buffer);
+if ('' === $trimmedInput) {
     fwrite(STDERR, "Empty input\n");
     exit(2);
 }
 
-$dataSet = [];
-if (str_contains($trim, "\n")) {
-    foreach (explode("\n", $trim) as $line) {
-        $line = trim($line);
-        if ($line === '') {
-            continue;
-        }
-        $obj = json_decode($line, true);
-        if (!is_array($obj)) {
-            continue;
-        }
-        $dataSet[] = $obj;
-    }
-} else {
-    $obj = json_decode($trim, true);
-    if (!is_array($obj)) {
-        fwrite(STDERR, "Invalid JSON\n");
-        exit(2);
-    }
-    if (isset($obj[0]) && is_array($obj[0])) {
-        foreach ($obj as $item) {
-            if (is_array($item)) {
-                $dataSet[] = $item;
-            }
-        }
-    } else {
-        $dataSet[] = $obj;
-    }
-}
-
+$dataSet = parse_dataset($trimmedInput);
 $ok = 0;
 $fail = 0;
 foreach ($dataSet as $event) {
     try {
         $id = $event['id'] ?? null;
-        if (!is_string($id) || $id === '') {
+        if (!is_string($id) || '' === $id) {
             $fail++;
             continue;
         }
 
-        $owner_id = isset($event['owner_id']) && is_string($event['owner_id']) && $event['owner_id'] !== '' ? $event['owner_id'] : (isset($event['ownerId']) && is_string($event['ownerId']) && $event['ownerId'] !== '' ? $event['ownerId'] : null);
-        $vendor_id = isset($event['vendor_id']) && is_string($event['vendor_id']) && $event['vendor_id'] !== '' ? $event['vendor_id'] : (isset($event['vendorId']) && is_string($event['vendorId']) && $event['vendorId'] !== '' ? $event['vendorId'] : null);
-
-        $payload = $event;
-        unset($payload['id'], $payload['ownerId'], $payload['vendorId'], $payload['owner_id'], $payload['vendor_id']);
-
-        $validated = AddressValidated::fromArray($payload);
-        $applier->apply($id, $validated, $owner_id, $vendor_id);
+        $ownerId = event_id_opt($event, 'ownerId', 'owner_id');
+        $vendorId = event_id_opt($event, 'vendorId', 'vendor_id');
+        $validated = AddressValidated::fromArray(valid_payload($event));
+        $applier->apply($id, $validated, $ownerId, $vendorId);
         $ok++;
-    } catch (Throwable $exception) {
+    } catch (Throwable $throwable) {
         $fail++;
-        fwrite(STDERR, 'Error: ' . $exception->getMessage() . "\n");
+        fwrite(STDERR, 'Error: '.$throwable->getMessage()."\n");
     }
 }
 
-fwrite(STDOUT, "Applied: {$ok}, Failed: {$fail}\n");
+fwrite(STDOUT, 'Applied: '.$ok.', Failed: '.$fail."\n");

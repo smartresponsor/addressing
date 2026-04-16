@@ -15,7 +15,8 @@
                     <div class="d-flex justify-content-between align-items-start flex-column flex-lg-row gap-3">
                         <div>
                             <h1 class="h2 mb-2">Address manager</h1>
-                            <p class="text-secondary mb-0">Create canonical address records through the Symfony demo flow built on DTOs, Forms, Twig and Bootstrap.</p>
+                            <p class="text-secondary mb-0">Create canonical address records through the Symfony demo
+                                flow built on DTOs, Forms, Twig and Bootstrap.</p>
                         </div>
                         <div class="badge text-bg-dark fs-6">Symfony demo</div>
                     </div>
@@ -27,18 +28,18 @@
                     {% endif %}
 
                     {{ form_start(manageForm, { attr: { class: 'row g-3 mt-1' } }) }}
-                        <div class="col-md-6">{{ form_row(manageForm.line1) }}</div>
-                        <div class="col-md-6">{{ form_row(manageForm.line2) }}</div>
-                        <div class="col-md-4">{{ form_row(manageForm.city) }}</div>
-                        <div class="col-md-3">{{ form_row(manageForm.region) }}</div>
-                        <div class="col-md-3">{{ form_row(manageForm.postalCode) }}</div>
-                        <div class="col-md-2">{{ form_row(manageForm.countryCode) }}</div>
-                        <div class="col-md-6">{{ form_row(manageForm.ownerId) }}</div>
-                        <div class="col-md-6">{{ form_row(manageForm.vendorId) }}</div>
-                        <div class="col-12 d-flex align-items-center gap-3">
-                            {{ form_widget(manageForm.save, { attr: { class: 'btn btn-primary px-4' } }) }}
-                            <span class="text-secondary small">Provide owner or vendor scope to preview the latest records below.</span>
-                        </div>
+                    <div class="col-md-6">{{ form_row(manageForm.line1) }}</div>
+                    <div class="col-md-6">{{ form_row(manageForm.line2) }}</div>
+                    <div class="col-md-4">{{ form_row(manageForm.city) }}</div>
+                    <div class="col-md-3">{{ form_row(manageForm.region) }}</div>
+                    <div class="col-md-3">{{ form_row(manageForm.postalCode) }}</div>
+                    <div class="col-md-2">{{ form_row(manageForm.countryCode) }}</div>
+                    <div class="col-md-6">{{ form_row(manageForm.ownerId) }}</div>
+                    <div class="col-md-6">{{ form_row(manageForm.vendorId) }}</div>
+                    <div class="col-12 d-flex align-items-center gap-3">
+                        {{ form_widget(manageForm.save, { attr: { class: 'btn btn-primary px-4' } }) }}
+                        <span class="text-secondary small">Provide owner or vendor scope to preview the latest records below.</span>
+                    </div>
                     {{ form_end(manageForm) }}
                 </div>
             </div>
@@ -47,7 +48,8 @@
                 <div class="card-body p-4">
                     <h2 class="h5 mb-3">Latest scoped addresses</h2>
                     {% if previewRows is empty %}
-                        <p class="text-secondary mb-0">No preview yet. Submit the form with an owner or vendor scope to see the latest records for that slice.</p>
+                        <p class="text-secondary mb-0">No preview yet. Submit the form with an owner or vendor scope to
+                            see the latest records for that slice.</p>
                     {% else %}
                         <div class="table-responsive">
                             <table class="table table-sm align-middle mb-0">

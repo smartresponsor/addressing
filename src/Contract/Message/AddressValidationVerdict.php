@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Contract\Message;
@@ -29,16 +30,16 @@ final readonly class AddressValidationVerdict implements \JsonSerializable
 
         $deliverable = null;
         if (array_key_exists('deliverable', $data)) {
-            $v = $data['deliverable'];
-            if (is_bool($v)) {
-                $deliverable = $v;
-            } elseif (is_int($v) || is_float($v)) {
-                $deliverable = ((int) $v) === 1;
-            } elseif (is_string($v)) {
-                $vv = strtolower(trim($v));
-                if (in_array($vv, ['1', 'true', 'yes'], true)) {
+            $rawDeliverable = $data['deliverable'];
+            if (is_bool($rawDeliverable)) {
+                $deliverable = $rawDeliverable;
+            } elseif (is_int($rawDeliverable) || is_float($rawDeliverable)) {
+                $deliverable = ((int) $rawDeliverable) === 1;
+            } elseif (is_string($rawDeliverable)) {
+                $normalizedDeliverable = strtolower(trim($rawDeliverable));
+                if (in_array($normalizedDeliverable, ['1', 'true', 'yes'], true)) {
                     $deliverable = true;
-                } elseif (in_array($vv, ['0', 'false', 'no'], true)) {
+                } elseif (in_array($normalizedDeliverable, ['0', 'false', 'no'], true)) {
                     $deliverable = false;
                 }
             }
@@ -46,19 +47,19 @@ final readonly class AddressValidationVerdict implements \JsonSerializable
 
         $granularity = null;
         if (array_key_exists('granularity', $data) && is_string($data['granularity'])) {
-            $g = trim($data['granularity']);
-            $granularity = '' === $g ? null : $g;
+            $normalizedGranularity = trim($data['granularity']);
+            $granularity = '' === $normalizedGranularity ? null : $normalizedGranularity;
         }
 
         $quality = null;
         if (array_key_exists('quality', $data)) {
-            $q = $data['quality'];
-            if (is_int($q)) {
-                $quality = $q;
-            } elseif (is_float($q)) {
-                $quality = (int) round($q);
-            } elseif (is_string($q) && is_numeric($q)) {
-                $quality = (int) round((float) $q);
+            $rawQuality = $data['quality'];
+            if (is_int($rawQuality)) {
+                $quality = $rawQuality;
+            } elseif (is_float($rawQuality)) {
+                $quality = (int) round($rawQuality);
+            } elseif (is_string($rawQuality) && is_numeric($rawQuality)) {
+                $quality = (int) round((float) $rawQuality);
             }
             if (null !== $quality) {
                 $quality = max(0, min(100, $quality));

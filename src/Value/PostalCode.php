@@ -1,19 +1,10 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Value;
 
-use InvalidArgumentException;
-use Override;
-
-/**
- *
- */
-
-/**
- *
- */
 final readonly class PostalCode implements \Stringable
 {
     private string $value;
@@ -21,11 +12,11 @@ final readonly class PostalCode implements \Stringable
     public function __construct(string $value)
     {
         $value = trim($value);
-        if ($value === '' || strlen($value) < 3) {
-            throw new InvalidArgumentException('PostalCode is too short');
+        if ('' === $value || strlen($value) < 3) {
+            throw new \InvalidArgumentException('PostalCode is too short');
         }
         if (strlen($value) > 32) {
-            throw new InvalidArgumentException('PostalCode is too long');
+            throw new \InvalidArgumentException('PostalCode is too long');
         }
         $this->value = $value;
     }
@@ -40,7 +31,7 @@ final readonly class PostalCode implements \Stringable
         return $this->value === $other->value;
     }
 
-    #[Override]
+    #[\Override]
     public function __toString(): string
     {
         return $this->value;

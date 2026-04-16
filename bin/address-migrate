@@ -4,14 +4,14 @@
 declare(strict_types=1);
 
 /**
- * @param string $k
- * @param string|null $d
+ * @param string $key
+ * @param string|null $default
  * @return string|null
  */
-function env(string $k, ?string $d = null): ?string
+function env(string $key, ?string $default = null): ?string
 {
-    $v = getenv($k);
-    return $v === false ? $d : $v;
+    $value = getenv($key);
+    return $value === false ? $default : $value;
 }
 
 $dsn = env('PG_DSN');
@@ -38,7 +38,7 @@ sort($files, SORT_STRING);
 foreach ($files as $file) {
     $sql = file_get_contents($file);
     if ($sql === false) {
-        fwrite(STDERR, "failed to read: {$file}\n");
+        fwrite(STDERR, 'failed to read: ' . $file . "\n");
         exit(2);
     }
     $pdo->exec($sql);

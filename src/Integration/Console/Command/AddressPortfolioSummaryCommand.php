@@ -13,7 +13,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Override;
 
 #[AsCommand(name: 'address:summary:portfolio', description: 'Summarize country/source/validation/normalization portfolios.')]
 final class AddressPortfolioSummaryCommand extends Command
@@ -23,9 +22,10 @@ final class AddressPortfolioSummaryCommand extends Command
         parent::__construct();
     }
 
-    #[Override]
+    #[\Override]
     protected function configure(): void
     {
+        parent::configure();
         $this
             ->addArgument('kind', InputArgument::REQUIRED, 'country|source|validation|normalization')
             ->addOption('owner-id', null, InputOption::VALUE_OPTIONAL)
@@ -34,11 +34,12 @@ final class AddressPortfolioSummaryCommand extends Command
             ->addOption('query', 'q', InputOption::VALUE_OPTIONAL);
     }
 
-    #[Override]
+    /** @noinspection PhpMissingParentCallCommonInspection */
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $symfonyStyle = new SymfonyStyle($input, $output);
-        $kind = $this->requiredArgument($input, 'kind');
+        $kind = $this->portfolioKind($input);
         $ownerId = $this->nullable($input->getOption('owner-id'));
         $vendorId = $this->nullable($input->getOption('vendor-id'));
         $countryCode = $this->nullable($input->getOption('country-code'));
@@ -62,12 +63,12 @@ final class AddressPortfolioSummaryCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function requiredArgument(InputInterface $input, string $name): string
+    private function portfolioKind(InputInterface $input): string
     {
-        $value = $input->getArgument($name);
+        $value = $input->getArgument('kind');
 
         if (!is_string($value)) {
-            throw new \RuntimeException('invalid_argument_'.$name);
+            throw new \RuntimeException('invalid_argument_kind');
         }
 
         return $value;

@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Util\Log;
@@ -18,7 +19,10 @@ final readonly class StructuredLogger
      */
     public function log(array $event): void
     {
-        $event['ts'] ??= (new \DateTimeImmutable('now'))->format(DATE_ATOM);
+        if (!isset($event['ts'])) {
+            $timestamp = new \DateTimeImmutable('now');
+            $event['ts'] = $timestamp->format(DATE_ATOM);
+        }
         $line = json_encode($event, JSON_UNESCAPED_UNICODE);
         if (false === $line) {
             $line = json_encode(
@@ -30,6 +34,6 @@ final readonly class StructuredLogger
             return;
         }
         $line .= "\n";
-        @file_put_contents($this->path, $line, FILE_APPEND | LOCK_EX);
+        file_put_contents($this->path, $line, FILE_APPEND | LOCK_EX);
     }
 }

@@ -1,13 +1,12 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Service\Application\Event;
 
 use App\ServiceInterface\Application\Event\AddressEventDispatcherServiceInterface;
 use App\ServiceInterface\Application\Event\AddressEventInterface;
-use Override;
-use Throwable;
 
 /**
  * In-memory event dispatcher.
@@ -25,19 +24,19 @@ final class AddressInMemoryEventDispatcherService implements AddressEventDispatc
      */
     private array $listeners = [];
 
-    #[Override]
+    #[\Override]
     public function subscribe(string $eventName, callable $listener): void
     {
         $this->listeners[$eventName][] = $listener;
     }
 
     /**
-     * {@inheritdoc}
+     * {}.
      *
      * Absolute rule:
      * dispatcher must never throw or affect business flow.
      */
-    #[Override]
+    #[\Override]
     public function dispatch(AddressEventInterface $addressEvent): void
     {
         $name = $addressEvent->name();
@@ -45,7 +44,7 @@ final class AddressInMemoryEventDispatcherService implements AddressEventDispatc
         foreach ($this->listeners[$name] ?? [] as $listener) {
             try {
                 $listener($addressEvent);
-            } catch (Throwable) {
+            } catch (\Throwable) {
                 // intentionally ignored:
                 // dispatcher must never break the main flow
             }

@@ -1,5 +1,6 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Util\Identifier;
@@ -12,7 +13,12 @@ final class AddressUlid implements AddressUlidInterface
     public static function generate(): string
     {
         $milliseconds = (int) round(microtime(true) * 1000);
-        $randomBytes = random_bytes(10);
+
+        try {
+            $randomBytes = random_bytes(10);
+        } catch (\Throwable) {
+            $randomBytes = substr(hash('sha256', uniqid((string) $milliseconds, true), true), 0, 10);
+        }
 
         return self::base32FromInt($milliseconds).self::base32FromBinary($randomBytes);
     }

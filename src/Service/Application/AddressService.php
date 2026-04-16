@@ -1,11 +1,13 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Service\Application;
 
 use App\EntityInterface\Record\AddressEvidenceSnapshotInterface;
 use App\EntityInterface\Record\AddressInterface;
+use App\RepositoryInterface\Persistence\AddressPageCriteria;
 use App\RepositoryInterface\Persistence\AddressRepositoryInterface;
 
 final readonly class AddressService
@@ -25,6 +27,8 @@ final readonly class AddressService
     }
 
     /**
+     * @noinspection PhpTooManyParametersInspection
+     *
      * @param array<string, mixed> $filters
      *
      * @return array{'items': list<AddressInterface>, 'nextCursor': ?string}
@@ -38,7 +42,11 @@ final readonly class AddressService
         ?string $cursor,
         array $filters = [],
     ): array {
-        return $this->addressRepository->findPage($ownerId, $vendorId, $countryCode, $query, $limit, $cursor, $filters);
+        $criteria = AddressPageCriteria::forScope($ownerId, $vendorId, $countryCode, $query)
+            ->withPagination($limit, $cursor)
+            ->withFilters($filters);
+
+        return $this->addressRepository->findPage($criteria);
     }
 
     /** @param array<string, mixed> $patch */
@@ -78,59 +86,21 @@ final readonly class AddressService
      */
     public function evidenceHistorySummary(string $addressId, ?string $ownerId, ?string $vendorId): array
     {
+        $summary = $this->emptyEvidenceHistorySummary();
+        $providers = [];
         $cursor = null;
-        $items = [];
 
         do {
             $page = $this->addressRepository->findEvidenceHistoryPage($addressId, $ownerId, $vendorId, 200, $cursor);
             foreach ($page['items'] as $item) {
-                $items[] = $item;
+                $this->accumulateEvidenceHistorySummary($summary, $providers, $item);
             }
             $cursor = $page['nextCursor'];
         } while (null !== $cursor);
 
-        $providers = [];
-        $latestValidatedAt = null;
-        $latestCreatedAt = null;
-        $statusPending = 0;
-        $statusValidated = 0;
-        $statusRejected = 0;
+        $summary['distinctProviders'] = count($providers);
 
-        foreach ($items as $item) {
-            $status = $item->validationStatus();
-            if ('pending' === $status) {
-                ++$statusPending;
-            } elseif ('validated' === $status) {
-                ++$statusValidated;
-            } elseif ('rejected' === $status) {
-                ++$statusRejected;
-            }
-
-            $provider = $item->validatedBy();
-            if (null !== $provider && '' !== trim($provider)) {
-                $providers[$provider] = true;
-            }
-
-            $validatedAt = $item->validatedAt();
-            if (null !== $validatedAt && (null === $latestValidatedAt || $validatedAt > $latestValidatedAt)) {
-                $latestValidatedAt = $validatedAt;
-            }
-
-            $createdAt = $item->createdAt();
-            if (null === $latestCreatedAt || $createdAt > $latestCreatedAt) {
-                $latestCreatedAt = $createdAt;
-            }
-        }
-
-        return [
-            'totalSnapshots' => count($items),
-            'statusPending' => $statusPending,
-            'statusValidated' => $statusValidated,
-            'statusRejected' => $statusRejected,
-            'distinctProviders' => count($providers),
-            'latestValidatedAt' => $latestValidatedAt,
-            'latestCreatedAt' => $latestCreatedAt,
-        ];
+        return $summary;
     }
 
     public function dedupe(?string $dedupeKey): ?AddressInterface
@@ -316,5 +286,81 @@ final readonly class AddressService
         array $filters = [],
     ): array {
         return $this->addressRepository->summarizeNormalizationPortfolio($ownerId, $vendorId, $countryCode, $query, $filters);
+    }
+
+    /**
+     * @return array{
+     *   'totalSnapshots':int,
+     *   'statusPending':int,
+     *   'statusValidated':int,
+     *   'statusRejected':int,
+     *   'distinctProviders':int,
+     *   'latestValidatedAt':?string,
+     *   'latestCreatedAt':?string
+     * }
+     */
+    private function emptyEvidenceHistorySummary(): array
+    {
+        return [
+            'totalSnapshots' => 0,
+            'statusPending' => 0,
+            'statusValidated' => 0,
+            'statusRejected' => 0,
+            'distinctProviders' => 0,
+            'latestValidatedAt' => null,
+            'latestCreatedAt' => null,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $summary
+     * @param array<string, true>  $providers
+     */
+    private function accumulateEvidenceHistorySummary(
+        array &$summary,
+        array &$providers,
+        AddressEvidenceSnapshotInterface $item,
+    ): void {
+        ++$summary['totalSnapshots'];
+        $this->incrementEvidenceValidationStatus($summary, $item->validationStatus());
+
+        $provider = $item->validatedBy();
+        if (null !== $provider && '' !== trim($provider)) {
+            $providers[$provider] = true;
+        }
+
+        $this->keepLatestTimestamp($summary, 'latestValidatedAt', $item->validatedAt());
+        $this->keepLatestTimestamp($summary, 'latestCreatedAt', $item->createdAt());
+    }
+
+    /** @param array<string, mixed> $summary */
+    private function incrementEvidenceValidationStatus(array &$summary, string $status): void
+    {
+        if ('pending' === $status) {
+            ++$summary['statusPending'];
+
+            return;
+        }
+        if ('validated' === $status) {
+            ++$summary['statusValidated'];
+
+            return;
+        }
+        if ('rejected' === $status) {
+            ++$summary['statusRejected'];
+        }
+    }
+
+    /** @param array<string, mixed> $summary */
+    private function keepLatestTimestamp(array &$summary, string $key, ?string $candidate): void
+    {
+        if (null === $candidate) {
+            return;
+        }
+
+        $current = $summary[$key];
+        if (null === $current || $candidate > $current) {
+            $summary[$key] = $candidate;
+        }
     }
 }
