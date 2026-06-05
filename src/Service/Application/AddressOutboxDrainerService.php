@@ -1,26 +1,23 @@
 <?php
 
-// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Service\Application;
 
-use App\ServiceInterface\Application\AddressOutboxDrainerServiceInterface;
+use App\Entity\AddressOutboxEntity;
+use Doctrine\ORM\EntityManagerInterface;
 
-final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceInterface
+final class AddressOutboxDrainerService
 {
-    /**
-     * @var callable|null
-     */
+    /** @var callable(string, array<string, mixed>, int, int, int, ?string): bool|null */
     private $sender;
 
-    public function __construct(private readonly \PDO $pdo, ?callable $sender = null)
+    public function __construct(private readonly EntityManagerInterface $entityManager, ?callable $sender = null)
     {
         $this->sender = $sender;
     }
 
-    #[\Override]
-    public function drain(string $url, int $limit, int $retryLimit, int $timeoutSec, int $backoffMs): int
+    public function drain(string $url, int $limit = 100, int $retryLimit = 3, int $timeoutSec = 10, int $backoffMs = 250): int
     {
         $dispatchConfig = new AddressOutboxDispatchConfig(
             url: $url,
@@ -40,127 +37,49 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
         return $count;
     }
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
+    /** @return array<int, array<string, mixed>> */
     private function reserveRows(string $lockId, int $limit): array
     {
-        return 'pgsql' === $this->driver()
-            ? $this->reservePgsqlRows($lockId, $limit)
-            : $this->reserveGenericRows($lockId, $limit);
-    }
+        $this->entityManager->beginTransaction();
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    private function reservePgsqlRows(string $lockId, int $limit): array
-    {
-        $statement = $this->pdo->prepare(
-            'WITH cte AS ('
-            .'SELECT id FROM address_outbox '
-            .'WHERE published_at IS NULL AND locked_at IS NULL '
-            .'ORDER BY id ASC LIMIT :lim '
-            .'FOR UPDATE SKIP LOCKED'
-            .') '
-            .'UPDATE address_outbox '
-            .'SET locked_at = now(), locked_by = :lockedBy '
-            .'FROM cte '
-            .'WHERE address_outbox.id = cte.id '
-            .'RETURNING address_outbox.id, event_name, event_version, payload'
-        );
-        $statement->bindValue(':lim', $limit, \PDO::PARAM_INT);
-        $statement->bindValue(':lockedBy', $lockId);
-        $statement->execute();
+        try {
+            /** @var list<AddressOutboxEntity> $entities */
+            $entities = $this->entityManager->getRepository(AddressOutboxEntity::class)->findBy(
+                ['publishedAt' => null, 'lockedAt' => null],
+                ['id' => 'ASC'],
+                max(1, $limit),
+            );
 
-        /** @var array<int, array<string, mixed>> $rows */
-        $rows = $statement->fetchAll(\PDO::FETCH_ASSOC);
+            if ([] === $entities) {
+                $this->entityManager->commit();
 
-        return $rows;
-    }
+                return [];
+            }
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    private function reserveGenericRows(string $lockId, int $limit): array
-    {
-        $this->pdo->beginTransaction();
+            $rows = [];
+            $now = new \DateTimeImmutable('now');
+            foreach ($entities as $entity) {
+                $entity->setLockedAt($now);
+                $entity->setLockedBy($lockId);
+                $rows[] = [
+                    'id' => $entity->getId(),
+                    'event_name' => $entity->getEventName(),
+                    'event_version' => $entity->getEventVersion(),
+                    'payload' => $entity->getPayload(),
+                ];
+            }
 
-        $ids = $this->selectUnlockedIds($limit);
-        if ([] === $ids) {
-            $this->pdo->commit();
+            $this->entityManager->flush();
+            $this->entityManager->commit();
 
-            return [];
+            return $rows;
+        } catch (\Throwable $throwable) {
+            if ($this->entityManager->getConnection()->isTransactionActive()) {
+                $this->entityManager->rollback();
+            }
+
+            throw $throwable;
         }
-
-        $this->lockSelectedRows($lockId, $ids);
-        $result = $this->lockedRowsByLockId($lockId);
-        $this->pdo->commit();
-
-        return $result;
-    }
-
-    /** @return list<int|string> */
-    private function selectUnlockedIds(int $limit): array
-    {
-        $select = $this->pdo->prepare(
-            'SELECT id FROM address_outbox '
-            .'WHERE published_at IS NULL AND locked_at IS NULL '
-            .'ORDER BY id ASC LIMIT :lim'
-        );
-        $select->bindValue(':lim', $limit, \PDO::PARAM_INT);
-        $select->execute();
-
-        /** @var list<int|string> $ids */
-        $ids = $select->fetchAll(\PDO::FETCH_COLUMN);
-
-        return $ids;
-    }
-
-    /** @param list<int|string> $ids */
-    private function lockSelectedRows(string $lockId, array $ids): void
-    {
-        $update = $this->pdo->prepare(
-            'UPDATE address_outbox '
-            .'SET locked_at = CURRENT_TIMESTAMP, locked_by = ? '
-            .'WHERE locked_at IS NULL AND id IN ('.$this->positionalPlaceholders(count($ids)).')'
-        );
-        $update->execute(array_merge([$lockId], $ids));
-    }
-
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    private function lockedRowsByLockId(string $lockId): array
-    {
-        $rows = $this->pdo->prepare(
-            'SELECT id, event_name, event_version, payload '
-            .'FROM address_outbox WHERE locked_by = ? AND published_at IS NULL'
-        );
-        $rows->execute([$lockId]);
-
-        /** @var array<int, array<string, mixed>> $result */
-        $result = $rows->fetchAll(\PDO::FETCH_ASSOC);
-
-        return $result;
-    }
-
-    private function positionalPlaceholders(int $count): string
-    {
-        return implode(',', array_fill(0, $count, '?'));
-    }
-
-    private function currentTimestampSql(): string
-    {
-        $driver = $this->driver();
-
-        return 'pgsql' === $driver ? 'now()' : 'CURRENT_TIMESTAMP';
-    }
-
-    private function driver(): string
-    {
-        $driver = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
-
-        return is_string($driver) ? $driver : '';
     }
 
     /** @param array<string, mixed> $row */
@@ -195,7 +114,7 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
     /**
      * @param array<string, mixed> $row
      *
-     * @return array<string, mixed>
+     * @return array{name:string, version:int, payload:array<string, mixed>|null}
      */
     private function eventPayload(array $row): array
     {
@@ -229,34 +148,40 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
 
     private function markPublished(int $id): void
     {
-        $update = $this->pdo->prepare(
-            'UPDATE address_outbox '
-            .'SET published_at = '.$this->currentTimestampSql().', locked_at = NULL, locked_by = NULL, '
-            .'published_attempt = published_attempt + 1, last_error = NULL '
-            .'WHERE id = :id'
-        );
-        $update->execute([':id' => $id]);
+        $entity = $this->entityManager->find(AddressOutboxEntity::class, $id);
+        if (!$entity instanceof AddressOutboxEntity) {
+            return;
+        }
+
+        $entity
+            ->setPublishedAt(new \DateTimeImmutable('now'))
+            ->setLockedAt(null)
+            ->setLockedBy(null)
+            ->setPublishedAttempt($entity->getPublishedAttempt() + 1)
+            ->setLastError(null);
+
+        $this->entityManager->flush();
     }
 
     private function markDispatchFailure(int $id, ?string $error): void
     {
-        $update = $this->pdo->prepare(
-            'UPDATE address_outbox '
-            .'SET locked_at = NULL, locked_by = NULL, '
-            .'published_attempt = published_attempt + 1, last_error = :error '
-            .'WHERE id = :id'
-        );
-        $update->execute([':id' => $id, ':error' => $error]);
+        $entity = $this->entityManager->find(AddressOutboxEntity::class, $id);
+        if (!$entity instanceof AddressOutboxEntity) {
+            return;
+        }
+
+        $entity
+            ->setLockedAt(null)
+            ->setLockedBy(null)
+            ->setPublishedAttempt($entity->getPublishedAttempt() + 1)
+            ->setLastError($error);
+
+        $this->entityManager->flush();
     }
 
-    /**
-     * @param array<string, mixed> $data
-     */
-    private function send(
-        AddressOutboxDispatchConfig $dispatchConfig,
-        array $data,
-        ?string &$error,
-    ): bool {
+    /** @param array<string, mixed> $data */
+    private function send(AddressOutboxDispatchConfig $dispatchConfig, array $data, ?string &$error): bool
+    {
         if (is_callable($this->sender)) {
             return $this->dispatchViaSender($this->sender, $dispatchConfig, $data, $error);
         }
@@ -273,12 +198,8 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
      * @param callable(string, array<string, mixed>, int, int, int, ?string): bool $sender
      * @param array<string, mixed>                                                 $data
      */
-    private function dispatchViaSender(
-        callable $sender,
-        AddressOutboxDispatchConfig $dispatchConfig,
-        array $data,
-        ?string &$error,
-    ): bool {
+    private function dispatchViaSender(callable $sender, AddressOutboxDispatchConfig $dispatchConfig, array $data, ?string &$error): bool
+    {
         return $sender(
             $dispatchConfig->url,
             $data,
@@ -289,9 +210,7 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
         );
     }
 
-    /**
-     * @param array<string, mixed> $data
-     */
+    /** @param array<string, mixed> $data */
     private function encodedDispatchPayload(array $data, ?string &$error): ?string
     {
         $payload = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -304,11 +223,8 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
         return null;
     }
 
-    private function post(
-        AddressOutboxDispatchConfig $dispatchConfig,
-        string $payload,
-        ?string &$error,
-    ): bool {
+    private function post(AddressOutboxDispatchConfig $dispatchConfig, string $payload, ?string &$error): bool
+    {
         $attempt = 0;
         $error = null;
 
@@ -358,9 +274,8 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
         return [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $payload,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_CONNECTTIMEOUT => $dispatchConfig->timeoutSec,
+            CURLOPT_POSTFIELDS => $payload,
             CURLOPT_TIMEOUT => $dispatchConfig->timeoutSec,
         ];
     }
@@ -376,19 +291,7 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
             return 'curl: '.$curlError;
         }
 
-        return 'http: '.$code.' body: '.substr($this->stringResponse($response), 0, 500);
-    }
-
-    private function stringResponse(mixed $response): string
-    {
-        if (is_string($response)) {
-            return $response;
-        }
-        if (is_int($response) || is_float($response) || is_bool($response)) {
-            return (string) $response;
-        }
-
-        return '';
+        return 'http: '.$code.' '.(is_string($response) ? trim($response) : '');
     }
 
     private function shouldRetry(int $attempt, AddressOutboxDispatchConfig $dispatchConfig): bool
@@ -398,6 +301,6 @@ final class AddressOutboxDrainerService implements AddressOutboxDrainerServiceIn
 
     private function retryDelayMicros(int $attempt, AddressOutboxDispatchConfig $dispatchConfig): int
     {
-        return $dispatchConfig->backoffMs * 1000 * $attempt;
+        return max(0, $dispatchConfig->backoffMs * $attempt) * 1000;
     }
 }

@@ -1,5 +1,6 @@
 -- Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 -- Demo seed data for Address domain (Postgres)
+-- Purpose: tiny deterministic manual sample, excluded from ordered migration authority
 
 SET TIME ZONE 'UTC';
 
@@ -23,6 +24,17 @@ INSERT INTO address_entity (
     validation_status,
     validation_provider,
     validated_at,
+    source_system,
+    source_type,
+    source_reference,
+    normalization_version,
+    provider_digest,
+    governance_status,
+    revalidation_due_at,
+    revalidation_policy,
+    last_validation_provider,
+    last_validation_status,
+    last_validation_score,
     created_at,
     validation_fingerprint
 ) VALUES
@@ -46,6 +58,17 @@ INSERT INTO address_entity (
           'validated',
           'demo',
           '2025-01-02T10:00:00Z',
+          'seed-demo',
+          'import',
+          'seed-demo-1',
+          'canon-v2',
+          'sha256:demo-provider-1',
+          'canonical',
+          '2025-04-01T00:00:00Z',
+          'quarterly',
+          'demo',
+          'validated',
+          97,
           '2025-01-01T08:00:00Z',
           'demo-fp-1'
       ),
@@ -66,12 +89,24 @@ INSERT INTO address_entity (
           30.2670,
           -97.7430,
           '9v6xj6f',
-          'normalized',
+          'pending',
           'demo',
           '2025-01-03T09:30:00Z',
+          'seed-demo',
+          'manual',
+          'seed-demo-2',
+          'canon-v1',
+          'sha256:demo-provider-2',
+          'alias',
+          '2025-02-15T00:00:00Z',
+          'monthly',
+          'demo',
+          'uncertain',
+          73,
           '2025-01-01T09:00:00Z',
           'demo-fp-2'
-      );
+      )
+ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO address_outbox (
     stream,
@@ -97,9 +132,10 @@ INSERT INTO address_outbox (
           'address',
           'address.normalized',
           1,
-          '{"address_id":"01J0DEMOADDR00000000000002","owner_id":"demo-owner-2","status":"normalized"}'::jsonb,
+          '{"address_id":"01J0DEMOADDR00000000000002","owner_id":"demo-owner-2","status":"pending"}'::jsonb,
           '2025-01-01T09:00:01Z',
           NULL,
           0,
           NULL
-      );
+      )
+ON CONFLICT DO NOTHING;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <files psalm-version="7.0.0-beta17@a7f96f911fc869c40c48ec977e21f01a8ca534bd">
-    <file src="src/Contract/Message/AddressOutboxEventContract.php">
+    <file src="src/Contract/Message/AddressOutboxEventMessage.php">
         <MissingPureAnnotation>
             <code><![CDATA[eventVersion]]></code>
             <code><![CDATA[eventVersions]]></code>
@@ -209,7 +209,7 @@
             <code><![CDATA[isExpectedType]]></code>
         </MissingPureAnnotation>
     </file>
-    <file src="src/Integration/Console/Command/AddressCreateCommand.php">
+    <file src="src/Command/AddressCreateCommand.php">
         <MissingPureAnnotation>
             <code><![CDATA[nullable]]></code>
         </MissingPureAnnotation>
@@ -217,12 +217,12 @@
             <code><![CDATA[AddressCreateCommand]]></code>
         </UnusedClass>
     </file>
-    <file src="src/Integration/Console/Command/AddressDemoLoadCommand.php">
+    <file src="src/Command/AddressDemoLoadCommand.php">
         <UnusedClass>
             <code><![CDATA[AddressDemoLoadCommand]]></code>
         </UnusedClass>
     </file>
-    <file src="src/Integration/Console/Command/AddressEvidenceSummaryCommand.php">
+    <file src="src/Command/AddressEvidenceSummaryCommand.php">
         <MissingPureAnnotation>
             <code><![CDATA[nullable]]></code>
         </MissingPureAnnotation>
@@ -230,7 +230,7 @@
             <code><![CDATA[AddressEvidenceSummaryCommand]]></code>
         </UnusedClass>
     </file>
-    <file src="src/Integration/Console/Command/AddressGovernanceClusterSummaryCommand.php">
+    <file src="src/Command/AddressGovernanceClusterSummaryCommand.php">
         <MissingPureAnnotation>
             <code><![CDATA[nullable]]></code>
         </MissingPureAnnotation>
@@ -238,7 +238,7 @@
             <code><![CDATA[AddressGovernanceClusterSummaryCommand]]></code>
         </UnusedClass>
     </file>
-    <file src="src/Integration/Console/Command/AddressPortfolioSummaryCommand.php">
+    <file src="src/Command/AddressPortfolioSummaryCommand.php">
         <MissingPureAnnotation>
             <code><![CDATA[nullable]]></code>
         </MissingPureAnnotation>
@@ -246,7 +246,7 @@
             <code><![CDATA[AddressPortfolioSummaryCommand]]></code>
         </UnusedClass>
     </file>
-    <file src="src/Integration/Console/Command/AddressQueueSummaryCommand.php">
+    <file src="src/Command/AddressQueueSummaryCommand.php">
         <MissingPureAnnotation>
             <code><![CDATA[nullable]]></code>
         </MissingPureAnnotation>
@@ -254,7 +254,7 @@
             <code><![CDATA[AddressQueueSummaryCommand]]></code>
         </UnusedClass>
     </file>
-    <file src="src/Integration/Console/Command/AddressSearchCommand.php">
+    <file src="src/Command/AddressSearchCommand.php">
         <MissingPureAnnotation>
             <code><![CDATA[nullable]]></code>
             <code><![CDATA[nullableBool]]></code>
@@ -263,7 +263,7 @@
             <code><![CDATA[AddressSearchCommand]]></code>
         </UnusedClass>
     </file>
-    <file src="src/Integration/Console/Command/AddressValidatedApplyCommand.php">
+    <file src="src/Command/AddressValidatedApplyCommand.php">
         <MissingPureAnnotation>
             <code><![CDATA[nullable]]></code>
         </MissingPureAnnotation>
@@ -386,29 +386,6 @@
             <code><![CDATA[is_array($rows)]]></code>
         </TypeDoesNotContainType>
     </file>
-    <file src="src/RepositoryInterface/Persistence/AddressRepositoryInterface.php">
-        <MissingAbstractPureAnnotation>
-            <code><![CDATA[appendEvidenceSnapshot]]></code>
-            <code><![CDATA[create]]></code>
-            <code><![CDATA[delete]]></code>
-            <code><![CDATA[findByDedupeKey]]></code>
-            <code><![CDATA[findEvidenceHistoryPage]]></code>
-            <code><![CDATA[findPage]]></code>
-            <code><![CDATA[get]]></code>
-            <code><![CDATA[getLatestEvidenceSnapshot]]></code>
-            <code><![CDATA[patchOperational]]></code>
-            <code><![CDATA[summarizeCountryPortfolio]]></code>
-            <code><![CDATA[summarizeGovernanceCluster]]></code>
-            <code><![CDATA[summarizeNormalizationPortfolio]]></code>
-            <code><![CDATA[summarizeOperationalQueues]]></code>
-            <code><![CDATA[summarizeSourcePortfolio]]></code>
-            <code><![CDATA[summarizeValidationPortfolio]]></code>
-            <code><![CDATA[update]]></code>
-        </MissingAbstractPureAnnotation>
-        <MissingInterfaceImmutableAnnotation>
-            <code><![CDATA[AddressRepositoryInterface]]></code>
-        </MissingInterfaceImmutableAnnotation>
-    </file>
     <file src="src/Service/Application/AddressGovernancePolicy.php">
         <MissingPureAnnotation>
             <code><![CDATA[asNullableString]]></code>
@@ -438,25 +415,6 @@
         <UnusedClass>
             <code><![CDATA[AddressProjectionService]]></code>
         </UnusedClass>
-    </file>
-    <file src="src/Service/Application/AddressService.php">
-        <MissingPureAnnotation>
-            <code><![CDATA[__construct]]></code>
-        </MissingPureAnnotation>
-        <PossiblyUnusedMethod>
-            <code><![CDATA[appendEvidenceSnapshot]]></code>
-        </PossiblyUnusedMethod>
-        <UnnecessaryVarAnnotation>
-            <code><![CDATA[array{
-         *   total:int,
-         *   dueForRevalidation:int,
-         *   evidenceMissing:int,
-         *   uncertainValidation:int,
-         *   conflictReview:int,
-         *   duplicateReview:int,
-         *   staleNormalizationVersion:int
-         * }]]></code>
-        </UnnecessaryVarAnnotation>
     </file>
     <file src="src/Service/Application/AddressValidatedApplierService.php">
         <MissingPureAnnotation>
@@ -677,7 +635,7 @@
             <code><![CDATA[$sql]]></code>
         </PossiblyFalseArgument>
         <TooManyArguments>
-            <code><![CDATA[new IndexProjector($repo, new Normalizer(), null, false)]]></code>
+            <code><![CDATA[new AddressIndexProjector($repo, new AddressIndexNormalizer(), null, false)]]></code>
         </TooManyArguments>
         <UnusedClass>
             <code><![CDATA[IndexProjectorTest]]></code>
@@ -730,17 +688,6 @@
             <code><![CDATA[$timeoutSec]]></code>
         </UnusedClosureParam>
     </file>
-    <file src="tests/Service/AddressServiceTest.php">
-        <MissingOverrideAttribute>
-            <code><![CDATA[protected function setUp(): void]]></code>
-        </MissingOverrideAttribute>
-        <MissingPureAnnotation>
-            <code><![CDATA[schemaSql]]></code>
-        </MissingPureAnnotation>
-        <UnusedClass>
-            <code><![CDATA[AddressServiceTest]]></code>
-        </UnusedClass>
-    </file>
     <file src="tests/Service/AddressValidatedApplierTest.php">
         <MissingOverrideAttribute>
             <code><![CDATA[protected function setUp(): void]]></code>
@@ -761,11 +708,6 @@
         <PossiblyInvalidCast>
             <code><![CDATA[$pdo->getAttribute(PDO::ATTR_DRIVER_NAME)]]></code>
         </PossiblyInvalidCast>
-    </file>
-    <file src="tests/Unit/AddressServiceUnitTest.php">
-        <UnusedClass>
-            <code><![CDATA[AddressServiceUnitTest]]></code>
-        </UnusedClass>
     </file>
     <file src="tests/ValueObjectsTest.php">
         <PossiblyUnusedMethod>

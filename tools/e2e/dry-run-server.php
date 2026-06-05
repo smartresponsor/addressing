@@ -14,6 +14,7 @@ $env = $_ENV;
 $env['APP_ENV'] = 'test';
 $env['APP_DEBUG'] = '0';
 $env['ADDRESS_DB_DSN'] = $env['ADDRESS_DB_DSN'] ?? 'sqlite:'.dirname(__DIR__, 2).'/var/addressing-dry-run.sqlite';
+$env['ADDRESS_DB_PATH'] = $env['ADDRESS_DB_PATH'] ?? substr($env['ADDRESS_DB_DSN'], strlen('sqlite:'));
 
 $descriptorSpec = [
     0 => ['pipe', 'r'],

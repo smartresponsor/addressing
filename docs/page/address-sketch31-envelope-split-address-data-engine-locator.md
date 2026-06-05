@@ -2,7 +2,7 @@ address-sketch31-envelope-split-address-data-engine-locator
 
 Decision boundary
 
-- AddressData: storage + CRUD + normalization + projections + outbox. No external verification.
+- AddressRecord: storage + CRUD + normalization + projections + outbox. No external verification.
 - AddressEngine: formatting/validation/parsing/normalization logic (pure library). No DB.
 - AddressLocator: provider routing + geocoding/validation integrations. No storage of canonical records.
 
@@ -57,7 +57,7 @@ Goal
 - tests moved with namespace update
   Acceptance Criteria
 - phpunit passes for engine tests.
-- AddressData repo no longer imports engine classes directly (use adapter interface).
+- AddressRecord repo no longer imports engine classes directly (use adapter interface).
   Notes
 - If engine code depends on Symfony services, wrap them behind interfaces in AddressEngine.
 
@@ -81,14 +81,14 @@ Goal
 - new repo: AddressLocator (or fold into existing Locator component)
 - interface contracts: AddressLocateServiceInterface + AddressVerifyServiceInterface
   Acceptance Criteria
-- AddressData exposes events/outbox for "AddressValidated" and consumes results via adapter.
+- AddressRecord exposes events/outbox for "AddressValidated" and consumes results via adapter.
   Notes
 - If Locator already exists, prefer moving this logic into Locator and keeping AddressLocator repo empty.
 
 Envelope D (BUCKET)
 Goal
 
-- Harden AddressData as a dedicated storage domain: entities, repository, projection, outbox.
+- Harden AddressRecord as a dedicated storage domain: entities, repository, projection, outbox.
   Slice
 - BUCKET
   Limits
@@ -108,7 +108,7 @@ Goal
 - src/Repository/**
 - src/Service/**
   Outputs
-- AddressData repo: clean namespaces, no duplicate root-level classes
+- AddressRecord repo: clean namespaces, no duplicate root-level classes
 - a single AddressRepositoryInterface in src/RepositoryInterface/Address
 - smoke script (tools/smoke.ps1)
   Acceptance Criteria

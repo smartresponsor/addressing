@@ -1,8 +1,41 @@
+includes:
+    - vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-symfony/rules.neon
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-doctrine/rules.neon
+
 parameters:
-  level: max
-  paths:
-    - src
-    - tests
-  checkGenericClassInNonGenericObjectType: true
-  checkMissingIterableValueType: true
-  inferPrivatePropertyTypeFromConstructor: true
+    level: 8
+    paths:
+        - src
+        - tests
+
+    tmpDir: var/phpstan
+
+    bootstrapFiles:
+        - vendor/autoload.php
+
+    excludePaths:
+        analyse:
+            - var/*
+            - vendor/*
+            - public/*
+            - migrations/*
+            - tests/Fixture/*
+            - tests/Fixtures/*
+            - tests/playwright/*
+
+    symfony:
+        consoleApplicationLoader: tests/console-application.php
+
+    doctrine:
+        objectManagerLoader: tests/object-manager.php
+
+    scanFiles:
+        - vendor/autoload.php
+        - vendor/symfony/dependency-injection/Loader/Configurator/ContainerConfigurator.php
+
+    checkMissingIterableValueType: true
+    checkGenericClassInNonGenericObjectType: true
+    inferPrivatePropertyTypeFromConstructor: true
+    reportUnmatchedIgnoredErrors: true

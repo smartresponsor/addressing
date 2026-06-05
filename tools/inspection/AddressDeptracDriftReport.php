@@ -10,6 +10,7 @@ $signals = [
     'legacyControllerRegexPresent' => str_contains($deptracContent, '^App\\Controller\\.*'),
     'legacyHttpRegexPresent' => str_contains($deptracContent, '^App\\(Request|Response|Dto|Command)\\.*'),
     'currentHttpControllerPathExists' => is_dir($root.'/src/Http/Controller'),
+    'currentServiceHttpPathExists' => is_dir($root.'/src/Service/Http'),
     'currentHttpPathExists' => is_dir($root.'/src/Http'),
     'currentRepositoryPathExists' => is_dir($root.'/src/Repository'),
     'currentServicePathExists' => is_dir($root.'/src/Service'),

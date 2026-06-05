@@ -1,17 +1,18 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace Tests;
 
-use App\Http\Schema\Validator;
+use App\Http\Schema\AddressSchemaValidator;
 use PHPUnit\Framework\TestCase;
 
 final class HttpSchemaValidatorTest extends TestCase
 {
     public function testValidateRejectsWrongType(): void
     {
-        $validator = new Validator();
+        $validator = new AddressSchemaValidator();
 
         $result = $validator->validate('ParseRequest', [
             'text' => '221B Baker Street',
@@ -23,7 +24,7 @@ final class HttpSchemaValidatorTest extends TestCase
 
     public function testValidateRejectsNullInRequiredField(): void
     {
-        $validator = new Validator();
+        $validator = new AddressSchemaValidator();
 
         $result = $validator->validate('ParseRequest', [
             'text' => null,
@@ -35,7 +36,7 @@ final class HttpSchemaValidatorTest extends TestCase
 
     public function testValidateAcceptsValidPayload(): void
     {
-        $validator = new Validator();
+        $validator = new AddressSchemaValidator();
 
         $result = $validator->validate('ParseRequest', [
             'text' => '221B Baker Street',

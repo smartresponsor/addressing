@@ -2,13 +2,13 @@
 
 ## Runtime posture
 
-The current Addressing slice is PDO-first at runtime. The Symfony container exposes the primary `PDO` service and does not wire a Doctrine ORM manager into the container surface.
+The current Addressing slice is Doctrine-first for schema authority and repository authority. The Symfony container still exposes a primary `PDO` service for transitional runtime helpers that operate on the native connection.
 
 For generic tooling compatibility, `tests/object-manager.php` returns the primary `PDO` connection for the active runtime slice, and `tests/console-application.php` boots the current Symfony kernel through the shared runtime bootstrap helper.
 
 ## Package surface posture
 
-The package surface is aligned to the PDO-first runtime contract:
+The package surface is now aligned to the Doctrine-first runtime contract:
 
 - `doctrine/orm` is no longer part of the runtime `require` surface
 - when present, Doctrine ORM is a development-only footprint used for inspection/static-analysis compatibility rather than as a runtime contract
@@ -16,7 +16,7 @@ The package surface is aligned to the PDO-first runtime contract:
 
 ## Shared SQLite schema authority
 
-The shared SQLite schema authority lives in `src/Integration/Persistence/AddressSchemaManager.php` and is consumed through `tests/Support/TestDatabase.php`.
+The shared schema authority lives in `src/Doctrine/AddressDoctrineSchemaManager.php`. Functional test support resets SQLite through Doctrine ORM metadata in `tests/Support/TestDatabase.php`.
 
 That shared schema surface includes:
 
@@ -80,7 +80,7 @@ The current runtime/trust-surface reports are:
 
 Notes:
 
-- `smoke:doctrine` is intentionally `not_applicable` in the current PDO-first runtime contract.
+- `smoke:doctrine` is expected to be applicable because Addressing now exposes Doctrine ORM schema authority.
 - `smoke:graphql` is intentionally `not_applicable` because no GraphQL surface is wired in the current slice.
 - `composer fixtures:demo` uses the container-managed `bin/address-demo-reset` entrypoint.
 - The temporary runtime replacement layer introduced during the synchronization phase has been retired from the active trust surface.

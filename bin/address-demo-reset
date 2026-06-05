@@ -3,7 +3,7 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-use App\Fixture\AddressDemoFixtureService;
+use App\Service\Fixture\AddressDemoFixtureService;
 
 require dirname(__DIR__).'/tools/support/AddressRuntimeBootstrap.php';
 

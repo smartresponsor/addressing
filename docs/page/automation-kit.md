@@ -3,8 +3,8 @@ Automation kit (Smartresponsor-style)
 What is included:
 
 - Domain/Tool scripts: run.ps1, github-gate.ps1, evidence-pack.ps1, plan/codex helpers
-- GitHub Actions workflow templates (tool/template/github-workflow)
-- Cloudflare Worker trigger templates (tool/template/worker)
+- GitHub Actions workflow templates (tool/templates/github-workflow)
+- Cloudflare Worker trigger templates (tool/templates/worker)
 
 Intended workflow:
 
@@ -16,3 +16,4 @@ Intended workflow:
 - Copy this kit into a repo, then run:
   pwsh -NoProfile -File Domain/Tool/bootstrap-automation.ps1 -Domain <domain> -Sketch <n> -Owner <ghOwner>
   -Repo <ghRepo> -Force
+

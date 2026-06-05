@@ -2,7 +2,7 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-use App\Entity\Record\AddressData;
+use App\Entity\Record\AddressRecord;
 use App\Service\Application\AddressProjectionService;
 
 require_once __DIR__.'/../vendor/autoload.php';
@@ -56,13 +56,13 @@ function bool_opt(array $row, string $key): ?bool
 }
 
 /** @param array<string, mixed> $row */
-function row_address(array $row): AddressData
+function row_address(array $row): AddressRecord
 {
     $validationRaw = decode_json_opt($row['validation_raw'] ?? null);
     $validationVerdict = decode_json_opt($row['validation_verdict'] ?? null);
     $validationDeliverable = bool_opt($row, 'validation_deliverable');
 
-    return new AddressData(
+    return new AddressRecord(
         (string) $row['id'],
         isset($row['owner_id']) ? (string) $row['owner_id'] : null,
         isset($row['vendor_id']) ? (string) $row['vendor_id'] : null,

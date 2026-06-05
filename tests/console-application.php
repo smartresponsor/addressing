@@ -5,7 +5,14 @@ declare(strict_types=1);
 
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 
-require __DIR__.'/../tools/support/AddressRuntimeBootstrap.php';
+putenv('APP_ENV=test');
+putenv('APP_DEBUG=1');
+$_SERVER['APP_ENV'] = 'test';
+$_SERVER['APP_DEBUG'] = '1';
+$_ENV['APP_ENV'] = 'test';
+$_ENV['APP_DEBUG'] = '1';
+
+require_once __DIR__.'/../tools/support/AddressRuntimeBootstrap.php';
 
 $bootstrapClass = 'AddressRuntimeBootstrap';
 if (!class_exists($bootstrapClass)) {

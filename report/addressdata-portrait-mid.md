@@ -9,14 +9,13 @@ Address Data — промежуточный портрет (после чист�
 
 1) Что осталось как ядро Address Data
 
-- Данные: src/Entity/Address/AddressData.php (+ src/EntityInterface/Address/AddressInterface.php).
+- Данные: src/Entity/Address/AddressEntity.php (+ src/EntityInterface/Address/AddressInterface.php).
 - Репозиторий: src/Repository/Address/AddressRepository.php (PDO) + зеркальный интерфейс
   src/RepositoryInterface/Address/AddressRepositoryInterface.php.
 - Контракт “валидировано”: src/Contract/Address/AddressValidated.php.
 - Применение валидации: src/Service/Application/Address/AddressValidatedApplier.php + зеркальный интерфейс
   src/ServiceInterface/Application/Address/AddressValidatedApplierInterface.php.
-- Проекции/аутбокс: src/Service/Application/Address/AddressProjection.php, src/Service/Application/Address/AddressOutboxDrainer.php,
-  bin/address-* runner scripts.
+- Проекции/аутбокс: src/Projection/AddressIndex/*, src/Service/Application/Event/*, bin/address-* runner scripts.
 - HTTP API: src/Http/AddressApi/Controller.php, public/index.php.
 - OpenAPI: openapi/address.yaml.
 
@@ -29,7 +28,7 @@ Address Data — промежуточный портрет (после чист�
 2) Хранилище (как сейчас в sql/*)
 
 - Postgres: address_entity (источник правды).
-- MySQL: address_projection (read model).
+- SQLite/Postgres-friendly address_index projection under src/Projection/AddressIndex/* (read model).
 
 1) Ключевые пробелы (до “product/production-ready” уровня)
 

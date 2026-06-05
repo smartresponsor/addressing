@@ -2,8 +2,8 @@ Address-sketch31-9-http-addressdata
 
 Goal
 
-- Expose AddressData CRUD and page endpoints over HTTP.
-- Keep the validated-apply contract inside AddressData (Locator/Engine can call it).
+- Expose AddressRecord CRUD and page endpoints over HTTP.
+- Keep the validated-apply contract inside AddressRecord (Locator/Engine can call it).
 
 Prerequisite
 

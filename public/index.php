@@ -2,15 +2,18 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-use App\Http\Controller\AddressController;
-use App\Http\ErrorMap;
-use App\Http\Middleware\Cors;
-use App\Http\Middleware\IpGuard;
-use App\Http\Middleware\RateLimiter;
-use App\Http\Middleware\RequestId;
-use App\Http\Middleware\SecurityHeaders;
-use App\Integration\Persistence\AddressPdoFactory;
+use App\Http\AddressErrorMap;
+use App\Http\Middleware\AddressCorsMiddleware;
+use App\Http\Middleware\AddressIpGuardMiddleware;
+use App\Http\Middleware\AddressRateLimiter;
+use App\Http\Middleware\AddressRequestIdMiddleware;
+use App\Http\Middleware\AddressSecurityHeadersMiddleware;
 use App\Kernel;
+use App\Service\Http\Address\AddressManageHttpService;
+use App\Service\Http\Address\AddressOperationalHttpService;
+use App\Service\Http\Address\AddressReadHttpService;
+use App\Service\Http\Address\AddressSummaryHttpService;
+use App\Service\Http\Address\AddressWriteHttpService;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,103 +31,108 @@ $request = Request::createFromGlobals();
 $method = $request->getMethod();
 $pathInfo = $request->getPathInfo();
 
+$kernel = new Kernel($_SERVER['APP_ENV'], (bool) $_SERVER['APP_DEBUG']);
+$kernel->boot();
+
 try {
-    RequestId::ensure();
+    AddressRequestIdMiddleware::ensure();
 } catch (Throwable) {
-    ErrorMap::emit(500, 'server_error', 'request_id_failed');
+    AddressErrorMap::emit(500, 'server_error', 'request_id_failed');
     exit(1);
 }
-Cors::handle($request, $method);
-SecurityHeaders::apply();
+AddressCorsMiddleware::handle($request, $method);
+AddressSecurityHeadersMiddleware::apply();
 
 $clientIp = (string) ($request->server->get('REMOTE_ADDR') ?? '0.0.0.0');
-if (!IpGuard::allowed($clientIp, $pathInfo)) {
-    ErrorMap::emit(403, 'forbidden', 'ip_forbidden');
+if (!AddressIpGuardMiddleware::allowed($clientIp, $pathInfo)) {
+    AddressErrorMap::emit(403, 'forbidden', 'ip_forbidden');
     exit(0);
 }
 
-$rateLimiter = new RateLimiter(AddressPdoFactory::createRateLimit());
+$rateLimiter = $kernel->getContainer()->get(AddressRateLimiter::class);
 if (!filter_var($_SERVER['RATE_LIMIT_DISABLED'] ?? getenv('RATE_LIMIT_DISABLED') ?? false, FILTER_VALIDATE_BOOL)
     && !$rateLimiter->check($clientIp, $method.' '.$pathInfo)
 ) {
-    ErrorMap::emit(429, 'too_many_requests', 'rate_limit_exceeded');
+    AddressErrorMap::emit(429, 'too_many_requests', 'rate_limit_exceeded');
     exit(0);
 }
 
-$kernel = new Kernel($_SERVER['APP_ENV'], (bool) $_SERVER['APP_DEBUG']);
-$kernel->boot();
-$controller = $kernel->getContainer()->get(AddressController::class);
+$addressManageHttpService = $kernel->getContainer()->get(AddressManageHttpService::class);
+$addressWriteHttpService = $kernel->getContainer()->get(AddressWriteHttpService::class);
+$addressReadHttpService = $kernel->getContainer()->get(AddressReadHttpService::class);
+$addressSummaryHttpService = $kernel->getContainer()->get(AddressSummaryHttpService::class);
+$addressOperationalHttpService = $kernel->getContainer()->get(AddressOperationalHttpService::class);
 
 try {
     if ('/address/manage' === $pathInfo && ('GET' === $method || 'POST' === $method)) {
-        $controller->manage($request)->send();
+        $addressManageHttpService->manage($request)->send();
         exit(0);
     }
 
     if ('POST' === $method && '/api/address' === $pathInfo) {
-        $controller->create($request)->send();
+        $addressWriteHttpService->create($request)->send();
         exit(0);
     }
 
     if ('GET' === $method && ('/api/address/page' === $pathInfo || '/api/address/search' === $pathInfo)) {
-        $controller->page($request)->send();
+        $addressReadHttpService->page($request)->send();
         exit(0);
     }
 
     if ('GET' === $method && '/api/address/queue-summary' === $pathInfo) {
-        $controller->queueSummary($request)->send();
+        $addressSummaryHttpService->queueSummary($request)->send();
         exit(0);
     }
 
     if ('GET' === $method && '/api/address/country-portfolio' === $pathInfo) {
-        $controller->countryPortfolioSummary($request)->send();
+        $addressSummaryHttpService->countryPortfolioSummary($request)->send();
         exit(0);
     }
 
     if ('GET' === $method && '/api/address/source-portfolio' === $pathInfo) {
-        $controller->sourcePortfolioSummary($request)->send();
+        $addressSummaryHttpService->sourcePortfolioSummary($request)->send();
         exit(0);
     }
 
     if ('GET' === $method && '/api/address/validation-portfolio' === $pathInfo) {
-        $controller->validationPortfolioSummary($request)->send();
+        $addressSummaryHttpService->validationPortfolioSummary($request)->send();
         exit(0);
     }
 
     if ('GET' === $method && '/api/address/normalization-portfolio' === $pathInfo) {
-        $controller->normalizationPortfolioSummary($request)->send();
+        $addressSummaryHttpService->normalizationPortfolioSummary($request)->send();
         exit(0);
     }
 
     if ('POST' === $method && '/api/address/operational-batch' === $pathInfo) {
-        $controller->patchOperationalBatch($request)->send();
+        $addressOperationalHttpService->patchOperationalBatch($request)->send();
         exit(0);
     }
 
     if (1 === preg_match('#^/api/address/([0-9A-HJKMNP-TV-Z]{26}|demo-[0-9]{4})$#', $pathInfo, $matches)) {
         if ('GET' === $method) {
-            $controller->get($request, $matches[1])->send();
+            $addressReadHttpService->get($request, $matches[1])->send();
             exit(0);
         }
 
         if ('DELETE' === $method) {
-            $controller->markDeleted($request, $matches[1])->send();
+            $addressWriteHttpService->markDeleted($request, $matches[1])->send();
             exit(0);
         }
 
         if ('PATCH' === $method) {
-            $controller->patchOperational($request, $matches[1])->send();
+            $addressOperationalHttpService->patchOperational($request, $matches[1])->send();
             exit(0);
         }
     }
 
     if (1 === preg_match('#^/api/address/([0-9A-HJKMNP-TV-Z]{26}|demo-[0-9]{4})/validated$#', $pathInfo, $matches) && 'POST' === $method) {
-        $controller->applyValidated($request, $matches[1])->send();
+        $addressOperationalHttpService->applyValidated($request, $matches[1])->send();
         exit(0);
     }
 
     if (1 === preg_match('#^/api/address/([0-9A-HJKMNP-TV-Z]{26}|demo-[0-9]{4})/governance-cluster$#', $pathInfo, $matches) && 'GET' === $method) {
-        $controller->governanceClusterSummary($request, $matches[1])->send();
+        $addressSummaryHttpService->governanceClusterSummary($request, $matches[1])->send();
         exit(0);
     }
 
@@ -133,16 +141,16 @@ try {
     $code = $exception->getMessage();
 
     if ('not_found' === $code) {
-        ErrorMap::emit(404, $code, $code);
+        AddressErrorMap::emit(404, $code, $code);
         exit(0);
     }
 
     if (str_starts_with($code, 'missing_') || str_starts_with($code, 'invalid_') || 'tenant_scope_required' === $code) {
-        ErrorMap::emit(400, $code, $code);
+        AddressErrorMap::emit(400, $code, $code);
         exit(0);
     }
 
-    ErrorMap::emit(500, 'runtime', $code);
+    AddressErrorMap::emit(500, 'runtime', $code);
 } catch (Throwable $exception) {
-    ErrorMap::emit(500, 'unhandled', $exception->getMessage());
+    AddressErrorMap::emit(500, 'unhandled', $exception->getMessage());
 }

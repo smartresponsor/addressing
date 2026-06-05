@@ -5,8 +5,10 @@ declare(strict_types=1);
 
 namespace Tests\Service;
 
+use App\Entity\AddressOutboxEntity;
 use App\Service\Application\AddressOutboxDrainerService;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\TestDatabase;
 
 final class AddressOutboxDrainerTest extends TestCase
 {
@@ -15,22 +17,16 @@ final class AddressOutboxDrainerTest extends TestCase
         $dbFile = tempnam(sys_get_temp_dir(), 'address-outbox-');
         static::assertNotFalse($dbFile);
 
-        $pdo1 = new \PDO('sqlite:'.$dbFile);
-        $pdo2 = new \PDO('sqlite:'.$dbFile);
-        $pdo1->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $pdo2->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $entityManager1 = TestDatabase::createSqliteEntityManager($dbFile, [AddressOutboxEntity::class]);
+        $entityManager2 = TestDatabase::createSqliteEntityManager($dbFile, [AddressOutboxEntity::class]);
 
-        $pdo1->exec($this->schemaSql());
-        $pdo1->exec(
-            'INSERT INTO address_outbox (event_name, event_version, payload) VALUES '
-            ."('AddressCreated', 1, '{\"id\":\"addr-1\"}'),"
-            ."('AddressCreated', 1, '{\"id\":\"addr-2\"}')"
-        );
+        $this->insertOutbox($entityManager1, 'AddressCreated', 1, ['id' => 'addr-1']);
+        $this->insertOutbox($entityManager1, 'AddressCreated', 1, ['id' => 'addr-2']);
 
         $published = [];
 
         $drainer2 = new AddressOutboxDrainerService(
-            $pdo2,
+            $entityManager2,
             function (
                 string $url,
                 array $data,
@@ -46,7 +42,7 @@ final class AddressOutboxDrainerTest extends TestCase
         );
 
         $drainer1 = new AddressOutboxDrainerService(
-            $pdo1,
+            $entityManager1,
             function (
                 string $url,
                 array $data,
@@ -67,30 +63,29 @@ final class AddressOutboxDrainerTest extends TestCase
         sort($published);
         static::assertSame(['addr-1', 'addr-2'], $published);
 
-        $publishedStatement = $pdo1->query('SELECT published_at FROM address_outbox ORDER BY id ASC');
-        self::assertInstanceOf(\PDOStatement::class, $publishedStatement);
-        $rows = $publishedStatement->fetchAll(\PDO::FETCH_COLUMN);
+        $entityManager1->clear();
+        /** @var list<AddressOutboxEntity> $rows */
+        $rows = $entityManager1->getRepository(AddressOutboxEntity::class)->findBy([], ['id' => 'ASC']);
         static::assertCount(2, $rows);
-        static::assertNotEmpty($rows[0]);
-        static::assertNotEmpty($rows[1]);
+        static::assertNotNull($rows[0]->getPublishedAt());
+        static::assertNotNull($rows[1]->getPublishedAt());
     }
 
-    private function schemaSql(): string
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function insertOutbox(\Doctrine\ORM\EntityManagerInterface $entityManager, string $eventName, int $eventVersion, array $payload): void
     {
-        return <<<'SQL'
-CREATE TABLE address_outbox (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  stream TEXT NOT NULL DEFAULT 'address',
-  event_name TEXT NOT NULL,
-  event_version INTEGER NOT NULL,
-  payload TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  published_at TEXT NULL,
-  locked_at TEXT NULL,
-  locked_by TEXT NULL,
-  published_attempt INTEGER NOT NULL DEFAULT 0,
-  last_error TEXT NULL
-);
-SQL;
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        static::assertIsString($json);
+
+        $entity = (new AddressOutboxEntity())
+            ->setEventName($eventName)
+            ->setEventVersion($eventVersion)
+            ->setPayload($json)
+            ->setCreatedAt(new \DateTimeImmutable('now'));
+
+        $entityManager->persist($entity);
+        $entityManager->flush();
     }
 }

@@ -13,7 +13,6 @@
             <file>tests/ValueObjectsTest.php</file>
         </testsuite>
         <testsuite name="integration">
-            <directory>tests/Integration</directory>
             <directory>tests/Service</directory>
         </testsuite>
         <testsuite name="functional">

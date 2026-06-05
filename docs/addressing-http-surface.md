@@ -8,11 +8,11 @@ The HTTP layer remains route-stable while the controller becomes thinner and mor
 
 - `src/Http/Factory/AddressQueryFilterFactory.php` builds tenant extraction, limit handling, country-code normalization, and operational or portfolio filter arrays from the request query string.
 - `src/Http/Factory/AddressViewArrayFactory.php` builds response payload arrays and preview rows for `AddressInterface` records.
-- `src/Http/Factory/AddressApiPayloadFactory.php` decodes JSON requests and assembles API payload structures such as `AddressData`, `AddressValidated`, operational patches, and validated string-id lists.
+- `src/Http/Factory/AddressApiPayloadFactory.php` decodes JSON requests and assembles API payload structures such as `AddressEntity`, `AddressValidated`, operational patches, and validated string-id lists.
 
 ## Why this matters
 
-This keeps `src/Http/Controller/AddressController.php` focused on request orchestration, response status handling, and delegation to the application service layer, instead of mixing transport parsing, payload assembly, and response shaping directly into the controller body.
+This keeps `src/Service/Http/Address/AddressHttpService.php` focused on HTTP request orchestration, response status handling, and delegation to the application service layer, instead of mixing transport parsing, payload assembly, and response shaping directly into the controller body.
 
 ## Intended next step
 

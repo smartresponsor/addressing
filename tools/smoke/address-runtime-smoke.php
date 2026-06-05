@@ -1,22 +1,36 @@
 <?php
 
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-$root = dirname(__DIR__, 2);
-$checks = [
-    'public/index.php' => is_file($root . '/public/index.php'),
-    'src/Http/AddressApi/Controller.php' => is_file($root . '/src/Http/AddressApi/Controller.php'),
-    'src/Repository/AddressRepository.php' => is_file($root . '/src/Repository/AddressRepository.php') || is_file($root . '/src/Repository/Address/AddressRepository.php'),
-    'openapi/address.yaml' => is_file($root . '/openapi/address.yaml'),
-];
+use App\Kernel;
+use App\Service\Http\Address\AddressReadHttpService;
+use Doctrine\DBAL\Connection;
 
-$failed = array_keys(array_filter($checks, static fn (bool $ok): bool => $ok === false));
+require_once dirname(__DIR__).'/../support/AddressRuntimeBootstrap.php';
 
-$report = [
+$kernel = AddressRuntimeBootstrap::bootKernel();
+$addressReadHttpService = AddressRuntimeBootstrap::service(AddressReadHttpService::class);
+$connection = AddressRuntimeBootstrap::connection();
+$driver = $connection->getDatabasePlatform()->getName();
+
+$ok = $kernel instanceof Kernel
+    && $addressReadHttpService instanceof AddressReadHttpService
+    && $connection instanceof Connection
+    && '' !== $driver;
+
+fwrite(STDOUT, json_encode([
     'component' => 'Addressing',
-    'checks' => $checks,
-    'status' => $failed === [] ? 'ok' : 'fail',
-];
+    'check' => 'runtime',
+    'status' => $ok ? 'ready' : 'incomplete',
+    'driver' => $driver,
+    'services' => [
+        Kernel::class => $kernel instanceof Kernel,
+        AddressReadHttpService::class => $addressReadHttpService instanceof AddressReadHttpService,
+        Connection::class => $connection instanceof Connection,
+    ],
+], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
 
-fwrite(STDOUT, json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
-exit($failed === [] ? 0 : 1);
+if (!$ok) {
+    throw new RuntimeException('runtime_smoke_failed');
+}

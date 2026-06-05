@@ -1,66 +1,117 @@
 <?php
 
-// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\Entity\Record;
 
+use App\EntityInterface\Record\AddressGovernanceStateInterface;
 use App\EntityInterface\Record\AddressInterface;
+use App\EntityInterface\Record\AddressRevalidationStateInterface;
+use App\EntityInterface\Record\AddressValidationStateInterface;
 
-final class AddressData implements AddressInterface
+final readonly class AddressData implements AddressInterface
 {
+    /**
+     * @param array<string, mixed>|null $validationRaw
+     * @param array<string, mixed>|null $validationVerdict
+     * @param array<string, mixed>|null $rawInputSnapshot
+     * @param array<string, mixed>|null $normalizedSnapshot
+     */
     public function __construct(
-        public string $id,
-        public ?string $ownerId,
-        public ?string $vendorId,
-        public string $line1,
-        public ?string $line2,
-        public string $city,
-        public ?string $region,
-        public ?string $postalCode,
-        public string $countryCode,
-        public ?string $line1Norm,
-        public ?string $cityNorm,
-        public ?string $regionNorm,
-        public ?string $postalCodeNorm,
-        public ?float $latitude,
-        public ?float $longitude,
-        public ?string $geohash,
-        public string $validationStatus,
-        public ?string $validationProvider,
-        public ?string $validatedAt,
-        public ?string $dedupeKey,
-        public string $createdAt,
-        public ?string $updatedAt,
-        public ?string $deletedAt,
-        public ?string $validationFingerprint = null,
-        /** @var array<string, mixed>|null */
-        public ?array $validationRaw = null,
-        /** @var array<string, mixed>|null */
-        public ?array $validationVerdict = null,
-        public ?bool $validationDeliverable = null,
-        public ?string $validationGranularity = null,
-        public ?int $validationQuality = null,
-        public ?string $sourceSystem = null,
-        public ?string $sourceType = null,
-        public ?string $sourceReference = null,
-        public ?string $normalizationVersion = null,
-        /** @var array<string, mixed>|null */
-        public ?array $rawInputSnapshot = null,
-        /** @var array<string, mixed>|null */
-        public ?array $normalizedSnapshot = null,
-        public ?string $providerDigest = null,
-        public string $governanceStatus = 'canonical',
-        public ?string $duplicateOfId = null,
-        public ?string $supersededById = null,
-        public ?string $aliasOfId = null,
-        public ?string $conflictWithId = null,
-        public ?string $revalidationDueAt = null,
-        public ?string $revalidationPolicy = null,
-        public ?string $lastValidationProvider = null,
-        public ?string $lastValidationStatus = null,
-        public ?int $lastValidationScore = null,
+        private string $id,
+        private ?string $ownerId,
+        private ?string $vendorId,
+        private string $line1,
+        private ?string $line2,
+        private string $city,
+        private ?string $region,
+        private ?string $postalCode,
+        private string $countryCode,
+        private ?string $line1Norm,
+        private ?string $cityNorm,
+        private ?string $regionNorm,
+        private ?string $postalCodeNorm,
+        private ?float $latitude,
+        private ?float $longitude,
+        private ?string $geohash,
+        private string $validationStatus,
+        private ?string $validationProvider,
+        private ?string $validatedAt,
+        private ?string $dedupeKey,
+        private string $createdAt,
+        private ?string $updatedAt,
+        private ?string $deletedAt,
+        private ?string $validationFingerprint,
+        private ?array $validationRaw,
+        private ?array $validationVerdict,
+        private ?bool $validationDeliverable,
+        private ?string $validationGranularity,
+        private ?int $validationQuality,
+        private ?string $sourceSystem,
+        private ?string $sourceType,
+        private ?string $sourceReference,
+        private ?string $normalizationVersion,
+        private ?array $rawInputSnapshot,
+        private ?array $normalizedSnapshot,
+        private ?string $providerDigest,
+        private string $governanceStatus,
+        private ?string $duplicateOfId,
+        private ?string $supersededById,
+        private ?string $aliasOfId,
+        private ?string $conflictWithId,
+        private ?string $revalidationDueAt,
+        private ?string $revalidationPolicy,
+        private ?string $lastValidationProvider,
+        private ?string $lastValidationStatus,
+        private ?int $lastValidationScore,
     ) {
+    }
+
+    #[\Override]
+    public function validationState(): AddressValidationStateInterface
+    {
+        return new AddressValidationState(
+            $this->validationStatus,
+            $this->validationProvider,
+            $this->validatedAt,
+            $this->validationFingerprint,
+            $this->validationRaw,
+            $this->validationVerdict,
+            $this->validationDeliverable,
+            $this->validationGranularity,
+            $this->validationQuality,
+            $this->sourceSystem,
+            $this->sourceType,
+            $this->sourceReference,
+            $this->normalizationVersion,
+            $this->rawInputSnapshot,
+            $this->normalizedSnapshot,
+            $this->providerDigest,
+        );
+    }
+
+    #[\Override]
+    public function governanceState(): AddressGovernanceStateInterface
+    {
+        return new AddressGovernanceState(
+            $this->governanceStatus,
+            $this->duplicateOfId,
+            $this->supersededById,
+            $this->aliasOfId,
+            $this->conflictWithId,
+        );
+    }
+
+    #[\Override]
+    public function revalidationState(): AddressRevalidationStateInterface
+    {
+        return new AddressRevalidationState(
+            $this->revalidationDueAt,
+            $this->revalidationPolicy,
+            $this->lastValidationProvider,
+            $this->lastValidationStatus,
+            $this->lastValidationScore,
+        );
     }
 
     #[\Override]
@@ -189,18 +240,14 @@ final class AddressData implements AddressInterface
         return $this->validationFingerprint;
     }
 
-    /**
-     * @return array<string, mixed>|null
-     */
+    /** @return array<string, mixed>|null */
     #[\Override]
     public function validationRaw(): ?array
     {
         return $this->validationRaw;
     }
 
-    /**
-     * @return array<string, mixed>|null
-     */
+    /** @return array<string, mixed>|null */
     #[\Override]
     public function validationVerdict(): ?array
     {

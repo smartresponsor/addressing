@@ -1,18 +1,12 @@
 <?php
 
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
- * Owner: Marketing America Corp
- */
 declare(strict_types=1);
 
 namespace App\Entity\Record;
 
 use App\EntityInterface\Record\AddressEvidenceSnapshotInterface;
-use Override;
 
-final class AddressEvidenceSnapshotData implements AddressEvidenceSnapshotInterface
+final readonly class AddressEvidenceSnapshotData implements AddressEvidenceSnapshotInterface
 {
     /**
      * @param array<string, mixed>|null $rawInputSnapshot
@@ -20,123 +14,126 @@ final class AddressEvidenceSnapshotData implements AddressEvidenceSnapshotInterf
      * @param array<string, mixed>|null $validationIssues
      */
     public function __construct(
-        public string $id,
-        public string $addressId,
-        public ?string $ownerId,
-        public ?string $vendorId,
-        public ?string $sourceSystem,
-        public ?string $sourceType,
-        public ?string $sourceReference,
-        public ?string $validatedBy,
-        public ?string $validatedAt,
-        public ?string $normalizationVersion,
-        public ?array $rawInputSnapshot,
-        public ?array $normalizedSnapshot,
-        public string $validationStatus,
-        public ?int $validationScore,
-        public ?array $validationIssues,
-        public ?string $providerDigest,
-        public string $createdAt,
+        private string $id,
+        private string $addressId,
+        private ?string $ownerId,
+        private ?string $vendorId,
+        private ?string $sourceSystem,
+        private ?string $sourceType,
+        private ?string $sourceReference,
+        private ?string $validatedBy,
+        private ?string $validatedAt,
+        private ?string $normalizationVersion,
+        private ?array $rawInputSnapshot,
+        private ?array $normalizedSnapshot,
+        private string $validationStatus,
+        private ?int $validationScore,
+        private ?array $validationIssues,
+        private ?string $providerDigest,
+        private string $createdAt,
     ) {
     }
 
-    #[Override]
+    #[\Override]
     public function id(): string
     {
         return $this->id;
     }
 
-    #[Override]
+    #[\Override]
     public function addressId(): string
     {
         return $this->addressId;
     }
 
-    #[Override]
+    #[\Override]
     public function ownerId(): ?string
     {
         return $this->ownerId;
     }
 
-    #[Override]
+    #[\Override]
     public function vendorId(): ?string
     {
         return $this->vendorId;
     }
 
-    #[Override]
+    #[\Override]
     public function sourceSystem(): ?string
     {
         return $this->sourceSystem;
     }
 
-    #[Override]
+    #[\Override]
     public function sourceType(): ?string
     {
         return $this->sourceType;
     }
 
-    #[Override]
+    #[\Override]
     public function sourceReference(): ?string
     {
         return $this->sourceReference;
     }
 
-    #[Override]
+    #[\Override]
     public function validatedBy(): ?string
     {
         return $this->validatedBy;
     }
 
-    #[Override]
+    #[\Override]
     public function validatedAt(): ?string
     {
         return $this->validatedAt;
     }
 
-    #[Override]
+    #[\Override]
     public function normalizationVersion(): ?string
     {
         return $this->normalizationVersion;
     }
 
-    #[Override]
+    /** @return array<string, mixed>|null */
+    #[\Override]
     public function rawInputSnapshot(): ?array
     {
         return $this->rawInputSnapshot;
     }
 
-    #[Override]
+    /** @return array<string, mixed>|null */
+    #[\Override]
     public function normalizedSnapshot(): ?array
     {
         return $this->normalizedSnapshot;
     }
 
-    #[Override]
+    #[\Override]
     public function validationStatus(): string
     {
         return $this->validationStatus;
     }
 
-    #[Override]
+    #[\Override]
     public function validationScore(): ?int
     {
         return $this->validationScore;
     }
 
-    #[Override]
+    /** @return array<string, mixed>|null */
+    #[\Override]
     public function validationIssues(): ?array
     {
         return $this->validationIssues;
     }
 
-    #[Override]
+    #[\Override]
     public function providerDigest(): ?string
     {
         return $this->providerDigest;
     }
 
-    #[Override]
+    #[\Override]
     public function createdAt(): string
     {
         return $this->createdAt;

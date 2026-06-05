@@ -28,7 +28,7 @@ if (!is_dir($sqlDir)) {
     exit(2);
 }
 
-$files = glob($sqlDir . '/*.sql');
+$files = glob($sqlDir . '/[0-9][0-9][0-9]_*.sql');
 if (!is_array($files) || count($files) < 1) {
     fwrite(STDERR, "no sql files\n");
     exit(2);

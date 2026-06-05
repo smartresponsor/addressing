@@ -3,20 +3,35 @@ services:
         autowire: true
         autoconfigure: true
 
-    PDO:
-        class: PDO
-        factory: [ 'App\Integration\Persistence\AddressPdoFactory', 'createPrimary' ]
-        public: true
-
-    address.rate_limit_pdo:
-        class: PDO
-        factory: [ 'App\Integration\Persistence\AddressPdoFactory', 'createRateLimit' ]
-
     App\:
         resource: '../src/'
         exclude:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
-    App\Http\Controller\AddressController:
+    App\Service\Http\Address\AddressManageHttpService:
+        public: true
+
+    App\Service\Http\Address\AddressWriteHttpService:
+        public: true
+
+    App\Service\Http\Address\AddressReadHttpService:
+        public: true
+
+    App\Service\Http\Address\AddressSummaryHttpService:
+        public: true
+
+    App\Service\Http\Address\AddressOperationalHttpService:
+        public: true
+
+    App\RepositoryInterface\Persistence\AddressWriteRepositoryInterface: '@App\Repository\Persistence\DoctrineAddressWriteRepository'
+    App\RepositoryInterface\Persistence\AddressReadRepositoryInterface: '@App\Repository\Persistence\DoctrineAddressReadRepository'
+    App\RepositoryInterface\Persistence\AddressEvidenceRepositoryInterface: '@App\Repository\Persistence\DoctrineAddressEvidenceRepository'
+    App\RepositoryInterface\Persistence\AddressOperationalRepositoryInterface: '@App\Repository\Persistence\DoctrineAddressOperationalRepository'
+    App\RepositoryInterface\Persistence\AddressQueueRepositoryInterface: '@App\Repository\Persistence\DoctrineAddressQueueRepository'
+    App\RepositoryInterface\Persistence\AddressGovernanceRepositoryInterface: '@App\Repository\Persistence\DoctrineAddressGovernanceRepository'
+    App\RepositoryInterface\Persistence\AddressPortfolioRepositoryInterface: '@App\Repository\Persistence\DoctrineAddressPortfolioRepository'
+    App\Projection\AddressIndex\AddressIndexRepositoryInterface: '@App\Projection\AddressIndex\DoctrineAddressIndexRepository'
+
+    App\Http\Middleware\AddressRateLimiter:
         public: true

@@ -1,11 +1,19 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace Tests\Support;
 
-use App\Integration\Persistence\AddressSchemaManager;
-use PDO;
+use App\Entity\AddressEntity;
+use App\Entity\AddressEvidenceSnapshotEntity;
+use App\Entity\AddressOutboxEntity;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\ORMSetup;
+use Doctrine\ORM\Tools\SchemaTool;
 
 final class TestDatabase
 {
@@ -14,42 +22,77 @@ final class TestDatabase
         return dirname(__DIR__, 2);
     }
 
-    public static function createPdo(): PDO
+    public static function createConnection(): Connection
     {
         $dsn = getenv('TEST_DB_DSN');
         $user = getenv('TEST_DB_USER');
         $pass = getenv('TEST_DB_PASS');
 
-        if (is_string($dsn) && $dsn !== '') {
-            $pdo = new PDO($dsn, is_string($user) ? $user : null, is_string($pass) ? $pass : null, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            ]);
-        } else {
-            $pdo = self::createInMemorySqlitePdo();
+        if (is_string($dsn) && '' !== $dsn) {
+            $params = ['url' => $dsn];
+            if (is_string($user) && '' !== $user) {
+                $params['user'] = $user;
+            }
+            if (is_string($pass) && '' !== $pass) {
+                $params['password'] = $pass;
+            }
+
+            return DriverManager::getConnection($params);
         }
 
-        return $pdo;
+        return self::createInMemorySqliteConnection();
     }
 
-    public static function createInMemorySqlitePdo(): PDO
+    public static function createInMemorySqliteConnection(): Connection
     {
-        $pdo = new PDO('sqlite::memory:');
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        return $pdo;
+        return DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
     }
 
-    public static function createSqlitePdo(string $sqlitePath): PDO
+    public static function createSqliteConnection(string $sqlitePath): Connection
     {
-        $pdo = new PDO('sqlite:'.$sqlitePath);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        return $pdo;
+        return DriverManager::getConnection(['driver' => 'pdo_sqlite', 'path' => $sqlitePath]);
     }
 
-    public static function resetAddressSchema(PDO $pdo): void
+    /**
+     * @param list<class-string> $classes
+     */
+    public static function createInMemoryEntityManager(array $classes = []): EntityManagerInterface
     {
-        AddressSchemaManager::resetSchema($pdo, self::projectRoot());
+        $entityManager = self::createEntityManager(self::createInMemorySqliteConnection());
+        if ([] !== $classes) {
+            self::resetEntitySchema($entityManager, $classes);
+        }
+
+        return $entityManager;
+    }
+
+    /**
+     * @param list<class-string> $classes
+     */
+    public static function createSqliteEntityManager(string $sqlitePath, array $classes = []): EntityManagerInterface
+    {
+        $entityManager = self::createEntityManager(self::createSqliteConnection($sqlitePath));
+        if ([] !== $classes) {
+            self::resetEntitySchema($entityManager, $classes);
+        }
+
+        return $entityManager;
+    }
+
+    public static function resetAddressSchema(Connection $connection): void
+    {
+        $config = ORMSetup::createAttributeMetadataConfiguration([
+            self::projectRoot().'/src/Entity',
+        ], true);
+        $config->enableNativeLazyObjects(true);
+
+        $entityManager = new EntityManager($connection, $config);
+        self::resetEntitySchema($entityManager, [
+            AddressEntity::class,
+            AddressEvidenceSnapshotEntity::class,
+            AddressOutboxEntity::class,
+        ]);
+        $entityManager->close();
     }
 
     public static function freshSqlitePath(string $suffix): string
@@ -60,5 +103,30 @@ final class TestDatabase
         }
 
         return $path;
+    }
+
+    /**
+     * @param list<class-string> $classes
+     */
+    private static function resetEntitySchema(EntityManagerInterface $entityManager, array $classes): void
+    {
+        $tool = new SchemaTool($entityManager);
+        $metadata = array_map(
+            static fn (string $class): \Doctrine\ORM\Mapping\ClassMetadata => $entityManager->getClassMetadata($class),
+            $classes,
+        );
+
+        $tool->dropSchema($metadata);
+        $tool->createSchema($metadata);
+    }
+
+    private static function createEntityManager(Connection $connection): EntityManagerInterface
+    {
+        $config = ORMSetup::createAttributeMetadataConfiguration([
+            self::projectRoot().'/src/Entity',
+        ], true);
+        $config->enableNativeLazyObjects(true);
+
+        return new EntityManager($connection, $config);
     }
 }

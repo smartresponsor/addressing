@@ -5,7 +5,7 @@
     <exclude-pattern>vendor/*</exclude-pattern>
     <exclude-pattern>var/*</exclude-pattern>
     <exclude-pattern>docs/site/*</exclude-pattern>
-    <exclude-pattern>tool/template/*</exclude-pattern>
+    <exclude-pattern>tool/templates/*</exclude-pattern>
     <exclude-pattern>src/docs/*</exclude-pattern>
     <exclude-pattern>src/report/*</exclude-pattern>
 
@@ -16,3 +16,4 @@
     <rule ref="rulesets/naming.xml" />
     <rule ref="rulesets/unusedcode.xml" />
 </ruleset>
+

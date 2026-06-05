@@ -6,7 +6,7 @@ declare(strict_types=1);
 namespace App\Http\Dto;
 
 use App\Contract\Message\AddressRecordPolicy;
-use App\Entity\Record\AddressData;
+use App\Entity\Record\AddressRecord;
 use App\Value\CountryCode;
 use App\Value\PostalCode;
 use App\Value\StreetLine;
@@ -18,7 +18,7 @@ final class AddressInputFactory
     /**
      * @param array<string, mixed> $overrides
      */
-    public function fromManageDto(AddressManageDto $addressManageDto, array $overrides = []): AddressData
+    public function fromManageDto(AddressManageDto $addressManageDto, array $overrides = []): AddressRecord
     {
         $createdAt = new \DateTimeImmutable();
         $now = $this->stringOverride($overrides, 'createdAt') ?? $createdAt->format('Y-m-d H:i:sP');
@@ -46,7 +46,7 @@ final class AddressInputFactory
                 'countryCode' => $countryCode,
             ];
 
-        return new AddressData(
+        return new AddressRecord(
             $this->stringOverride($overrides, 'id') ?? (string) new Ulid(),
             $ownerId,
             $vendorId,

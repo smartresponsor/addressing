@@ -4,7 +4,7 @@ This page documents how database migrations in the Address domain are ordered, m
 
 ## Ordering
 
-Postgres schema migrations live in `sql/postgres/` and must be applied in strict ascending order by their numeric prefix (e.g., `001_`, `002_`). The execution order is part of the contract, because later migrations assume earlier objects (tables, functions, extensions) already exist.
+Postgres schema migrations live in `sql/postgres/` and must be applied in strict ascending order by their numeric prefix (e.g., `001_`, `002_`). The execution order is part of the contract, because later migrations assume earlier objects (tables, functions, extensions) already exist. Only files that match `NNN_*.sql` are part of the schema authority. Files such as `seed_demo.sql` are auxiliary data assets and must not be executed by the migration runner.
 
 When adding a new migration:
 

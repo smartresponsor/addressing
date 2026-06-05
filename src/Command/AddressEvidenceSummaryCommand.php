@@ -1,0 +1,76 @@
+<?php
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+declare(strict_types=1);
+
+namespace App\Command;
+
+use App\Service\Application\AddressEvidenceService;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
+
+#[AsCommand(name: 'address:summary:evidence', description: 'Summarize evidence history for an address.')]
+final class AddressEvidenceSummaryCommand extends Command
+{
+    public function __construct(private readonly AddressEvidenceService $addressEvidenceService)
+    {
+        parent::__construct();
+    }
+
+    #[\Override]
+    protected function configure(): void
+    {
+        parent::configure();
+        $this
+            ->addArgument('address-id', InputArgument::REQUIRED)
+            ->addOption('owner-id', null, InputOption::VALUE_OPTIONAL)
+            ->addOption('vendor-id', null, InputOption::VALUE_OPTIONAL);
+    }
+
+    /** @noinspection PhpMissingParentCallCommonInspection */
+    #[\Override]
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $symfonyStyle = new SymfonyStyle($input, $output);
+        $summary = $this->addressEvidenceService->historySummary(
+            $this->addressId($input),
+            $this->nullable($input->getOption('owner-id')),
+            $this->nullable($input->getOption('vendor-id')),
+        );
+
+        $payload = json_encode($summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if (false === $payload) {
+            throw new \RuntimeException('invalid_summary_payload');
+        }
+
+        $symfonyStyle->writeln($payload);
+
+        return Command::SUCCESS;
+    }
+
+    private function addressId(InputInterface $input): string
+    {
+        $value = $input->getArgument('address-id');
+
+        if (!is_string($value)) {
+            throw new \RuntimeException('invalid_argument_address-id');
+        }
+
+        return $value;
+    }
+
+    private function nullable(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+        $value = trim($value);
+
+        return '' === $value ? null : $value;
+    }
+}

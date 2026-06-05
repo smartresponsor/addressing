@@ -4,6 +4,8 @@
 declare(strict_types=1);
 
 use App\Kernel;
+use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Dotenv\Dotenv;
 
@@ -29,6 +31,7 @@ final class AddressRuntimeBootstrap
             (new Dotenv())->bootEnv($root.'/.env');
         }
 
+        self::ensureAddressDbPath();
         $_SERVER['APP_ENV'] ??= 'dev';
         $_SERVER['APP_DEBUG'] ??= '1';
 
@@ -48,14 +51,25 @@ final class AddressRuntimeBootstrap
         return self::container()->get($id);
     }
 
-    public static function pdo(): \PDO
+
+    public static function entityManager(): EntityManagerInterface
     {
-        $pdo = self::service(\PDO::class);
-        if (!$pdo instanceof \PDO) {
-            throw new RuntimeException('primary_pdo_service_missing');
+        $entityManager = self::service(EntityManagerInterface::class);
+        if (!$entityManager instanceof EntityManagerInterface) {
+            throw new RuntimeException('entity_manager_service_missing');
         }
 
-        return $pdo;
+        return $entityManager;
+    }
+
+    public static function connection(): Connection
+    {
+        $connection = self::service(Connection::class);
+        if (!$connection instanceof Connection) {
+            throw new RuntimeException('primary_connection_service_missing');
+        }
+
+        return $connection;
     }
 
     private static function debugFlag(): bool
@@ -64,5 +78,26 @@ final class AddressRuntimeBootstrap
         $normalized = filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
 
         return $normalized ?? false;
+    }
+
+    private static function ensureAddressDbPath(): void
+    {
+        if ('' !== ($_SERVER['ADDRESS_DB_PATH'] ?? $_ENV['ADDRESS_DB_PATH'] ?? getenv('ADDRESS_DB_PATH') ?? '')) {
+            return;
+        }
+
+        $dsn = $_SERVER['ADDRESS_DB_DSN'] ?? $_ENV['ADDRESS_DB_DSN'] ?? getenv('ADDRESS_DB_DSN');
+        if (!is_string($dsn) || '' === trim($dsn) || !str_starts_with($dsn, 'sqlite:')) {
+            return;
+        }
+
+        $path = substr($dsn, strlen('sqlite:'));
+        if ('' === $path) {
+            return;
+        }
+
+        putenv('ADDRESS_DB_PATH='.$path);
+        $_ENV['ADDRESS_DB_PATH'] = $path;
+        $_SERVER['ADDRESS_DB_PATH'] = $path;
     }
 }

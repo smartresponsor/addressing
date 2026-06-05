@@ -5,38 +5,23 @@ declare(strict_types=1);
 
 namespace App\Service\Application;
 
+use App\Contract\Message\AddressOutboxEventMessage;
 use App\Contract\Message\AddressValidated;
-use App\Integration\Persistence\AddressEvidenceSnapshotContext;
-use App\Integration\Persistence\AddressEvidenceSnapshotWriter;
-use App\Integration\Persistence\AddressOutboxWriter;
-use App\Integration\Persistence\AddressTenantScopeSqlHelper;
-use App\Integration\Persistence\AddressValidatedMutationPlan;
-use App\Integration\Persistence\AddressValidatedMutationPlanBuilder;
+use App\Entity\AddressEntity;
+use App\Entity\AddressEvidenceSnapshotEntity;
+use App\Entity\AddressOutboxEntity;
 use App\ServiceInterface\Application\AddressValidatedApplierServiceInterface;
+use Doctrine\ORM\EntityManagerInterface;
 
-final readonly class AddressValidatedApplierService implements AddressValidatedApplierServiceInterface
+final class AddressValidatedApplierService implements AddressValidatedApplierServiceInterface
 {
-    private AddressTenantScopeSqlHelper $scopeSqlHelper;
     private AddressValidatedPayloadFactory $payloadFactory;
-    private AddressValidatedMutationPlanBuilder $planBuilder;
-    private AddressEvidenceSnapshotWriter $snapshotWriter;
-    private AddressOutboxWriter $outboxWriter;
 
     public function __construct(
-        private \PDO $pdo,
-        ?AddressTenantScopeSqlHelper $scopeSqlHelper = null,
+        private readonly EntityManagerInterface $entityManager,
         ?AddressValidatedPayloadFactory $payloadFactory = null,
-        ?AddressValidatedMutationPlanBuilder $planBuilder = null,
-        ?AddressEvidenceSnapshotWriter $snapshotWriter = null,
-        ?AddressOutboxWriter $outboxWriter = null,
     ) {
-        $this->scopeSqlHelper = $scopeSqlHelper ?? new AddressTenantScopeSqlHelper();
         $this->payloadFactory = $payloadFactory ?? new AddressValidatedPayloadFactory();
-        $this->planBuilder = $planBuilder
-            ?? new AddressValidatedMutationPlanBuilder($pdo, $this->payloadFactory);
-        $this->snapshotWriter = $snapshotWriter
-            ?? new AddressEvidenceSnapshotWriter($pdo, $this->payloadFactory);
-        $this->outboxWriter = $outboxWriter ?? new AddressOutboxWriter($pdo);
     }
 
     #[\Override]
@@ -45,128 +30,230 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         $fingerprint = $addressValidated->fingerprint();
         $now = new \DateTimeImmutable('now');
         $validatedAt = $addressValidated->validatedAt ?? $now;
-        $scopeParams = $this->scopeSqlHelper->params($ownerId, $vendorId);
-        $scopeWhere = $this->scopeSqlHelper->whereClause($ownerId, $vendorId);
-        $lockClause = $this->isPgsql() ? ' FOR UPDATE' : '';
+        $entity = $this->findAddressEntity($id, $ownerId, $vendorId);
+        if (!$entity instanceof AddressEntity) {
+            throw new \RuntimeException('not_found');
+        }
 
+        $this->entityManager->beginTransaction();
         try {
-            $this->pdo->beginTransaction();
-
-            $existingFingerprint = $this->loadValidationFingerprint($id, $scopeWhere, $scopeParams, $lockClause);
-            if (null !== $existingFingerprint && $existingFingerprint === $fingerprint) {
-                $this->pdo->commit();
+            if ($entity->getValidationFingerprint() === $fingerprint) {
+                $this->entityManager->commit();
 
                 return;
             }
 
-            $plan = $this->planBuilder->build(
-                $id,
+            $normalizedSnapshot = $this->payloadFactory->normalizedSnapshot($addressValidated);
+            $providerDigest = $this->payloadFactory->providerDigest($addressValidated);
+            $validationIssues = $this->validationIssues($addressValidated);
+            $rawSha256 = null;
+            if (null !== $addressValidated->raw) {
+                $rawSha256 = hash('sha256', $this->encodePayload($addressValidated->raw));
+            }
+
+            $entity
+                ->setLine1Norm($addressValidated->line1Norm)
+                ->setCityNorm($addressValidated->cityNorm)
+                ->setRegionNorm($addressValidated->regionNorm)
+                ->setPostalCodeNorm($addressValidated->postalCodeNorm)
+                ->setLatitude($addressValidated->latitude)
+                ->setLongitude($addressValidated->longitude)
+                ->setGeohash($addressValidated->geohash)
+                ->setValidationProvider($addressValidated->validationProvider)
+                ->setValidationStatus('validated')
+                ->setValidatedAt($validatedAt)
+                ->setDedupeKey($addressValidated->dedupeKey)
+                ->setValidationFingerprint($fingerprint)
+                ->setUpdatedAt($now)
+                ->setSourceSystem($addressValidated->sourceSystem)
+                ->setSourceType($addressValidated->sourceType)
+                ->setSourceReference($addressValidated->sourceReference)
+                ->setNormalizationVersion($addressValidated->normalizationVersion)
+                ->setRawInputSnapshot($addressValidated->rawInput)
+                ->setNormalizedSnapshot($normalizedSnapshot)
+                ->setProviderDigest($providerDigest)
+                ->setGovernanceStatus($this->normalizeGovernanceStatus($addressValidated->governanceStatus))
+                ->setDuplicateOfId($this->sanitizeGovernanceLink($addressValidated->duplicateOfId, $id))
+                ->setSupersededById($this->sanitizeGovernanceLink($addressValidated->supersededById, $id))
+                ->setAliasOfId($this->sanitizeGovernanceLink($addressValidated->aliasOfId, $id))
+                ->setConflictWithId($this->sanitizeGovernanceLink($addressValidated->conflictWithId, $id))
+                ->setRevalidationDueAt($addressValidated->revalidationDueAt)
+                ->setRevalidationPolicy($addressValidated->revalidationPolicy)
+                ->setLastValidationProvider($addressValidated->lastValidationProvider ?? $addressValidated->validationProvider)
+                ->setLastValidationStatus($this->normalizeValidationStatus($addressValidated->lastValidationStatus ?? 'validated'))
+                ->setLastValidationScore($addressValidated->lastValidationScore)
+                ->setValidationRaw($addressValidated->raw)
+                ->setValidationVerdict($validationIssues)
+                ->setValidationDeliverable($addressValidated->addressValidationVerdict?->deliverable)
+                ->setValidationGranularity($addressValidated->addressValidationVerdict?->granularity)
+                ->setValidationQuality($addressValidated->addressValidationVerdict?->quality);
+
+            $snapshot = $this->createEvidenceSnapshot(
+                $entity,
                 $addressValidated,
-                $fingerprint,
-                $now,
                 $validatedAt,
+                $normalizedSnapshot,
+                $providerDigest,
+                $validationIssues,
             );
+            if ($snapshot instanceof AddressEvidenceSnapshotEntity) {
+                $this->entityManager->persist($snapshot);
+            }
 
-            $this->applyMutation($id, $scopeWhere, $scopeParams, $plan);
-
-            $evidenceSnapshotId = $this->snapshotWriter->write(
-                AddressEvidenceSnapshotContext::fromMutationPlan(
-                    addressId: $id,
-                    ownerId: $ownerId,
-                    vendorId: $vendorId,
-                    addressValidated: $addressValidated,
-                    plan: $plan,
-                )
-            );
-
-            $this->outboxWriter->write(
-                $this->payloadFactory->outboxPayload(
-                    AddressValidatedOutboxContext::fromMutationPlan(
+            $outbox = (new AddressOutboxEntity())
+                ->setEventName('AddressValidatedApplied')
+                ->setEventVersion(1)
+                ->setPayload($this->encodePayload(AddressOutboxEventMessage::decoratePayload('AddressValidatedApplied', $this->payloadFactory->outboxPayload(
+                    new AddressValidatedOutboxContext(
                         id: $id,
                         ownerId: $ownerId,
                         vendorId: $vendorId,
                         fingerprint: $fingerprint,
                         validatedAt: $validatedAt,
-                        evidenceSnapshotId: $evidenceSnapshotId,
-                        plan: $plan,
+                        rawSha256: $rawSha256,
+                        governanceStatus: $this->normalizeGovernanceStatus($addressValidated->governanceStatus),
+                        duplicateOfId: $this->sanitizeGovernanceLink($addressValidated->duplicateOfId, $id),
+                        supersededById: $this->sanitizeGovernanceLink($addressValidated->supersededById, $id),
+                        aliasOfId: $this->sanitizeGovernanceLink($addressValidated->aliasOfId, $id),
+                        conflictWithId: $this->sanitizeGovernanceLink($addressValidated->conflictWithId, $id),
+                        revalidationDueAt: $addressValidated->revalidationDueAt?->format(DATE_ATOM),
+                        revalidationPolicy: $addressValidated->revalidationPolicy,
+                        lastValidationStatus: $this->normalizeValidationStatus($addressValidated->lastValidationStatus ?? 'validated'),
+                        lastValidationScore: $addressValidated->lastValidationScore,
+                        evidenceSnapshotId: $snapshot instanceof AddressEvidenceSnapshotEntity ? $snapshot->getId() : null,
+                        providerDigest: $providerDigest,
                     ),
                     $addressValidated,
-                )
-            );
+                ))))
+                ->setCreatedAt($now);
+            $this->entityManager->persist($outbox);
 
-            $this->pdo->commit();
-        } catch (\RuntimeException $runtimeException) {
-            $this->rollbackIfActive();
-            throw $runtimeException;
+            $this->entityManager->flush();
+            $this->entityManager->commit();
         } catch (\Throwable $throwable) {
-            $this->rollbackIfActive();
+            if ($this->entityManager->getConnection()->isTransactionActive()) {
+                $this->entityManager->rollback();
+            }
+
+            if ($throwable instanceof \RuntimeException) {
+                throw $throwable;
+            }
+
             throw new \RuntimeException('apply_failed', previous: $throwable);
         }
     }
 
-    /** @param array<string, mixed> $scopeParams */
-    private function loadValidationFingerprint(
-        string $id,
-        string $scopeWhere,
-        array $scopeParams,
-        string $lockClause,
-    ): ?string {
-        $statement = $this->prepare(
-            'SELECT validation_fingerprint FROM address_entity WHERE id = :id AND '.$scopeWhere.$lockClause
-        );
-        $statement->execute(array_merge([':id' => $id], $scopeParams));
-        $row = $statement->fetch(\PDO::FETCH_ASSOC);
-
-        if (!is_array($row)) {
-            throw new \RuntimeException('not_found');
-        }
-
-        $fingerprint = $row['validation_fingerprint'] ?? null;
-
-        return is_string($fingerprint) && '' !== $fingerprint ? $fingerprint : null;
-    }
-
-    /** @param array<string, mixed> $scopeParams */
-    private function applyMutation(
-        string $id,
-        string $scopeWhere,
-        array $scopeParams,
-        AddressValidatedMutationPlan $plan,
-    ): void {
-        $statement = $this->prepare(
-            'UPDATE address_entity SET '.$plan->setClause().' WHERE id = :id AND '.$scopeWhere
-        );
-        $ok = $statement->execute(array_merge([':id' => $id], $plan->params, $scopeParams));
-
-        if (!$ok) {
-            throw new \RuntimeException('apply_failed');
-        }
-        if ($statement->rowCount() < 1) {
-            throw new \RuntimeException('not_found');
-        }
-    }
-
-    private function isPgsql(): bool
+    private function findAddressEntity(string $id, ?string $ownerId, ?string $vendorId): ?AddressEntity
     {
-        $driverAttr = $this->pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
-
-        return is_string($driverAttr) && 'pgsql' === $driverAttr;
-    }
-
-    private function rollbackIfActive(): void
-    {
-        if ($this->pdo->inTransaction()) {
-            $this->pdo->rollBack();
+        $criteria = ['id' => $id, 'deletedAt' => null];
+        if (null !== $ownerId) {
+            $criteria['ownerId'] = $ownerId;
         }
-    }
-
-    private function prepare(string $sql): \PDOStatement
-    {
-        $statement = $this->pdo->prepare($sql);
-        if (false === $statement) {
-            throw new \RuntimeException('prepare_failed');
+        if (null !== $vendorId) {
+            $criteria['vendorId'] = $vendorId;
         }
 
-        return $statement;
+        $entity = $this->entityManager->getRepository(AddressEntity::class)->findOneBy($criteria);
+
+        return $entity instanceof AddressEntity ? $entity : null;
+    }
+
+    private function normalizeValidationStatus(string $status): string
+    {
+        return match ($status) {
+            'validated', 'rejected', 'uncertain' => $status,
+            default => 'validated',
+        };
+    }
+
+    private function normalizeGovernanceStatus(?string $status): string
+    {
+        return match ($status) {
+            'duplicate', 'superseded', 'alias', 'conflict' => $status,
+            default => 'canonical',
+        };
+    }
+
+    private function sanitizeGovernanceLink(?string $linkId, string $currentId): ?string
+    {
+        $linkId = is_string($linkId) ? trim($linkId) : '';
+        if ('' === $linkId || $linkId === $currentId) {
+            return null;
+        }
+
+        return $linkId;
+    }
+
+    /**
+     * @param array<string, mixed>|null $normalizedSnapshot
+     * @param array<string, mixed>|null $validationIssues
+     */
+    private function createEvidenceSnapshot(
+        AddressEntity $entity,
+        AddressValidated $addressValidated,
+        \DateTimeImmutable $validatedAt,
+        ?array $normalizedSnapshot,
+        ?string $providerDigest,
+        ?array $validationIssues,
+    ): ?AddressEvidenceSnapshotEntity {
+        if (!$this->payloadFactory->hasEvidence($addressValidated)) {
+            return null;
+        }
+
+        $validatedBy = $addressValidated->validationProvider ?? $addressValidated->lastValidationProvider ?? $addressValidated->sourceSystem;
+        $validationScore = $addressValidated->lastValidationScore ?? $addressValidated->addressValidationVerdict?->quality;
+        if (null === $validationIssues && null !== $addressValidated->raw && isset($addressValidated->raw['issues']) && is_array($addressValidated->raw['issues'])) {
+            $validationIssues = $addressValidated->raw['issues'];
+        }
+
+        $snapshot = (new AddressEvidenceSnapshotEntity())
+            ->setId(bin2hex(random_bytes(16)))
+            ->setAddress($entity)
+            ->setOwnerId($entity->getOwnerId())
+            ->setVendorId($entity->getVendorId())
+            ->setSourceSystem($addressValidated->sourceSystem)
+            ->setSourceType($addressValidated->sourceType)
+            ->setSourceReference($addressValidated->sourceReference)
+            ->setValidatedBy($validatedBy)
+            ->setValidatedAt($addressValidated->validatedAt)
+            ->setNormalizationVersion($addressValidated->normalizationVersion)
+            ->setRawInputSnapshot($addressValidated->rawInput)
+            ->setNormalizedSnapshot($normalizedSnapshot)
+            ->setValidationStatus($this->normalizeValidationStatus($addressValidated->lastValidationStatus ?? 'validated'))
+            ->setValidationScore($validationScore)
+            ->setValidationIssues($validationIssues)
+            ->setProviderDigest($providerDigest)
+            ->setCreatedAt($validatedAt);
+
+        return $snapshot;
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function encodePayload(array $payload): string
+    {
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if (false === $json) {
+            throw new \RuntimeException('payload_encode_failed');
+        }
+
+        return $json;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function validationIssues(AddressValidated $addressValidated): ?array
+    {
+        if ($addressValidated->addressValidationVerdict instanceof \App\Contract\Message\AddressValidationVerdict) {
+            return $addressValidated->addressValidationVerdict->jsonSerialize();
+        }
+
+        if (null !== $addressValidated->raw && isset($addressValidated->raw['issues']) && is_array($addressValidated->raw['issues'])) {
+            return $addressValidated->raw['issues'];
+        }
+
+        return null;
     }
 }

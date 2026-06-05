@@ -1,0 +1,16 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+doctrine:
+    dbal:
+        driver: 'pdo_sqlite'
+        path: '%env(resolve:ADDRESS_DB_PATH)%'
+    orm:
+        mappings:
+            Addressing:
+                type: attribute
+                dir: '%kernel.project_dir%/src/Entity'
+                prefix: 'App\Entity'
+                alias: Addressing

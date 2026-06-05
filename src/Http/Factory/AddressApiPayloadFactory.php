@@ -6,7 +6,7 @@ namespace App\Http\Factory;
 
 use App\Contract\Message\AddressRecordPolicy;
 use App\Contract\Message\AddressValidated;
-use App\Entity\Record\AddressData;
+use App\Entity\Record\AddressRecord;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Uid\Ulid;
 
@@ -25,13 +25,13 @@ final readonly class AddressApiPayloadFactory
     }
 
     /** @param array<string, mixed> $in */
-    public function createAddressData(array $in): AddressData
+    public function createAddressEntity(array $in): AddressRecord
     {
         $id = (string) new Ulid();
         $createdAt = new \DateTimeImmutable('now');
         $now = $createdAt->format('Y-m-d H:i:sP');
 
-        return new AddressData(
+        return new AddressRecord(
             $id,
             $this->optStr($in, 'ownerId'),
             $this->optStr($in, 'vendorId'),

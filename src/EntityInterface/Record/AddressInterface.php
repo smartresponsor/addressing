@@ -1,11 +1,18 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
 namespace App\EntityInterface\Record;
 
 interface AddressInterface
 {
+    public function validationState(): AddressValidationStateInterface;
+
+    public function governanceState(): AddressGovernanceStateInterface;
+
+    public function revalidationState(): AddressRevalidationStateInterface;
+
     public function id(): string;
 
     public function ownerId(): ?string;

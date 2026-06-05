@@ -1,70 +1,104 @@
-# Managed by Commanding inspection
+# Managed by Addressing canon cleanup W02
 deptrac:
     paths:
-        - ./src
+        - ../src
 
     exclude_files:
         - '#.*Test.*#'
         - '#.*Kernel.php#'
 
     layers:
-        -   name: HttpController
+        -   name: Command
             collectors:
-                -   type: className
-                    regex: '^App\\Http\\Controller\\.*'
+                -   type: classNameRegex
+                    value: '#^App\\Command\\.*#'
+
+        -   name: ServiceHttp
+            collectors:
+                -   type: classNameRegex
+                    value: '#^App\\Service\\Http\\.*#'
 
         -   name: Http
             collectors:
-                -   type: className
-                    regex: '^App\\Http\\(?!Controller\\).*'
+                -   type: classNameRegex
+                    value: '#^App\\Http\\.*#'
 
         -   name: ServiceInterface
             collectors:
-                -   type: className
-                    regex: '^App\\ServiceInterface\\.*'
+                -   type: classNameRegex
+                    value: '#^App\\ServiceInterface\\.*#'
 
         -   name: Service
             collectors:
-                -   type: className
-                    regex: '^App\\Service\\.*'
+                -   type: classNameRegex
+                    value: '#^App\\Service\\.*#'
 
         -   name: RepositoryInterface
             collectors:
-                -   type: className
-                    regex: '^App\\RepositoryInterface\\.*'
+                -   type: classNameRegex
+                    value: '#^App\\RepositoryInterface\\.*#'
 
         -   name: Repository
             collectors:
-                -   type: className
-                    regex: '^App\\Repository\\.*'
+                -   type: classNameRegex
+                    value: '#^App\\Repository\\.*#'
+
+        -   name: Doctrine
+            collectors:
+                -   type: classNameRegex
+                    value: '#^App\\Doctrine\\.*#'
 
         -   name: Integration
             collectors:
-                -   type: className
-                    regex: '^App\\Integration\\.*'
+                -   type: classNameRegex
+                    value: '#^App\\Integration\\.*#'
 
         -   name: Contract
             collectors:
-                -   type: className
-                    regex: '^App\\Contract\\.*'
+                -   type: classNameRegex
+                    value: '#^App\\Contract\\.*#'
 
         -   name: EntityInterface
             collectors:
-                -   type: className
-                    regex: '^App\\EntityInterface\\.*'
+                -   type: classNameRegex
+                    value: '#^App\\EntityInterface\\.*#'
 
         -   name: Entity
             collectors:
-                -   type: className
-                    regex: '^App\\Entity\\.*'
+                -   type: classNameRegex
+                    value: '#^App\\Entity\\.*#'
 
         -   name: Value
             collectors:
-                -   type: className
-                    regex: '^App\\Value\\.*'
+                -   type: classNameRegex
+                    value: '#^App\\Value\\.*#'
+
+        -   name: Projection
+            collectors:
+                -   type: classNameRegex
+                    value: '#^App\\Projection\\.*#'
+
+        -   name: Util
+            collectors:
+                -   type: classNameRegex
+                    value: '#^App\\Util\\.*#'
+
+        -   name: UtilInterface
+            collectors:
+                -   type: classNameRegex
+                    value: '#^App\\UtilInterface\\.*#'
 
     ruleset:
-        HttpController:
+        Command:
+            - Service
+            - ServiceInterface
+            - RepositoryInterface
+            - Contract
+            - EntityInterface
+            - Http
+            - Value
+
+        ServiceHttp:
             - Http
             - Service
             - ServiceInterface
@@ -85,19 +119,27 @@ deptrac:
             - ServiceInterface
             - RepositoryInterface
             - Repository
+            - Doctrine
+            - Contract
+            - EntityInterface
+            - Entity
+            - Http
+            - Value
+            - Integration
+
+        Repository:
+            - RepositoryInterface
+            - Doctrine
             - Contract
             - EntityInterface
             - Entity
             - Value
             - Integration
 
-        Repository:
-            - RepositoryInterface
-            - Contract
-            - EntityInterface
+        Doctrine:
             - Entity
+            - EntityInterface
             - Value
-            - Integration
 
         Integration:
             - Contract
@@ -105,9 +147,20 @@ deptrac:
             - Entity
             - Value
 
-        Contract: ~
+        Projection:
+            - Entity
+            - Value
+            - Integration
+
+        Util:
+            - UtilInterface
+
         ServiceInterface: ~
-        RepositoryInterface: ~
+        Contract: ~
         EntityInterface: ~
         Entity: ~
         Value: ~
+        RepositoryInterface:
+            - Value
+            - EntityInterface
+        UtilInterface: ~

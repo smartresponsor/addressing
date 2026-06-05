@@ -1,9 +1,9 @@
 openapi: 3.0.3
 info:
-    title: SmartResponsor AddressData API
+    title: SmartResponsor AddressRecord API
     version: 0.1.0
     description: |
-        AddressData surface: create, fetch, delete, page, and apply validated fields.
+        AddressRecord surface: create, fetch, delete, page, and apply validated fields.
 servers:
     -   url: /
 paths:

@@ -3,27 +3,27 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-use App\Projection\AddressIndex\IndexRecord;
-use App\Projection\AddressIndex\PdoRepository;
+namespace Tests\Projection;
+
+use App\Entity\AddressIndexEntity;
+use App\Projection\AddressIndex\AddressIndexRecord;
+use App\Projection\AddressIndex\DoctrineAddressIndexRepository;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\TestDatabase;
 
 final class AddressIndexRepositoryTest extends TestCase
 {
-    private PdoRepository $repo;
+    private DoctrineAddressIndexRepository $repo;
 
     protected function setUp(): void
     {
-        $pdo = new PDO('sqlite::memory:');
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $sql = file_get_contents(__DIR__.'/../../src/Projection/AddressIndex/schema.sqlite.sql');
-        self::assertIsString($sql);
-        $pdo->exec($sql);
-        $this->repo = new PdoRepository($pdo);
+        $entityManager = TestDatabase::createInMemoryEntityManager([AddressIndexEntity::class]);
+        $this->repo = new DoctrineAddressIndexRepository($entityManager);
     }
 
     public function testUpsertAndFetch(): void
     {
-        $r = new IndexRecord(
+        $r = new AddressIndexRecord(
             digest: str_repeat('a', 64),
             line1: '123 Main St',
             line2: null,
@@ -36,7 +36,7 @@ final class AddressIndexRepositoryTest extends TestCase
             display: '123 Main St, Houston, TX 77002, USA',
             provider: 'test',
             confidence: 0.9,
-            geoKey: IndexRecord::geokey(29.7604, -95.3698),
+            geoKey: AddressIndexRecord::geokey(29.7604, -95.3698),
             createdAt: '2024-01-01 00:00:00',
             updatedAt: '2024-01-01 00:00:00',
         );

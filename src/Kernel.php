@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 namespace App;
 
+use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\TwigBundle\TwigBundle;
@@ -22,6 +23,7 @@ final class Kernel extends BaseKernel implements KernelInterface
     {
         yield new FrameworkBundle();
         yield new TwigBundle();
+        yield new DoctrineBundle();
     }
 
     /**
@@ -37,6 +39,9 @@ final class Kernel extends BaseKernel implements KernelInterface
 
         $projectConfigDir = $this->projectConfigDir();
         $loader->load($projectConfigDir.'/packages/*.yaml', 'glob');
+        if ('test' === $this->environment) {
+            $loader->load($projectConfigDir.'/packages/test/*.yaml', 'glob');
+        }
         $loader->load($projectConfigDir.'/addressing_services.yaml');
     }
 
