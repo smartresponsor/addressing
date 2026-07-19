@@ -1,6 +1,6 @@
 {
-    "name": "smartresponsor/addressing",
-    "description": "Addressing — Symfony-oriented address operations and governance component",
+    "name": "addressing/address",
+    "description": "Addressing process app",
     "type": "library",
     "license": "MIT",
     "require": {
@@ -9,6 +9,7 @@
         "ext-pdo": "*",
         "doctrine/doctrine-bundle": "^3.2",
         "doctrine/orm": "^2.15 || ^3.0",
+        "objecting/object": "dev-master",
         "symfony/form": "^8.0",
         "symfony/framework-bundle": "^8.0",
         "symfony/intl": "^8.0",
@@ -76,6 +77,7 @@
         "md": "@php tools/php/php84.php vendor/bin/phpmd src,text phpmd.xml.dist",
         "md:tests": "@php tools/php/php84.php vendor/bin/phpmd tests,text phpmd.xml.dist",
         "test:unit": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite unit",
+        "test:object-identity": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist tests/Unit/Address/AddressingObjectIdentityContractTest.php",
         "test:integration": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite integration",
         "test:e2e": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite e2e",
         "test:e2e:panther": [
@@ -155,5 +157,14 @@
         "preferred-install": "dist"
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../Objecting",
+            "options": {
+                "symlink": true
+            }
+        }
+    ]
 }
