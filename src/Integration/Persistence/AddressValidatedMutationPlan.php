@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Integration\Persistence;
+namespace App\Addressing\Integration\Persistence;
 
 /**
  * @phpstan-type MutationParams array<string, mixed>
@@ -11,8 +11,8 @@ namespace App\Integration\Persistence;
 final readonly class AddressValidatedMutationPlan
 {
     /**
-     * @param MutationAssignments  $updateAssignments
-     * @param MutationParams       $params
+     * @param MutationAssignments       $updateAssignments
+     * @param MutationParams            $params
      * @param array<string, mixed>|null $normalizedSnapshot
      */
     public function __construct(

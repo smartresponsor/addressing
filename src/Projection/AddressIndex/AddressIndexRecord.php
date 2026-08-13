@@ -3,13 +3,13 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Projection\AddressIndex;
+namespace App\Addressing\Projection\AddressIndex;
 
-use App\Integration\Geocode\GeocodeResult;
-use App\Value\CountryCode;
-use App\Value\PostalCode;
-use App\Value\Primitive\Region;
-use App\Value\StreetLine;
+use App\Addressing\Integration\Geocode\GeocodeResult;
+use App\Addressing\Value\CountryCode;
+use App\Addressing\Value\PostalCode;
+use App\Addressing\Value\Primitive\Region;
+use App\Addressing\Value\StreetLine;
 
 final readonly class AddressIndexRecord
 {

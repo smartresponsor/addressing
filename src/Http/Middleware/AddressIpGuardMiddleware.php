@@ -3,14 +3,14 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Http\Middleware;
+namespace App\Addressing\Http\Middleware;
 
 final class AddressIpGuardMiddleware
 {
     /** @return list<string> */
-    private static function listFromEnv(string $name): array
+    private static function listFromEnv(string $nameEntity): array
     {
-        $value = getenv($name);
+        $value = getenv($nameEntity);
         if (false === $value || '' === trim($value)) {
             return [];
         }

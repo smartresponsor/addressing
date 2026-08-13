@@ -3,14 +3,14 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Http\Dto;
+namespace App\Addressing\Http\Dto;
 
-use App\Contract\Message\AddressRecordPolicy;
-use App\Entity\Record\AddressRecord;
-use App\Value\CountryCode;
-use App\Value\PostalCode;
-use App\Value\StreetLine;
-use App\Value\Subdivision;
+use App\Addressing\Contract\Message\AddressRecordPolicy;
+use App\Addressing\Entity\Record\AddressRecord;
+use App\Addressing\Value\CountryCode;
+use App\Addressing\Value\PostalCode;
+use App\Addressing\Value\StreetLine;
+use App\Addressing\Value\Subdivision;
 use Symfony\Component\Uid\Ulid;
 
 final class AddressInputFactory

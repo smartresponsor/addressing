@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Integration\Persistence;
+namespace App\Addressing\Integration\Persistence;
 
-use App\Contract\Message\AddressValidated;
+use App\Addressing\Contract\Message\AddressValidated;
 
 final readonly class AddressEvidenceSnapshotContext
 {

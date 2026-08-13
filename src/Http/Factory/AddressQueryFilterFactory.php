@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Factory;
+namespace App\Addressing\Http\Factory;
 
-use App\Contract\Message\AddressRecordPolicy;
+use App\Addressing\Contract\Message\AddressRecordPolicy;
 use Symfony\Component\HttpFoundation\Request;
 
 final readonly class AddressQueryFilterFactory

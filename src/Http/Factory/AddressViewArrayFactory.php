@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Factory;
+namespace App\Addressing\Http\Factory;
 
-use App\EntityInterface\Record\AddressInterface;
+use App\Addressing\EntityInterface\Record\AddressInterface;
 
 final readonly class AddressViewArrayFactory
 {

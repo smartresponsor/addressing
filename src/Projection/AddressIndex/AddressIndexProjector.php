@@ -3,10 +3,10 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Projection\AddressIndex;
+namespace App\Addressing\Projection\AddressIndex;
 
-use App\Service\Application\Event\AddressCreatedEvent;
-use App\Service\Application\Event\AddressUpdatedEvent;
+use App\Addressing\Service\Application\Event\AddressCreatedEvent;
+use App\Addressing\Service\Application\Event\AddressUpdatedEvent;
 
 final readonly class AddressIndexProjector
 {

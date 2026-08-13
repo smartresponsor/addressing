@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Projection\AddressIndex;
+namespace App\Addressing\Projection\AddressIndex;
 
-use App\Entity\AddressIndexEntity;
+use App\Addressing\Entity\AddressIndexEntity;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DoctrineAddressIndexRepository implements AddressIndexRepositoryInterface

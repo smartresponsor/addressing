@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Factory;
+namespace App\Addressing\Http\Factory;
 
-use App\Contract\Message\AddressRecordPolicy;
-use App\Contract\Message\AddressValidated;
-use App\Entity\Record\AddressRecord;
+use App\Addressing\Contract\Message\AddressRecordPolicy;
+use App\Addressing\Contract\Message\AddressValidated;
+use App\Addressing\Entity\Record\AddressRecord;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Uid\Ulid;
 
