@@ -3,7 +3,7 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Value\Primitive;
+namespace App\Addressing\Value\Primitive;
 
 final readonly class Line implements \Stringable
 {

@@ -3,7 +3,7 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Value\Common;
+namespace App\Addressing\Value\Common;
 
 final readonly class Country implements \Stringable
 {

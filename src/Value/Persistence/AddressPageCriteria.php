@@ -3,7 +3,7 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Value\Persistence;
+namespace App\Addressing\Value\Persistence;
 
 final class AddressPageCriteria
 {
