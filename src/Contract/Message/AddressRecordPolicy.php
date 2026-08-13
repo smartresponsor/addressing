@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace App\Contract\Message;
+namespace App\Addressing\Contract\Message;
 
 final class AddressRecordPolicy
 {

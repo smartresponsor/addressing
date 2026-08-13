@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Entity\Address;
+namespace App\Addressing\Entity\Address;
 
 use App\Objecting\EntityTrait\Embeddable\ObjectAuditEmbeddableTrait;
 use App\Objecting\EntityTrait\Embeddable\ObjectIdentityEmbeddableTrait;
 use App\Objecting\EntityTrait\Embeddable\ObjectStateEmbeddableTrait;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: \App\Repository\Address\AddressComponentEntityRepository::class)]
+#[ORM\Entity(repositoryClass: \App\Addressing\Repository\Address\AddressComponentEntityRepository::class)]
 #[ORM\Table(name: 'address_component')]
 #[ORM\Index(name: 'address_component_address_type_idx', columns: ['address_id', 'component_type'])]
 class AddressComponentEntity

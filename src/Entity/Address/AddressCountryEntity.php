@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Entity\Address;
+namespace App\Addressing\Entity\Address;
 
 use App\Objecting\EntityTrait\Embeddable\ObjectAuditEmbeddableTrait;
 use App\Objecting\EntityTrait\Embeddable\ObjectIdentityEmbeddableTrait;
 use App\Objecting\EntityTrait\Embeddable\ObjectStateEmbeddableTrait;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: \App\Repository\Address\AddressCountryEntityRepository::class)]
+#[ORM\Entity(repositoryClass: \App\Addressing\Repository\Address\AddressCountryEntityRepository::class)]
 #[ORM\Table(name: 'address_country')]
 #[ORM\Index(name: 'address_country_iso2_idx', columns: ['iso2'])]
 class AddressCountryEntity

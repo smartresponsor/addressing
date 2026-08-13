@@ -3,10 +3,10 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Command;
+namespace App\Addressing\Command;
 
-use App\Contract\Message\AddressRecordPolicy;
-use App\Service\Application\AddressReadService;
+use App\Addressing\Contract\Message\AddressRecordPolicy;
+use App\Addressing\Service\Application\AddressReadService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

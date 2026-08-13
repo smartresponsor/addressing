@@ -3,9 +3,9 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Command;
+namespace App\Addressing\Command;
 
-use App\Service\Application\AddressGovernanceSummaryService;
+use App\Addressing\Service\Application\AddressGovernanceSummaryService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;

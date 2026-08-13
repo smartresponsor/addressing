@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Doctrine;
+namespace App\Addressing\Doctrine;
 
-use App\Entity\AddressEntity;
-use App\Entity\AddressEvidenceSnapshotEntity;
-use App\Entity\AddressOutboxEntity;
+use App\Addressing\Entity\AddressEntity;
+use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
+use App\Addressing\Entity\AddressOutboxEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 

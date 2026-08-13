@@ -7,9 +7,9 @@
  */
 declare(strict_types=1);
 
-namespace App\Entity\Record;
+namespace App\Addressing\Entity\Record;
 
-use App\EntityInterface\Record\AddressEvidenceSnapshotInterface;
+use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
 
 final class AddressEvidenceSnapshotRecord implements AddressEvidenceSnapshotInterface
 {

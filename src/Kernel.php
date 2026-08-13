@@ -3,7 +3,7 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App;
+namespace App\Addressing;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
@@ -24,6 +24,7 @@ final class Kernel extends BaseKernel implements KernelInterface
         yield new FrameworkBundle();
         yield new TwigBundle();
         yield new DoctrineBundle();
+        yield new AddressingBundle();
     }
 
     /**
@@ -42,7 +43,6 @@ final class Kernel extends BaseKernel implements KernelInterface
         if ('test' === $this->environment) {
             $loader->load($projectConfigDir.'/packages/test/*.yaml', 'glob');
         }
-        $loader->load($projectConfigDir.'/addressing_services.yaml');
     }
 
     #[\Override]

@@ -3,11 +3,11 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Command;
+namespace App\Addressing\Command;
 
-use App\Http\Dto\AddressInputFactory;
-use App\Http\Dto\AddressManageDto;
-use App\Service\Application\AddressWriteService;
+use App\Addressing\Http\Dto\AddressInputFactory;
+use App\Addressing\Http\Dto\AddressManageDto;
+use App\Addressing\Service\Application\AddressWriteService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -83,11 +83,11 @@ final class AddressCreateCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function requiredOption(InputInterface $input, string $name): string
+    private function requiredOption(InputInterface $input, string $nameEntity): string
     {
-        $value = $input->getOption($name);
+        $value = $input->getOption($nameEntity);
         if (!is_string($value)) {
-            throw new \RuntimeException('invalid_option_'.$name);
+            throw new \RuntimeException('invalid_option_'.$nameEntity);
         }
 
         return $value;
