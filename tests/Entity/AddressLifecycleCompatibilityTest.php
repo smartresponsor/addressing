@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Entity;
 
-use App\Entity\AddressEntity;
-use App\Entity\AddressOutboxEntity;
+use App\Addressing\Entity\AddressEntity;
+use App\Addressing\Entity\AddressOutboxEntity;
 use PHPUnit\Framework\TestCase;
 
 final class AddressLifecycleCompatibilityTest extends TestCase

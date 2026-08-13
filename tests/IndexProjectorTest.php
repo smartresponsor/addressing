@@ -5,11 +5,11 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use App\Entity\AddressIndexEntity;
-use App\Projection\AddressIndex\AddressIndexNormalizer;
-use App\Projection\AddressIndex\AddressIndexProjector;
-use App\Projection\AddressIndex\DoctrineAddressIndexRepository;
-use App\Service\Application\Event\AddressCreatedEvent;
+use App\Addressing\Entity\AddressIndexEntity;
+use App\Addressing\Projection\AddressIndex\AddressIndexNormalizer;
+use App\Addressing\Projection\AddressIndex\AddressIndexProjector;
+use App\Addressing\Projection\AddressIndex\DoctrineAddressIndexRepository;
+use App\Addressing\Service\Application\Event\AddressCreatedEvent;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
 

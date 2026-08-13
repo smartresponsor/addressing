@@ -5,10 +5,10 @@ declare(strict_types=1);
 
 namespace Tests\Functional;
 
-use App\Kernel;
-use App\Service\Http\Address\AddressManageHttpService;
-use App\Service\Http\Address\AddressReadHttpService;
-use App\Service\Http\Address\AddressWriteHttpService;
+use App\Addressing\Kernel;
+use App\Addressing\Service\Http\Address\AddressManageHttpService;
+use App\Addressing\Service\Http\Address\AddressReadHttpService;
+use App\Addressing\Service\Http\Address\AddressWriteHttpService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Tests\Support\TestDatabase;

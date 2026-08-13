@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use App\Entity\Record\AddressData;
-use App\Entity\Record\AddressGovernanceState;
-use App\Entity\Record\AddressRevalidationState;
-use App\Entity\Record\AddressValidationState;
+use App\Addressing\Entity\Record\AddressData;
+use App\Addressing\Entity\Record\AddressGovernanceState;
+use App\Addressing\Entity\Record\AddressRevalidationState;
+use App\Addressing\Entity\Record\AddressValidationState;
 use PHPUnit\Framework\TestCase;
 
 final class AddressRecordBoundaryClustersTest extends TestCase
