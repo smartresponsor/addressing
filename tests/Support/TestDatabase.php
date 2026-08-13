@@ -5,9 +5,9 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
-use App\Entity\AddressEntity;
-use App\Entity\AddressEvidenceSnapshotEntity;
-use App\Entity\AddressOutboxEntity;
+use App\Addressing\Entity\AddressEntity;
+use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
+use App\Addressing\Entity\AddressOutboxEntity;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;

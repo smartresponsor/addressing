@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Address;
 
-use App\Entity\Address\AddressCountryEntity;
+use App\Addressing\Entity\Address\AddressCountryEntity;
 use App\Objecting\Embeddable\ObjectIdentityEmbeddable;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
@@ -42,7 +42,7 @@ final class AddressingObjectIdentityContractTest extends TestCase
             dirname(__DIR__, 3).'/src/Entity',
         ], true)->getMetadataDriverImpl();
         self::assertNotNull($addressingDriver);
-        $driverChain->addDriver($addressingDriver, 'App\\Entity');
+        $driverChain->addDriver($addressingDriver, 'App\Addressing\\Entity');
 
         $objectingDriver = ORMSetup::createAttributeMetadataConfiguration([
             dirname(__DIR__, 4).'/Objecting/src/Embeddable',
