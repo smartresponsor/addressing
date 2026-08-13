@@ -5,11 +5,11 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use App\Value\CountryCode;
-use App\Value\GeoPoint;
-use App\Value\PostalCode;
-use App\Value\StreetLine;
-use App\Value\Subdivision;
+use App\Addressing\Value\CountryCode;
+use App\Addressing\Value\GeoPoint;
+use App\Addressing\Value\PostalCode;
+use App\Addressing\Value\StreetLine;
+use App\Addressing\Value\Subdivision;
 use PHPUnit\Framework\TestCase;
 
 final class ValueObjectsTest extends TestCase
