@@ -3,11 +3,11 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-use App\Entity\AddressEntity;
-use App\Entity\AddressEvidenceSnapshotEntity;
-use App\Entity\AddressIndexEntity;
-use App\Entity\AddressOutboxEntity;
-use App\Entity\RateLimitEntity;
+use App\Addressing\Entity\AddressEntity;
+use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
+use App\Addressing\Entity\AddressIndexEntity;
+use App\Addressing\Entity\AddressOutboxEntity;
+use App\Addressing\Entity\RateLimitEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use Tests\Support\TestDatabase;
 
