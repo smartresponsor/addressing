@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Repository\Address;
+namespace App\Addressing\Repository\Address;
 
-use App\Entity\Address\AddressStreetTypeEntity;
-use App\RepositoryInterface\Address\AddressStreetTypeEntityRepositoryInterface;
+use App\Addressing\Entity\Address\AddressStreetTypeEntity;
+use App\Addressing\RepositoryInterface\Address\AddressStreetTypeEntityRepositoryInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 

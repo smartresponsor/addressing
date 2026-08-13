@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Repository\Persistence;
+namespace App\Addressing\Repository\Persistence;
 
-use App\Entity\AddressEntity;
-use App\Entity\AddressEvidenceSnapshotEntity;
-use App\EntityInterface\Record\AddressEvidenceSnapshotInterface;
-use App\EntityInterface\Record\AddressInterface;
-use App\RepositoryInterface\Persistence\AddressEvidenceRepositoryInterface;
+use App\Addressing\Entity\AddressEntity;
+use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
+use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
+use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\RepositoryInterface\Persistence\AddressEvidenceRepositoryInterface;
 
 final readonly class DoctrineAddressEvidenceRepository extends AbstractDoctrineAddressRepository implements AddressEvidenceRepositoryInterface
 {

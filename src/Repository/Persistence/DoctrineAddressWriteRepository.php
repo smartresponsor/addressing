@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Repository\Persistence;
+namespace App\Addressing\Repository\Persistence;
 
-use App\Entity\AddressEntity;
-use App\EntityInterface\Record\AddressInterface;
-use App\RepositoryInterface\Persistence\AddressWriteRepositoryInterface;
+use App\Addressing\Entity\AddressEntity;
+use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\RepositoryInterface\Persistence\AddressWriteRepositoryInterface;
 
 final readonly class DoctrineAddressWriteRepository extends AbstractDoctrineAddressRepository implements AddressWriteRepositoryInterface
 {

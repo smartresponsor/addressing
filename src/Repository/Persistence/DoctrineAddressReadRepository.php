@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Repository\Persistence;
+namespace App\Addressing\Repository\Persistence;
 
-use App\Entity\AddressEntity;
-use App\EntityInterface\Record\AddressInterface;
-use App\RepositoryInterface\Persistence\AddressReadRepositoryInterface;
-use App\Value\Persistence\AddressPageCriteria;
+use App\Addressing\Entity\AddressEntity;
+use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\RepositoryInterface\Persistence\AddressReadRepositoryInterface;
+use App\Addressing\Value\Persistence\AddressPageCriteria;
 
 final readonly class DoctrineAddressReadRepository extends AbstractDoctrineAddressRepository implements AddressReadRepositoryInterface
 {

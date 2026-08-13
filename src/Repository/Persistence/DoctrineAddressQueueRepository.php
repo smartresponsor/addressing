@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Repository\Persistence;
+namespace App\Addressing\Repository\Persistence;
 
-use App\RepositoryInterface\Persistence\AddressQueueRepositoryInterface;
+use App\Addressing\RepositoryInterface\Persistence\AddressQueueRepositoryInterface;
 
 final readonly class DoctrineAddressQueueRepository extends AbstractDoctrineAddressRepository implements AddressQueueRepositoryInterface
 {

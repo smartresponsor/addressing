@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Repository\Persistence;
+namespace App\Addressing\Repository\Persistence;
 
-use App\Entity\AddressEntity;
-use App\RepositoryInterface\Persistence\AddressPortfolioRepositoryInterface;
+use App\Addressing\Entity\AddressEntity;
+use App\Addressing\RepositoryInterface\Persistence\AddressPortfolioRepositoryInterface;
 
 final readonly class DoctrineAddressPortfolioRepository extends AbstractDoctrineAddressRepository implements AddressPortfolioRepositoryInterface
 {

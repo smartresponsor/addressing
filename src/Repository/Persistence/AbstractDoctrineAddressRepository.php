@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace App\Repository\Persistence;
+namespace App\Addressing\Repository\Persistence;
 
-use App\Contract\Message\AddressOutboxEventMessage;
-use App\Contract\Message\AddressRecordPolicy;
-use App\Doctrine\AddressEntityMapper;
-use App\Entity\AddressEntity;
-use App\Entity\AddressEvidenceSnapshotEntity;
-use App\Entity\AddressOutboxEntity;
-use App\Entity\Record\AddressData;
-use App\Entity\Record\AddressEvidenceSnapshotData;
-use App\EntityInterface\Record\AddressEvidenceSnapshotInterface;
-use App\EntityInterface\Record\AddressInterface;
-use App\Service\Application\AddressGovernancePolicy;
+use App\Addressing\Contract\Message\AddressOutboxEventMessage;
+use App\Addressing\Contract\Message\AddressRecordPolicy;
+use App\Addressing\Doctrine\AddressEntityMapper;
+use App\Addressing\Entity\AddressEntity;
+use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
+use App\Addressing\Entity\AddressOutboxEntity;
+use App\Addressing\Entity\Record\AddressData;
+use App\Addressing\Entity\Record\AddressEvidenceSnapshotData;
+use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
+use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\Service\Application\AddressGovernancePolicy;
 use Doctrine\ORM\EntityManagerInterface;
 
 abstract readonly class AbstractDoctrineAddressRepository
@@ -805,16 +805,16 @@ abstract readonly class AbstractDoctrineAddressRepository
     }
 
     /** @param array<string, mixed> $payload */
-    protected function appendOutbox(string $name, array $payload): void
+    protected function appendOutbox(string $nameEntity, array $payload): void
     {
         $json = json_encode(
-            AddressOutboxEventMessage::decoratePayload($name, $payload),
+            AddressOutboxEventMessage::decoratePayload($nameEntity, $payload),
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
         );
 
         $entity = (new AddressOutboxEntity())
-            ->setEventName($name)
-            ->setEventVersion(AddressOutboxEventMessage::eventVersion($name))
+            ->setEventName($nameEntity)
+            ->setEventVersion(AddressOutboxEventMessage::eventVersion($nameEntity))
             ->setPayload($json)
             ->setCreatedAt(new \DateTimeImmutable('now'));
 
