@@ -5,8 +5,8 @@ declare(strict_types=1);
 
 namespace Tests\Service;
 
-use App\Entity\AddressOutboxEntity;
-use App\Service\Application\AddressOutboxDrainerService;
+use App\Addressing\Entity\AddressOutboxEntity;
+use App\Addressing\Service\Application\AddressOutboxDrainerService;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
 

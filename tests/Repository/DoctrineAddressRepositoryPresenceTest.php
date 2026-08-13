@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Repository;
 
-use App\Repository\Persistence\DoctrineAddressRepository;
-use App\RepositoryInterface\Persistence\AddressEvidenceRepositoryInterface;
-use App\RepositoryInterface\Persistence\AddressGovernanceRepositoryInterface;
-use App\RepositoryInterface\Persistence\AddressOperationalRepositoryInterface;
-use App\RepositoryInterface\Persistence\AddressPortfolioRepositoryInterface;
-use App\RepositoryInterface\Persistence\AddressQueueRepositoryInterface;
-use App\RepositoryInterface\Persistence\AddressReadRepositoryInterface;
-use App\RepositoryInterface\Persistence\AddressWriteRepositoryInterface;
+use App\Addressing\Repository\Persistence\DoctrineAddressRepository;
+use App\Addressing\RepositoryInterface\Persistence\AddressEvidenceRepositoryInterface;
+use App\Addressing\RepositoryInterface\Persistence\AddressGovernanceRepositoryInterface;
+use App\Addressing\RepositoryInterface\Persistence\AddressOperationalRepositoryInterface;
+use App\Addressing\RepositoryInterface\Persistence\AddressPortfolioRepositoryInterface;
+use App\Addressing\RepositoryInterface\Persistence\AddressQueueRepositoryInterface;
+use App\Addressing\RepositoryInterface\Persistence\AddressReadRepositoryInterface;
+use App\Addressing\RepositoryInterface\Persistence\AddressWriteRepositoryInterface;
 use PHPUnit\Framework\TestCase;
 
 final class DoctrineAddressRepositoryPresenceTest extends TestCase

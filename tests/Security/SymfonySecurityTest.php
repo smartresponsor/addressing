@@ -5,9 +5,9 @@ declare(strict_types=1);
 
 namespace Tests\Security;
 
-use App\Entity\RateLimitEntity;
-use App\Http\Middleware\AddressIpGuardMiddleware;
-use App\Http\Middleware\AddressRateLimiter;
+use App\Addressing\Entity\RateLimitEntity;
+use App\Addressing\Http\Middleware\AddressIpGuardMiddleware;
+use App\Addressing\Http\Middleware\AddressRateLimiter;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
 

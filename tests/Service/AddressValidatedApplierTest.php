@@ -5,11 +5,11 @@ declare(strict_types=1);
 
 namespace Tests\Service;
 
-use App\Contract\Message\AddressValidated;
-use App\Entity\AddressEntity;
-use App\Entity\AddressEvidenceSnapshotEntity;
-use App\Entity\AddressOutboxEntity;
-use App\Service\Application\AddressValidatedApplierService;
+use App\Addressing\Contract\Message\AddressValidated;
+use App\Addressing\Entity\AddressEntity;
+use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
+use App\Addressing\Entity\AddressOutboxEntity;
+use App\Addressing\Service\Application\AddressValidatedApplierService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
