@@ -1,7 +1,7 @@
 # Addressing architecture remediation plan
 
 ## Goal
-Bring `smartresponsor/addressing` from a mixed transitional state to a coherent Symfony-oriented `App\\` component with trustworthy QA wiring, lower structural drift, and clearer separation between HTTP, application, persistence, and reporting concerns.
+Bring `smartresponsor/addressing` from a mixed transitional state to a coherent Symfony-oriented `App\Addressing\\` component with trustworthy QA wiring, lower structural drift, and clearer separation between HTTP, application, persistence, and reporting concerns.
 
 ## Current architectural findings
 
@@ -18,7 +18,7 @@ Bring `smartresponsor/addressing` from a mixed transitional state to a coherent 
 - Interface layering appears heavier than the current implementation justifies.
 
 ## Working rules for remediation
-- Keep the default `App\\` namespace only.
+- Keep the default `App\Addressing\\` namespace only.
 - Prefer Symfony-oriented structure and naming.
 - Prioritize factual repository state over assumptions.
 - Remove legacy drift instead of preserving it by default when it no longer serves an active runtime path.
@@ -46,7 +46,7 @@ Purpose: reduce custom bootstrap burden and move the component closer to a stabl
 Planned actions:
 - Review `public/index.php`, routing entrypoints, and service loading.
 - Reduce manual dispatch where practical.
-- Keep the component under `App\\` with a clearer config and runtime surface.
+- Keep the component under `App\Addressing\\` with a clearer config and runtime surface.
 - Trim unnecessary custom glue when Symfony-native mechanisms can own the responsibility.
 
 Expected result:

@@ -125,6 +125,6 @@ Example payload stored inside `address_outbox.payload` for a validated apply:
 
 ## End-to-end traceability
 - **API contract → Address record:** request/response surfaces in `openapi/address.yaml` map to `address_entity` columns.
-- **Validation contract → Stored state:** `App\Contract\Message\AddressValidated` and `AddressValidatedMutationPlan*` populate `validation_*`, governance, provenance, and revalidation columns.
+- **Validation contract → Stored state:** `App\Addressing\Contract\Message\AddressValidated` and `AddressValidatedMutationPlan*` populate `validation_*`, governance, provenance, and revalidation columns.
 - **Validated apply → Evidence history:** `AddressEvidenceSnapshotWriter` captures the validation/evidence companion row.
 - **Write path → Event emission:** CRUD and validation updates append payloads into `address_outbox`, and `AddressOutboxDrainerService` emits `{ name, version, payload }` envelopes.

@@ -5,7 +5,7 @@ Addressing no longer relies on `AddressPdoFactory` or `AddressSchemaManager` as 
 ## Canonical bootstrap/schema authority
 
 - Doctrine ORM entity metadata under `src/Entity`
-- `App\Doctrine\AddressDoctrineSchemaManager`
+- `App\Addressing\Doctrine\AddressDoctrineSchemaManager`
 - Symfony host DBAL connection exposed through `doctrine.dbal.default_connection`
 
 ## Transitional note

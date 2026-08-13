@@ -3,7 +3,7 @@ address-sketch31-report-compile-repair
 What changed
 
 - Fixed PHP parse errors and made SQL blocks valid (replaced invalid triple-quote strings with nowdoc heredoc).
-- Introduced App\\Entity\\Address\\AddressEntity implementing App\\EntityInterface\\Address\\AddressInterface.
+- Introduced App\Addressing\\Entity\\Address\\AddressEntity implementing App\Addressing\\EntityInterface\\Address\\AddressInterface.
 - Updated PDO repository and MySQL projection to use interface getters (no property access).
 - Normalized Value classes to avoid leading whitespace before '<?php' (prevents strict_types load-time fatal).
 

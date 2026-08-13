@@ -32,10 +32,10 @@ Scope: incremental pass after W01. This pass does not split `DoctrineAddressRepo
 - PHP lint passed for `src`, `tests`, `public`, and `tools` PHP files.
 - No empty directories remain in the snapshot.
 - No references remain to old namespaces/paths:
-  - `App\Bridge`
-  - `App\Infrastructure`
-  - `App\Fixture`
-  - `App\Integration\Console\Command`
+  - `App\Addressing\Bridge`
+  - `App\Addressing\Infrastructure`
+  - `App\Addressing\Fixture`
+  - `App\Addressing\Integration\Console\Command`
   - `AddressOutboxEventContract`
   - `src/Bridge`
   - `src/Infrastructure`

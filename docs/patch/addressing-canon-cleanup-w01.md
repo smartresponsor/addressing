@@ -12,9 +12,9 @@ Applied to current slice: `Addressing(9).zip`.
 - Removed missing `.commanding` script references from Composer scripts.
 - Repaired `public/index.php` so it no longer depends on missing `AddressPdoFactory`; `AddressRateLimiter` is resolved from the Symfony container.
 - Renamed record/read-model classes:
-  - `App\Entity\Record\AddressEntity` -> `App\Entity\Record\AddressRecord`
-  - `App\Entity\Record\AddressEvidenceSnapshotEntity` -> `App\Entity\Record\AddressEvidenceSnapshotRecord`
-- Moved `AddressPageCriteria` out of `RepositoryInterface` into `App\Value\Persistence`.
+  - `App\Addressing\Entity\Record\AddressEntity` -> `App\Addressing\Entity\Record\AddressRecord`
+  - `App\Addressing\Entity\Record\AddressEvidenceSnapshotEntity` -> `App\Addressing\Entity\Record\AddressEvidenceSnapshotRecord`
+- Moved `AddressPageCriteria` out of `RepositoryInterface` into `App\Addressing\Value\Persistence`.
 - Canon-prefixed generic HTTP/projection classes:
   - `ErrorMap` -> `AddressErrorMap`
   - `Cors` -> `AddressCorsMiddleware`
@@ -34,7 +34,7 @@ Applied to current slice: `Addressing(9).zip`.
 ## Verified locally
 
 - PHP lint clean for `src`, `tests`, `public`, `bin`, `tools`.
-- Local `App\...` imports resolve against current `src` class map.
+- Local `App\Addressing\...` imports resolve against current `src` class map.
 - No empty folders remain.
 - No class/file-name mismatches remain in `src`.
 
