@@ -3,11 +3,11 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Application;
+namespace App\Addressing\Service\Application;
 
-use App\EntityInterface\Record\AddressInterface;
-use App\RepositoryInterface\Persistence\AddressReadRepositoryInterface;
-use App\Value\Persistence\AddressPageCriteria;
+use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\RepositoryInterface\Persistence\AddressReadRepositoryInterface;
+use App\Addressing\Value\Persistence\AddressPageCriteria;
 
 final readonly class AddressReadService
 {

@@ -3,9 +3,9 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Application;
+namespace App\Addressing\Service\Application;
 
-use App\RepositoryInterface\Persistence\AddressOperationalRepositoryInterface;
+use App\Addressing\RepositoryInterface\Persistence\AddressOperationalRepositoryInterface;
 
 final readonly class AddressOperationalService
 {

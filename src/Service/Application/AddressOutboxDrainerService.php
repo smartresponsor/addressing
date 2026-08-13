@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Service\Application;
+namespace App\Addressing\Service\Application;
 
-use App\Entity\AddressOutboxEntity;
+use App\Addressing\Entity\AddressOutboxEntity;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class AddressOutboxDrainerService
@@ -124,7 +124,7 @@ final class AddressOutboxDrainerService
         }
 
         return [
-            'name' => $this->rowString($row, 'event_name') ?? '',
+            'nameEntity' => $this->rowString($row, 'event_name') ?? '',
             'version' => $this->rowInt($row, 'event_version'),
             'payload' => $payload,
         ];

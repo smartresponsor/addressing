@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Service\Application;
+namespace App\Addressing\Service\Application;
 
 final readonly class AddressOutboxDispatchConfig
 {

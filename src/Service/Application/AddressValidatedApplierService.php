@@ -3,14 +3,14 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Application;
+namespace App\Addressing\Service\Application;
 
-use App\Contract\Message\AddressOutboxEventMessage;
-use App\Contract\Message\AddressValidated;
-use App\Entity\AddressEntity;
-use App\Entity\AddressEvidenceSnapshotEntity;
-use App\Entity\AddressOutboxEntity;
-use App\ServiceInterface\Application\AddressValidatedApplierServiceInterface;
+use App\Addressing\Contract\Message\AddressOutboxEventMessage;
+use App\Addressing\Contract\Message\AddressValidated;
+use App\Addressing\Entity\AddressEntity;
+use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
+use App\Addressing\Entity\AddressOutboxEntity;
+use App\Addressing\ServiceInterface\Application\AddressValidatedApplierServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class AddressValidatedApplierService implements AddressValidatedApplierServiceInterface
@@ -246,7 +246,7 @@ final class AddressValidatedApplierService implements AddressValidatedApplierSer
      */
     private function validationIssues(AddressValidated $addressValidated): ?array
     {
-        if ($addressValidated->addressValidationVerdict instanceof \App\Contract\Message\AddressValidationVerdict) {
+        if ($addressValidated->addressValidationVerdict instanceof \App\Addressing\Contract\Message\AddressValidationVerdict) {
             return $addressValidated->addressValidationVerdict->jsonSerialize();
         }
 

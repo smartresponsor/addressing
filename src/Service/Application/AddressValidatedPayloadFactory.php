@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Service\Application;
+namespace App\Addressing\Service\Application;
 
-use App\Contract\Message\AddressValidated;
-use App\Contract\Message\AddressValidationVerdict;
+use App\Addressing\Contract\Message\AddressValidated;
+use App\Addressing\Contract\Message\AddressValidationVerdict;
 
 /** Builds normalized payload fragments from address validation messages. */
 final readonly class AddressValidatedPayloadFactory

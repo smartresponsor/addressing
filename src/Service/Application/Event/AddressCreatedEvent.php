@@ -3,9 +3,9 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Application\Event;
+namespace App\Addressing\Service\Application\Event;
 
-use App\ServiceInterface\Application\Event\AddressEventInterface;
+use App\Addressing\ServiceInterface\Application\Event\AddressEventInterface;
 
 final readonly class AddressCreatedEvent implements AddressEventInterface
 {
@@ -29,7 +29,7 @@ final readonly class AddressCreatedEvent implements AddressEventInterface
     }
 
     #[\Override]
-    public function name(): string
+    public function nameEntity(): string
     {
         return 'address.created';
     }

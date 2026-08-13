@@ -8,9 +8,9 @@
  */
 declare(strict_types=1);
 
-namespace App\Service\Application;
+namespace App\Addressing\Service\Application;
 
-use App\Contract\Message\AddressRecordPolicy;
+use App\Addressing\Contract\Message\AddressRecordPolicy;
 
 final class AddressGovernancePolicy
 {
