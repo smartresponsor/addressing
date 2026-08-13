@@ -3,12 +3,12 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Http\Address;
+namespace App\Addressing\Service\Http\Address;
 
-use App\Http\Factory\AddressQueryFilterFactory;
-use App\Service\Application\AddressGovernanceSummaryService;
-use App\Service\Application\AddressPortfolioSummaryService;
-use App\Service\Application\AddressQueueSummaryService;
+use App\Addressing\Http\Factory\AddressQueryFilterFactory;
+use App\Addressing\Service\Application\AddressGovernanceSummaryService;
+use App\Addressing\Service\Application\AddressPortfolioSummaryService;
+use App\Addressing\Service\Application\AddressQueueSummaryService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 

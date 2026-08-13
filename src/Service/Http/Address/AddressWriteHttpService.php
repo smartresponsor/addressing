@@ -3,10 +3,10 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Http\Address;
+namespace App\Addressing\Service\Http\Address;
 
-use App\Http\Factory\AddressApiPayloadFactory;
-use App\Service\Application\AddressWriteService;
+use App\Addressing\Http\Factory\AddressApiPayloadFactory;
+use App\Addressing\Service\Application\AddressWriteService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

@@ -3,10 +3,10 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Http\Address;
+namespace App\Addressing\Service\Http\Address;
 
-use App\EntityInterface\Record\AddressInterface;
-use App\Http\Factory\AddressViewArrayFactory;
+use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\Http\Factory\AddressViewArrayFactory;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 

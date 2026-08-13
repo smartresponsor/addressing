@@ -3,15 +3,15 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Http\Address;
+namespace App\Addressing\Service\Http\Address;
 
-use App\EntityInterface\Record\AddressInterface;
-use App\Http\Dto\AddressInputFactory;
-use App\Http\Dto\AddressManageDto;
-use App\Http\Factory\AddressViewArrayFactory;
-use App\Http\Form\AddressManageType;
-use App\Service\Application\AddressReadService;
-use App\Service\Application\AddressWriteService;
+use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\Http\Dto\AddressInputFactory;
+use App\Addressing\Http\Dto\AddressManageDto;
+use App\Addressing\Http\Factory\AddressViewArrayFactory;
+use App\Addressing\Http\Form\AddressManageType;
+use App\Addressing\Service\Application\AddressReadService;
+use App\Addressing\Service\Application\AddressWriteService;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
