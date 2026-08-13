@@ -2,8 +2,8 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-use App\Entity\Record\AddressRecord;
-use App\Service\Application\AddressProjectionService;
+use App\Addressing\Entity\Record\AddressRecord;
+use App\Addressing\Service\Application\AddressProjectionService;
 
 require_once __DIR__.'/../vendor/autoload.php';
 

@@ -2,18 +2,18 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-use App\Http\AddressErrorMap;
-use App\Http\Middleware\AddressCorsMiddleware;
-use App\Http\Middleware\AddressIpGuardMiddleware;
-use App\Http\Middleware\AddressRateLimiter;
-use App\Http\Middleware\AddressRequestIdMiddleware;
-use App\Http\Middleware\AddressSecurityHeadersMiddleware;
-use App\Kernel;
-use App\Service\Http\Address\AddressManageHttpService;
-use App\Service\Http\Address\AddressOperationalHttpService;
-use App\Service\Http\Address\AddressReadHttpService;
-use App\Service\Http\Address\AddressSummaryHttpService;
-use App\Service\Http\Address\AddressWriteHttpService;
+use App\Addressing\Http\AddressErrorMap;
+use App\Addressing\Http\Middleware\AddressCorsMiddleware;
+use App\Addressing\Http\Middleware\AddressIpGuardMiddleware;
+use App\Addressing\Http\Middleware\AddressRateLimiter;
+use App\Addressing\Http\Middleware\AddressRequestIdMiddleware;
+use App\Addressing\Http\Middleware\AddressSecurityHeadersMiddleware;
+use App\Addressing\Kernel;
+use App\Addressing\Service\Http\Address\AddressManageHttpService;
+use App\Addressing\Service\Http\Address\AddressOperationalHttpService;
+use App\Addressing\Service\Http\Address\AddressReadHttpService;
+use App\Addressing\Service\Http\Address\AddressSummaryHttpService;
+use App\Addressing\Service\Http\Address\AddressWriteHttpService;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

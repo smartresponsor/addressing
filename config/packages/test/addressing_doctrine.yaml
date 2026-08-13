@@ -3,9 +3,9 @@ services:
         factory: ['Tests\Support\TestDatabase', 'createInMemoryEntityManager']
         arguments:
             - [
-                'App\Entity\AddressEntity',
-                'App\Entity\AddressEvidenceSnapshotEntity',
-                'App\Entity\AddressOutboxEntity',
-                'App\Entity\AddressIndexEntity',
-                'App\Entity\RateLimitEntity',
+                'App\Addressing\Entity\AddressEntity',
+                'App\Addressing\Entity\AddressEvidenceSnapshotEntity',
+                'App\Addressing\Entity\AddressOutboxEntity',
+                'App\Addressing\Entity\AddressIndexEntity',
+                'App\Addressing\Entity\RateLimitEntity',
             ]

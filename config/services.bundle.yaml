@@ -1,0 +1,33 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\Addressing\:
+        resource: '../src/'
+        exclude:
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    App\Addressing\Service\Http\Address\AddressManageHttpService:
+        public: true
+    App\Addressing\Service\Http\Address\AddressWriteHttpService:
+        public: true
+    App\Addressing\Service\Http\Address\AddressReadHttpService:
+        public: true
+    App\Addressing\Service\Http\Address\AddressSummaryHttpService:
+        public: true
+    App\Addressing\Service\Http\Address\AddressOperationalHttpService:
+        public: true
+
+    App\Addressing\RepositoryInterface\Persistence\AddressWriteRepositoryInterface: '@App\Addressing\Repository\Persistence\DoctrineAddressWriteRepository'
+    App\Addressing\RepositoryInterface\Persistence\AddressReadRepositoryInterface: '@App\Addressing\Repository\Persistence\DoctrineAddressReadRepository'
+    App\Addressing\RepositoryInterface\Persistence\AddressEvidenceRepositoryInterface: '@App\Addressing\Repository\Persistence\DoctrineAddressEvidenceRepository'
+    App\Addressing\RepositoryInterface\Persistence\AddressOperationalRepositoryInterface: '@App\Addressing\Repository\Persistence\DoctrineAddressOperationalRepository'
+    App\Addressing\RepositoryInterface\Persistence\AddressQueueRepositoryInterface: '@App\Addressing\Repository\Persistence\DoctrineAddressQueueRepository'
+    App\Addressing\RepositoryInterface\Persistence\AddressGovernanceRepositoryInterface: '@App\Addressing\Repository\Persistence\DoctrineAddressGovernanceRepository'
+    App\Addressing\RepositoryInterface\Persistence\AddressPortfolioRepositoryInterface: '@App\Addressing\Repository\Persistence\DoctrineAddressPortfolioRepository'
+    App\Addressing\Projection\AddressIndex\AddressIndexRepositoryInterface: '@App\Addressing\Projection\AddressIndex\DoctrineAddressIndexRepository'
+
+    App\Addressing\Http\Middleware\AddressRateLimiter:
+        public: true

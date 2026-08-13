@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use App\Service\Application\AddressOutboxDrainerService;
+use App\Addressing\Service\Application\AddressOutboxDrainerService;
 use JetBrains\PhpStorm\NoReturn;
 
 /**
