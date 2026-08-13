@@ -3,8 +3,8 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-use App\Kernel;
-use App\Service\Http\Address\AddressReadHttpService;
+use App\Addressing\Kernel;
+use App\Addressing\Service\Http\Address\AddressReadHttpService;
 use Doctrine\DBAL\Connection;
 
 require_once dirname(__DIR__).'/../support/AddressRuntimeBootstrap.php';

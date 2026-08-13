@@ -24,8 +24,8 @@ $interesting = [
 ];
 
 $reported = [];
-foreach ($interesting as $name) {
-    $reported[$name] = $scripts[$name] ?? null;
+foreach ($interesting as $nameEntity) {
+    $reported[$nameEntity] = $scripts[$nameEntity] ?? null;
 }
 
 $transitionLayer = [

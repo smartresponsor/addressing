@@ -3,9 +3,9 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-use App\Service\Http\Address\AddressManageHttpService;
-use App\Service\Http\Address\AddressReadHttpService;
-use App\Service\Http\Address\AddressWriteHttpService;
+use App\Addressing\Service\Http\Address\AddressManageHttpService;
+use App\Addressing\Service\Http\Address\AddressReadHttpService;
+use App\Addressing\Service\Http\Address\AddressWriteHttpService;
 use Symfony\Component\Form\FormFactoryInterface;
 use Twig\Environment;
 
