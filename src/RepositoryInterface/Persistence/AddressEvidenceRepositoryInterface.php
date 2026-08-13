@@ -3,10 +3,10 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\RepositoryInterface\Persistence;
+namespace App\Addressing\RepositoryInterface\Persistence;
 
-use App\EntityInterface\Record\AddressEvidenceSnapshotInterface;
-use App\EntityInterface\Record\AddressInterface;
+use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
+use App\Addressing\EntityInterface\Record\AddressInterface;
 
 interface AddressEvidenceRepositoryInterface
 {
