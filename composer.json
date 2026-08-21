@@ -55,6 +55,7 @@
         "test": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist",
         "stan": "@stan:conservative",
         "rector:dry": "vendor/bin/rector process --dry-run",
+        "qodana": "pwsh -NoProfile -ExecutionPolicy Bypass -File bin/qodana-local.ps1",
         "quality": [
             "@stan",
             "@rector:dry"
@@ -64,6 +65,7 @@
         "qa:deptrac": "php vendor/bin/deptrac analyse --config-file=config/addressing_deptrac.yaml",
         "qa:trust-surface": "@php tools/php/php84.php tools/qa/AddressTrustSurfaceRunner.php",
         "qa:cs": "php vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.dist.php",
+        "qa:qodana": "@qodana",
         "qa": [
             "@qa:phpstan",
             "@qa:deptrac",
