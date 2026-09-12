@@ -74,8 +74,8 @@ final class RoutePathSegmentSeparationRule implements RuleInterface
         foreach ($segments as $index => $segment) {
             if ($this->isDynamic($segment)) {
                 $nameEntity = trim($segment, '{}');
-                if (!in_array($nameEntity, ['id', 'slug'], true)) {
-                    $issues[] = sprintf('%s uses unsupported dynamic segment %s; only {id} and {slug} are canonical.', $route, $segment);
+                if (!in_array($nameEntity, ['id', 'slug', 'token'], true)) {
+                    $issues[] = sprintf('%s uses unsupported dynamic segment %s; only {id}, {slug}, and {token} are canonical.', $route, $segment);
                 }
                 if ($index !== count($segments) - 1) {
                     $issues[] = sprintf('%s uses %s before the final path segment; {id}/{slug} may appear only at the end.', $route, $segment);

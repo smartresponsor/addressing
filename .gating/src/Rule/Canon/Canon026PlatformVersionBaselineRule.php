@@ -46,7 +46,7 @@ final class Canon026PlatformVersionBaselineRule extends AbstractCanonRule
             if (!is_string($package) || !str_starts_with($package, 'symfony/') || !is_string($constraint)) {
                 continue;
             }
-            if ('symfony/flex' === $package) {
+            if (in_array($package, ['symfony/flex', 'symfony/monolog-bundle'], true)) {
                 continue;
             }
             if (preg_match('/^\\s*(?:[~^]|>=?|<=?)?\\s*(?:[0-7](?:\\.|$)|8\\.0(?:\\.|$))/', $constraint)) {

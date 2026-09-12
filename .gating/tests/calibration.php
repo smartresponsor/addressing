@@ -15,6 +15,8 @@ use Gating\Gate\Rule\Canon\Canon035SymfonyContainerReuseRule;
 use Gating\Gate\Rule\Canon\Canon036DocumentationProducerOwnershipRule;
 use Gating\Gate\Rule\Canon\Canon037GeneratedReferenceArtifactRule;
 use Gating\Gate\Rule\Canon\Canon038ConfigYamlSubjectPrefixRule;
+use Gating\Gate\Rule\Canon\Canon039PhpTestToolingRule;
+use Gating\Gate\Rule\Canon\Canon040PhpTestCoverageRule;
 use Gating\Gate\Rule\Documentation\DocblockPreservationRule;
 use Gating\Gate\Rule\Mirror\ServiceInterfaceMirrorRule;
 use Gating\Gate\Rule\Mutation\MutationSafetyRule;
@@ -160,6 +162,75 @@ JSON);
     $yamlPrefix = (new Canon038ConfigYamlSubjectPrefixRule())->check(new RuleContext($yamlRoot));
     $assert('failed' === $yamlPrefix->status, 'Subject vocabulary after the semantic filename must fail the left-edge Canon038 prefix contract.');
     unlink($yamlRoot.'/config/packages/doctrine_catalog.yaml');
+
+    $testingRoot = $root.'/php-test-coverage';
+    mkdir($testingRoot.'/src', 0777, true);
+    mkdir($testingRoot.'/var/coverage', 0777, true);
+    file_put_contents($testingRoot.'/src/ExampleService.php', '<?php namespace App\\Service; final class ExampleService { public function run(bool $flag): int { return $flag ? 1 : 0; } }'."\n");
+    file_put_contents($testingRoot.'/composer.json', json_encode([
+        'require' => ['php' => '^8.4'],
+        'require-dev' => ['phpunit/phpunit' => '^13.3.3'],
+        'scripts' => [
+            'test' => 'phpunit',
+            'test:coverage' => 'phpunit --branch-coverage --coverage-text=var/coverage/summary.txt',
+        ],
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    file_put_contents($testingRoot.'/phpunit.xml.dist', <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit>
+  <source>
+    <include>
+      <directory suffix=".php">src</directory>
+    </include>
+  </source>
+  <coverage includeUncoveredFiles="true" branchCoverage="true">
+    <report>
+      <text outputFile="var/coverage/summary.txt" showOnlySummary="true"/>
+    </report>
+  </coverage>
+</phpunit>
+XML);
+    $testTooling = (new Canon039PhpTestToolingRule())->check(new RuleContext($testingRoot));
+    $assert('passed' === $testTooling->status, 'Canonical PHPUnit dependency/config/scripts must pass Canon039; got '.$testTooling->status.': '.$testTooling->message.' '.implode(' | ', $testTooling->evidence));
+
+    file_put_contents($testingRoot.'/var/coverage/summary.txt', <<<'COVERAGE'
+Code Coverage Report:
+  Methods: 80.00% (4/5)
+  Branches: 70.00% (7/10)
+  Lines: 80.00% (8/10)
+COVERAGE);
+    touch($testingRoot.'/var/coverage/summary.txt', time() + 5);
+    $testCoverage = (new Canon040PhpTestCoverageRule())->check(new RuleContext($testingRoot));
+    $assert('passed' === $testCoverage->status, 'Exactly 80/80/70 coverage must pass Canon040; got '.$testCoverage->status.': '.$testCoverage->message.' '.implode(' | ', $testCoverage->evidence));
+
+    file_put_contents($testingRoot.'/var/coverage/summary.txt', <<<'COVERAGE'
+Code Coverage Report:
+  Methods: 40.00% (2/5)
+  Branches: 30.00% (3/10)
+  Lines: 40.00% (4/10)
+COVERAGE);
+    touch($testingRoot.'/var/coverage/summary.txt', time() + 5);
+    $testCoverage = (new Canon040PhpTestCoverageRule())->check(new RuleContext($testingRoot));
+    $assert('warning' === $testCoverage->status && str_contains($testCoverage->message, 'HIGH_TEST_DEBT'), '40/40/30 coverage must warn and classify HIGH_TEST_DEBT.');
+
+    file_put_contents($testingRoot.'/var/coverage/summary.txt', <<<'COVERAGE'
+Code Coverage Report:
+  Methods: 100.00% (5/5)
+  Lines: 100.00% (10/10)
+COVERAGE);
+    touch($testingRoot.'/var/coverage/summary.txt', time() + 5);
+    $testCoverage = (new Canon040PhpTestCoverageRule())->check(new RuleContext($testingRoot));
+    $assert('warning' === $testCoverage->status && str_contains(implode(' | ', $testCoverage->evidence), 'Missing Branches metric'), 'Missing branch instrumentation must warn instead of being treated as full branch coverage.');
+
+    unlink($testingRoot.'/var/coverage/summary.txt');
+    unlink($testingRoot.'/phpunit.xml.dist');
+    unlink($testingRoot.'/composer.json');
+    unlink($testingRoot.'/src/ExampleService.php');
+    rmdir($testingRoot.'/var/coverage');
+    rmdir($testingRoot.'/var');
+    rmdir($testingRoot.'/src');
+    rmdir($testingRoot);
+
     unlink($root.'/bin/console');
     unlink($root.'/config/bundles.php');
     mkdir($root.'/public/bundles/vendor', 0777, true);

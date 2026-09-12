@@ -2,6 +2,11 @@
 .report/
 report/
 
+# PHPUnit generated coverage/cache
+/var/coverage/
+/var/phpunit/
+/var/legacy/
+
 # Local environment overrides
 .env.local
 .env.*.local

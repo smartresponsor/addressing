@@ -46,6 +46,8 @@ use Gating\Gate\Rule\Canon\Canon035SymfonyContainerReuseRule;
 use Gating\Gate\Rule\Canon\Canon036DocumentationProducerOwnershipRule;
 use Gating\Gate\Rule\Canon\Canon037GeneratedReferenceArtifactRule;
 use Gating\Gate\Rule\Canon\Canon038ConfigYamlSubjectPrefixRule;
+use Gating\Gate\Rule\Canon\Canon039PhpTestToolingRule;
+use Gating\Gate\Rule\Canon\Canon040PhpTestCoverageRule;
 use Gating\Gate\Rule\Canon\CanonRuleMirrorRule;
 use Gating\Gate\Rule\Composer\ComposerPlatformRule;
 use Gating\Gate\Rule\Database\DatabaseTablePrefixRule;
@@ -110,6 +112,8 @@ final readonly class RuleRegistry
             new Canon036DocumentationProducerOwnershipRule(),
             new Canon037GeneratedReferenceArtifactRule(),
             new Canon038ConfigYamlSubjectPrefixRule(),
+            new Canon039PhpTestToolingRule(),
+            new Canon040PhpTestCoverageRule(),
             new CanonRuleMirrorRule(),
             new ProfileContractRule(),
             new ForbiddenArchitectureRule(),
@@ -203,6 +207,8 @@ final readonly class RuleRegistry
             ['id' => 'canon.036.documentation_producer_ownership', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Enforces component documentation-producer topology while reserving Antora site ownership for Documentating.'],
             ['id' => 'canon.037.generated_reference_artifact', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Keeps reproducible generated config/reference.php outside repository source history.'],
             ['id' => 'canon.038.config_yaml_subject_prefix', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Namespaces component-owned YAML filenames with the Canon018 subject token while exempting framework/vendor bootstrap conventions.'],
+            ['id' => 'canon.039.php_test_tooling', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Requires PHPUnit, explicit production source coverage, branch instrumentation, and a persistent standard text coverage summary.'],
+            ['id' => 'canon.040.php_test_coverage', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Measures line, method, and branch coverage independently and classifies high test debt.'],
             ['id' => 'canon.mirror_contract', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'meta-canon', 'summary' => 'Validates CanonNNN mirror naming/coverage contract.'],
             ['id' => 'profile.contract_validity', 'area' => 'profile', 'scope' => 'profile', 'kind' => 'profile-canon', 'summary' => 'Ensures component profiles use the common Gating profile contract.'],
             ['id' => 'structure.forbidden_architecture', 'area' => 'structure', 'scope' => 'platform', 'kind' => 'hard-canon', 'summary' => 'Blocks /src/Domain, Port, Adapter, and Adaptor folders.'],

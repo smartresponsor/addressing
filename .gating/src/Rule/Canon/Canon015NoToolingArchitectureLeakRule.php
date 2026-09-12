@@ -39,6 +39,9 @@ final class Canon015NoToolingArchitectureLeakRule extends AbstractCanonRule
                 if (!$file instanceof \SplFileInfo || !$file->isFile() || 'php' !== $file->getExtension()) {
                     continue;
                 }
+                if (str_ends_with($file->getFilename(), '.stub.php') || str_contains(str_replace('\\', '/', $file->getPathname()), '/stubs/')) {
+                    continue;
+                }
 
                 $contents = (string) file_get_contents($file->getPathname());
                 if (1 === preg_match('/^namespace\s+[^;]+;/m', $contents) && 1 === preg_match('/\b(?:class|interface|trait|enum)\s+\w+/', $contents)) {

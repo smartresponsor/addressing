@@ -37,11 +37,15 @@ final class Canon000ComponentPrefixRule extends AbstractCanonRule
             }
 
             $contents = file_get_contents($file->getPathname());
-            if (false === $contents || 1 !== preg_match('/\b(?:class|interface)\s+([A-Za-z_][A-Za-z0-9_]*)\b/', $contents, $m)) {
+            if (false === $contents) {
                 continue;
             }
-            if (!str_starts_with($m[1], $prefix)) {
-                $hits[] = $this->relative($context, $file->getPathname()).' => '.$m[1];
+            $declaration = $this->declaration($contents);
+            if (null === $declaration) {
+                continue;
+            }
+            if (!str_starts_with($declaration, $prefix)) {
+                $hits[] = $this->relative($context, $file->getPathname()).' => '.$declaration;
             }
         }
 
