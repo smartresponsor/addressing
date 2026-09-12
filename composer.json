@@ -7,21 +7,27 @@
         "php": "^8.4",
         "ext-curl": "*",
         "ext-pdo": "*",
+        "cruding/crud": "dev-master",
         "doctrine/doctrine-bundle": "^3.2",
         "doctrine/orm": "^2.15 || ^3.0",
+        "easycorp/easyadmin-bundle": "^5.0",
+        "interfacing/interface": "dev-master",
         "objecting/object": "dev-master",
-        "symfony/console": "^8.0",
-        "symfony/form": "^8.0",
-        "symfony/framework-bundle": "^8.0",
-        "symfony/intl": "^8.0",
-        "symfony/property-access": "^8.0",
-        "symfony/property-info": "^8.0",
-        "symfony/serializer": "^8.0",
-        "symfony/translation": "^8.0",
-        "symfony/twig-bundle": "^8.0",
-        "symfony/uid": "^8.0",
-        "symfony/validator": "^8.0",
-        "symfony/yaml": "^8.0",
+        "viewing/view": "dev-master",
+        "symfony/console": "^8.1",
+        "symfony/form": "^8.1",
+        "symfony/framework-bundle": "^8.1",
+        "symfony/intl": "^8.1",
+        "symfony/property-access": "^8.1",
+        "symfony/property-info": "^8.1",
+        "symfony/security-bundle": "^8.1",
+        "symfony/security-csrf": "^8.1",
+        "symfony/serializer": "^8.1",
+        "symfony/translation": "^8.1",
+        "symfony/twig-bundle": "^8.1",
+        "symfony/uid": "^8.1",
+        "symfony/validator": "^8.1",
+        "symfony/yaml": "^8.1",
         "twig/twig": "^3.24"
     },
     "require-dev": {
@@ -29,12 +35,12 @@
         "deptrac/deptrac": "^3.0",
         "fakerphp/faker": "^1.23",
         "friendsofphp/php-cs-fixer": "^3.94",
-        "phpstan/phpstan": "^1.11",
-        "phpstan/phpstan-doctrine": "^1.5",
-        "phpstan/phpstan-symfony": "^1.4",
+        "phpstan/phpstan": "^2.2",
+        "phpstan/phpstan-doctrine": "^2.0",
+        "phpstan/phpstan-symfony": "^2.0",
         "phpunit/phpunit": "^10.5",
-        "rector/rector": "^1.2",
-        "symfony/dotenv": "^8.0",
+        "rector/rector": "^2.6",
+        "symfony/dotenv": "^8.1",
         "symfony/panther": "^2.2",
         "vimeo/psalm": "^7.0"
     },
@@ -55,14 +61,17 @@
         "test": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist",
         "stan": "@stan:conservative",
         "rector:dry": "vendor/bin/rector process --dry-run",
+        "rector:fix": "php vendor/bin/rector process",
         "qodana": "pwsh -NoProfile -ExecutionPolicy Bypass -File bin/qodana-local.ps1",
         "quality": [
             "@stan",
             "@rector:dry"
         ],
         "qa:phpstan": "php -d memory_limit=1G vendor/bin/phpstan analyse -c phpstan.neon.dist",
+        "phpstan:clear": "php vendor/bin/phpstan clear-result-cache -c phpstan.neon.dist",
         "qa:rector": "php vendor/bin/rector process --dry-run",
         "qa:deptrac": "php vendor/bin/deptrac analyse --config-file=config/addressing_deptrac.yaml",
+        "gating": "@php .gating/bin/gating check --target=. --profile=.gating/.gating/profile/component/_template.yaml --rule-set=tools/qa/addressing-platform-canon.yaml --policy-root=.gating/.gating --severity-config=.gating/.gating/config/severity.yaml",
         "qa:trust-surface": "@php tools/php/php84.php tools/qa/AddressTrustSurfaceRunner.php",
         "qa:cs": "php vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.dist.php",
         "qa:qodana": "@qodana",
@@ -164,7 +173,28 @@
     "repositories": [
         {
             "type": "path",
+            "url": "../Cruding",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../Interfacing",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
             "url": "../Objecting",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../Viewing",
             "options": {
                 "symlink": true
             }
