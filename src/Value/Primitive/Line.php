@@ -3,7 +3,7 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Value\Primitive;
+namespace App\Addressing\Value\Primitive;
 
 final readonly class Line implements \Stringable
 {
@@ -17,9 +17,7 @@ final readonly class Line implements \Stringable
     public static function norm(string $s): string
     {
         $normalized = preg_replace('/\s+/', ' ', $s);
-        if (null === $normalized) {
-            $normalized = $s;
-        }
+        $normalized ??= $s;
 
         return trim($normalized);
     }

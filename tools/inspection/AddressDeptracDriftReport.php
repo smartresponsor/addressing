@@ -7,8 +7,8 @@ $deptracPath = $root.'/config/addressing_deptrac.yaml';
 $deptracContent = is_file($deptracPath) ? (string) file_get_contents($deptracPath) : '';
 
 $signals = [
-    'legacyControllerRegexPresent' => str_contains($deptracContent, '^App\\Controller\\.*'),
-    'legacyHttpRegexPresent' => str_contains($deptracContent, '^App\\(Request|Response|Dto|Command)\\.*'),
+    'legacyControllerRegexPresent' => str_contains($deptracContent, '^App\Addressing\\Controller\\.*'),
+    'legacyHttpRegexPresent' => str_contains($deptracContent, '^App\Addressing\\(Request|Response|Dto|Command)\\.*'),
     'currentHttpControllerPathExists' => is_dir($root.'/src/Http/Controller'),
     'currentServiceHttpPathExists' => is_dir($root.'/src/Service/Http'),
     'currentHttpPathExists' => is_dir($root.'/src/Http'),

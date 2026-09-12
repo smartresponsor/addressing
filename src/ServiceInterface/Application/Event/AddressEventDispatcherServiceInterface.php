@@ -1,8 +1,11 @@
 <?php
-# Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\ServiceInterface\Application\Event;
+namespace App\Addressing\ServiceInterface\Application\Event;
+
+use App\Addressing\EventInterface\AddressEventInterface;
 
 interface AddressEventDispatcherServiceInterface
 {

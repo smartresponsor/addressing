@@ -3,9 +3,9 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Command;
+namespace App\Addressing\Command;
 
-use App\Service\Application\AddressPortfolioSummaryService;
+use App\Addressing\Service\Application\AddressPortfolioSummaryService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -65,13 +65,7 @@ final class AddressPortfolioSummaryCommand extends Command
 
     private function portfolioKind(InputInterface $input): string
     {
-        $value = $input->getArgument('kind');
-
-        if (!is_string($value)) {
-            throw new \RuntimeException('invalid_argument_kind');
-        }
-
-        return $value;
+        return $input->getArgument('kind');
     }
 
     private function nullable(mixed $value): ?string

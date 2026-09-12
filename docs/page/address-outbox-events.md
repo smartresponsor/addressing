@@ -23,7 +23,7 @@ The `address_outbox` table stores domain events emitted by the Address service. 
 
 ## Registered events
 
-Current event names registered by `App\Contract\Message\AddressOutboxEventMessage`:
+Current event names registered by `App\Addressing\Contract\Message\AddressOutboxEventMessage`:
 
 - `AddressCreated`
 - `AddressUpdated`

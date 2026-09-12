@@ -3,12 +3,12 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Http\Address;
+namespace App\Addressing\Service\Http\Address;
 
-use App\Http\Factory\AddressQueryFilterFactory;
-use App\Service\Application\AddressGovernanceSummaryService;
-use App\Service\Application\AddressPortfolioSummaryService;
-use App\Service\Application\AddressQueueSummaryService;
+use App\Addressing\Http\Factory\AddressQueryFilterFactory;
+use App\Addressing\Service\Application\AddressGovernanceSummaryService;
+use App\Addressing\Service\Application\AddressPortfolioSummaryService;
+use App\Addressing\Service\Application\AddressQueueSummaryService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -32,7 +32,7 @@ final readonly class AddressSummaryHttpService
             $vendorId,
             $countryCode,
             $query,
-            $this->addressQueryFilterFactory->operationalFilters($request, false, true)
+            $this->addressQueryFilterFactory->operationalFilters($request, false, true),
         );
 
         return new JsonResponse($summary);
@@ -45,7 +45,7 @@ final readonly class AddressSummaryHttpService
             $ownerId,
             $vendorId,
             $query,
-            $this->addressQueryFilterFactory->operationalFilters($request)
+            $this->addressQueryFilterFactory->operationalFilters($request),
         );
 
         return $this->addressHttpResponderService->summaryItems($summary);
@@ -59,7 +59,7 @@ final readonly class AddressSummaryHttpService
             $vendorId,
             $countryCode,
             $query,
-            $this->addressQueryFilterFactory->portfolioFilters($request, true)
+            $this->addressQueryFilterFactory->portfolioFilters($request, true),
         );
 
         return $this->addressHttpResponderService->summaryItems($summary);
@@ -73,7 +73,7 @@ final readonly class AddressSummaryHttpService
             $vendorId,
             $countryCode,
             $query,
-            $this->addressQueryFilterFactory->portfolioFilters($request, true, true)
+            $this->addressQueryFilterFactory->portfolioFilters($request, true, true),
         );
 
         return $this->addressHttpResponderService->summaryItems($summary);
@@ -87,7 +87,7 @@ final readonly class AddressSummaryHttpService
             $vendorId,
             $countryCode,
             $query,
-            $this->addressQueryFilterFactory->portfolioFilters($request, true, true, true)
+            $this->addressQueryFilterFactory->portfolioFilters($request, true, true, true),
         );
 
         return $this->addressHttpResponderService->summaryItems($summary);

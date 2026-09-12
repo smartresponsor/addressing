@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Doctrine;
+namespace App\Addressing\Doctrine;
 
-use App\Entity\AddressEntity;
-use App\Entity\AddressEvidenceSnapshotEntity;
-use App\Entity\Record\AddressData;
-use App\EntityInterface\Record\AddressEvidenceSnapshotInterface;
+use App\Addressing\Entity\AddressEntity;
+use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
+use App\Addressing\Entity\Record\AddressData;
+use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
 
 final class AddressEntityMapper
 {

@@ -3,12 +3,12 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Projection\AddressIndex;
+namespace App\Addressing\Projection\AddressIndex;
 
-use App\Value\CountryCode;
-use App\Value\PostalCode;
-use App\Value\Primitive\Region;
-use App\Value\StreetLine;
+use App\Addressing\Value\CountryCode;
+use App\Addressing\Value\PostalCode;
+use App\Addressing\Value\Primitive\Region;
+use App\Addressing\Value\StreetLine;
 
 final class AddressIndexNormalizer
 {
@@ -33,7 +33,7 @@ final class AddressIndexNormalizer
             throw new \InvalidArgumentException('City is required');
         }
 
-        $regionObj = new Region($address['region']);
+        $region = new Region($address['region']);
         $postalCode = new PostalCode($address['postal']);
         $countryCode = new CountryCode($address['country']);
 
@@ -41,7 +41,7 @@ final class AddressIndexNormalizer
             $line1Obj->value(),
             $line2Obj?->value() ?? '',
             strtolower($city),
-            (string) $regionObj,
+            (string) $region,
             $postalCode->value(),
             $countryCode->value(),
         ]));
@@ -50,7 +50,7 @@ final class AddressIndexNormalizer
             'line1' => $line1Obj,
             'line2' => $line2Obj,
             'city' => $city,
-            'region' => $regionObj,
+            'region' => $region,
             'postal' => $postalCode,
             'country' => $countryCode,
             'digest' => $digest,

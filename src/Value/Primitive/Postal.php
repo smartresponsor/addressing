@@ -3,7 +3,7 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Value\Primitive;
+namespace App\Addressing\Value\Primitive;
 
 final readonly class Postal implements \Stringable
 {
@@ -18,9 +18,7 @@ final readonly class Postal implements \Stringable
     {
         $normalizedInput = strtoupper(trim($input));
         $filtered = preg_replace('/[^A-Z0-9- ]/', '', $normalizedInput);
-        if (null === $filtered) {
-            $filtered = $normalizedInput;
-        }
+        $filtered ??= $normalizedInput;
         $normalized = preg_replace('/\s+/', ' ', $filtered);
         if (null === $normalized) {
             return $filtered;

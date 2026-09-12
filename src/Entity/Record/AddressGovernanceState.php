@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Entity\Record;
+namespace App\Addressing\Entity\Record;
 
-use App\EntityInterface\Record\AddressGovernanceStateInterface;
+use App\Addressing\EntityInterface\Record\AddressGovernanceStateInterface;
 
 final readonly class AddressGovernanceState implements AddressGovernanceStateInterface
 {

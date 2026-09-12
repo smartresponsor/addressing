@@ -5,9 +5,9 @@ declare(strict_types=1);
 
 namespace Tests\Projection;
 
-use App\Entity\AddressIndexEntity;
-use App\Projection\AddressIndex\AddressIndexRecord;
-use App\Projection\AddressIndex\DoctrineAddressIndexRepository;
+use App\Addressing\Entity\AddressIndexEntity;
+use App\Addressing\Projection\AddressIndex\AddressIndexRecord;
+use App\Addressing\Repository\AddressIndex\DoctrineAddressIndexRepository;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
 

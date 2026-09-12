@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Entity\Record;
+namespace App\Addressing\Entity\Record;
 
-use App\EntityInterface\Record\AddressRevalidationStateInterface;
+use App\Addressing\EntityInterface\Record\AddressRevalidationStateInterface;
 
 final readonly class AddressRevalidationState implements AddressRevalidationStateInterface
 {

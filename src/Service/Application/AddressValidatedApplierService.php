@@ -3,25 +3,27 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Application;
+namespace App\Addressing\Service\Application;
 
-use App\Contract\Message\AddressOutboxEventMessage;
-use App\Contract\Message\AddressValidated;
-use App\Entity\AddressEntity;
-use App\Entity\AddressEvidenceSnapshotEntity;
-use App\Entity\AddressOutboxEntity;
-use App\ServiceInterface\Application\AddressValidatedApplierServiceInterface;
+use App\Addressing\Context\Application\AddressValidatedOutboxContext;
+use App\Addressing\Contract\Message\AddressValidated;
+use App\Addressing\Entity\AddressEntity;
+use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
+use App\Addressing\Entity\AddressOutboxEntity;
+use App\Addressing\Factory\Application\AddressValidatedPayloadFactory;
+use App\Addressing\Message\AddressOutboxEventMessage;
+use App\Addressing\ServiceInterface\Application\AddressValidatedApplierServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
-final class AddressValidatedApplierService implements AddressValidatedApplierServiceInterface
+final readonly class AddressValidatedApplierService implements AddressValidatedApplierServiceInterface
 {
-    private AddressValidatedPayloadFactory $payloadFactory;
+    private AddressValidatedPayloadFactory $addressValidatedPayloadFactory;
 
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private EntityManagerInterface $entityManager,
         ?AddressValidatedPayloadFactory $payloadFactory = null,
     ) {
-        $this->payloadFactory = $payloadFactory ?? new AddressValidatedPayloadFactory();
+        $this->addressValidatedPayloadFactory = $payloadFactory ?? new AddressValidatedPayloadFactory();
     }
 
     #[\Override]
@@ -43,8 +45,8 @@ final class AddressValidatedApplierService implements AddressValidatedApplierSer
                 return;
             }
 
-            $normalizedSnapshot = $this->payloadFactory->normalizedSnapshot($addressValidated);
-            $providerDigest = $this->payloadFactory->providerDigest($addressValidated);
+            $normalizedSnapshot = $this->addressValidatedPayloadFactory->normalizedSnapshot($addressValidated);
+            $providerDigest = $this->addressValidatedPayloadFactory->providerDigest($addressValidated);
             $validationIssues = $this->validationIssues($addressValidated);
             $rawSha256 = null;
             if (null !== $addressValidated->raw) {
@@ -103,7 +105,7 @@ final class AddressValidatedApplierService implements AddressValidatedApplierSer
             $outbox = (new AddressOutboxEntity())
                 ->setEventName('AddressValidatedApplied')
                 ->setEventVersion(1)
-                ->setPayload($this->encodePayload(AddressOutboxEventMessage::decoratePayload('AddressValidatedApplied', $this->payloadFactory->outboxPayload(
+                ->setPayload($this->encodePayload(AddressOutboxEventMessage::decoratePayload('AddressValidatedApplied', $this->addressValidatedPayloadFactory->outboxPayload(
                     new AddressValidatedOutboxContext(
                         id: $id,
                         ownerId: $ownerId,
@@ -139,7 +141,7 @@ final class AddressValidatedApplierService implements AddressValidatedApplierSer
                 throw $throwable;
             }
 
-            throw new \RuntimeException('apply_failed', previous: $throwable);
+            throw new \RuntimeException('apply_failed', $throwable->getCode(), previous: $throwable);
         }
     }
 
@@ -196,7 +198,7 @@ final class AddressValidatedApplierService implements AddressValidatedApplierSer
         ?string $providerDigest,
         ?array $validationIssues,
     ): ?AddressEvidenceSnapshotEntity {
-        if (!$this->payloadFactory->hasEvidence($addressValidated)) {
+        if (!$this->addressValidatedPayloadFactory->hasEvidence($addressValidated)) {
             return null;
         }
 
@@ -206,7 +208,7 @@ final class AddressValidatedApplierService implements AddressValidatedApplierSer
             $validationIssues = $addressValidated->raw['issues'];
         }
 
-        $snapshot = (new AddressEvidenceSnapshotEntity())
+        return (new AddressEvidenceSnapshotEntity())
             ->setId(bin2hex(random_bytes(16)))
             ->setAddress($entity)
             ->setOwnerId($entity->getOwnerId())
@@ -224,8 +226,6 @@ final class AddressValidatedApplierService implements AddressValidatedApplierSer
             ->setValidationIssues($validationIssues)
             ->setProviderDigest($providerDigest)
             ->setCreatedAt($validatedAt);
-
-        return $snapshot;
     }
 
     /**
@@ -246,7 +246,7 @@ final class AddressValidatedApplierService implements AddressValidatedApplierSer
      */
     private function validationIssues(AddressValidated $addressValidated): ?array
     {
-        if ($addressValidated->addressValidationVerdict instanceof \App\Contract\Message\AddressValidationVerdict) {
+        if ($addressValidated->addressValidationVerdict instanceof \App\Addressing\Contract\Message\AddressValidationVerdict) {
             return $addressValidated->addressValidationVerdict->jsonSerialize();
         }
 

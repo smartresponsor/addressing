@@ -3,9 +3,9 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Command;
+namespace App\Addressing\Command;
 
-use App\Service\Application\AddressQueueSummaryService;
+use App\Addressing\Service\Application\AddressQueueSummaryService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

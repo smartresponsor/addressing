@@ -3,13 +3,13 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Application;
+namespace App\Addressing\Service\Application;
 
-use App\RepositoryInterface\Persistence\AddressPortfolioRepositoryInterface;
+use App\Addressing\RepositoryInterface\AddressPortfolioRepositoryInterface;
 
 final readonly class AddressPortfolioSummaryService
 {
-    public function __construct(private AddressPortfolioRepositoryInterface $portfolioRepository)
+    public function __construct(private AddressPortfolioRepositoryInterface $addressPortfolioRepository)
     {
     }
 
@@ -32,7 +32,7 @@ final readonly class AddressPortfolioSummaryService
      */
     public function country(?string $ownerId, ?string $vendorId, ?string $q = null, array $filters = []): array
     {
-        return $this->portfolioRepository->summarizeCountryPortfolio($ownerId, $vendorId, $q, $filters);
+        return $this->addressPortfolioRepository->summarizeCountryPortfolio($ownerId, $vendorId, $q, $filters);
     }
 
     /**
@@ -55,7 +55,7 @@ final readonly class AddressPortfolioSummaryService
      */
     public function source(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $query, array $filters = []): array
     {
-        return $this->portfolioRepository->summarizeSourcePortfolio($ownerId, $vendorId, $countryCode, $query, $filters);
+        return $this->addressPortfolioRepository->summarizeSourcePortfolio($ownerId, $vendorId, $countryCode, $query, $filters);
     }
 
     /**
@@ -78,7 +78,7 @@ final readonly class AddressPortfolioSummaryService
      */
     public function validation(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $query, array $filters = []): array
     {
-        return $this->portfolioRepository->summarizeValidationPortfolio($ownerId, $vendorId, $countryCode, $query, $filters);
+        return $this->addressPortfolioRepository->summarizeValidationPortfolio($ownerId, $vendorId, $countryCode, $query, $filters);
     }
 
     /**
@@ -102,6 +102,6 @@ final readonly class AddressPortfolioSummaryService
      */
     public function normalization(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $query, array $filters = []): array
     {
-        return $this->portfolioRepository->summarizeNormalizationPortfolio($ownerId, $vendorId, $countryCode, $query, $filters);
+        return $this->addressPortfolioRepository->summarizeNormalizationPortfolio($ownerId, $vendorId, $countryCode, $query, $filters);
     }
 }

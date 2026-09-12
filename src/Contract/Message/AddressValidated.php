@@ -3,7 +3,9 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Contract\Message;
+namespace App\Addressing\Contract\Message;
+
+use App\Addressing\Policy\AddressRecordPolicy;
 
 final readonly class AddressValidated implements \JsonSerializable
 {

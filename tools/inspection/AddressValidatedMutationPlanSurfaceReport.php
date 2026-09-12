@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 $root = dirname(__DIR__, 2);
-$planPath = $root.'/src/Integration/Persistence/AddressValidatedMutationPlan.php';
+$planPath = $root.'/src/Plan/Persistence/AddressValidatedMutationPlan.php';
 $builderPath = $root.'/src/Integration/Persistence/AddressValidatedMutationPlanBuilder.php';
 $builderContent = is_file($builderPath) ? (string) file_get_contents($builderPath) : '';
 
@@ -11,7 +11,7 @@ fwrite(STDOUT, json_encode([
     'component' => 'Addressing',
     'status' => 'report',
     'checks' => [
-        'src/Integration/Persistence/AddressValidatedMutationPlan.php' => is_file($planPath),
+        'src/Plan/Persistence/AddressValidatedMutationPlan.php' => is_file($planPath),
         'src/Integration/Persistence/AddressValidatedMutationPlanBuilder.php' => is_file($builderPath),
     ],
     'signals' => [

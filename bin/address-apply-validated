@@ -5,9 +5,9 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use App\Contract\Message\AddressValidated;
-use App\Kernel;
-use App\Service\Application\AddressValidatedApplierService;
+use App\Addressing\Contract\Message\AddressValidated;
+use App\Addressing\Kernel;
+use App\Addressing\Service\Application\AddressValidatedApplierService;
 use JetBrains\PhpStorm\NoReturn;
 
 #[NoReturn] function usage(): void

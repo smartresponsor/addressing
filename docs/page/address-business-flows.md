@@ -5,9 +5,9 @@ Short, business-focused flows with input/output trace for the Address domain.
 ## Create address
 
 **Input:** API request payload with address fields (`line1`, `city`, `countryCode`, optional `dedupeKey`).  
-**Process:** `App\Http\AddressApi\Controller::create` builds `AddressData` and
-calls `App\Service\Application\AddressWriteService::create`, which persists
-via `App\Repository\Persistence\DoctrineAddressWriteRepository::create` and appends `AddressCreated` to `address_outbox`.  
+**Process:** `App\Addressing\Http\AddressApi\Controller::create` builds `AddressData` and
+calls `App\Addressing\Service\Application\AddressWriteService::create`, which persists
+via `App\Addressing\Repository\Persistence\DoctrineAddressWriteRepository::create` and appends `AddressCreated` to `address_outbox`.  
 **Output:** `{ "id": "<ulid>" }` response + outbox row.
 
 ## Update address
@@ -33,6 +33,6 @@ any).
 ## Outbox event delivery
 
 **Input:** target webhook URL + drain parameters (`limit`, `retryLimit`, `timeoutSec`, `backoffMs`).  
-**Process:** `App\Service\Application\AddressOutboxDrainerService::drain` reads `address_outbox` rows and POSTs each event
+**Process:** `App\Addressing\Service\Application\AddressOutboxDrainerService::drain` reads `address_outbox` rows and POSTs each event
 payload.  
 **Output:** published rows updated with `published_at`, or `last_error` filled on failure.

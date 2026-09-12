@@ -3,9 +3,9 @@
 The production repository path is now Doctrine-only. `DoctrineAddressRepository` no longer depends on the legacy PDO repository for operational patching or read/reporting surfaces.
 
 Current state:
-- primary repository authority: `App\Repository\Persistence\DoctrineAddressRepository`
+- primary repository authority: `App\Addressing\Repository\Persistence\DoctrineAddressRepository`
 - host-facing schema authority: Doctrine ORM entities under `src/Entity/`
-- removed from service wiring: `App\Repository\Persistence\AddressRepository`
+- removed from service wiring: `App\Addressing\Repository\Persistence\AddressRepository`
 
 Important:
 - `AddressPdoFactory` and `AddressSchemaManager` have been removed from the primary bootstrap path. Schema reset/bootstrap now flows through `AddressDoctrineSchemaManager` and Doctrine ORM metadata.

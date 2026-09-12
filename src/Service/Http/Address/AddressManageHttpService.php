@@ -3,15 +3,14 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Http\Address;
+namespace App\Addressing\Service\Http\Address;
 
-use App\EntityInterface\Record\AddressInterface;
-use App\Http\Dto\AddressInputFactory;
-use App\Http\Dto\AddressManageDto;
-use App\Http\Factory\AddressViewArrayFactory;
-use App\Http\Form\AddressManageType;
-use App\Service\Application\AddressReadService;
-use App\Service\Application\AddressWriteService;
+use App\Addressing\Http\Dto\AddressManageDto;
+use App\Addressing\Http\Factory\AddressInputFactory;
+use App\Addressing\Http\Factory\AddressViewArrayFactory;
+use App\Addressing\Http\Form\AddressManageType;
+use App\Addressing\Service\Application\AddressReadService;
+use App\Addressing\Service\Application\AddressWriteService;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,7 +25,7 @@ final readonly class AddressManageHttpService
         private AddressViewArrayFactory $addressViewArrayFactory,
         private AddressReadService $addressReadService,
         private AddressWriteService $addressWriteService,
-        private Environment $twig,
+        private Environment $twigEnvironment,
     ) {
     }
 
@@ -52,7 +51,7 @@ final readonly class AddressManageHttpService
             ? $this->previewRows($form->getData())
             : [];
 
-        return new Response($this->twig->render('address/manage.html.twig', [
+        return new Response($this->twigEnvironment->render('address/manage.html.twig', [
             'manageForm' => $form->createView(),
             'createdId' => $createdAddressId,
             'previewRows' => $previewRows,
@@ -61,16 +60,16 @@ final readonly class AddressManageHttpService
 
     private function createFromManageDto(AddressManageDto $addressManageDto): string
     {
-        $addressData = $this->addressInputFactory->fromManageDto($addressManageDto, [
+        $addressRecord = $this->addressInputFactory->fromManageDto($addressManageDto, [
             'id' => (string) new Ulid(),
             'createdAt' => $this->currentTimestampLiteral(),
             'sourceSystem' => 'symfony-manage',
             'sourceType' => 'manual',
             'sourceReference' => 'manage-form',
         ]);
-        $this->addressWriteService->create($addressData);
+        $this->addressWriteService->create($addressRecord);
 
-        return $addressData->id();
+        return $addressRecord->id();
     }
 
     private function currentTimestampLiteral(): string
@@ -90,8 +89,8 @@ final readonly class AddressManageHttpService
         }
 
         return array_map(
-            fn (AddressInterface $address): array => $this->addressViewArrayFactory->previewRow($address),
-            $this->addressReadService->search($ownerId, $vendorId, null, null, 10, null)['items']
+            $this->addressViewArrayFactory->previewRow(...),
+            $this->addressReadService->search($ownerId, $vendorId, null, null, 10, null)['items'],
         );
     }
 

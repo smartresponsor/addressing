@@ -3,12 +3,12 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Fixture;
+namespace App\Addressing\Service\Fixture;
 
-use App\Doctrine\AddressDoctrineSchemaManager;
-use App\Http\Dto\AddressInputFactory;
-use App\Http\Dto\AddressManageDto;
-use App\Service\Application\AddressWriteService;
+use App\Addressing\Doctrine\AddressDoctrineSchemaManager;
+use App\Addressing\Http\Dto\AddressManageDto;
+use App\Addressing\Http\Factory\AddressInputFactory;
+use App\Addressing\Service\Application\AddressWriteService;
 use Faker\Factory;
 use Faker\Generator;
 

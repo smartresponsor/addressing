@@ -12,6 +12,11 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->parallel();
     $rectorConfig->skip([
         RenameParamToMatchTypeRector::class,
+        __DIR__ . '/src/Entity/AddressEvidenceSnapshotEntity.php',
+        __DIR__ . '/src/Doctrine/AddressEntityMapper.php',
+        __DIR__ . '/src/Repository/AbstractDoctrineAddressRepository.php',
+        __DIR__ . '/src/Service/Application/AddressValidatedApplierService.php',
+        __DIR__ . '/src/Service/Http/Address/AddressRateLimiterService.php',
     ]);
     $rectorConfig->sets([
         LevelSetList::UP_TO_PHP_84,

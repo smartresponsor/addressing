@@ -3,9 +3,9 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Http\Address;
+namespace App\Addressing\Service\Http\Address;
 
-use App\Http\Factory\AddressQueryFilterFactory;
+use App\Addressing\Http\Factory\AddressQueryFilterFactory;
 use Symfony\Component\HttpFoundation\Request;
 
 final readonly class AddressHttpScopeService

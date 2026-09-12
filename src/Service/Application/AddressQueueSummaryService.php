@@ -3,13 +3,13 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Application;
+namespace App\Addressing\Service\Application;
 
-use App\RepositoryInterface\Persistence\AddressQueueRepositoryInterface;
+use App\Addressing\RepositoryInterface\AddressQueueRepositoryInterface;
 
 final readonly class AddressQueueSummaryService
 {
-    public function __construct(private AddressQueueRepositoryInterface $queueRepository)
+    public function __construct(private AddressQueueRepositoryInterface $addressQueueRepository)
     {
     }
 
@@ -43,7 +43,7 @@ final readonly class AddressQueueSummaryService
          *   'staleNormalizationVersion':int
          * } $summary
          */
-        $summary = $this->queueRepository->summarizeOperationalQueues($ownerId, $vendorId, $countryCode, $query, $filters);
+        $summary = $this->addressQueueRepository->summarizeOperationalQueues($ownerId, $vendorId, $countryCode, $query, $filters);
 
         return $summary;
     }

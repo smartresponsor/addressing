@@ -19,8 +19,8 @@ $scripts = $payload['scripts'];
 
 $report = [];
 $missingPaths = [];
-foreach ($scripts as $name => $definition) {
-    if (!is_string($name) || !(str_starts_with($name, 'smoke:') || str_starts_with($name, 'report:') || 'qa:trust-surface' === $name)) {
+foreach ($scripts as $nameEntity => $definition) {
+    if (!is_string($nameEntity) || !(str_starts_with($nameEntity, 'smoke:') || str_starts_with($nameEntity, 'report:') || 'qa:trust-surface' === $nameEntity)) {
         continue;
     }
 
@@ -56,7 +56,7 @@ foreach ($scripts as $name => $definition) {
         ];
     }
 
-    $report[$name] = [
+    $report[$nameEntity] = [
         'commands' => $commands,
         'paths' => $entries,
     ];

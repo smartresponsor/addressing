@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Entity;
 
-use App\Entity\AddressEntity;
-use App\Entity\AddressEvidenceSnapshotEntity;
+use App\Addressing\Entity\AddressEntity;
+use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
 use Doctrine\ORM\Mapping as ORM;
 use PHPUnit\Framework\TestCase;
 

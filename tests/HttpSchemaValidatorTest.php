@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use App\Http\Schema\AddressSchemaValidator;
+use App\Addressing\Http\Schema\AddressSchemaValidator;
 use PHPUnit\Framework\TestCase;
 
 final class HttpSchemaValidatorTest extends TestCase

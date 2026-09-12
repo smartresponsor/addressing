@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Entity\Record;
+namespace App\Addressing\Entity\Record;
 
-use App\EntityInterface\Record\AddressGovernanceStateInterface;
-use App\EntityInterface\Record\AddressInterface;
-use App\EntityInterface\Record\AddressRevalidationStateInterface;
-use App\EntityInterface\Record\AddressValidationStateInterface;
+use App\Addressing\EntityInterface\Record\AddressGovernanceStateInterface;
+use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\EntityInterface\Record\AddressRevalidationStateInterface;
+use App\Addressing\EntityInterface\Record\AddressValidationStateInterface;
 
 final readonly class AddressData implements AddressInterface
 {

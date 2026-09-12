@@ -3,7 +3,7 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Http\Middleware;
+namespace App\Addressing\Http\Middleware;
 
 use Symfony\Component\HttpFoundation\Request;
 
@@ -40,7 +40,7 @@ final class AddressCorsMiddleware
 
     private static function isAllowed(string $origin, string $allowList): bool
     {
-        $items = array_filter(array_map('trim', explode(',', $allowList)), fn ($s): bool => '' !== $s);
+        $items = array_filter(array_map(trim(...), explode(',', $allowList)), fn ($s): bool => '' !== $s);
         foreach ($items as $item) {
             if ('*' === $item) {
                 return true;

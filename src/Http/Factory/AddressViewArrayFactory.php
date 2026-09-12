@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Factory;
+namespace App\Addressing\Http\Factory;
 
-use App\EntityInterface\Record\AddressInterface;
+use App\Addressing\EntityInterface\Record\AddressInterface;
 
 final readonly class AddressViewArrayFactory
 {
@@ -169,6 +169,6 @@ final readonly class AddressViewArrayFactory
 
     private function primaryGovernanceLinkId(AddressInterface $address): ?string
     {
-        return array_find([$address->duplicateOfId(), $address->supersededById(), $address->aliasOfId(), $address->conflictWithId()], fn ($candidate) => null !== $candidate && '' !== $candidate);
+        return array_find([$address->duplicateOfId(), $address->supersededById(), $address->aliasOfId(), $address->conflictWithId()], fn ($candidate): bool => null !== $candidate && '' !== $candidate);
     }
 }

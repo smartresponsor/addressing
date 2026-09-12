@@ -5,8 +5,8 @@ declare(strict_types=1);
 
 namespace Tests\Service;
 
-use App\Entity\AddressOutboxEntity;
-use App\Service\Application\AddressOutboxDrainerService;
+use App\Addressing\Entity\AddressOutboxEntity;
+use App\Addressing\Service\Application\AddressOutboxDrainerService;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
 
@@ -38,7 +38,7 @@ final class AddressOutboxDrainerTest extends TestCase
                 $published[] = $data['payload']['id'] ?? null;
 
                 return true;
-            }
+            },
         );
 
         $drainer1 = new AddressOutboxDrainerService(
@@ -55,7 +55,7 @@ final class AddressOutboxDrainerTest extends TestCase
                 $drainer2->drain('http://example.test', 10, 0, 1, 0);
 
                 return true;
-            }
+            },
         );
 
         $drainer1->drain('http://example.test', 1, 0, 1, 0);

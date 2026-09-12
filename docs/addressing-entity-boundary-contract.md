@@ -14,8 +14,8 @@ This change does **not** introduce new tables and does **not** change the runtim
 
 The host application still builds and upgrades schema through:
 
-- `App\Integration\Persistence\AddressPdoFactory`
-- `App\Integration\Persistence\AddressSchemaManager`
+- `App\Addressing\Integration\Persistence\AddressPdoFactory`
+- `App\Addressing\Integration\Persistence\AddressSchemaManager`
 - `sql/postgres/*.sql`
 
 It does **not** build schema from Doctrine entity metadata.

@@ -3,9 +3,9 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Util\Identifier;
+namespace App\Addressing\Util\Identifier;
 
-use App\UtilInterface\Identifier\AddressUlidInterface;
+use App\Addressing\UtilInterface\Identifier\AddressUlidInterface;
 
 final class AddressUlid implements AddressUlidInterface
 {

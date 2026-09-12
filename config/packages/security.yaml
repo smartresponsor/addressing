@@ -1,0 +1,10 @@
+security:
+    providers:
+        users_in_memory:
+            memory: ~
+
+    firewalls:
+        main:
+            lazy: true
+            provider: users_in_memory
+            security: true

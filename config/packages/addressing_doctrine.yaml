@@ -5,12 +5,19 @@ services:
 
 doctrine:
     dbal:
-        driver: 'pdo_sqlite'
-        path: '%env(resolve:ADDRESS_DB_PATH)%'
+        default_connection: infra
+        connections:
+            infra:
+                driver: 'pdo_sqlite'
+                path: '%env(resolve:ADDRESS_DB_PATH)%'
     orm:
-        mappings:
-            Addressing:
-                type: attribute
-                dir: '%kernel.project_dir%/src/Entity'
-                prefix: 'App\Entity'
-                alias: Addressing
+        default_entity_manager: default
+        entity_managers:
+            default:
+                connection: infra
+                mappings:
+                    Addressing:
+                        type: attribute
+                        dir: '%kernel.project_dir%/src/Entity'
+                        prefix: 'App\Addressing\Entity'
+                        alias: Addressing

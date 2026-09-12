@@ -20,7 +20,7 @@ if (!class_exists($bootstrapClass)) {
 }
 
 $kernel = (new ReflectionMethod($bootstrapClass, 'bootKernel'))->invoke(null);
-if (!$kernel instanceof App\Kernel) {
+if (!$kernel instanceof App\Addressing\Kernel) {
     throw new RuntimeException('address_runtime_kernel_bootstrap_failed');
 }
 

@@ -5,10 +5,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
-use App\EntityInterface\Record\AddressInterface;
-use App\RepositoryInterface\Persistence\AddressReadRepositoryInterface;
-use App\Service\Application\AddressReadService;
-use App\Value\Persistence\AddressPageCriteria;
+use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\RepositoryInterface\AddressReadRepositoryInterface;
+use App\Addressing\Service\Application\AddressReadService;
+use App\Addressing\Value\Persistence\AddressPageCriteria;
 use PHPUnit\Framework\TestCase;
 
 final class AddressReadServiceUnitTest extends TestCase

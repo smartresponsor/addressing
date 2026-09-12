@@ -3,10 +3,10 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Service\Application\Event;
+namespace App\Addressing\Service\Application\Event;
 
-use App\ServiceInterface\Application\Event\AddressEventDispatcherServiceInterface;
-use App\ServiceInterface\Application\Event\AddressEventInterface;
+use App\Addressing\EventInterface\AddressEventInterface;
+use App\Addressing\ServiceInterface\Application\Event\AddressEventDispatcherServiceInterface;
 
 /**
  * In-memory event dispatcher.
@@ -39,9 +39,9 @@ final class AddressInMemoryEventDispatcherService implements AddressEventDispatc
     #[\Override]
     public function dispatch(AddressEventInterface $addressEvent): void
     {
-        $name = $addressEvent->name();
+        $nameEntity = $addressEvent->nameEntity();
 
-        foreach ($this->listeners[$name] ?? [] as $listener) {
+        foreach ($this->listeners[$nameEntity] ?? [] as $listener) {
             try {
                 $listener($addressEvent);
             } catch (\Throwable) {

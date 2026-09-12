@@ -2,18 +2,18 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-use App\Http\AddressErrorMap;
-use App\Http\Middleware\AddressCorsMiddleware;
-use App\Http\Middleware\AddressIpGuardMiddleware;
-use App\Http\Middleware\AddressRateLimiter;
-use App\Http\Middleware\AddressRequestIdMiddleware;
-use App\Http\Middleware\AddressSecurityHeadersMiddleware;
-use App\Kernel;
-use App\Service\Http\Address\AddressManageHttpService;
-use App\Service\Http\Address\AddressOperationalHttpService;
-use App\Service\Http\Address\AddressReadHttpService;
-use App\Service\Http\Address\AddressSummaryHttpService;
-use App\Service\Http\Address\AddressWriteHttpService;
+use App\Addressing\Http\AddressErrorMap;
+use App\Addressing\Http\Middleware\AddressCorsMiddleware;
+use App\Addressing\Http\Middleware\AddressIpGuardMiddleware;
+use App\Addressing\Service\Http\Address\AddressRateLimiterService;
+use App\Addressing\Http\Middleware\AddressRequestIdMiddleware;
+use App\Addressing\Http\Middleware\AddressSecurityHeadersMiddleware;
+use App\Addressing\Kernel;
+use App\Addressing\Service\Http\Address\AddressManageHttpService;
+use App\Addressing\Service\Http\Address\AddressOperationalHttpService;
+use App\Addressing\Service\Http\Address\AddressReadHttpService;
+use App\Addressing\Service\Http\Address\AddressSummaryHttpService;
+use App\Addressing\Service\Http\Address\AddressWriteHttpService;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -49,7 +49,7 @@ if (!AddressIpGuardMiddleware::allowed($clientIp, $pathInfo)) {
     exit(0);
 }
 
-$rateLimiter = $kernel->getContainer()->get(AddressRateLimiter::class);
+$rateLimiter = $kernel->getContainer()->get(AddressRateLimiterService::class);
 if (!filter_var($_SERVER['RATE_LIMIT_DISABLED'] ?? getenv('RATE_LIMIT_DISABLED') ?? false, FILTER_VALIDATE_BOOL)
     && !$rateLimiter->check($clientIp, $method.' '.$pathInfo)
 ) {

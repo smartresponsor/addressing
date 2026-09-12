@@ -7,7 +7,7 @@
  */
 declare(strict_types=1);
 
-namespace App\EntityInterface\Record;
+namespace App\Addressing\EntityInterface\Record;
 
 interface AddressEvidenceSnapshotInterface
 {

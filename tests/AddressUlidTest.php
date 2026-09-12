@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use App\Util\Identifier\AddressUlid;
+use App\Addressing\Util\Identifier\AddressUlid;
 use PHPUnit\Framework\TestCase;
 
 final class AddressUlidTest extends TestCase

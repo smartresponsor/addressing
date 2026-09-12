@@ -3,3 +3,5 @@ framework:
     http_method_override: false
     handle_all_throwables: true
     form: true
+    session: true
+    csrf_protection: true

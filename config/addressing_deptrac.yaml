@@ -11,82 +11,82 @@ deptrac:
         -   name: Command
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\Command\\.*#'
+                    value: '#^App\Addressing\\Command\\.*#'
 
         -   name: ServiceHttp
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\Service\\Http\\.*#'
+                    value: '#^App\Addressing\\Service\\Http\\.*#'
 
         -   name: Http
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\Http\\.*#'
+                    value: '#^App\Addressing\\Http\\.*#'
 
         -   name: ServiceInterface
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\ServiceInterface\\.*#'
+                    value: '#^App\Addressing\\ServiceInterface\\.*#'
 
         -   name: Service
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\Service\\.*#'
+                    value: '#^App\Addressing\\Service\\.*#'
 
         -   name: RepositoryInterface
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\RepositoryInterface\\.*#'
+                    value: '#^App\Addressing\\RepositoryInterface\\.*#'
 
         -   name: Repository
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\Repository\\.*#'
+                    value: '#^App\Addressing\\Repository\\.*#'
 
         -   name: Doctrine
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\Doctrine\\.*#'
+                    value: '#^App\Addressing\\Doctrine\\.*#'
 
         -   name: Integration
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\Integration\\.*#'
+                    value: '#^App\Addressing\\Integration\\.*#'
 
         -   name: Contract
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\Contract\\.*#'
+                    value: '#^App\Addressing\\Contract\\.*#'
 
         -   name: EntityInterface
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\EntityInterface\\.*#'
+                    value: '#^App\Addressing\\EntityInterface\\.*#'
 
         -   name: Entity
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\Entity\\.*#'
+                    value: '#^App\Addressing\\Entity\\.*#'
 
         -   name: Value
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\Value\\.*#'
+                    value: '#^App\Addressing\\Value\\.*#'
 
         -   name: Projection
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\Projection\\.*#'
+                    value: '#^App\Addressing\\Projection\\.*#'
 
         -   name: Util
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\Util\\.*#'
+                    value: '#^App\Addressing\\Util\\.*#'
 
         -   name: UtilInterface
             collectors:
                 -   type: classNameRegex
-                    value: '#^App\\UtilInterface\\.*#'
+                    value: '#^App\Addressing\\UtilInterface\\.*#'
 
     ruleset:
         Command:
