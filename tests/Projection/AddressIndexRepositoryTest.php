@@ -7,7 +7,7 @@ namespace Tests\Projection;
 
 use App\Addressing\Entity\AddressIndexEntity;
 use App\Addressing\Projection\AddressIndex\AddressIndexRecord;
-use App\Addressing\Projection\AddressIndex\DoctrineAddressIndexRepository;
+use App\Addressing\Repository\AddressIndex\DoctrineAddressIndexRepository;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
 

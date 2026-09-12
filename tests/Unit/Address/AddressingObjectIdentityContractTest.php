@@ -71,11 +71,11 @@ final class AddressingObjectIdentityContractTest extends TestCase
         $objectSlug = $metadata->getFieldMapping('objectIdentity.objectSlug');
 
         self::assertArrayHasKey('objectIdentity', $metadata->embeddedClasses);
-        self::assertSame('object_uuid', $objectUuid['columnName']);
+        self::assertSame('uuid', $objectUuid['columnName']);
         self::assertSame('binary', $objectUuid['type']);
         self::assertSame(16, $objectUuid['length']);
         self::assertFalse($objectUuid['nullable'] ?? false);
-        self::assertSame('object_slug', $objectSlug['columnName']);
+        self::assertSame('slug', $objectSlug['columnName']);
         self::assertSame('string', $objectSlug['type']);
         self::assertSame(190, $objectSlug['length']);
         self::assertFalse($objectSlug['nullable'] ?? false);

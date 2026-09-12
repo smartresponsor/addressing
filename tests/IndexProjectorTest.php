@@ -6,10 +6,11 @@ declare(strict_types=1);
 namespace Tests;
 
 use App\Addressing\Entity\AddressIndexEntity;
+use App\Addressing\Event\AddressCreatedEvent;
 use App\Addressing\Projection\AddressIndex\AddressIndexNormalizer;
 use App\Addressing\Projection\AddressIndex\AddressIndexProjector;
-use App\Addressing\Projection\AddressIndex\DoctrineAddressIndexRepository;
-use App\Addressing\Service\Application\Event\AddressCreatedEvent;
+use App\Addressing\Repository\AddressIndex\DoctrineAddressIndexRepository;
+use App\Addressing\Service\Projection\AddressIndex\AddressIndexProjectorService;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
 
@@ -19,7 +20,7 @@ final class AddressIndexProjectorTest extends TestCase
     {
         $entityManager = TestDatabase::createInMemoryEntityManager([AddressIndexEntity::class]);
         $repo = new DoctrineAddressIndexRepository($entityManager);
-        $projector = new AddressIndexProjector($repo, new AddressIndexNormalizer());
+        $projector = new AddressIndexProjector($repo, new AddressIndexNormalizer(), new AddressIndexProjectorService());
 
         $evt = new AddressCreatedEvent('123 Main St', null, 'Houston', 'TX', '77002', 'US');
         $projector->onAddressCreated($evt);

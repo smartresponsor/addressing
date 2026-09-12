@@ -38,7 +38,7 @@ final class AddressOutboxDrainerTest extends TestCase
                 $published[] = $data['payload']['id'] ?? null;
 
                 return true;
-            }
+            },
         );
 
         $drainer1 = new AddressOutboxDrainerService(
@@ -55,7 +55,7 @@ final class AddressOutboxDrainerTest extends TestCase
                 $drainer2->drain('http://example.test', 10, 0, 1, 0);
 
                 return true;
-            }
+            },
         );
 
         $drainer1->drain('http://example.test', 1, 0, 1, 0);

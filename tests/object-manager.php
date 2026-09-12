@@ -8,7 +8,6 @@ use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
 use App\Addressing\Entity\AddressIndexEntity;
 use App\Addressing\Entity\AddressOutboxEntity;
 use App\Addressing\Entity\RateLimitEntity;
-use Doctrine\ORM\EntityManagerInterface;
 use Tests\Support\TestDatabase;
 
 require_once __DIR__.'/../vendor/autoload.php';
@@ -20,9 +19,5 @@ $entityManager = TestDatabase::createInMemoryEntityManager([
     AddressIndexEntity::class,
     RateLimitEntity::class,
 ]);
-
-if (!$entityManager instanceof EntityManagerInterface) {
-    throw new RuntimeException('address_phpstan_object_manager_bootstrap_failed');
-}
 
 return $entityManager;
