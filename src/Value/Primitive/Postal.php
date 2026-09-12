@@ -18,9 +18,7 @@ final readonly class Postal implements \Stringable
     {
         $normalizedInput = strtoupper(trim($input));
         $filtered = preg_replace('/[^A-Z0-9- ]/', '', $normalizedInput);
-        if (null === $filtered) {
-            $filtered = $normalizedInput;
-        }
+        $filtered ??= $normalizedInput;
         $normalized = preg_replace('/\s+/', ' ', $filtered);
         if (null === $normalized) {
             return $filtered;

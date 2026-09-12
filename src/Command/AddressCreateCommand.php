@@ -5,8 +5,8 @@ declare(strict_types=1);
 
 namespace App\Addressing\Command;
 
-use App\Addressing\Http\Dto\AddressInputFactory;
 use App\Addressing\Http\Dto\AddressManageDto;
+use App\Addressing\Http\Factory\AddressInputFactory;
 use App\Addressing\Service\Application\AddressWriteService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -57,20 +57,20 @@ final class AddressCreateCommand extends Command
         $addressManageDto->ownerId = $this->nullable($input->getOption('owner-id'));
         $addressManageDto->vendorId = $this->nullable($input->getOption('vendor-id'));
 
-        $addressData = $this->addressInputFactory->fromManageDto($addressManageDto, [
+        $addressRecord = $this->addressInputFactory->fromManageDto($addressManageDto, [
             'sourceSystem' => $this->requiredOption($input, 'source-system'),
             'sourceType' => 'manual',
             'sourceReference' => $this->requiredOption($input, 'source-reference'),
         ]);
-        $this->addressWriteService->create($addressData);
+        $this->addressWriteService->create($addressRecord);
 
         $message = json_encode([
-            'id' => $addressData->id(),
-            'ownerId' => $addressData->ownerId(),
-            'vendorId' => $addressData->vendorId(),
-            'line1' => $addressData->line1(),
-            'city' => $addressData->city(),
-            'countryCode' => $addressData->countryCode(),
+            'id' => $addressRecord->id(),
+            'ownerId' => $addressRecord->ownerId(),
+            'vendorId' => $addressRecord->vendorId(),
+            'line1' => $addressRecord->line1(),
+            'city' => $addressRecord->city(),
+            'countryCode' => $addressRecord->countryCode(),
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         if (false === $message) {
             $symfonyStyle->error('Failed to encode command output.');

@@ -40,7 +40,7 @@ final class AddressCorsMiddleware
 
     private static function isAllowed(string $origin, string $allowList): bool
     {
-        $items = array_filter(array_map('trim', explode(',', $allowList)), fn ($s): bool => '' !== $s);
+        $items = array_filter(array_map(trim(...), explode(',', $allowList)), fn ($s): bool => '' !== $s);
         foreach ($items as $item) {
             if ('*' === $item) {
                 return true;

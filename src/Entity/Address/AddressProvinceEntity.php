@@ -35,8 +35,7 @@ class AddressProvinceEntity
     #[ORM\Column(name: 'type', type: 'string', length: 32, nullable: true)]
     private ?string $type = null;
 
-    #[ORM\Column(name: 'enabled', type: 'boolean')]
-    private bool $enabled = true;
+    // Canonical `enabled` storage is owned by ObjectStateEmbeddableTrait.
 
     public function __construct(?string $objectUuid = null, ?string $objectSlug = null)
     {
@@ -95,12 +94,12 @@ class AddressProvinceEntity
 
     public function isEnabled(): bool
     {
-        return $this->enabled;
+        return $this->isObjectEnabled();
     }
 
     public function setEnabled(bool $enabled): self
     {
-        $this->enabled = $enabled;
+        $this->setObjectEnabled($enabled);
 
         return $this;
     }

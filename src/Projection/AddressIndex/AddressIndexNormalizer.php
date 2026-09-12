@@ -33,7 +33,7 @@ final class AddressIndexNormalizer
             throw new \InvalidArgumentException('City is required');
         }
 
-        $regionObj = new Region($address['region']);
+        $region = new Region($address['region']);
         $postalCode = new PostalCode($address['postal']);
         $countryCode = new CountryCode($address['country']);
 
@@ -41,7 +41,7 @@ final class AddressIndexNormalizer
             $line1Obj->value(),
             $line2Obj?->value() ?? '',
             strtolower($city),
-            (string) $regionObj,
+            (string) $region,
             $postalCode->value(),
             $countryCode->value(),
         ]));
@@ -50,7 +50,7 @@ final class AddressIndexNormalizer
             'line1' => $line1Obj,
             'line2' => $line2Obj,
             'city' => $city,
-            'region' => $regionObj,
+            'region' => $region,
             'postal' => $postalCode,
             'country' => $countryCode,
             'digest' => $digest,

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Http\Factory;
 
-use App\Addressing\Contract\Message\AddressRecordPolicy;
+use App\Addressing\Policy\AddressRecordPolicy;
 use Symfony\Component\HttpFoundation\Request;
 
 final readonly class AddressQueryFilterFactory

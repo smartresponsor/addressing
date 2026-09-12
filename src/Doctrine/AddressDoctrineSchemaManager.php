@@ -18,17 +18,17 @@ final readonly class AddressDoctrineSchemaManager
 
     public function ensureSchema(): void
     {
-        $tool = new SchemaTool($this->entityManager);
+        $schemaTool = new SchemaTool($this->entityManager);
         $classes = $this->managedClasses();
-        $tool->updateSchema($classes);
+        $schemaTool->updateSchema($classes);
     }
 
     public function resetSchema(): void
     {
-        $tool = new SchemaTool($this->entityManager);
+        $schemaTool = new SchemaTool($this->entityManager);
         $classes = $this->managedClasses();
-        $tool->dropSchema($classes);
-        $tool->createSchema($classes);
+        $schemaTool->dropSchema($classes);
+        $schemaTool->createSchema($classes);
     }
 
     /**

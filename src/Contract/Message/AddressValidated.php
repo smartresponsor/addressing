@@ -5,6 +5,8 @@ declare(strict_types=1);
 
 namespace App\Addressing\Contract\Message;
 
+use App\Addressing\Policy\AddressRecordPolicy;
+
 final readonly class AddressValidated implements \JsonSerializable
 {
     public function __construct(

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Service\Application;
 
+use App\Addressing\Config\Application\AddressOutboxDispatchConfig;
 use App\Addressing\Entity\AddressOutboxEntity;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -19,7 +20,7 @@ final class AddressOutboxDrainerService
 
     public function drain(string $url, int $limit = 100, int $retryLimit = 3, int $timeoutSec = 10, int $backoffMs = 250): int
     {
-        $dispatchConfig = new AddressOutboxDispatchConfig(
+        $addressOutboxDispatchConfig = new AddressOutboxDispatchConfig(
             url: $url,
             retryLimit: $retryLimit,
             timeoutSec: $timeoutSec,
@@ -30,7 +31,7 @@ final class AddressOutboxDrainerService
         $count = 0;
 
         foreach ($rows as $row) {
-            $this->dispatchReservedRow($dispatchConfig, $row);
+            $this->dispatchReservedRow($addressOutboxDispatchConfig, $row);
             ++$count;
         }
 
@@ -124,7 +125,7 @@ final class AddressOutboxDrainerService
         }
 
         return [
-            'nameEntity' => $this->rowString($row, 'event_name') ?? '',
+            'name' => $this->rowString($row, 'event_name') ?? '',
             'version' => $this->rowInt($row, 'event_version'),
             'payload' => $payload,
         ];
@@ -232,12 +233,12 @@ final class AddressOutboxDrainerService
             ++$attempt;
 
             $curlHandle = $this->curlHandle($dispatchConfig, $payload, $error);
-            if (null === $curlHandle) {
+            if (!$curlHandle instanceof \CurlHandle) {
                 return false;
             }
 
             $response = curl_exec($curlHandle);
-            $code = (int) curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
+            $code = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
             $curlError = curl_error($curlHandle);
             curl_close($curlHandle);
 

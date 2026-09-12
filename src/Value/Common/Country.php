@@ -12,9 +12,7 @@ final readonly class Country implements \Stringable
     public function __construct(string $alpha2)
     {
         $filtered = preg_replace('/[^A-Za-z]/', '', $alpha2);
-        if (null === $filtered) {
-            $filtered = '';
-        }
+        $filtered ??= '';
         $countryCode = strtoupper($filtered);
         if (2 !== strlen($countryCode)) {
             throw new \InvalidArgumentException('Country must be 2 letters');

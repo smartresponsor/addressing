@@ -32,7 +32,7 @@ final readonly class AddressSummaryHttpService
             $vendorId,
             $countryCode,
             $query,
-            $this->addressQueryFilterFactory->operationalFilters($request, false, true)
+            $this->addressQueryFilterFactory->operationalFilters($request, false, true),
         );
 
         return new JsonResponse($summary);
@@ -45,7 +45,7 @@ final readonly class AddressSummaryHttpService
             $ownerId,
             $vendorId,
             $query,
-            $this->addressQueryFilterFactory->operationalFilters($request)
+            $this->addressQueryFilterFactory->operationalFilters($request),
         );
 
         return $this->addressHttpResponderService->summaryItems($summary);
@@ -59,7 +59,7 @@ final readonly class AddressSummaryHttpService
             $vendorId,
             $countryCode,
             $query,
-            $this->addressQueryFilterFactory->portfolioFilters($request, true)
+            $this->addressQueryFilterFactory->portfolioFilters($request, true),
         );
 
         return $this->addressHttpResponderService->summaryItems($summary);
@@ -73,7 +73,7 @@ final readonly class AddressSummaryHttpService
             $vendorId,
             $countryCode,
             $query,
-            $this->addressQueryFilterFactory->portfolioFilters($request, true, true)
+            $this->addressQueryFilterFactory->portfolioFilters($request, true, true),
         );
 
         return $this->addressHttpResponderService->summaryItems($summary);
@@ -87,7 +87,7 @@ final readonly class AddressSummaryHttpService
             $vendorId,
             $countryCode,
             $query,
-            $this->addressQueryFilterFactory->portfolioFilters($request, true, true, true)
+            $this->addressQueryFilterFactory->portfolioFilters($request, true, true, true),
         );
 
         return $this->addressHttpResponderService->summaryItems($summary);

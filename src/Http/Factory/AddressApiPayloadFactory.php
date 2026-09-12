@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Addressing\Http\Factory;
 
-use App\Addressing\Contract\Message\AddressRecordPolicy;
 use App\Addressing\Contract\Message\AddressValidated;
 use App\Addressing\Entity\Record\AddressRecord;
+use App\Addressing\Policy\AddressRecordPolicy;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Uid\Ulid;
 
@@ -77,7 +77,7 @@ final readonly class AddressApiPayloadFactory
             AddressRecordPolicy::normalizeRevalidationPolicy($this->optStr($in, 'revalidationPolicy')),
             $this->optStr($in, 'lastValidationProvider'),
             AddressRecordPolicy::normalizeLastValidationStatus($this->optStr($in, 'lastValidationStatus')),
-            $this->lastValidationScore($in)
+            $this->lastValidationScore($in),
         );
     }
 

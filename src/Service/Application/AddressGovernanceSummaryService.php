@@ -5,11 +5,11 @@ declare(strict_types=1);
 
 namespace App\Addressing\Service\Application;
 
-use App\Addressing\RepositoryInterface\Persistence\AddressGovernanceRepositoryInterface;
+use App\Addressing\RepositoryInterface\AddressGovernanceRepositoryInterface;
 
 final readonly class AddressGovernanceSummaryService
 {
-    public function __construct(private AddressGovernanceRepositoryInterface $governanceRepository)
+    public function __construct(private AddressGovernanceRepositoryInterface $addressGovernanceRepository)
     {
     }
 
@@ -30,6 +30,6 @@ final readonly class AddressGovernanceSummaryService
      */
     public function summarize(string $addressId, ?string $ownerId, ?string $vendorId): array
     {
-        return $this->governanceRepository->summarizeGovernanceCluster($addressId, $ownerId, $vendorId);
+        return $this->addressGovernanceRepository->summarizeGovernanceCluster($addressId, $ownerId, $vendorId);
     }
 }

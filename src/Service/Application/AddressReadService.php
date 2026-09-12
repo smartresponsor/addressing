@@ -6,12 +6,12 @@ declare(strict_types=1);
 namespace App\Addressing\Service\Application;
 
 use App\Addressing\EntityInterface\Record\AddressInterface;
-use App\Addressing\RepositoryInterface\Persistence\AddressReadRepositoryInterface;
+use App\Addressing\RepositoryInterface\AddressReadRepositoryInterface;
 use App\Addressing\Value\Persistence\AddressPageCriteria;
 
 final readonly class AddressReadService
 {
-    public function __construct(private AddressReadRepositoryInterface $readRepository)
+    public function __construct(private AddressReadRepositoryInterface $addressReadRepository)
     {
     }
 
@@ -31,11 +31,11 @@ final readonly class AddressReadService
         ?string $cursor,
         array $filters = [],
     ): array {
-        $criteria = AddressPageCriteria::forScope($ownerId, $vendorId, $countryCode, $query)
+        $addressPageCriteria = AddressPageCriteria::forScope($ownerId, $vendorId, $countryCode, $query)
             ->withPagination($limit, $cursor)
             ->withFilters($filters);
 
-        return $this->readRepository->findPage($criteria);
+        return $this->addressReadRepository->findPage($addressPageCriteria);
     }
 
     public function dedupe(?string $dedupeKey): ?AddressInterface
@@ -44,11 +44,11 @@ final readonly class AddressReadService
             return null;
         }
 
-        return $this->readRepository->findByDedupeKey($dedupeKey);
+        return $this->addressReadRepository->findByDedupeKey($dedupeKey);
     }
 
     public function get(string $id, ?string $ownerId, ?string $vendorId): ?AddressInterface
     {
-        return $this->readRepository->get($id, $ownerId, $vendorId);
+        return $this->addressReadRepository->get($id, $ownerId, $vendorId);
     }
 }

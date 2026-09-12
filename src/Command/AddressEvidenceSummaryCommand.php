@@ -55,13 +55,7 @@ final class AddressEvidenceSummaryCommand extends Command
 
     private function addressId(InputInterface $input): string
     {
-        $value = $input->getArgument('address-id');
-
-        if (!is_string($value)) {
-            throw new \RuntimeException('invalid_argument_address-id');
-        }
-
-        return $value;
+        return $input->getArgument('address-id');
     }
 
     private function nullable(mixed $value): ?string

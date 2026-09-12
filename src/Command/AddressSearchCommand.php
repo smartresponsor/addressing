@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Command;
 
-use App\Addressing\Contract\Message\AddressRecordPolicy;
+use App\Addressing\Policy\AddressRecordPolicy;
 use App\Addressing\Service\Application\AddressReadService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -65,7 +65,7 @@ final class AddressSearchCommand extends Command
             ],
         );
 
-        $items = array_map(static fn ($address): array => [
+        $items = array_map(static fn (\App\Addressing\EntityInterface\Record\AddressInterface $address): array => [
             'id' => $address->id(),
             'line1' => $address->line1(),
             'city' => $address->city(),
@@ -91,9 +91,6 @@ final class AddressSearchCommand extends Command
     private function limitOption(InputInterface $input): int
     {
         $value = $input->getOption('limit');
-        if (is_int($value)) {
-            return $value;
-        }
         if (is_string($value) && is_numeric($value)) {
             return (int) $value;
         }

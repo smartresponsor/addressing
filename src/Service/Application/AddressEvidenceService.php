@@ -7,22 +7,22 @@ namespace App\Addressing\Service\Application;
 
 use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
 use App\Addressing\EntityInterface\Record\AddressInterface;
-use App\Addressing\RepositoryInterface\Persistence\AddressEvidenceRepositoryInterface;
+use App\Addressing\RepositoryInterface\AddressEvidenceRepositoryInterface;
 
 final readonly class AddressEvidenceService
 {
-    public function __construct(private AddressEvidenceRepositoryInterface $evidenceRepository)
+    public function __construct(private AddressEvidenceRepositoryInterface $addressEvidenceRepository)
     {
     }
 
     public function appendSnapshot(AddressInterface $address): ?AddressEvidenceSnapshotInterface
     {
-        return $this->evidenceRepository->appendEvidenceSnapshot($address);
+        return $this->addressEvidenceRepository->appendEvidenceSnapshot($address);
     }
 
     public function latestSnapshot(string $addressId, ?string $ownerId, ?string $vendorId): ?AddressEvidenceSnapshotInterface
     {
-        return $this->evidenceRepository->getLatestEvidenceSnapshot($addressId, $ownerId, $vendorId);
+        return $this->addressEvidenceRepository->getLatestEvidenceSnapshot($addressId, $ownerId, $vendorId);
     }
 
     /**
@@ -30,7 +30,7 @@ final readonly class AddressEvidenceService
      */
     public function history(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array
     {
-        return $this->evidenceRepository->findEvidenceHistoryPage($addressId, $ownerId, $vendorId, $limit, $cursor);
+        return $this->addressEvidenceRepository->findEvidenceHistoryPage($addressId, $ownerId, $vendorId, $limit, $cursor);
     }
 
     /**
@@ -51,7 +51,7 @@ final readonly class AddressEvidenceService
         $cursor = null;
 
         do {
-            $page = $this->evidenceRepository->findEvidenceHistoryPage($addressId, $ownerId, $vendorId, 200, $cursor);
+            $page = $this->addressEvidenceRepository->findEvidenceHistoryPage($addressId, $ownerId, $vendorId, 200, $cursor);
             foreach ($page['items'] as $item) {
                 $this->accumulateEvidenceHistorySummary($summary, $providers, $item);
             }
@@ -60,7 +60,15 @@ final readonly class AddressEvidenceService
 
         $summary['distinctProviders'] = count($providers);
 
-        return $summary;
+        return [
+            'totalSnapshots' => (int) $summary['totalSnapshots'],
+            'statusPending' => (int) $summary['statusPending'],
+            'statusValidated' => (int) $summary['statusValidated'],
+            'statusRejected' => (int) $summary['statusRejected'],
+            'distinctProviders' => (int) $summary['distinctProviders'],
+            'latestValidatedAt' => is_string($summary['latestValidatedAt']) ? $summary['latestValidatedAt'] : null,
+            'latestCreatedAt' => is_string($summary['latestCreatedAt']) ? $summary['latestCreatedAt'] : null,
+        ];
     }
 
     /**

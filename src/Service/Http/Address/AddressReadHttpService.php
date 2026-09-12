@@ -44,7 +44,7 @@ final readonly class AddressReadHttpService
         $result = $this->addressReadService->search($ownerId, $vendorId, $countryCode, $query, $limit, $cursor, $filters);
         $items = array_map(
             fn (AddressInterface $address): array => $this->addressViewArrayFactory->toArray($address, $expectedNormalizationVersion),
-            $result['items']
+            $result['items'],
         );
 
         return new JsonResponse([

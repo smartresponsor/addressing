@@ -5,14 +5,17 @@ declare(strict_types=1);
 
 namespace App\Addressing\Projection\AddressIndex;
 
-use App\Addressing\Service\Application\Event\AddressCreatedEvent;
-use App\Addressing\Service\Application\Event\AddressUpdatedEvent;
+use App\Addressing\Event\AddressCreatedEvent;
+use App\Addressing\Event\AddressUpdatedEvent;
+use App\Addressing\RepositoryInterface\AddressIndex\AddressIndexRepositoryInterface;
+use App\Addressing\Service\Projection\AddressIndex\AddressIndexProjectorService;
 
 final readonly class AddressIndexProjector
 {
     public function __construct(
         private AddressIndexRepositoryInterface $addressIndexRepository,
-        private AddressIndexNormalizer $normalizer,
+        private AddressIndexNormalizer $addressIndexNormalizer,
+        private AddressIndexProjectorService $addressIndexProjectorService,
     ) {
     }
 
@@ -43,9 +46,8 @@ final readonly class AddressIndexProjector
     /** @param array{line1: string, line2: ?string, city: string, region: string, postal: string, country: string} $payload */
     private function handle(array $payload): void
     {
-        $norm = $this->normalizer->normalize($payload);
-        $projector = new AddressIndexProjectorService();
-        $indexRecord = $projector->project($norm);
-        $this->addressIndexRepository->upsert($indexRecord);
+        $norm = $this->addressIndexNormalizer->normalize($payload);
+        $addressIndexRecord = $this->addressIndexProjectorService->project($norm);
+        $this->addressIndexRepository->upsert($addressIndexRecord);
     }
 }

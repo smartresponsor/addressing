@@ -5,6 +5,8 @@ declare(strict_types=1);
 
 namespace App\Addressing\ServiceInterface\Application\Event;
 
+use App\Addressing\EventInterface\AddressEventInterface;
+
 interface AddressEventDispatcherServiceInterface
 {
     public function subscribe(string $eventName, callable $listener): void;

@@ -14,7 +14,7 @@ final class AddressIpGuardMiddleware
         if (false === $value || '' === trim($value)) {
             return [];
         }
-        $parts = array_filter(array_map('trim', explode(',', $value)), fn ($item): bool => '' !== $item);
+        $parts = array_filter(array_map(trim(...), explode(',', $value)), fn ($item): bool => '' !== $item);
 
         return array_values($parts);
     }
@@ -22,7 +22,7 @@ final class AddressIpGuardMiddleware
     public static function allowed(string $ip, string $path): bool
     {
         $deny = self::listFromEnv('DENY_IPS');
-        if (array_any($deny, fn ($d) => $ip === $d)) {
+        if (array_any($deny, fn (string $d): bool => $ip === $d)) {
             return false;
         }
 
@@ -33,7 +33,7 @@ final class AddressIpGuardMiddleware
 
         $allowPaths = self::listFromEnv('ALLOW_PATHS');
         if ([] !== $allowPaths) {
-            return array_any($allowPaths, fn ($allowPath) => str_starts_with($path, $allowPath));
+            return array_any($allowPaths, fn ($allowPath): bool => str_starts_with($path, $allowPath));
         }
 
         return true;

@@ -5,8 +5,8 @@ declare(strict_types=1);
 
 namespace App\Addressing\Service\Application\Event;
 
+use App\Addressing\EventInterface\AddressEventInterface;
 use App\Addressing\ServiceInterface\Application\Event\AddressEventDispatcherServiceInterface;
-use App\Addressing\ServiceInterface\Application\Event\AddressEventInterface;
 
 /**
  * In-memory event dispatcher.

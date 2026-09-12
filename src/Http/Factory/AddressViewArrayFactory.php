@@ -169,6 +169,6 @@ final readonly class AddressViewArrayFactory
 
     private function primaryGovernanceLinkId(AddressInterface $address): ?string
     {
-        return array_find([$address->duplicateOfId(), $address->supersededById(), $address->aliasOfId(), $address->conflictWithId()], fn ($candidate) => null !== $candidate && '' !== $candidate);
+        return array_find([$address->duplicateOfId(), $address->supersededById(), $address->aliasOfId(), $address->conflictWithId()], fn ($candidate): bool => null !== $candidate && '' !== $candidate);
     }
 }

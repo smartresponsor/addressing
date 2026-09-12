@@ -17,9 +17,7 @@ final readonly class Line implements \Stringable
     public static function norm(string $s): string
     {
         $normalized = preg_replace('/\s+/', ' ', $s);
-        if (null === $normalized) {
-            $normalized = $s;
-        }
+        $normalized ??= $s;
 
         return trim($normalized);
     }

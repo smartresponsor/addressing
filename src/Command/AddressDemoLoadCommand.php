@@ -34,11 +34,11 @@ final class AddressDemoLoadCommand extends Command
     #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
+        $symfonyStyle = new SymfonyStyle($input, $output);
         $count = max(1, $this->countOption($input));
         $loaded = $this->addressDemoFixtureService->resetAndLoad($count);
 
-        $io->success(sprintf('Loaded %d demo addresses.', $loaded));
+        $symfonyStyle->success(sprintf('Loaded %d demo addresses.', $loaded));
 
         return Command::SUCCESS;
     }
@@ -46,9 +46,6 @@ final class AddressDemoLoadCommand extends Command
     private function countOption(InputInterface $input): int
     {
         $value = $input->getOption('count');
-        if (is_int($value)) {
-            return $value;
-        }
         if (is_string($value) && is_numeric($value)) {
             return (int) $value;
         }

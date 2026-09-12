@@ -6,8 +6,8 @@ declare(strict_types=1);
 namespace App\Addressing\Service\Fixture;
 
 use App\Addressing\Doctrine\AddressDoctrineSchemaManager;
-use App\Addressing\Http\Dto\AddressInputFactory;
 use App\Addressing\Http\Dto\AddressManageDto;
+use App\Addressing\Http\Factory\AddressInputFactory;
 use App\Addressing\Service\Application\AddressWriteService;
 use Faker\Factory;
 use Faker\Generator;
