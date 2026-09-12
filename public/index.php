@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Addressing\Http\AddressErrorMap;
 use App\Addressing\Http\Middleware\AddressCorsMiddleware;
 use App\Addressing\Http\Middleware\AddressIpGuardMiddleware;
-use App\Addressing\Http\Middleware\AddressRateLimiter;
+use App\Addressing\Service\Http\Address\AddressRateLimiterService;
 use App\Addressing\Http\Middleware\AddressRequestIdMiddleware;
 use App\Addressing\Http\Middleware\AddressSecurityHeadersMiddleware;
 use App\Addressing\Kernel;
@@ -49,7 +49,7 @@ if (!AddressIpGuardMiddleware::allowed($clientIp, $pathInfo)) {
     exit(0);
 }
 
-$rateLimiter = $kernel->getContainer()->get(AddressRateLimiter::class);
+$rateLimiter = $kernel->getContainer()->get(AddressRateLimiterService::class);
 if (!filter_var($_SERVER['RATE_LIMIT_DISABLED'] ?? getenv('RATE_LIMIT_DISABLED') ?? false, FILTER_VALIDATE_BOOL)
     && !$rateLimiter->check($clientIp, $method.' '.$pathInfo)
 ) {

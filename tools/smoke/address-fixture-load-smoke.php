@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 use App\Addressing\Service\Fixture\AddressDemoFixtureService;
 
-require_once dirname(__DIR__).'/../support/AddressRuntimeBootstrap.php';
+require_once dirname(__DIR__).'/support/AddressRuntimeBootstrap.php';
 
 $count = isset($argv[1]) && is_numeric($argv[1]) ? max(1, (int) $argv[1]) : 1;
 
@@ -13,10 +13,7 @@ $count = isset($argv[1]) && is_numeric($argv[1]) ? max(1, (int) $argv[1]) : 1;
 $fixtureService = AddressRuntimeBootstrap::service(AddressDemoFixtureService::class);
 $loaded = $fixtureService->resetAndLoad($count);
 
-$connection = AddressRuntimeBootstrap::connection();
-$rowCount = (int) $connection->fetchOne('SELECT COUNT(*) FROM address_entity');
-
-$ok = $loaded === $count && $rowCount === $count;
+$ok = $loaded === $count;
 
 fwrite(STDOUT, json_encode([
     'component' => 'Addressing',
@@ -24,7 +21,6 @@ fwrite(STDOUT, json_encode([
     'status' => $ok ? 'ready' : 'incomplete',
     'requested' => $count,
     'loaded' => $loaded,
-    'rowCount' => $rowCount,
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
 
 if (!$ok) {

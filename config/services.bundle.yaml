@@ -20,14 +20,17 @@ services:
     App\Addressing\Service\Http\Address\AddressOperationalHttpService:
         public: true
 
-    App\Addressing\RepositoryInterface\Persistence\AddressWriteRepositoryInterface: '@App\Addressing\Repository\Persistence\DoctrineAddressWriteRepository'
-    App\Addressing\RepositoryInterface\Persistence\AddressReadRepositoryInterface: '@App\Addressing\Repository\Persistence\DoctrineAddressReadRepository'
-    App\Addressing\RepositoryInterface\Persistence\AddressEvidenceRepositoryInterface: '@App\Addressing\Repository\Persistence\DoctrineAddressEvidenceRepository'
-    App\Addressing\RepositoryInterface\Persistence\AddressOperationalRepositoryInterface: '@App\Addressing\Repository\Persistence\DoctrineAddressOperationalRepository'
-    App\Addressing\RepositoryInterface\Persistence\AddressQueueRepositoryInterface: '@App\Addressing\Repository\Persistence\DoctrineAddressQueueRepository'
-    App\Addressing\RepositoryInterface\Persistence\AddressGovernanceRepositoryInterface: '@App\Addressing\Repository\Persistence\DoctrineAddressGovernanceRepository'
-    App\Addressing\RepositoryInterface\Persistence\AddressPortfolioRepositoryInterface: '@App\Addressing\Repository\Persistence\DoctrineAddressPortfolioRepository'
-    App\Addressing\Projection\AddressIndex\AddressIndexRepositoryInterface: '@App\Addressing\Projection\AddressIndex\DoctrineAddressIndexRepository'
+    App\Addressing\RepositoryInterface\AddressWriteRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressWriteRepository'
+    App\Addressing\RepositoryInterface\AddressReadRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressReadRepository'
+    App\Addressing\RepositoryInterface\AddressEvidenceRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressEvidenceRepository'
+    App\Addressing\RepositoryInterface\AddressOperationalRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressOperationalRepository'
+    App\Addressing\RepositoryInterface\AddressQueueRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressQueueRepository'
+    App\Addressing\RepositoryInterface\AddressGovernanceRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressGovernanceRepository'
+    App\Addressing\RepositoryInterface\AddressPortfolioRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressPortfolioRepository'
+    App\Addressing\RepositoryInterface\AddressIndex\AddressIndexRepositoryInterface: '@App\Addressing\Repository\AddressIndex\DoctrineAddressIndexRepository'
 
-    App\Addressing\Http\Middleware\AddressRateLimiter:
+    App\Addressing\Service\Http\Address\AddressRateLimiterService:
+        public: true
+
+    App\Addressing\Service\Fixture\AddressDemoFixtureService:
         public: true

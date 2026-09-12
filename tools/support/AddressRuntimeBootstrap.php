@@ -64,12 +64,7 @@ final class AddressRuntimeBootstrap
 
     public static function connection(): Connection
     {
-        $connection = self::service(Connection::class);
-        if (!$connection instanceof Connection) {
-            throw new RuntimeException('primary_connection_service_missing');
-        }
-
-        return $connection;
+        return self::entityManager()->getConnection();
     }
 
     private static function debugFlag(): bool
@@ -82,18 +77,18 @@ final class AddressRuntimeBootstrap
 
     private static function ensureAddressDbPath(): void
     {
-        if ('' !== ($_SERVER['ADDRESS_DB_PATH'] ?? $_ENV['ADDRESS_DB_PATH'] ?? getenv('ADDRESS_DB_PATH') ?? '')) {
+        $configuredPath = $_SERVER['ADDRESS_DB_PATH'] ?? $_ENV['ADDRESS_DB_PATH'] ?? getenv('ADDRESS_DB_PATH');
+        if (is_string($configuredPath) && '' !== trim($configuredPath)) {
             return;
         }
 
         $dsn = $_SERVER['ADDRESS_DB_DSN'] ?? $_ENV['ADDRESS_DB_DSN'] ?? getenv('ADDRESS_DB_DSN');
-        if (!is_string($dsn) || '' === trim($dsn) || !str_starts_with($dsn, 'sqlite:')) {
-            return;
-        }
+        $path = is_string($dsn) && str_starts_with(trim($dsn), 'sqlite:')
+            ? substr(trim($dsn), strlen('sqlite:'))
+            : self::projectRoot().'/var/addressing.sqlite';
 
-        $path = substr($dsn, strlen('sqlite:'));
         if ('' === $path) {
-            return;
+            $path = self::projectRoot().'/var/addressing.sqlite';
         }
 
         putenv('ADDRESS_DB_PATH='.$path);

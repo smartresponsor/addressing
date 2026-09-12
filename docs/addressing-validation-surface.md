@@ -7,9 +7,9 @@
 ## What now lives outside the applier service
 
 - `src/Service/Application/AddressValidatedPayloadFactory.php` owns reusable validated-payload semantics such as evidence detection, normalized snapshot derivation, provider-digest derivation, governance-link normalization, and outbox payload shaping.
-- `src/Integration/Persistence/AddressTenantScopeSqlHelper.php` owns tenant-scope SQL clause and parameter assembly.
+- `src/Builder/Persistence/AddressTenantScopeSqlBuilder.php` owns tenant-scope SQL clause and parameter assembly.
 - `src/Integration/Persistence/AddressValidatedMutationPlanBuilder.php` owns validated update-assignment and parameter-plan construction for the `address_entity` mutation path.
-- `src/Integration/Persistence/AddressValidatedMutationPlan.php` carries the assembled mutation state used by the applier transaction.
+- `src/Plan/Persistence/AddressValidatedMutationPlan.php` carries the assembled mutation state used by the applier transaction.
 - `src/Integration/Persistence/AddressEvidenceSnapshotWriter.php` owns persistence writes to `address_evidence_snapshot`.
 - `src/Integration/Persistence/AddressOutboxWriter.php` owns persistence writes to `address_outbox`.
 

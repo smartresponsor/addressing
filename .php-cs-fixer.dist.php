@@ -20,9 +20,11 @@ $finder = Finder::create()
         'public',
         'migrations',
     ])
-    ->name('*.php');
+    ->name('*.php')
+    ->notPath('reference.php');
 
 return new Config()
+    ->setRiskyAllowed(true)
     ->setParallelConfig(ParallelConfigFactory::detect())
     ->setUsingCache(true)
     ->setCacheFile(__DIR__ . '/var/.php-cs-fixer.cache')

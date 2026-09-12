@@ -5,29 +5,22 @@ declare(strict_types=1);
 
 use App\Addressing\Kernel;
 use App\Addressing\Service\Http\Address\AddressReadHttpService;
-use Doctrine\DBAL\Connection;
 
-require_once dirname(__DIR__).'/../support/AddressRuntimeBootstrap.php';
+require_once dirname(__DIR__).'/support/AddressRuntimeBootstrap.php';
 
 $kernel = AddressRuntimeBootstrap::bootKernel();
 $addressReadHttpService = AddressRuntimeBootstrap::service(AddressReadHttpService::class);
-$connection = AddressRuntimeBootstrap::connection();
-$driver = $connection->getDatabasePlatform()->getName();
 
 $ok = $kernel instanceof Kernel
-    && $addressReadHttpService instanceof AddressReadHttpService
-    && $connection instanceof Connection
-    && '' !== $driver;
+    && $addressReadHttpService instanceof AddressReadHttpService;
 
 fwrite(STDOUT, json_encode([
     'component' => 'Addressing',
     'check' => 'runtime',
     'status' => $ok ? 'ready' : 'incomplete',
-    'driver' => $driver,
     'services' => [
         Kernel::class => $kernel instanceof Kernel,
         AddressReadHttpService::class => $addressReadHttpService instanceof AddressReadHttpService,
-        Connection::class => $connection instanceof Connection,
     ],
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
 

@@ -1,0 +1,12 @@
+rule_set:
+    name: addressing-platform-canon
+    description: Addressing platform-level canon gates that do not require a component-specific profile.
+    rules:
+        - canon.022.standalone_application_dependency_baseline
+        - canon.023.development_composer_symlink
+        - canon.024.production_composer_bundle
+        - canon.025.component_dual_runtime_mode
+        - canon.026.platform_version_baseline
+        - canon.027.database_engine_baseline
+        - canon.028.dual_doctrine_connection
+        - canon.029.mandatory_php_quality_tooling
