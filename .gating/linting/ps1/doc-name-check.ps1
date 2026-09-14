@@ -6,7 +6,7 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path -Path $Root
-$gateDir = Join-Path $repoRoot ".gate"
+$gateDir = Join-Path $repoRoot ".gating"
 if (-not (Test-Path -LiteralPath $gateDir)) {
   $gateDir = $repoRoot
 }

@@ -7,7 +7,7 @@ DOMAIN="${2:-canon}"
 DIR="${3:-}"
 
 ROOT="$(cd "$ROOT" && pwd)"
-GATE_DIR="$ROOT/.gate"
+GATE_DIR="$ROOT/.gating"
 if [[ ! -d "$GATE_DIR" ]]; then
   GATE_DIR="$ROOT"
 fi

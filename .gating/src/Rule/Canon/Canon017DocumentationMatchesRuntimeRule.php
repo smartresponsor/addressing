@@ -36,6 +36,9 @@ final class Canon017DocumentationMatchesRuntimeRule extends AbstractCanonRule
             if (!$file instanceof \SplFileInfo || !$file->isFile() || !in_array(strtolower($file->getExtension()), ['md', 'adoc', 'rst'], true)) {
                 continue;
             }
+            if ('CMCP_CHANGELOG.md' === $file->getBasename()) {
+                continue;
+            }
 
             $path = str_replace('\\', '/', $file->getPathname());
             if (str_contains($path, '/vendor/') || str_contains($path, '/var/') || str_contains($path, '/.git/')) {

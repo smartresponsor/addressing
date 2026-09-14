@@ -5,7 +5,7 @@ REPO_ROOT="${1:-$(pwd)}"
 QUALITY="${QUALITY:-0}"
 ARCHIVE_ZIPS="${ARCHIVE_ZIPS:-}"
 
-GATE_DIR="$REPO_ROOT/.gate"
+GATE_DIR="$REPO_ROOT/.gating"
 if [[ ! -d "$GATE_DIR" ]]; then
   GATE_DIR="$REPO_ROOT"
 fi

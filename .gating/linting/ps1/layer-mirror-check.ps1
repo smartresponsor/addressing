@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 $root = Resolve-Path -Path $Path
 $arg = @("--path", $root, "--report", $Report)
 if ($NoWrite) { $arg += "--no-write" }
-$gateDir = Join-Path $root ".gate"
+$gateDir = Join-Path $root ".gating"
 if (-not (Test-Path -LiteralPath $gateDir)) {
   $gateDir = $root
 }

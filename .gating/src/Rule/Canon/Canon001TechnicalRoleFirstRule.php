@@ -12,7 +12,7 @@ use Gating\Gate\Contract\RuleResult;
  */
 final class Canon001TechnicalRoleFirstRule extends AbstractCanonRule
 {
-    private const array ROOTS = ['Controller', 'Service', 'ServiceInterface', 'Repository', 'RepositoryInterface', 'Entity', 'DTO', 'Snapshot', 'Form', 'FormInterface', 'Policy', 'Builder', 'BuilderInterface', 'Responder', 'ResponderInterface', 'Command', 'Enum', 'Event', 'EventSubscriber', 'ValueObject', 'ValueObjectInterface', 'Exception', 'Message', 'Handler', 'Provider', 'ProviderInterface', 'Resolver', 'Factory', 'FactoryInterface', 'Recorder', 'RecorderInterface', 'Verifier', 'VerifierInterface', 'Authenticator', 'Clock', 'Codec', 'Context', 'Guard', 'Invoker', 'Parser', 'Runner', 'Contract', 'Kernel', 'Registry', 'Rule', 'Console', 'Inventory', 'Profile', 'Reporter', 'Target', 'DataFixtures', 'Validator', 'DependencyInjection'];
+    private const array ROOTS = ['Controller', 'Service', 'ServiceInterface', 'Repository', 'RepositoryInterface', 'Entity', 'DTO', 'Snapshot', 'Form', 'FormInterface', 'Policy', 'Builder', 'BuilderInterface', 'Responder', 'ResponderInterface', 'Command', 'Enum', 'Event', 'EventSubscriber', 'ValueObject', 'ValueObjectInterface', 'Exception', 'Message', 'Handler', 'Provider', 'ProviderInterface', 'Resolver', 'Factory', 'FactoryInterface', 'Normalizer', 'Recorder', 'RecorderInterface', 'Verifier', 'VerifierInterface', 'Authenticator', 'Clock', 'Codec', 'Context', 'Guard', 'Invoker', 'Parser', 'Runner', 'Contract', 'Kernel', 'Registry', 'Rule', 'Console', 'Inventory', 'Profile', 'Reporter', 'Target', 'DataFixtures', 'Validator', 'DependencyInjection'];
 
     /**
      * Returns the stable identifier used to register and report this Gating rule.

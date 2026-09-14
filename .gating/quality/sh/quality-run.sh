@@ -2,7 +2,7 @@
 set -euo pipefail
 REPO_ROOT="${1:-$(pwd)}"
 REPO_ROOT="$(cd "$REPO_ROOT" && pwd)"
-GATE_DIR="$REPO_ROOT/.gate"
+GATE_DIR="$REPO_ROOT/.gating"
 if [[ ! -d "$GATE_DIR" ]]; then
   GATE_DIR="$REPO_ROOT"
 fi
