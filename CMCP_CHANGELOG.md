@@ -136,4 +136,15 @@
 - Final `composer qa:full`: PASS — lint 201 files, CS 167 files, PHPStan 165 paths, Deptrac 136 paths/0 violations, trust-surface ready, Rector clean, PHPUnit 22 tests/108 assertions/1 intentional skip.
 - Final `composer validate --strict --check-lock`: PASS.
 - Signed integration commit `c951d89` contains only the first dependency-baseline change set; pre-existing `.gating/**` and `config/reference.php` changes were excluded.
-- Push attempt was blocked by Console MCP policy because `master` is protected and the worktree still contains 182 pre-existing unrelated changes. Current branch evidence at the block: `master` ahead 1, behind 0; no remote mutation occurred.
+- Initial push attempt was blocked by Console MCP policy because `master` is protected and the worktree still reported 182 entries.
+
+### Dirty-worktree and protected-master closure
+
+- Forensic Git review showed the 182-entry status was not 182 independent code edits: only 27 tracked files had content diffs, consisting of the embedded `.gating/**` distribution plus generated `config/reference.php`; the remaining status entries collapsed after index normalization.
+- Canon037 was read directly from Canonization and requires `config/reference.php` to remain outside repository source history. Added `/config/reference.php` to `.gitignore`, removed the file from the Git index while preserving the local generated copy, and committed this as `d11a346` (`Stop tracking generated Symfony reference`).
+- The embedded `.gating` changes were verified as the current Gating `0.11.0` distribution: sampled Registry, Cruding profile, Canon043–045 and tooling matched the owner `Gating` repository; staging `.gating` normalized status noise down to 34 real files.
+- Embedded Gating calibration tests passed, then the policy-pack sync was committed as `85fd7ae` (`Sync Addressing Gating policy pack`).
+- Post-sync worktree became fully clean: `dirtyCount=0`; local `master` was ahead of `origin/master` by four commits and behind by zero.
+- Direct push to protected `master` was not bypassed. Created `rc/addressing-rc-closure` at HEAD, pushed it to origin, and opened PR `smartresponsor/addressing#81` against `master`.
+- PR #81 is Git-mergeable. GitHub checks currently fail before runner steps start (`steps: []`) across CodeQL, Qodana, Security and Addressing gate workflows. The same pre-runner pattern is present in other `smartresponsor` repositories, including a recent Tagging CodeQL run, so this is an organization/GitHub Actions infrastructure blocker rather than an Addressing code failure.
+- Merge remains intentionally stopped while GitHub checks are red and review is required; no branch-protection bypass or force push was used.
