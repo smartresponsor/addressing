@@ -7,7 +7,9 @@
         "php": "^8.4",
         "ext-curl": "*",
         "ext-pdo": "*",
+        "collectioning/collection": "dev-master",
         "cruding/crud": "dev-master",
+        "tabling/table": "dev-master",
         "doctrine/doctrine-bundle": "^3.2",
         "doctrine/orm": "^2.15 || ^3.0",
         "easycorp/easyadmin-bundle": "^5.0",
@@ -173,30 +175,62 @@
     "repositories": [
         {
             "type": "path",
+            "url": "../Collectioning",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "collectioning/collection": "dev-master"
+                }
+            }
+        },
+        {
+            "type": "path",
             "url": "../Cruding",
             "options": {
-                "symlink": true
+                "symlink": true,
+                "versions": {
+                    "cruding/crud": "dev-master"
+                }
             }
         },
         {
             "type": "path",
             "url": "../Interfacing",
             "options": {
-                "symlink": true
+                "symlink": true,
+                "versions": {
+                    "interfacing/interface": "dev-master"
+                }
             }
         },
         {
             "type": "path",
             "url": "../Objecting",
             "options": {
-                "symlink": true
+                "symlink": true,
+                "versions": {
+                    "objecting/object": "dev-master"
+                }
+            }
+        },
+        {
+            "type": "path",
+            "url": "../Tabling",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "tabling/table": "dev-master"
+                }
             }
         },
         {
             "type": "path",
             "url": "../Viewing",
             "options": {
-                "symlink": true
+                "symlink": true,
+                "versions": {
+                    "viewing/view": "dev-master"
+                }
             }
         }
     ]

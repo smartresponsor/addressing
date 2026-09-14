@@ -93,3 +93,40 @@
 
 - The repository was already materially dirty before this task and `master` was already ahead of `origin/master`; many files touched by this RC pass also contained pre-existing migration edits.
 - No broad stage/commit/push is permitted until provenance is reviewed, because doing so would fold unrelated pre-existing work into this RC integration unit.
+
+## 2026-09-14 — Addressing RC dependency-contract pass
+
+### Reconnaissance baseline
+
+- Read repository `AGENTS.md`, `README.md`, `composer.json`, Addressing architecture/boundary documentation, standalone boot surfaces, and the available QA/gate inventory.
+- Read the mandatory contracts for Objecting, Cruding, Viewing, Interfacing, Collectioning, and Tabling plus Gating and Canonization.
+- Consulted authoritative Canonization rules `Canon001`, `Canon010`, `Canon017`, `Canon021`, `Canon022`, `Canon031`, `Canon043`, `Canon044`, and `Canon045`.
+- Market/open-source baseline: mature address platforms separate parsing/normalization from validation/provider evidence, governance/deduplication, and geocoding. Provider integration/geocoding remains outside this RC workstream.
+- Pre-existing worktree contained 182 status entries, overwhelmingly under `.gating`, plus `config/reference.php`; these are preserved and excluded from this patch.
+
+### Target-to-canon mapping
+
+- `Canon021`: generic CRUD stays in Cruding.
+- `Canon022`: standalone Addressing (`bin/console` + `config/bundles.php`) requires Collectioning and Tabling as direct runtime dependencies.
+- `Canon043`: locally linked first-party packages use exact `dev-master` plus `options.versions` pins.
+- `Canon045`: root Composer exposes the complete first-party local path-repository closure.
+- `Canon044`: Objecting-backed persisted fields stay entity-native; no field rename is required in this pass.
+
+### Selected RC-critical implementation
+
+- Add direct `collectioning/collection` and `tabling/table` dependencies.
+- Add canonical local path repositories/version pins for the complete first-party baseline.
+- Register Collectioning and Tabling bundles in standalone runtime and mirror the dependencies in `composer.prod.json`.
+
+### Evidence and gates
+
+- Pre-change `composer gating`: FAIL only `Canon022`, reporting missing Collectioning and Tabling direct dependencies; Canon023–029 pass.
+- Post-change Composer resolution: PASS; Collectioning and Tabling resolve as local junction/path packages and the lock was updated deterministically.
+- `composer gating`: PASS — Canon022–029, 8/8.
+- `composer validate --strict --check-lock`: PASS.
+- `composer qa:phpstan`: PASS — 165 analysed paths, 0 errors.
+- `composer qa:deptrac`: PASS — 0 violations, 0 uncovered, 0 errors.
+- `composer test`: PASS — 22 tests, 108 assertions, 1 intentional skip.
+- `composer smoke:container`: PASS.
+- `composer smoke:runtime`: PASS.
+- `composer audit`: PASS — no security advisories.
