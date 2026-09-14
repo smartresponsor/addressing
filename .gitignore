@@ -41,4 +41,5 @@ test-results/
 !/Domain/Ai/agent-trigger/worker/.dev.vars.example
 
 docs/site/
+/config/reference.php
 var/
