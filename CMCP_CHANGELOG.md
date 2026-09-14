@@ -130,3 +130,10 @@
 - `composer smoke:container`: PASS.
 - `composer smoke:runtime`: PASS.
 - `composer audit`: PASS — no security advisories.
+- Aggregate `qa:full` initially exposed two pre-existing QA wiring defects: source-style scanning included generated `config/reference.php`, and PHPMD scripts referenced an uninstalled tool whose stable dependency line cannot coexist with Symfony 8.1.
+- Aligned `.php-cs-fixer.php` with the existing dist contract by excluding generated `config/reference.php` rather than mutating the generated file.
+- Removed dead PHPMD script wiring after Composer proved stable PHPMD 2.15/PDepend 2.x incompatible with Symfony 8.1; `qa:full` now composes the maintained `qa` contour (PHPStan, Deptrac, trust-surface, Rector) with style and tests.
+- Final `composer qa:full`: PASS — lint 201 files, CS 167 files, PHPStan 165 paths, Deptrac 136 paths/0 violations, trust-surface ready, Rector clean, PHPUnit 22 tests/108 assertions/1 intentional skip.
+- Final `composer validate --strict --check-lock`: PASS.
+- Signed integration commit `c951d89` contains only the first dependency-baseline change set; pre-existing `.gating/**` and `config/reference.php` changes were excluded.
+- Push attempt was blocked by Console MCP policy because `master` is protected and the worktree still contains 182 pre-existing unrelated changes. Current branch evidence at the block: `master` ahead 1, behind 0; no remote mutation occurred.

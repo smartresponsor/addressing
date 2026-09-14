@@ -88,8 +88,6 @@
         "cs:check-quiet": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run",
         "stan:conservative": "tools/php/php82.php vendor/bin/phpstan analyse",
         "stan:runtime-target": "@php tools/php/php84.php vendor/bin/phpstan analyse",
-        "md": "@php tools/php/php84.php vendor/bin/phpmd src,text phpmd.xml.dist",
-        "md:tests": "@php tools/php/php84.php vendor/bin/phpmd tests,text phpmd.xml.dist",
         "test:unit": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite unit",
         "test:object-identity": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist tests/Unit/Address/AddressingObjectIdentityContractTest.php",
         "test:integration": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite integration",
@@ -110,17 +108,12 @@
         "qa:static": [
             "@stan"
         ],
-        "qa:smell": [
-            "@md",
-            "@md:tests"
-        ],
         "qa:test": [
             "@test"
         ],
         "qa:full": [
             "@qa:style",
-            "@qa:static",
-            "@qa:smell",
+            "@qa",
             "@qa:test"
         ],
         "smoke:runtime": "@php tools/php/php84.php tools/smoke/address-runtime-smoke.php",
