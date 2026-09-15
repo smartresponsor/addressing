@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = "Stop"
 $ArchiveZips = $env:ARCHIVE_ZIPS
 
-$gateDir = Join-Path $RepoRoot ".gate"
+$gateDir = Join-Path $RepoRoot ".gating"
 if (-not (Test-Path -LiteralPath $gateDir)) {
   $gateDir = $RepoRoot
 }

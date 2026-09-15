@@ -10,6 +10,7 @@ use Gating\Gate\Contract\RuleContext;
 use Gating\Gate\Inventory\InventoryScanner;
 use Gating\Gate\Rule\Canon\Canon027DatabaseEngineBaselineRule;
 use Gating\Gate\Rule\Canon\Canon028DualDoctrineConnectionRule;
+use Gating\Gate\Rule\Canon\Canon031PhpDocCoverageRule;
 use Gating\Gate\Rule\Canon\Canon032BundleRegistrationRule;
 use Gating\Gate\Rule\Canon\Canon035SymfonyContainerReuseRule;
 use Gating\Gate\Rule\Canon\Canon036DocumentationProducerOwnershipRule;
@@ -17,6 +18,12 @@ use Gating\Gate\Rule\Canon\Canon037GeneratedReferenceArtifactRule;
 use Gating\Gate\Rule\Canon\Canon038ConfigYamlSubjectPrefixRule;
 use Gating\Gate\Rule\Canon\Canon039PhpTestToolingRule;
 use Gating\Gate\Rule\Canon\Canon040PhpTestCoverageRule;
+use Gating\Gate\Rule\Canon\Canon041BehavioralUiTestToolingRule;
+use Gating\Gate\Rule\Canon\Canon042BehavioralUiCoverageRule;
+use Gating\Gate\Rule\Canon\Canon043DevelopmentComposerDependencyVersionRule;
+use Gating\Gate\Rule\Canon\Canon044ObjectingSystemFieldNamingRule;
+use Gating\Gate\Rule\Canon\Canon045DevelopmentComposerRepositoryClosureRule;
+use Gating\Gate\Rule\Canon\CanonRuleMirrorRule;
 use Gating\Gate\Rule\Documentation\DocblockPreservationRule;
 use Gating\Gate\Rule\Mirror\ServiceInterfaceMirrorRule;
 use Gating\Gate\Rule\Mutation\MutationSafetyRule;
@@ -51,6 +58,49 @@ $runCommand = static function (array $command): int {
 };
 
 try {
+    $mirrorRoot = $root.'/mirror';
+    $mirrorGating = $mirrorRoot.'/Gating';
+    $mirrorCanonization = $mirrorRoot.'/Canonization/.canonization/Governance/Architecture/Rule';
+    mkdir($mirrorGating.'/src/Rule/Canon', 0777, true);
+    mkdir($mirrorCanonization, 0777, true);
+    file_put_contents($mirrorGating.'/src/Rule/Canon/Canon999EvidenceProbeRule.php', "<?php\n");
+    file_put_contents($mirrorCanonization.'/Canon999EvidenceProbeRule.md', <<<'MARKDOWN'
+# Canon999EvidenceProbeRule — Calibration Probe
+
+## Evidence Contract
+```yaml
+evidence_contract:
+  coverage: "probe population"
+  extraction: [relative_path]
+  body_read: prohibited
+  reasoning: none
+  escalation: [parse_failure]
+  executable_evidence: ["probe gate"]
+```
+MARKDOWN);
+    $mirror = (new CanonRuleMirrorRule())->check(new RuleContext($mirrorGating));
+    $assert('passed' === $mirror->status, 'A mirrored Canon rule with a complete Evidence Contract must pass the mirror contract.');
+
+    file_put_contents(
+        $mirrorCanonization.'/Canon999EvidenceProbeRule.md',
+        str_replace("  reasoning: none\n", '', (string) file_get_contents($mirrorCanonization.'/Canon999EvidenceProbeRule.md')),
+    );
+    $mirror = (new CanonRuleMirrorRule())->check(new RuleContext($mirrorGating));
+    $assert('failed' === $mirror->status && str_contains(implode(' | ', $mirror->evidence), 'missing reasoning'), 'A Canon rule missing an Evidence Contract field must fail the mirror contract.');
+
+    unlink($mirrorCanonization.'/Canon999EvidenceProbeRule.md');
+    unlink($mirrorGating.'/src/Rule/Canon/Canon999EvidenceProbeRule.php');
+    rmdir($mirrorCanonization);
+    rmdir(dirname($mirrorCanonization));
+    rmdir(dirname($mirrorCanonization, 2));
+    rmdir(dirname($mirrorCanonization, 3));
+    rmdir(dirname($mirrorCanonization, 4));
+    rmdir($mirrorGating.'/src/Rule/Canon');
+    rmdir($mirrorGating.'/src/Rule');
+    rmdir($mirrorGating.'/src');
+    rmdir($mirrorGating);
+    rmdir($mirrorRoot);
+
     mkdir($root.'/config/routes', 0777, true);
     file_put_contents($root.'/config/routes/test.yaml', <<<'YAML'
 real_route:
@@ -79,6 +129,96 @@ YAML);
     $assert('passed' === $owner->status, 'Excluded vendor route name must not affect owner policy.');
     $segments = (new RoutePathSegmentSeparationRule())->check(new RuleContext($root, $excludedProfile));
     $assert('failed' === $segments->status && 1 === count($segments->evidence), 'Excluded vendor route name must not add path-segment findings.');
+
+    $composerPolicyRoot = $root.'/composer-policy';
+    $composerPolicySibling = $root.'/Objecting';
+    mkdir($composerPolicyRoot, 0777, true);
+    mkdir($composerPolicySibling, 0777, true);
+    file_put_contents($composerPolicySibling.'/composer.json', '{"name":"objecting/object"}');
+    file_put_contents($composerPolicyRoot.'/composer.json', json_encode([
+        'minimum-stability' => 'dev',
+        'prefer-stable' => true,
+        'require' => ['objecting/object' => 'dev-master'],
+        'repositories' => [[
+            'type' => 'path',
+            'url' => '../Objecting',
+            'options' => ['symlink' => true, 'versions' => ['objecting/object' => 'dev-master']],
+        ]],
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    $composerVersion = (new Canon043DevelopmentComposerDependencyVersionRule())->check(new RuleContext($composerPolicyRoot));
+    $assert('passed' === $composerVersion->status, 'Local sibling dependency using dev-master must pass Canon043.');
+    file_put_contents($composerPolicyRoot.'/composer.json', str_replace('dev-master', '*@dev', (string) file_get_contents($composerPolicyRoot.'/composer.json')));
+    $composerVersion = (new Canon043DevelopmentComposerDependencyVersionRule())->check(new RuleContext($composerPolicyRoot));
+    $assert('failed' === $composerVersion->status, 'Local sibling dependency using *@dev must fail Canon043.');
+
+    $composerClosureRoot = $root.'/composer-closure';
+    $composerClosureCruding = $root.'/Cruding';
+    $composerClosureCollectioning = $root.'/Collectioning';
+    mkdir($composerClosureRoot, 0777, true);
+    mkdir($composerClosureCruding, 0777, true);
+    mkdir($composerClosureCollectioning, 0777, true);
+    file_put_contents($composerClosureCollectioning.'/composer.json', '{"name":"collectioning/collection"}');
+    file_put_contents($composerClosureCruding.'/composer.json', json_encode([
+        'name' => 'cruding/crud',
+        'require' => ['collectioning/collection' => 'dev-master'],
+        'repositories' => [['type' => 'path', 'url' => '../Collectioning']],
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    file_put_contents($composerClosureRoot.'/composer.json', json_encode([
+        'require' => ['cruding/crud' => 'dev-master'],
+        'repositories' => [['type' => 'path', 'url' => '../Cruding']],
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    $composerClosure = (new Canon045DevelopmentComposerRepositoryClosureRule())->check(new RuleContext($composerClosureRoot));
+    $assert('failed' === $composerClosure->status, 'Missing root path visibility for a transitive first-party dependency must fail Canon045.');
+    file_put_contents($composerClosureRoot.'/composer.json', json_encode([
+        'require' => ['cruding/crud' => 'dev-master'],
+        'repositories' => [
+            ['type' => 'path', 'url' => '../Cruding'],
+            ['type' => 'path', 'url' => '../Collectioning'],
+        ],
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    $composerClosure = (new Canon045DevelopmentComposerRepositoryClosureRule())->check(new RuleContext($composerClosureRoot));
+    $assert('passed' === $composerClosure->status, 'Complete root local repository closure must pass Canon045.');
+
+    $objectingNamingRoot = $root.'/objecting-field-naming';
+    mkdir($objectingNamingRoot.'/src/Entity', 0777, true);
+    file_put_contents($objectingNamingRoot.'/composer.json', '{"name":"objecting/object"}');
+    file_put_contents($objectingNamingRoot.'/src/Entity/Example.php', "<?php\nnamespace App\\Objecting\\Entity;\nuse Doctrine\\ORM\\Mapping as ORM;\nfinal class Example { #[ORM\\Column(name: 'created_at')] private \\DateTimeImmutable \$createdAt; }\n");
+    $objectingNaming = (new Canon044ObjectingSystemFieldNamingRule())->check(new RuleContext($objectingNamingRoot));
+    $assert('passed' === $objectingNaming->status, 'Entity-native Objecting system field names must pass Canon044.');
+    file_put_contents($objectingNamingRoot.'/src/Entity/Example.php', "<?php\nnamespace App\\Objecting\\Entity;\nuse Doctrine\\ORM\\Mapping as ORM;\nfinal class Example { #[ORM\\Column(name: 'object_created_at')] private \\DateTimeImmutable \$objectCreatedAt; }\n");
+    $objectingNaming = (new Canon044ObjectingSystemFieldNamingRule())->check(new RuleContext($objectingNamingRoot));
+    $assert('failed' === $objectingNaming->status, 'Objecting-prefixed Doctrine field and column names must fail Canon044.');
+    unlink($objectingNamingRoot.'/src/Entity/Example.php');
+    unlink($objectingNamingRoot.'/composer.json');
+    rmdir($objectingNamingRoot.'/src/Entity');
+    rmdir($objectingNamingRoot.'/src');
+    rmdir($objectingNamingRoot);
+
+    $phpDocRoot = $root.'/phpdoc-coverage';
+    mkdir($phpDocRoot.'/src', 0777, true);
+    file_put_contents($phpDocRoot.'/src/ExampleDocumentedService.php', <<<'PHPFILE'
+<?php
+/**
+ * Represents one documented service contract used for calibration.
+ */
+final class ExampleDocumentedService
+{
+    public function __construct() {}
+    public function getName(): string { return 'example'; }
+    public function setName(string $name): void {}
+    private function helper(): void {}
+    /**
+     * Executes the externally meaningful service behavior for callers.
+     */
+    public function run(): void {}
+}
+PHPFILE);
+    $phpDocCoverage = (new Canon031PhpDocCoverageRule())->check(new RuleContext($phpDocRoot));
+    $assert('passed' === $phpDocCoverage->status, 'Canon031 must ignore constructor/accessor/private implementation noise when the class and contract method are documented.');
+    $assert(str_contains($phpDocCoverage->message, 'excluded trivial/internal methods'), 'Canon031 must report excluded trivial/internal methods separately from the coverage denominator.');
+    unlink($phpDocRoot.'/src/ExampleDocumentedService.php');
+    rmdir($phpDocRoot.'/src');
+    rmdir($phpDocRoot);
 
     file_put_contents($root.'/.php-cs-fixer.dist.php', "<?php return (new PhpCsFixer\\Config())->setRules(['phpdoc_to_comment' => false]);\n");
     $docblock = (new DocblockPreservationRule())->check(new RuleContext($root));
@@ -221,6 +361,82 @@ COVERAGE);
     touch($testingRoot.'/var/coverage/summary.txt', time() + 5);
     $testCoverage = (new Canon040PhpTestCoverageRule())->check(new RuleContext($testingRoot));
     $assert('warning' === $testCoverage->status && str_contains(implode(' | ', $testCoverage->evidence), 'Missing Branches metric'), 'Missing branch instrumentation must warn instead of being treated as full branch coverage.');
+
+    $uiTestingRoot = $root.'/behavioral-ui-testing';
+    mkdir($uiTestingRoot.'/src', 0777, true);
+    mkdir($uiTestingRoot.'/var/coverage', 0777, true);
+    file_put_contents($uiTestingRoot.'/src/Kernel.php', "<?php namespace App; final class Kernel {}\n");
+    file_put_contents($uiTestingRoot.'/composer.json', json_encode([
+        'require' => ['symfony/framework-bundle' => '^8.1'],
+        'require-dev' => [
+            'phpunit/phpunit' => '^13.3',
+            'symfony/test-pack' => '^2.0',
+            'symfony/panther' => '^2.3',
+        ],
+        'scripts' => [
+            'test' => 'phpunit',
+            'test:behavioral-coverage' => 'php tool/behavioral-coverage.php',
+        ],
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    file_put_contents($uiTestingRoot.'/package.json', json_encode([
+        'devDependencies' => ['@playwright/test' => '^1.0'],
+        'scripts' => ['test:ui' => 'playwright test'],
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    file_put_contents($uiTestingRoot.'/playwright.config.ts', "export default {};\n");
+
+    $behavioralTooling = (new Canon041BehavioralUiTestToolingRule())->check(new RuleContext($uiTestingRoot));
+    $assert('passed' === $behavioralTooling->status, 'Canonical Symfony Test Pack, Panther, and Playwright tooling must pass Canon041; got '.$behavioralTooling->status.': '.$behavioralTooling->message.' '.implode(' | ', $behavioralTooling->evidence));
+
+    file_put_contents($uiTestingRoot.'/var/coverage/behavioral-ui.json', json_encode([
+        'functional' => ['covered' => 8, 'total' => 10],
+        'behavioral' => ['covered' => 8, 'total' => 10],
+        'ui' => ['covered' => 7, 'total' => 10],
+        'critical' => ['covered' => 3, 'total' => 3],
+    ], JSON_PRETTY_PRINT));
+    $legacyBehavioralCoverage = (new Canon042BehavioralUiCoverageRule())->check(new RuleContext($uiTestingRoot));
+    $assert('warning' === $legacyBehavioralCoverage->status && str_contains($legacyBehavioralCoverage->message, 'legacy schema'), 'Counter-only Canon042 evidence must warn instead of being accepted as reproducible coverage.');
+
+    $inventory = static fn (int $total, int $covered, string $prefix): array => [
+        'eligible' => array_map(static fn (int $index): string => $prefix.':'.$index, range(1, $total)),
+        'covered' => array_map(static fn (int $index): string => $prefix.':'.$index, range(1, $covered)),
+    ];
+    file_put_contents($uiTestingRoot.'/var/coverage/behavioral-ui.json', json_encode([
+        'schema' => 'behavioral-ui-coverage-v2',
+        'generatedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
+        'producer' => ['kind' => 'repository_script', 'script' => 'test:behavioral-coverage'],
+        'dimensions' => [
+            'functional' => $inventory(10, 8, 'functional'),
+            'behavioral' => $inventory(10, 8, 'behavioral'),
+            'ui' => $inventory(10, 7, 'ui'),
+            'critical' => $inventory(3, 3, 'critical'),
+        ],
+    ], JSON_PRETTY_PRINT));
+    $behavioralCoverage = (new Canon042BehavioralUiCoverageRule())->check(new RuleContext($uiTestingRoot));
+    $assert('passed' === $behavioralCoverage->status, 'Exactly 80/80/70/100 behavioral/UI coverage must pass Canon042; got '.$behavioralCoverage->status.': '.$behavioralCoverage->message.' '.implode(' | ', $behavioralCoverage->evidence));
+
+    file_put_contents($uiTestingRoot.'/var/coverage/behavioral-ui.json', json_encode([
+        'schema' => 'behavioral-ui-coverage-v2',
+        'generatedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
+        'producer' => ['kind' => 'repository_script', 'script' => 'test:behavioral-coverage'],
+        'dimensions' => [
+            'functional' => $inventory(10, 4, 'functional'),
+            'behavioral' => $inventory(10, 4, 'behavioral'),
+            'ui' => $inventory(10, 3, 'ui'),
+            'critical' => $inventory(3, 2, 'critical'),
+        ],
+    ], JSON_PRETTY_PRINT));
+    $behavioralCoverage = (new Canon042BehavioralUiCoverageRule())->check(new RuleContext($uiTestingRoot));
+    $assert('warning' === $behavioralCoverage->status && str_contains($behavioralCoverage->message, 'HIGH_BEHAVIORAL_TEST_DEBT'), '40/40/30/66.7 behavioral/UI coverage must warn and classify HIGH_BEHAVIORAL_TEST_DEBT.');
+
+    unlink($uiTestingRoot.'/var/coverage/behavioral-ui.json');
+    unlink($uiTestingRoot.'/playwright.config.ts');
+    unlink($uiTestingRoot.'/package.json');
+    unlink($uiTestingRoot.'/composer.json');
+    unlink($uiTestingRoot.'/src/Kernel.php');
+    rmdir($uiTestingRoot.'/var/coverage');
+    rmdir($uiTestingRoot.'/var');
+    rmdir($uiTestingRoot.'/src');
+    rmdir($uiTestingRoot);
 
     unlink($testingRoot.'/var/coverage/summary.txt');
     unlink($testingRoot.'/phpunit.xml.dist');

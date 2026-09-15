@@ -25,22 +25,6 @@ paths:
                                 $ref: '#/components/schemas/AddressResponse'
                 '400':
                     description: Bad request
-        get:
-            summary: Page addresses (alias)
-            parameters:
-                -   $ref: '#/components/parameters/q'
-                -   $ref: '#/components/parameters/country'
-                -   $ref: '#/components/parameters/ownerId'
-                -   $ref: '#/components/parameters/vendorId'
-                -   $ref: '#/components/parameters/limit'
-                -   $ref: '#/components/parameters/cursor'
-            responses:
-                '200':
-                    description: Page
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/AddressPageResponse'
     /api/address/page:
         get:
             summary: Page addresses
@@ -72,6 +56,28 @@ paths:
                                 $ref: '#/components/schemas/AddressResponse'
                 '404':
                     description: Not found
+        patch:
+            summary: Patch Addressing operational state
+            parameters:
+                -   $ref: '#/components/parameters/id'
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            additionalProperties: true
+            responses:
+                '200':
+                    description: Updated address
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AddressResponse'
+                '404':
+                    description: Not found or not patched
+                '422':
+                    description: Invalid operational patch
         delete:
             summary: Mark address as deleted
             parameters:
@@ -103,6 +109,83 @@ paths:
                     description: Bad request
                 '404':
                     description: Not found
+    /api/address/search:
+        get:
+            summary: Search addresses
+            parameters:
+                -   $ref: '#/components/parameters/q'
+                -   $ref: '#/components/parameters/country'
+                -   $ref: '#/components/parameters/ownerId'
+                -   $ref: '#/components/parameters/vendorId'
+                -   $ref: '#/components/parameters/limit'
+                -   $ref: '#/components/parameters/cursor'
+            responses:
+                '200':
+                    description: Search page
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AddressPageResponse'
+    /api/address/queue-summary:
+        get:
+            summary: Summarize the current operational address queue
+            responses:
+                '200':
+                    description: Queue summary
+    /api/address/country-portfolio:
+        get:
+            summary: Summarize addresses by country
+            responses:
+                '200':
+                    description: Country portfolio summary
+    /api/address/source-portfolio:
+        get:
+            summary: Summarize addresses by source
+            responses:
+                '200':
+                    description: Source portfolio summary
+    /api/address/validation-portfolio:
+        get:
+            summary: Summarize address validation state
+            responses:
+                '200':
+                    description: Validation portfolio summary
+    /api/address/normalization-portfolio:
+        get:
+            summary: Summarize address normalization state
+            responses:
+                '200':
+                    description: Normalization portfolio summary
+    /api/address/operational-batch:
+        post:
+            summary: Apply an operational patch to a set of address IDs
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [ids]
+                            properties:
+                                ids:
+                                    type: array
+                                    items: { type: string }
+                            additionalProperties: true
+            responses:
+                '200':
+                    description: Batch patch result
+                '422':
+                    description: Invalid batch payload
+    /api/address/{id}/governance-cluster:
+        get:
+            summary: Summarize the governance cluster containing an address
+            parameters:
+                -   $ref: '#/components/parameters/id'
+            responses:
+                '200':
+                    description: Governance cluster summary
+                '404':
+                    description: No governance cluster found
 components:
     parameters:
         id:

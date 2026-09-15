@@ -14,6 +14,8 @@ final class Canon022StandaloneApplicationDependencyBaselineRule extends Abstract
 {
     private const array REQUIRED = [
         'cruding/crud',
+        'collectioning/collection',
+        'tabling/table',
         'viewing/view',
         'interfacing/interface',
         'objecting/object',

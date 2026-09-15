@@ -1,6 +1,7 @@
 {
     "info": {
-        "name": "Address API",
+        "name": "Addressing API",
+        "description": "Current standalone Addressing API examples; canonical contract: openapi/address.yaml",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
@@ -8,125 +9,40 @@
             "name": "Create Address",
             "request": {
                 "method": "POST",
-                "header": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
+                "header": [{"key": "Content-Type", "value": "application/json"}],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\n  \"city\": \"Kyiv\",\n  \"country\": \"UA\",\n  \"street\": \"Khreshchatyk\",\n  \"zipcode\": \"01001\"\n}"
+                    "raw": "{\n  \"ownerId\": \"demo-owner\",\n  \"line1\": \"1 Khreshchatyk Street\",\n  \"city\": \"Kyiv\",\n  \"region\": \"Kyiv\",\n  \"postalCode\": \"01001\",\n  \"country\": \"UA\"\n}"
                 },
-                "url": {
-                    "raw": "http://localhost:8000/address",
-                    "protocol": "http",
-                    "host": [
-                        "localhost"
-                    ],
-                    "port": "8000",
-                    "path": [
-                        "address"
-                    ]
-                }
+                "url": "http://localhost:8000/api/address"
             }
         },
         {
             "name": "Get Address by ID",
             "request": {
                 "method": "GET",
-                "url": {
-                    "raw": "http://localhost:8000/address/1",
-                    "protocol": "http",
-                    "host": [
-                        "localhost"
-                    ],
-                    "port": "8000",
-                    "path": [
-                        "address",
-                        "1"
-                    ]
-                }
+                "url": "http://localhost:8000/api/address/demo-0001?ownerId=demo-owner"
             }
         },
         {
-            "name": "Search Address by City",
+            "name": "Search Addresses",
             "request": {
                 "method": "GET",
-                "url": {
-                    "raw": "http://localhost:8000/address/search?city=Kyiv",
-                    "protocol": "http",
-                    "host": [
-                        "localhost"
-                    ],
-                    "port": "8000",
-                    "path": [
-                        "address",
-                        "search"
-                    ],
-                    "query": [
-                        {
-                            "key": "city",
-                            "value": "Kyiv"
-                        }
-                    ]
-                }
+                "url": "http://localhost:8000/api/address/search?ownerId=demo-owner&q=Kyiv"
             }
         },
         {
-            "name": "List Addresses (Paginated)",
+            "name": "Page Addresses",
             "request": {
                 "method": "GET",
-                "url": {
-                    "raw": "http://localhost:8000/address/list?page=1&limit=10",
-                    "protocol": "http",
-                    "host": [
-                        "localhost"
-                    ],
-                    "port": "8000",
-                    "path": [
-                        "address",
-                        "list"
-                    ],
-                    "query": [
-                        {
-                            "key": "page",
-                            "value": "1"
-                        },
-                        {
-                            "key": "limit",
-                            "value": "10"
-                        }
-                    ]
-                }
+                "url": "http://localhost:8000/api/address/page?ownerId=demo-owner&limit=10"
             }
         },
         {
-            "name": "Advanced Search",
+            "name": "Queue Summary",
             "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\n  \"city\": \"Kyiv\",\n  \"country\": \"UA\",\n  \"page\": 1,\n  \"limit\": 5\n}"
-                },
-                "url": {
-                    "raw": "http://localhost:8000/address/search-advanced",
-                    "protocol": "http",
-                    "host": [
-                        "localhost"
-                    ],
-                    "port": "8000",
-                    "path": [
-                        "address",
-                        "search-advanced"
-                    ]
-                }
+                "method": "GET",
+                "url": "http://localhost:8000/api/address/queue-summary?ownerId=demo-owner"
             }
         }
     ]

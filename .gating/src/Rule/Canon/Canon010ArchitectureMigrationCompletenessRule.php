@@ -35,6 +35,9 @@ final class Canon010ArchitectureMigrationCompletenessRule extends AbstractCanonR
             if (!$file instanceof \SplFileInfo || !$file->isFile()) {
                 continue;
             }
+            if ('CMCP_CHANGELOG.md' === $file->getBasename()) {
+                continue;
+            }
             $path = str_replace('\\', '/', $file->getPathname());
             if (str_contains($path, '/.git/') || str_contains($path, '/.gating/') || str_contains($path, '/vendor/') || str_contains($path, '/node_modules/') || str_contains($path, '/var/')) {
                 continue;

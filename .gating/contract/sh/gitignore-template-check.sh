@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="${1:-$(pwd)}"
-CONTRACT_JSON="$REPO_ROOT/.gate/contract/contract.json"
+CONTRACT_JSON="$REPO_ROOT/.gating/contract/contract.json"
 GITIGNORE="$REPO_ROOT/.gitignore"
 
 if [[ ! -f "$CONTRACT_JSON" ]]; then

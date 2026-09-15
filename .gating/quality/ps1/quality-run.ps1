@@ -4,7 +4,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$gateDir = Join-Path $RepoRoot ".gate"
+$gateDir = Join-Path $RepoRoot ".gating"
 if (-not (Test-Path -LiteralPath $gateDir)) {
   $gateDir = $RepoRoot
 }

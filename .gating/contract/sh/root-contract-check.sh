@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="${1:-$(pwd)}"
-CONTRACT_JSON="$REPO_ROOT/.gate/contract/contract.json"
+CONTRACT_JSON="$REPO_ROOT/.gating/contract/contract.json"
 
 if [[ ! -f "$CONTRACT_JSON" ]]; then
   echo "contract.json not found: $CONTRACT_JSON" >&2

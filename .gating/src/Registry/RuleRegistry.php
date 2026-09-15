@@ -48,6 +48,11 @@ use Gating\Gate\Rule\Canon\Canon037GeneratedReferenceArtifactRule;
 use Gating\Gate\Rule\Canon\Canon038ConfigYamlSubjectPrefixRule;
 use Gating\Gate\Rule\Canon\Canon039PhpTestToolingRule;
 use Gating\Gate\Rule\Canon\Canon040PhpTestCoverageRule;
+use Gating\Gate\Rule\Canon\Canon041BehavioralUiTestToolingRule;
+use Gating\Gate\Rule\Canon\Canon042BehavioralUiCoverageRule;
+use Gating\Gate\Rule\Canon\Canon043DevelopmentComposerDependencyVersionRule;
+use Gating\Gate\Rule\Canon\Canon044ObjectingSystemFieldNamingRule;
+use Gating\Gate\Rule\Canon\Canon045DevelopmentComposerRepositoryClosureRule;
 use Gating\Gate\Rule\Canon\CanonRuleMirrorRule;
 use Gating\Gate\Rule\Composer\ComposerPlatformRule;
 use Gating\Gate\Rule\Database\DatabaseTablePrefixRule;
@@ -114,6 +119,11 @@ final readonly class RuleRegistry
             new Canon038ConfigYamlSubjectPrefixRule(),
             new Canon039PhpTestToolingRule(),
             new Canon040PhpTestCoverageRule(),
+            new Canon041BehavioralUiTestToolingRule(),
+            new Canon042BehavioralUiCoverageRule(),
+            new Canon043DevelopmentComposerDependencyVersionRule(),
+            new Canon044ObjectingSystemFieldNamingRule(),
+            new Canon045DevelopmentComposerRepositoryClosureRule(),
             new CanonRuleMirrorRule(),
             new ProfileContractRule(),
             new ForbiddenArchitectureRule(),
@@ -190,7 +200,7 @@ final readonly class RuleRegistry
             ['id' => 'canon.019.no_alternative_layer_taxonomy', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Blocks competing Domain/Application/Infrastructure and Port/Adapter architecture roots.'],
             ['id' => 'canon.020.typed_symfony_role_root', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Blocks generic source roots that hide explicit Symfony/application technical roles.'],
             ['id' => 'canon.021.cruding_owns_generic_crud', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Reviews component-local generic CRUD machinery while exempting EasyAdmin back-office CRUD.'],
-            ['id' => 'canon.022.standalone_application_dependency_baseline', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Requires Cruding, Viewing, Interfacing, Objecting, and EasyAdmin as direct runtime dependencies of standalone Symfony applications.'],
+            ['id' => 'canon.022.standalone_application_dependency_baseline', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Requires Cruding, Collectioning, Tabling, Viewing, Interfacing, Objecting, and EasyAdmin as direct runtime dependencies of standalone Symfony applications.'],
             ['id' => 'canon.023.development_composer_symlink', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Requires local sibling Composer path repositories to use symlink=true in development.'],
             ['id' => 'canon.024.production_composer_bundle', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Requires composer.prod.json and rejects path/symlink repositories in production.'],
             ['id' => 'canon.025.component_dual_runtime_mode', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Requires standalone Symfony boot surfaces and a reusable component bundle surface.'],
@@ -209,6 +219,11 @@ final readonly class RuleRegistry
             ['id' => 'canon.038.config_yaml_subject_prefix', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Namespaces component-owned YAML filenames with the Canon018 subject token while exempting framework/vendor bootstrap conventions.'],
             ['id' => 'canon.039.php_test_tooling', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Requires PHPUnit, explicit production source coverage, branch instrumentation, and a persistent standard text coverage summary.'],
             ['id' => 'canon.040.php_test_coverage', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Measures line, method, and branch coverage independently and classifies high test debt.'],
+            ['id' => 'canon.041.behavioral_ui_test_tooling', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Requires Symfony Test Pack, Panther, and repository-local Playwright tooling for standalone Symfony applications.'],
+            ['id' => 'canon.042.behavioral_ui_coverage', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Evaluates explicit functional, behavioral, UI, and critical-workflow coverage evidence and classifies behavioral test debt.'],
+            ['id' => 'canon.043.development_composer_dependency_version', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Requires locally linked first-party Composer path dependencies to use exact dev-master constraints.'],
+            ['id' => 'canon.044.objecting_system_field_naming', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Requires Objecting persisted system fields and Doctrine columns to use entity-native names without object/objecting prefixes.'],
+            ['id' => 'canon.045.development_composer_repository_closure', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'canon-linked', 'summary' => 'Requires root development Composer manifests to expose the complete reachable local first-party path-repository closure.'],
             ['id' => 'canon.mirror_contract', 'area' => 'canon', 'scope' => 'platform', 'kind' => 'meta-canon', 'summary' => 'Validates CanonNNN mirror naming/coverage contract.'],
             ['id' => 'profile.contract_validity', 'area' => 'profile', 'scope' => 'profile', 'kind' => 'profile-canon', 'summary' => 'Ensures component profiles use the common Gating profile contract.'],
             ['id' => 'structure.forbidden_architecture', 'area' => 'structure', 'scope' => 'platform', 'kind' => 'hard-canon', 'summary' => 'Blocks /src/Domain, Port, Adapter, and Adaptor folders.'],

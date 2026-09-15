@@ -32,6 +32,7 @@ final class Canon031PhpDocCoverageRule extends AbstractCanonRule
         $classCovered = 0;
         $methodTotal = 0;
         $methodCovered = 0;
+        $methodExcluded = 0;
         $evidence = [];
 
         foreach ($this->phpFiles($context) as $file) {
@@ -50,14 +51,18 @@ final class Canon031PhpDocCoverageRule extends AbstractCanonRule
                 }
             }
 
-            if (preg_match_all('/(?:(\/\*\*.*?\*\/)\s*)?(?:#\[[^\r\n]*\]\s*)*(?:(?:public|protected|private|static|final|abstract)\s+)*function\s+&?\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(/s', $contents, $methods, PREG_SET_ORDER)) {
+            if (preg_match_all('/(?:(\/\*\*.*?\*\/)\s*)?(?:#\[[^\r\n]*\]\s*)*((?:(?:public|protected|private|static|final|abstract)\s+)*)function\s+&?\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(/s', $contents, $methods, PREG_SET_ORDER)) {
                 foreach ($methods as $match) {
+                    if (!$this->isMethodEligible($match[2], $match[3])) {
+                        ++$methodExcluded;
+                        continue;
+                    }
                     ++$methodTotal;
                     $status = $this->classify($match[1]);
                     if ('covered' === $status) {
                         ++$methodCovered;
                     } elseif (count($evidence) < self::MAX_EVIDENCE) {
-                        $evidence[] = sprintf('%s::%s() [method:%s]', $relative, $match[2], $status);
+                        $evidence[] = sprintf('%s::%s() [method:%s]', $relative, $match[3], $status);
                     }
                 }
             }
@@ -70,13 +75,14 @@ final class Canon031PhpDocCoverageRule extends AbstractCanonRule
         $classCoverage = 0 === $classTotal ? 100.0 : 100.0 * $classCovered / $classTotal;
         $methodCoverage = 0 === $methodTotal ? 100.0 : 100.0 * $methodCovered / $methodTotal;
         $summary = sprintf(
-            'PHPDoc coverage: classes %d/%d (%.1f%%), methods %d/%d (%.1f%%); threshold %.0f%%.',
+            'PHPDoc coverage: classes %d/%d (%.1f%%), contract methods %d/%d (%.1f%%), excluded trivial/internal methods %d; threshold %.0f%%.',
             $classCovered,
             $classTotal,
             $classCoverage,
             $methodCovered,
             $methodTotal,
             $methodCoverage,
+            $methodExcluded,
             self::THRESHOLD,
         );
 
@@ -87,6 +93,18 @@ final class Canon031PhpDocCoverageRule extends AbstractCanonRule
         array_unshift($evidence, 'Semantic PHPDoc review and documentation completion are required.');
 
         return $this->result('warning', $summary, $evidence, 'warning');
+    }
+
+    /**
+     * Keeps the documentation denominator focused on externally meaningful behavior rather than implementation noise.
+     */
+    private function isMethodEligible(string $modifiers, string $name): bool
+    {
+        if (1 === preg_match('/\bprivate\b/', $modifiers) || str_starts_with($name, '__')) {
+            return false;
+        }
+
+        return 1 !== preg_match('/^(?:get|set|is|has)[A-Z_]/', $name);
     }
 
     /**

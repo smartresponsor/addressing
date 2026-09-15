@@ -4,7 +4,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$contractPath = Join-Path $RepoRoot ".gate/contract/contract.json"
+$contractPath = Join-Path $RepoRoot ".gating/contract/contract.json"
 if (-not (Test-Path $contractPath)) { throw "contract.json not found: $contractPath" }
 
 $contract = Get-Content $contractPath -Raw | ConvertFrom-Json
