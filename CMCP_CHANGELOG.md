@@ -181,5 +181,5 @@
 - `composer validate --strict --check-lock`: green.
 - Symfony `lint:yaml` is green for repository config plus `openapi/address.yaml`, `docs/openapi.yaml`, and `docs/AddressAPI.insomnia.yaml`.
 - Canon017 cleanup also refreshed the Postman/Insomnia examples to current `/api/address/*` routes and current create/search/page vocabulary; the retired `/address/search-advanced` token is absent from the current tree.
-- Signed commit `2041d1e` (`Harden Addressing route diagnostics and runtime docs`) was created on `rc/addressing-rc-closure` and pushed to origin.
-- PR `smartresponsor/addressing#81` is open and Git-mergeable at head `2041d1e99c33df83ff619ee3a8c12822d5ced132`; GitHub currently requires review and reports two CodeQL checks as queued/unknown. No merge was attempted while review/check policy evidence is incomplete.
+- Signed implementation commit `2041d1e` (`Harden Addressing route diagnostics and runtime docs`) was created on `rc/addressing-rc-closure` and pushed to origin; the journal closure is committed separately.
+- PR `smartresponsor/addressing#81` is open and Git-mergeable, but GitHub still requires review. The latest observed Addressing gate and Security jobs fail before runner steps execute (`steps: []`), matching the previously recorded organization/Actions infrastructure pattern rather than a repository gate failure. No merge was attempted while required review and remote checks remain red.
