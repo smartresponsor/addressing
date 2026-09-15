@@ -60,15 +60,15 @@ final class AddressingObjectIdentityContractTest extends TestCase
         $objectingMetadata = $entityManager->getClassMetadata(ObjectIdentityEmbeddable::class);
 
         self::assertTrue($objectingMetadata->isEmbeddedClass);
-        self::assertSame('binary', $objectingMetadata->getFieldMapping('objectUuid')['type']);
-        self::assertSame(16, $objectingMetadata->getFieldMapping('objectUuid')['length']);
-        self::assertFalse($objectingMetadata->getFieldMapping('objectUuid')['nullable'] ?? false);
-        self::assertSame('string', $objectingMetadata->getFieldMapping('objectSlug')['type']);
-        self::assertSame(190, $objectingMetadata->getFieldMapping('objectSlug')['length']);
-        self::assertFalse($objectingMetadata->getFieldMapping('objectSlug')['nullable'] ?? false);
+        self::assertSame('binary', $objectingMetadata->getFieldMapping('uuid')['type']);
+        self::assertSame(16, $objectingMetadata->getFieldMapping('uuid')['length']);
+        self::assertFalse($objectingMetadata->getFieldMapping('uuid')['nullable'] ?? false);
+        self::assertSame('string', $objectingMetadata->getFieldMapping('slug')['type']);
+        self::assertSame(190, $objectingMetadata->getFieldMapping('slug')['length']);
+        self::assertFalse($objectingMetadata->getFieldMapping('slug')['nullable'] ?? false);
 
-        $objectUuid = $metadata->getFieldMapping('objectIdentity.objectUuid');
-        $objectSlug = $metadata->getFieldMapping('objectIdentity.objectSlug');
+        $objectUuid = $metadata->getFieldMapping('objectIdentity.uuid');
+        $objectSlug = $metadata->getFieldMapping('objectIdentity.slug');
 
         self::assertArrayHasKey('objectIdentity', $metadata->embeddedClasses);
         self::assertSame('uuid', $objectUuid['columnName']);

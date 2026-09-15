@@ -2,22 +2,38 @@
 
 declare(strict_types=1);
 
-$root = dirname(__DIR__, 2);
-$index = $root . '/public/index.php';
-$routes = [];
+/**
+ * @return array{method_tokens: list<string>, uri_tokens: list<string>, uri_patterns: list<string>}
+ */
+function addressRouteInventory(string $content): array
+{
+    preg_match_all("/'([A-Z]+)'\\s*===\\s*\\\$method/", $content, $methodMatches);
+    preg_match_all("/'((?:\\/address|\\/api\\/address)[^']*)'\\s*===\\s*\\\$pathInfo/", $content, $uriMatches);
+    preg_match_all("/preg_match\\('([^']+)'\\s*,\\s*\\\$pathInfo/", $content, $patternMatches);
 
-if (is_file($index)) {
-    $content = file_get_contents($index) ?: '';
-    preg_match_all('/\$_SERVER\[\'REQUEST_METHOD\'\]\s*===\s*\'([A-Z]+)\'/m', $content, $methodMatches);
-    preg_match_all('/\$_SERVER\[\'REQUEST_URI\'\].*?(\/[^\'\"]+)/m', $content, $uriMatches);
-    $routes = [
-        'method_tokens' => array_values(array_unique($methodMatches[1] ?? [])),
-        'uri_tokens' => array_values(array_unique($uriMatches[1] ?? [])),
+    $methods = array_values(array_unique($methodMatches[1] ?? []));
+    $uris = array_values(array_unique($uriMatches[1] ?? []));
+    $patterns = array_values(array_unique($patternMatches[1] ?? []));
+
+    sort($methods);
+    sort($uris);
+    sort($patterns);
+
+    return [
+        'method_tokens' => $methods,
+        'uri_tokens' => $uris,
+        'uri_patterns' => $patterns,
     ];
 }
 
-fwrite(STDOUT, json_encode([
-    'component' => 'Addressing',
-    'source' => 'public/index.php',
-    'routes' => $routes,
-], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+$root = dirname(__DIR__, 2);
+$index = $root.'/public/index.php';
+$content = is_file($index) ? (file_get_contents($index) ?: '') : '';
+
+if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) {
+    fwrite(STDOUT, json_encode([
+        'component' => 'Addressing',
+        'source' => 'public/index.php',
+        'routes' => addressRouteInventory($content),
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
+}

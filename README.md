@@ -1,54 +1,62 @@
 # Addressing
 
-Addressing is a Symfony-based geo-data and address management component of the Smart Responsor platform. It handles address lifecycle, validation, and advanced search operations within the system.
+Addressing is the Symfony address-lifecycle component of the Smart Responsor platform. It owns address records, normalization and validation evidence, operational state, governance links, scoped search, portfolio summaries, and address-specific HTTP/CLI operations.
 
-This module is **not** a mapping service or a routing engine. It acts as the core database layer and HTTP boundary for normalized, validated addresses.
+Addressing does **not** own generic CRUD mechanics, collection-query infrastructure, final presentation, shared interface shells, mapping UI, routing, or an external geocoding/postal-verification provider. Generic CRUD belongs to Cruding; provider integrations may feed Addressing validation evidence through explicit component contracts.
 
-## Current Posture
+## Current posture
 
-### What the component already does
-- Handles address CRUD operations and schema mapping.
-- Provides standard validation constraints for address models.
-- Offers advanced search capabilities (by city, country, zipcode, etc.).
-- Built on Doctrine attributes and Symfony standard libraries.
-- Features standard QA scripts (PHPStan, Psalm, Rector, PHP-CS-Fixer, Deptrac).
+The component currently provides:
 
-### What this repository does not claim yet
-- Interactive mapping or map rendering interfaces.
-- Geocoding/reverse-geocoding service provider integrations.
-- Address verification via third-party post-office APIs.
+- address creation, scoped reads, soft deletion, cursor paging, and search;
+- validation/provenance state and application of validated payloads;
+- operational patches and batch operational updates;
+- queue, country, source, validation, normalization, and governance-cluster summaries;
+- evidence snapshots, outbox support, and address-index projection support;
+- Objecting-backed system fields with Addressing-owned business entities and persistence;
+- a standalone Symfony runtime plus `App\Addressing\AddressingBundle` for host integration.
 
-## Runtime Surface & Entrypoints
+The runtime does not perform provider-side geocoding, reverse geocoding, postal verification, or map rendering.
 
-The versioned HTTP entrypoints for address operations include:
-- `POST /address` - Create an address
-- `GET /address/{id}` - Fetch a specific address by ID
-- `GET /address/search` - Search addresses by city name
-- `GET /address/list` - List addresses with pagination
-- `POST /address/search-advanced` - Perform advanced filtering by criteria
+## Runtime HTTP surface
 
-## Local Setup
+The standalone front controller currently exposes:
 
-Install dependencies:
+- `GET|POST /address/manage`
+- `POST /api/address`
+- `GET /api/address/page`
+- `GET /api/address/search`
+- `GET /api/address/queue-summary`
+- `GET /api/address/country-portfolio`
+- `GET /api/address/source-portfolio`
+- `GET /api/address/validation-portfolio`
+- `GET /api/address/normalization-portfolio`
+- `POST /api/address/operational-batch`
+- `GET|PATCH|DELETE /api/address/{id}`
+- `POST /api/address/{id}/validated`
+- `GET /api/address/{id}/governance-cluster`
+
+`{id}` is the Addressing string identifier accepted by the runtime (`ULID`, with the local `demo-####` fixture form also accepted in standalone/demo flows).
+
+Run `composer report:route-inventory` to inspect the route grammar extracted from the current front controller. `composer qa:trust-surface` fails when the diagnostic no longer proves the core runtime route surface.
+
+## Local setup
+
 ```bash
 composer install
-npm install
-```
-
-Run QA suites and validations:
-```bash
 composer qa:full
-vendor/bin/phpunit -c phpunit.xml.dist
+composer gating
 ```
 
-For console demo data reset:
+For local demo data reset:
+
 ```bash
 php bin/address-demo-reset 50
 ```
 
-## Local Composer Path Installation
+## Local Composer path installation
 
-To import this module as a path repository within your Symfony host project:
+Development consumers use the canonical first-party path identity:
 
 ```json
 {
@@ -57,19 +65,22 @@ To import this module as a path repository within your Symfony host project:
       "type": "path",
       "url": "../Addressing",
       "options": {
-        "symlink": true
+        "symlink": true,
+        "versions": { "addressing/address": "dev-master" }
       }
     }
   ],
   "require": {
-    "addressing/address": "*@dev"
+    "addressing/address": "dev-master"
   }
 }
 ```
 
-## Documentation Map
+Production consumers use the packaged dependency contract and do not rely on sibling path repositories.
 
-- [HTTP Surface Notes](docs/addressing-http-surface.md)
-- [Entity Boundary Contract](docs/addressing-entity-boundary-contract.md)
-- [Architecture Remediation Plan](docs/addressing-architecture-remediation-plan.md)
-- [OpenAPI Schema Definition](docs/openapi.yaml)
+## Documentation map
+
+- [HTTP surface](docs/addressing-http-surface.md)
+- [Entity boundary contract](docs/addressing-entity-boundary-contract.md)
+- [Architecture remediation history](docs/addressing-architecture-remediation-plan.md)
+- [Canonical OpenAPI contract](openapi/address.yaml)
