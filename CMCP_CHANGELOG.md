@@ -183,3 +183,30 @@
 - Canon017 cleanup also refreshed the Postman/Insomnia examples to current `/api/address/*` routes and current create/search/page vocabulary; the retired `/address/search-advanced` token is absent from the current tree.
 - Signed implementation commit `2041d1e` (`Harden Addressing route diagnostics and runtime docs`) was created on `rc/addressing-rc-closure` and pushed to origin; the journal closure is committed separately.
 - PR `smartresponsor/addressing#81` is open and Git-mergeable, but GitHub still requires review. The latest observed Addressing gate and Security jobs fail before runner steps execute (`steps: []`), matching the previously recorded organization/Actions infrastructure pattern rather than a repository gate failure. No merge was attempted while required review and remote checks remain red.
+
+## 2026-09-16 — Post-PR #81 RC closure on clean master base
+
+- PR #81 is now merged. The old `rc/addressing-rc-closure` branch contained five additional post-merge commits plus already-merged historical commits, so a direct rebase replayed merged history and conflicted in the journal.
+- Created clean branch `rc/addressing-rc-final` directly from current `origin/master` and reapplied only the net post-PR #81 value.
+- Reapplied current Doctrine persistence documentation and executable trust evidence: `AddressDoctrineSchemaManager`, `AddressEntityMapper`, and all three schema-managed entities are now reflected by docs and fail-hard smoke diagnostics.
+- Reapplied the PostgreSQL current-schema baseline migration `Version20260915184500CurrentBaseline`.
+- Reapplied Canon039/041 test tooling: PHPUnit `^12.5`, `symfony/test-pack`, explicit `src/` coverage population, and persistent `test:coverage` evidence.
+- Canon040 evidence remains explicit debt rather than hidden debt: latest measured coverage from the prior branch was lines 32.17%, methods 34.50%, branches 36.97%, classified `HIGH_TEST_DEBT`; Canon040 treats below-threshold valid evidence as warning/remediation debt rather than a hard merge blocker.
+- Local `bin/cmcp-generate-current-baseline.ps1` remains orchestration-local and is ignored by Git.
+
+### Acceptance results
+
+- Composer lock was regenerated from the constrained PHPUnit/test-pack update. The resulting snapshot also refreshed compatible Symfony 8.1 patch releases and current `dev-master` references for the declared first-party path packages; the resulting manifest/lock pair passes strict validation.
+- `composer validate --strict --check-lock`: PASS.
+- `composer audit`: PASS — no security vulnerability advisories.
+- `composer qa:full`: PASS — PHP lint 201 files, PHP-CS-Fixer 167 files/0 fixable, PHPStan 165 paths/0 errors, Deptrac 136 paths/0 violations/warnings/errors, trust-surface ready with `documentation_runtime_ready: true`, Rector clean, PHPUnit 12.5.35 22 tests/112 assertions/1 intentional skip/1 notice.
+- `composer gating`: PASS — Canon022–029 8/8, 0 failures or warnings.
+- `composer smoke:container`: PASS (`ready`).
+- `composer smoke:runtime`: PASS (`ready`).
+- `composer smoke:doctrine`: PASS (`ready`); ORM and `AddressEntity`, `AddressEvidenceSnapshotEntity`, `AddressOutboxEntity` mappings are present.
+- `composer test:coverage`: PASS and refreshed persistent Canon040 evidence: Lines 32.17% (1219/3789), Methods 34.50% (295/855), Branches 36.97% (616/1666). This remains explicit `HIGH_TEST_DEBT`, not a fabricated pass.
+- Changed-PHP lint also passes for the trust runner, Doctrine smoke, and current-baseline migration.
+- Migration sanity: `Version20260915184500CurrentBaseline` is intentionally sequenced after existing `Version20260823014000`, which owns creation of `address_entity`; the new baseline covers the additional Addressing-owned tables and its evidence-snapshot FK therefore has a valid predecessor contract.
+
+Что имеем? Чистая post-PR #81 интеграционная ветка на свежем `origin/master`, полный acceptance green, воспроизводимая coverage evidence и проверенный migration sequence.
+Что осталось? Создать signed integration commit, опубликовать `rc/addressing-rc-final`, открыть conflict-free PR, закрыть superseded #82 и пройти GitHub merge gate.

@@ -40,11 +40,19 @@ $routeInventoryReady = [] === array_diff(['DELETE', 'GET', 'PATCH', 'POST'], $ro
     && in_array('/api/address', $routeInventory['uri_tokens'], true)
     && 3 <= count($routeInventory['uri_patterns']);
 $reportsReady = !in_array(false, array_column($results, 'exists'), true);
+$entityBoundary = file_get_contents($root.'/docs/addressing-entity-boundary-contract.md');
+$documentationRuntimeReady = false !== $entityBoundary
+    && str_contains($entityBoundary, 'AddressDoctrineSchemaManager')
+    && str_contains($entityBoundary, 'AddressEntityMapper')
+    && !str_contains($entityBoundary, 'AddressPdoFactory')
+    && !str_contains($entityBoundary, 'AddressSchemaManager')
+    && !str_contains($entityBoundary, 'sql/postgres/');
 
 fwrite(STDOUT, json_encode([
     'component' => 'Addressing',
-    'status' => $reportsReady && $routeInventoryReady ? 'ready' : 'partial',
+    'status' => $reportsReady && $routeInventoryReady && $documentationRuntimeReady ? 'ready' : 'partial',
     'route_inventory_ready' => $routeInventoryReady,
+    'documentation_runtime_ready' => $documentationRuntimeReady,
     'route_inventory' => $routeInventory,
     'reports' => $results,
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);

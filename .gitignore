@@ -43,3 +43,4 @@ test-results/
 docs/site/
 /config/reference.php
 var/
+/bin/cmcp-generate-current-baseline.ps1
