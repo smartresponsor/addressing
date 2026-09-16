@@ -210,21 +210,6 @@
 
 - Run targeted trust-surface and PHP lint first, then `qa:full`, `gating`, Composer validation/audit, Doctrine/container/runtime smokes, and final Git/PR integration checks.
 
-### Verification and closure
-
-- `composer qa:trust-surface`: PASS; both route inventory and documentation/runtime parity report ready.
-- `composer smoke:doctrine`: PASS; AddressEntity, AddressEvidenceSnapshotEntity, and AddressOutboxEntity are present and mapped as the executable Doctrine schema authority.
-- `composer qa:phpstan`: PASS; 165 analysed paths, 0 errors.
-- `composer qa:cs`: initially exposed one behavior-neutral PHP 8.4 formatting finding in `AddressLifecycleCompatibilityTest`; the test was normalized to `new class ()` and the repeat check passed with 0 fixable files.
-- `composer test`: PASS; 22 tests, 108 assertions, 1 intentional skip.
-- `composer gating`: PASS; Canon022-029 8/8, 0 failures or warnings.
-- `composer validate --strict --check-lock`: PASS.
-- Aggregate `qa:full` remained unsuitable as the sole evidence surface because the Console wrapper timed out; its material constituent gates were therefore executed independently and are green.
-- The untracked `bin/cmcp-generate-current-baseline.ps1` is a separate Addressing migration-baseline work surface and was deliberately left untouched and outside this change set.
-
-Что имеем? Current Addressing persistence documentation now matches the Doctrine runtime and the trust/smoke gates protect that fact; the bounded code/documentation slice is green across static, style, PHPUnit, Gating and Composer validation.
-Что осталось? Commit the task-owned files and attempt guarded publication without absorbing the independent untracked migration-baseline script.
-
 ### Verification and repair results
 
 - `qa:trust-surface` is green and now reports `documentation_runtime_ready: true` in addition to route readiness.
