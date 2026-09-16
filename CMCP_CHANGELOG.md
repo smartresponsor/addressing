@@ -183,3 +183,52 @@
 - Canon017 cleanup also refreshed the Postman/Insomnia examples to current `/api/address/*` routes and current create/search/page vocabulary; the retired `/address/search-advanced` token is absent from the current tree.
 - Signed implementation commit `2041d1e` (`Harden Addressing route diagnostics and runtime docs`) was created on `rc/addressing-rc-closure` and pushed to origin; the journal closure is committed separately.
 - PR `smartresponsor/addressing#81` is open and Git-mergeable, but GitHub still requires review. The latest observed Addressing gate and Security jobs fail before runner steps execute (`steps: []`), matching the previously recorded organization/Actions infrastructure pattern rather than a repository gate failure. No merge was attempted while required review and remote checks remain red.
+
+## 2026-09-16 — Persistence-contract documentation hardening
+
+### Reconnaissance baseline
+
+- Re-read Addressing `AGENTS.md`, README, Composer manifest, HTTP/entity/remediation/OpenAPI documentation, Deptrac policy, trust-surface gate, current Doctrine schema/mapper/entity implementation, and Git state.
+- Re-read the required Objecting, Cruding, Viewing, Interfacing, Gating, and Canonization root contracts. Addressing still declares the complete first-party dependency contour through pinned `dev-master` path repositories with symlinks.
+- Consulted Canonization rules `Canon017`, `Canon021`, `Canon022`, and `Canon044` for current-documentation parity, CRUD ownership, standalone dependency baseline, and Objecting system-field naming.
+- Current branch is `rc/addressing-rc-closure`, tracking `origin/rc/addressing-rc-closure`, initially ahead by one commit. The pre-existing untracked `bin/cmcp-generate-current-baseline.ps1` is preserved and excluded from this workstream.
+- Baseline verification: `composer gating` passes Canon022–029 8/8; PHPUnit passes 22 tests / 108 assertions with one intentional skip; lint, CS, PHPStan, Deptrac, trust-surface, and Rector stages are green. The aggregate `qa:full` Console invocation reached PHPUnit after all preceding stages passed but the wrapper returned without a final exit code, so PHPUnit was re-run independently and passed.
+
+### Target-to-canon mapping and selected RC work
+
+- `Canon017`: `docs/addressing-entity-boundary-contract.md` still described removed `AddressPdoFactory` / `AddressSchemaManager` / `sql/postgres` schema authority. Current runtime instead uses Doctrine attributes, `AddressDoctrineSchemaManager`, `AddressEntityMapper`, and the configured Doctrine entity manager.
+- `Canon021`: no generic CRUD engine is introduced; Addressing-specific lifecycle/operational HTTP remains inside Addressing while reusable CRUD stays in Cruding.
+- `Canon022`: no dependency change is required; the standalone baseline is already complete and executable Gating is green.
+- `Canon044`: active Objecting-backed taxonomy entities use canonical field packs. A broader lifecycle migration of the main persistence entities is deliberately not folded into this documentation repair because it changes schema semantics and requires an explicit data-parity wave.
+- RC-critical implementation: make the entity-boundary document describe the current Doctrine runtime, mark the old remediation plan as historical context, and extend `qa:trust-surface` with a deterministic documentation-runtime parity assertion so removed PDO topology cannot silently return to authoritative current documentation.
+
+### Growth workstream kept outside RC
+
+- Provider-neutral postal-validation/geocoding adapters, broader international normalization, richer confidence/precision UX, and external provider observability remain post-RC capability work. Mapping/routing UI, generic CRUD, generic collection infrastructure, and final rendering remain outside Addressing ownership.
+
+### Verification plan
+
+- Run targeted trust-surface and PHP lint first, then `qa:full`, `gating`, Composer validation/audit, Doctrine/container/runtime smokes, and final Git/PR integration checks.
+
+### Verification and closure
+
+- `composer qa:trust-surface`: PASS; both route inventory and documentation/runtime parity report ready.
+- `composer smoke:doctrine`: PASS; AddressEntity, AddressEvidenceSnapshotEntity, and AddressOutboxEntity are present and mapped as the executable Doctrine schema authority.
+- `composer qa:phpstan`: PASS; 165 analysed paths, 0 errors.
+- `composer qa:cs`: initially exposed one behavior-neutral PHP 8.4 formatting finding in `AddressLifecycleCompatibilityTest`; the test was normalized to `new class ()` and the repeat check passed with 0 fixable files.
+- `composer test`: PASS; 22 tests, 108 assertions, 1 intentional skip.
+- `composer gating`: PASS; Canon022-029 8/8, 0 failures or warnings.
+- `composer validate --strict --check-lock`: PASS.
+- Aggregate `qa:full` remained unsuitable as the sole evidence surface because the Console wrapper timed out; its material constituent gates were therefore executed independently and are green.
+- The untracked `bin/cmcp-generate-current-baseline.ps1` is a separate Addressing migration-baseline work surface and was deliberately left untouched and outside this change set.
+
+Что имеем? Current Addressing persistence documentation now matches the Doctrine runtime and the trust/smoke gates protect that fact; the bounded code/documentation slice is green across static, style, PHPUnit, Gating and Composer validation.
+Что осталось? Commit the task-owned files and attempt guarded publication without absorbing the independent untracked migration-baseline script.
+
+### Verification and repair results
+
+- `qa:trust-surface` is green and now reports `documentation_runtime_ready: true` in addition to route readiness.
+- The first aggregate `qa:full` retry exposed stale/transient PHPStan/Symfony cache state referencing the old Cruding normalizer namespace. Addressing contains no such reference; current Cruding owns `App\\Cruding\\Normalizer\\Resource\\CrudRouteValueNormalizer`. After the repository-provided `phpstan:clear`, `qa:phpstan` and the complete `qa:full` gate pass.
+- Composer strict validation passes and `composer audit` reports no security advisories.
+- Container and runtime smokes pass.
+- The pre-existing Doctrine smoke was factually broken because it did not load Composer autoload and therefore always reported ORM/entities missing while returning success. It now loads the installed runtime, checks all three schema-managed Doctrine entities (`AddressEntity`, `AddressEvidenceSnapshotEntity`, `AddressOutboxEntity`), and fails hard on incomplete evidence. The repaired smoke reports `status: ready` with ORM and all entity mappings present.
