@@ -217,3 +217,16 @@
 - Composer strict validation passes and `composer audit` reports no security advisories.
 - Container and runtime smokes pass.
 - The pre-existing Doctrine smoke was factually broken because it did not load Composer autoload and therefore always reported ORM/entities missing while returning success. It now loads the installed runtime, checks all three schema-managed Doctrine entities (`AddressEntity`, `AddressEvidenceSnapshotEntity`, `AddressOutboxEntity`), and fails hard on incomplete evidence. The repaired smoke reports `status: ready` with ORM and all entity mappings present.
+
+## 2026-09-16 — Canon039/040/041 test-contract closure
+
+- Consulted Canonization rules `Canon039PhpTestToolingRule`, `Canon040PhpTestCoverageRule`, `Canon041BehavioralUiTestToolingRule`, and `Canon042BehavioralUiCoverageRule` in addition to the existing Addressing canon mapping.
+- Added `symfony/test-pack` and aligned PHPUnit to `^12.5` because Composer proved `symfony/test-pack` 1.2 incompatible with the prior PHPUnit 10.5 line. The PHPUnit schema is now 12.5.
+- Materialized the Canon039 execution contract: `src/` is the explicit coverage population and `test:coverage` writes persistent php-code-coverage evidence to `var/coverage/summary.txt` with path/branch data.
+- Canon041 repository-local browser tooling was already present through Panther and Playwright; `symfony/test-pack` closes the missing standard Symfony application-test dependency.
+- Fresh Canon040 evidence is honest and below target: lines 32.17% (1219/3789), methods 34.50% (295/855), branches 36.97% (616/1666). Addressing therefore remains `HIGH_TEST_DEBT`; passing test counts are not treated as coverage.
+- Post-change `qa:full` passes under PHPUnit 12.5.35: 22 tests, 112 assertions, one intentional skip and one PHPUnit notice. Composer strict validation, Canon022-029 Gating, and Composer audit are green.
+- The pre-existing untracked `bin/cmcp-generate-current-baseline.ps1` remains outside this change set.
+
+Что имеем? Standard Symfony/PHPUnit testing and reproducible coverage tooling are now materialized and the existing QA contour is green.
+Что осталось? Canon040 coverage debt is the remaining RC test-quality debt; raise line/method/branch coverage with behaviorally meaningful tests rather than test-count heuristics.
