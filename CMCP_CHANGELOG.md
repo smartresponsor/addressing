@@ -269,3 +269,17 @@
 
 Что имеем? Addressing now consumes Gating through Composer, the consumer `.gating` surface is artifact-only, and all independent Addressing gates exercised in this pass are green.
 Что осталось? Commit/publish this checkpoint; rerun standalone runtime and PHPStan after the owning Viewing repository repairs its controller/service-prototype mismatch.
+
+### Integration closure
+
+- Signed commit `00c56e9` (`Harden Addressing DTO and Gating contracts`) captured the DTO/Gating/capability-audit workstream.
+- Independent follow-up commit `484870e` (`Adopt deterministic Objecting identity constraints`) captured the concurrent Objecting/Doctrine index-name workstream without mixing provenance.
+- Published `rc/addressing-rc-final-v2`; PR #84 was created but GitHub reported `mergeable: CONFLICTING`.
+- Fetched current `origin/master` and rebased cleanly. Git skipped already-applied historical commit `6521566`; no manual conflict resolution or force push was required.
+- Post-rebase verification remained green for targeted Gating (9/9), PHPUnit (22 tests / 112 assertions), Doctrine mapping smoke, and strict Composer validation.
+- Because policy does not permit force-pushing the rewritten v2 history, created and published `rc/addressing-rc-final-v3` from rebased HEAD `6cd8471d7a031bdf9fa8eccd3aa2ed1fb52e3888`.
+- Opened replacement PR #85 against `master`; GitHub reports `MERGEABLE`. Superseded PR #84 was closed.
+- Representative Addressing gate and CodeQL failures on PR #85 have `steps: []` and no job logs, confirming the same pre-runner GitHub/Actions infrastructure failure pattern recorded previously. Review is still required; no merge or policy bypass was attempted.
+
+Что имеем? Clean rebased branch `rc/addressing-rc-final-v3`, mergeable PR #85, current targeted Addressing acceptance green, and superseded PR #84 closed.
+Что осталось? Remote review/Actions infrastructure must become green before merge. After the owning Viewing repository repairs its controller/service-prototype mismatch, rerun full standalone runtime and PHPStan acceptance before declaring the wider RC fully closed.
