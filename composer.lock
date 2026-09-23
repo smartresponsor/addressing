@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e3a6c68d66e1b1b038e850d5299bd3dc",
+    "content-hash": "ee5544f37ae71f0bcc887a6f5dda5cd5",
     "packages": [
         {
             "name": "collectioning/collection",
@@ -12,7 +12,7 @@
             "dist": {
                 "type": "path",
                 "url": "../Collectioning",
-                "reference": "a10b546a7a293e15a8bcacfb36d3795212f4d3e1"
+                "reference": "ec38869bba378a9e5347618a088fc8e5b8128fa5"
             },
             "require": {
                 "doctrine/doctrine-bundle": "^3.2",
@@ -27,6 +27,7 @@
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.95",
+                "gating/gate": "dev-master",
                 "phpstan/phpstan": "^2.2",
                 "phpunit/phpunit": "^13.3"
             },
@@ -62,6 +63,15 @@
                 ],
                 "cs:fix": [
                     "php-cs-fixer fix"
+                ],
+                "gate": [
+                    "@php vendor/bin/gating check --target=."
+                ],
+                "quality": [
+                    "@cs:check",
+                    "@phpstan",
+                    "@test",
+                    "@gate"
                 ]
             },
             "license": [
@@ -156,7 +166,7 @@
             "dist": {
                 "type": "path",
                 "url": "../Cruding",
-                "reference": "d43603fa05e6d603e26a820da5f14528891ee7b7"
+                "reference": "998dc7088cb4dec6e7bacb8f4568f8c059281793"
             },
             "require": {
                 "collectioning/collection": "dev-master",
@@ -179,6 +189,7 @@
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.95",
+                "gating/gate": "dev-master",
                 "phpstan/phpstan": "^2.0",
                 "phpunit/phpunit": "^12.0",
                 "symfony/dotenv": "^8.1"
@@ -252,6 +263,15 @@
                     "@canon:cruding",
                     "@smoke:cruding",
                     "@test"
+                ],
+                "gate": [
+                    "@php vendor/bin/gating check --target=."
+                ],
+                "quality": [
+                    "@cs:check",
+                    "@phpstan",
+                    "@test",
+                    "@gate"
                 ]
             },
             "license": [
@@ -873,27 +893,25 @@
         },
         {
             "name": "doctrine/lexer",
-            "version": "3.0.1",
+            "version": "3.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/lexer.git",
-                "reference": "31ad66abc0fc9e1a1f2d9bc6a42668d2fbbcd6dd"
+                "reference": "e96fe45e92a54233726014a7cc7340abf29bb14c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/lexer/zipball/31ad66abc0fc9e1a1f2d9bc6a42668d2fbbcd6dd",
-                "reference": "31ad66abc0fc9e1a1f2d9bc6a42668d2fbbcd6dd",
+                "url": "https://api.github.com/repos/doctrine/lexer/zipball/e96fe45e92a54233726014a7cc7340abf29bb14c",
+                "reference": "e96fe45e92a54233726014a7cc7340abf29bb14c",
                 "shasum": ""
             },
             "require": {
                 "php": "^8.1"
             },
             "require-dev": {
-                "doctrine/coding-standard": "^12",
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^10.5",
-                "psalm/plugin-phpunit": "^0.18.3",
-                "vimeo/psalm": "^5.21"
+                "doctrine/coding-standard": "^14",
+                "phpstan/phpstan": "^2",
+                "phpunit/phpunit": "^10.5.58 || ^12.5.4"
             },
             "type": "library",
             "autoload": {
@@ -930,7 +948,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/lexer/issues",
-                "source": "https://github.com/doctrine/lexer/tree/3.0.1"
+                "source": "https://github.com/doctrine/lexer/tree/3.0.2"
             },
             "funding": [
                 {
@@ -946,7 +964,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-02-05T11:56:58+00:00"
+            "time": "2026-06-14T20:44:06+00:00"
         },
         {
             "name": "doctrine/orm",
@@ -1189,16 +1207,16 @@
         },
         {
             "name": "easycorp/easyadmin-bundle",
-            "version": "v5.5.1",
+            "version": "v5.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/EasyCorp/EasyAdminBundle.git",
-                "reference": "77b2a6b13c7050cd5412b3ce2b86e909682b97c3"
+                "reference": "e02a2b6b38630e53b40a6342b6efbe34b8dda3e3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/EasyCorp/EasyAdminBundle/zipball/77b2a6b13c7050cd5412b3ce2b86e909682b97c3",
-                "reference": "77b2a6b13c7050cd5412b3ce2b86e909682b97c3",
+                "url": "https://api.github.com/repos/EasyCorp/EasyAdminBundle/zipball/e02a2b6b38630e53b40a6342b6efbe34b8dda3e3",
+                "reference": "e02a2b6b38630e53b40a6342b6efbe34b8dda3e3",
                 "shasum": ""
             },
             "require": {
@@ -1287,7 +1305,7 @@
             ],
             "support": {
                 "issues": "https://github.com/EasyCorp/EasyAdminBundle/issues",
-                "source": "https://github.com/EasyCorp/EasyAdminBundle/tree/v5.5.1"
+                "source": "https://github.com/EasyCorp/EasyAdminBundle/tree/v5.6.0"
             },
             "funding": [
                 {
@@ -1295,7 +1313,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-08-11T06:28:56+00:00"
+            "time": "2026-09-17T19:03:00+00:00"
         },
         {
             "name": "interfacing/interface",
@@ -1303,7 +1321,7 @@
             "dist": {
                 "type": "path",
                 "url": "../Interfacing",
-                "reference": "02c5ccf77ad1986f2187e8d91f8a422e86af0d97"
+                "reference": "34c65c769e4306fb5c79395c937bb682d32a42a0"
             },
             "require": {
                 "collectioning/collection": "dev-master",
@@ -1339,6 +1357,7 @@
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.95.4",
+                "gating/gate": "dev-master",
                 "phpstan/extension-installer": "^1.4.3",
                 "phpstan/phpstan": "^2.2.2",
                 "phpstan/phpstan-phpunit": "^2.0.16",
@@ -1430,6 +1449,15 @@
                 ],
                 "canon:interfacing:seal": [
                     "php tools/qa/interfacing-seal-report.php"
+                ],
+                "gate": [
+                    "@php vendor/bin/gating check --target=."
+                ],
+                "quality": [
+                    "@cs:check",
+                    "@stan",
+                    "@test",
+                    "@gate"
                 ]
             },
             "license": [
@@ -1447,7 +1475,7 @@
             "dist": {
                 "type": "path",
                 "url": "../Objecting",
-                "reference": "24d40b48ae0882f9e137c4526250c6b368f407bb"
+                "reference": "28dde694f067b3f4cac5c14db1385266d1d8b767"
             },
             "require": {
                 "doctrine/orm": "^3.3",
@@ -1460,6 +1488,7 @@
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": ">=3.95 <4.0",
+                "gating/gate": "dev-master",
                 "phpstan/phpstan": "^2.0",
                 "phpunit/phpunit": "^11.0 || ^12.0"
             },
@@ -1616,6 +1645,14 @@
                 ],
                 "test:internal-types": [
                     "@php tools/test/objecting_internal_type_resolution_check.php"
+                ],
+                "gate": [
+                    "@php vendor/bin/gating check --target=."
+                ],
+                "quality": [
+                    "@phpstan",
+                    "@test",
+                    "@gate"
                 ]
             },
             "license": [
@@ -6413,16 +6450,16 @@
         },
         {
             "name": "symfony/ux-twig-component",
-            "version": "v3.4.0",
+            "version": "v3.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/ux-twig-component.git",
-                "reference": "520e1da46bbb5974a2cf5839369aec3c8fc1a6f0"
+                "reference": "e47eb29a7880da340210c6dc90b66e221b5ec549"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/ux-twig-component/zipball/520e1da46bbb5974a2cf5839369aec3c8fc1a6f0",
-                "reference": "520e1da46bbb5974a2cf5839369aec3c8fc1a6f0",
+                "url": "https://api.github.com/repos/symfony/ux-twig-component/zipball/e47eb29a7880da340210c6dc90b66e221b5ec549",
+                "reference": "e47eb29a7880da340210c6dc90b66e221b5ec549",
                 "shasum": ""
             },
             "require": {
@@ -6431,7 +6468,8 @@
                 "symfony/deprecation-contracts": "^2.2|^3.0",
                 "symfony/event-dispatcher": "^7.4|^8.0",
                 "symfony/property-access": "^7.4|^8.0",
-                "twig/twig": "^3.10.3"
+                "twig/html-extra": "^3.29|^4.0",
+                "twig/twig": "^3.24|^4.0"
             },
             "conflict": {
                 "symfony/config": "<6.4"
@@ -6445,8 +6483,7 @@
                 "symfony/framework-bundle": "^7.4|^8.0",
                 "symfony/stimulus-bundle": "^2.9.1|^3.0",
                 "symfony/twig-bundle": "^7.4|^8.0",
-                "twig/extra-bundle": "^3.10.3",
-                "twig/html-extra": "^3.10.3"
+                "twig/extra-bundle": "^3.24|^4.0"
             },
             "type": "symfony-bundle",
             "extra": {
@@ -6478,7 +6515,7 @@
                 "twig"
             ],
             "support": {
-                "source": "https://github.com/symfony/ux-twig-component/tree/v3.4.0"
+                "source": "https://github.com/symfony/ux-twig-component/tree/v3.5.1"
             },
             "funding": [
                 {
@@ -6498,7 +6535,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-28T06:36:17+00:00"
+            "time": "2026-09-18T12:02:28+00:00"
         },
         {
             "name": "symfony/validator",
@@ -6933,7 +6970,7 @@
             "dist": {
                 "type": "path",
                 "url": "../Tabling",
-                "reference": "7b9be0a8127b1f3d976062873c9ad4582a7f5e55"
+                "reference": "beb48184a9615ae92b28239b750bd97d5421b8cf"
             },
             "require": {
                 "collectioning/collection": "dev-master",
@@ -6945,6 +6982,7 @@
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.95",
+                "gating/gate": "dev-master",
                 "phpstan/phpstan": "^2.2",
                 "phpunit/phpunit": "^13.3"
             },
@@ -6984,7 +7022,11 @@
                     "@test:coverage",
                     "@phpstan",
                     "@cs:check",
-                    "@validate:prod"
+                    "@validate:prod",
+                    "@gate"
+                ],
+                "gate": [
+                    "@php vendor/bin/gating check --target=."
                 ]
             },
             "license": [
@@ -6998,16 +7040,16 @@
         },
         {
             "name": "twig/extra-bundle",
-            "version": "v3.24.0",
+            "version": "v3.29.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/twig-extra-bundle.git",
-                "reference": "6a621fcb1f28aa9ea7b34a99047ae0cdf5b834c9"
+                "reference": "aaa2993e19293a99240c4c61aa461d743b0dd569"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/twig-extra-bundle/zipball/6a621fcb1f28aa9ea7b34a99047ae0cdf5b834c9",
-                "reference": "6a621fcb1f28aa9ea7b34a99047ae0cdf5b834c9",
+                "url": "https://api.github.com/repos/twigphp/twig-extra-bundle/zipball/aaa2993e19293a99240c4c61aa461d743b0dd569",
+                "reference": "aaa2993e19293a99240c4c61aa461d743b0dd569",
                 "shasum": ""
             },
             "require": {
@@ -7056,7 +7098,7 @@
                 "twig"
             ],
             "support": {
-                "source": "https://github.com/twigphp/twig-extra-bundle/tree/v3.24.0"
+                "source": "https://github.com/twigphp/twig-extra-bundle/tree/v3.29.0"
             },
             "funding": [
                 {
@@ -7068,20 +7110,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-02-07T08:07:38+00:00"
+            "time": "2026-09-11T08:59:50+00:00"
         },
         {
             "name": "twig/html-extra",
-            "version": "v3.28.0",
+            "version": "v3.29.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/html-extra.git",
-                "reference": "760893ed7bdd0a381e4e00004c6f6e26ad3881d7"
+                "reference": "7147611979df81edb78baf7d003860b72e335c3f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/html-extra/zipball/760893ed7bdd0a381e4e00004c6f6e26ad3881d7",
-                "reference": "760893ed7bdd0a381e4e00004c6f6e26ad3881d7",
+                "url": "https://api.github.com/repos/twigphp/html-extra/zipball/7147611979df81edb78baf7d003860b72e335c3f",
+                "reference": "7147611979df81edb78baf7d003860b72e335c3f",
                 "shasum": ""
             },
             "require": {
@@ -7124,7 +7166,7 @@
                 "twig"
             ],
             "support": {
-                "source": "https://github.com/twigphp/html-extra/tree/v3.28.0"
+                "source": "https://github.com/twigphp/html-extra/tree/v3.29.0"
             },
             "funding": [
                 {
@@ -7136,20 +7178,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-06-25T06:50:01+00:00"
+            "time": "2026-09-06T20:35:36+00:00"
         },
         {
             "name": "twig/twig",
-            "version": "v3.28.0",
+            "version": "v3.29.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "597c12ed286fb9d1701a36684ce6e0cbe28ebc8b"
+                "reference": "45a3c6e9224c3377a39c7b150bb29d5d97d2c75d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/597c12ed286fb9d1701a36684ce6e0cbe28ebc8b",
-                "reference": "597c12ed286fb9d1701a36684ce6e0cbe28ebc8b",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/45a3c6e9224c3377a39c7b150bb29d5d97d2c75d",
+                "reference": "45a3c6e9224c3377a39c7b150bb29d5d97d2c75d",
                 "shasum": ""
             },
             "require": {
@@ -7204,7 +7246,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.28.0"
+                "source": "https://github.com/twigphp/Twig/tree/v3.29.0"
             },
             "funding": [
                 {
@@ -7216,7 +7258,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-03T20:44:34+00:00"
+            "time": "2026-09-18T09:10:14+00:00"
         },
         {
             "name": "viewing/view",
@@ -7243,6 +7285,7 @@
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.95",
+                "gating/gate": "dev-master",
                 "phpstan/phpstan": "^2.1",
                 "phpunit/phpunit": "^12.0",
                 "squizlabs/php_codesniffer": "^3.10",
@@ -7280,9 +7323,12 @@
                     "php-cs-fixer fix --dry-run --diff"
                 ],
                 "gate": [
-                    "@test",
+                    "@php vendor/bin/gating check --target=."
+                ],
+                "quality": [
                     "@phpstan",
-                    "@php-cs-fixer"
+                    "@test",
+                    "@gate"
                 ]
             },
             "license": [
@@ -8882,6 +8928,84 @@
                 }
             ],
             "time": "2026-02-20T16:13:53+00:00"
+        },
+        {
+            "name": "gating/gate",
+            "version": "dev-master",
+            "dist": {
+                "type": "path",
+                "url": "../Gating",
+                "reference": "957e9d5ade835d089d11e13560cd1f1d24632ac6"
+            },
+            "require": {
+                "php": "^8.4",
+                "symfony/console": "^8.1",
+                "symfony/filesystem": "^8.1",
+                "symfony/finder": "^8.1",
+                "symfony/yaml": "^8.1"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.95.4",
+                "phpstan/phpstan": "^2.2.2",
+                "phpunit/phpunit": "^13.3.3",
+                "rector/rector": "^2.4.1"
+            },
+            "bin": [
+                "bin/gating"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "App\\Gating\\": "src/"
+                }
+            },
+            "scripts": {
+                "gate": [
+                    "@php bin/gating check --target=."
+                ],
+                "scan": [
+                    "@php bin/gating scan --target=."
+                ],
+                "test": [
+                    "@php tests/calibration.php"
+                ],
+                "test:unit": [
+                    "phpunit tests/Unit"
+                ],
+                "test:coverage": [
+                    "@php -d xdebug.mode=coverage vendor/bin/phpunit --branch-coverage --coverage-text=var/coverage/summary.txt"
+                ],
+                "cs:check": [
+                    "php-cs-fixer fix --dry-run --diff --verbose"
+                ],
+                "cs:fix": [
+                    "php-cs-fixer fix --verbose"
+                ],
+                "phpstan": [
+                    "phpstan analyse -c .gating/quality/owner/php/phpstan.neon"
+                ],
+                "rector:check": [
+                    "rector process --dry-run --config .gating/quality/owner/php/rector.php"
+                ],
+                "rector:fix": [
+                    "rector process --config .gating/quality/owner/php/rector.php"
+                ],
+                "quality": [
+                    "@cs:check",
+                    "@phpstan",
+                    "@rector:check",
+                    "@test",
+                    "@gate"
+                ]
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Smart Responsor Symfony-oriented executable ecosystem gate.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "kelunik/certificate",
@@ -13036,6 +13160,7 @@
     "stability-flags": {
         "collectioning/collection": 20,
         "cruding/crud": 20,
+        "gating/gate": 20,
         "interfacing/interface": 20,
         "objecting/object": 20,
         "tabling/table": 20,
