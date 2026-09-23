@@ -21,7 +21,7 @@ use Doctrine\ORM\Mapping as ORM;
 class AddressEntity
 {
     #[ORM\Id]
-    #[ORM\Column(name: 'id', type: 'string', length: 26, unique: true)]
+    #[ORM\Column(name: 'id', type: 'string', length: 26)]
     private string $id;
 
     #[ORM\Column(name: 'owner_id', type: 'string', length: 64, nullable: true)]
