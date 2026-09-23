@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Command;
 
-use App\Addressing\Http\Dto\AddressManageDto;
+use App\Addressing\DTO\AddressManageDTO;
 use App\Addressing\Http\Factory\AddressInputFactory;
 use App\Addressing\Service\Application\AddressWriteService;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -47,7 +47,7 @@ final class AddressCreateCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $symfonyStyle = new SymfonyStyle($input, $output);
-        $addressManageDto = new AddressManageDto();
+        $addressManageDto = new AddressManageDTO();
         $addressManageDto->line1 = $this->requiredOption($input, 'line1');
         $addressManageDto->line2 = $this->nullable($input->getOption('line2'));
         $addressManageDto->city = $this->requiredOption($input, 'city');

@@ -11,8 +11,13 @@
 /allure-results/
 /allure-report/
 
-# PHPUnit
+# PHPUnit and quality-tool caches
 .phpunit.result.cache
+/.deptrac.cache
+
+# Gating consumer artifact surface
+/.gating/*
+!/.gating/README.md
 
 # IDE and editors
 /.idea/

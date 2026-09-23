@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Service\Http\Address;
 
-use App\Addressing\Http\Dto\AddressManageDto;
+use App\Addressing\DTO\AddressManageDTO;
 use App\Addressing\Http\Factory\AddressInputFactory;
 use App\Addressing\Http\Factory\AddressViewArrayFactory;
 use App\Addressing\Http\Form\AddressManageType;
@@ -37,17 +37,17 @@ final readonly class AddressManageHttpService
     public function manage(Request $request): Response
     {
         $createdAddressId = null;
-        $form = $this->formFactory->create(AddressManageType::class, new AddressManageDto());
+        $form = $this->formFactory->create(AddressManageType::class, new AddressManageDTO());
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $dto = $form->getData();
-            if ($dto instanceof AddressManageDto) {
+            if ($dto instanceof AddressManageDTO) {
                 $createdAddressId = $this->createFromManageDto($dto);
             }
         }
 
-        $previewRows = $form->getData() instanceof AddressManageDto
+        $previewRows = $form->getData() instanceof AddressManageDTO
             ? $this->previewRows($form->getData())
             : [];
 
@@ -58,7 +58,7 @@ final readonly class AddressManageHttpService
         ]));
     }
 
-    private function createFromManageDto(AddressManageDto $addressManageDto): string
+    private function createFromManageDto(AddressManageDTO $addressManageDto): string
     {
         $addressRecord = $this->addressInputFactory->fromManageDto($addressManageDto, [
             'id' => (string) new Ulid(),
@@ -80,7 +80,7 @@ final readonly class AddressManageHttpService
     }
 
     /** @return array<int, array<string, mixed>> */
-    private function previewRows(AddressManageDto $addressManageDto): array
+    private function previewRows(AddressManageDTO $addressManageDto): array
     {
         $ownerId = $this->nullableFormString(['ownerId' => $addressManageDto->ownerId], 'ownerId');
         $vendorId = $this->nullableFormString(['vendorId' => $addressManageDto->vendorId], 'vendorId');

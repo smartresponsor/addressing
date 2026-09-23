@@ -5,8 +5,8 @@ declare(strict_types=1);
 
 namespace App\Addressing\Http\Factory;
 
+use App\Addressing\DTO\AddressManageDTO;
 use App\Addressing\Entity\Record\AddressRecord;
-use App\Addressing\Http\Dto\AddressManageDto;
 use App\Addressing\Policy\AddressRecordPolicy;
 use App\Addressing\Value\CountryCode;
 use App\Addressing\Value\PostalCode;
@@ -19,7 +19,7 @@ final class AddressInputFactory
     /**
      * @param array<string, mixed> $overrides
      */
-    public function fromManageDto(AddressManageDto $addressManageDto, array $overrides = []): AddressRecord
+    public function fromManageDto(AddressManageDTO $addressManageDto, array $overrides = []): AddressRecord
     {
         $createdAt = new \DateTimeImmutable();
         $now = $this->stringOverride($overrides, 'createdAt') ?? $createdAt->format('Y-m-d H:i:sP');
@@ -170,14 +170,14 @@ final class AddressInputFactory
         return '' === $value ? null : $value;
     }
 
-    private function postalCode(AddressManageDto $addressManageDto): ?string
+    private function postalCode(AddressManageDTO $addressManageDto): ?string
     {
         return null !== $addressManageDto->postalCode && '' !== trim($addressManageDto->postalCode)
             ? (string) new PostalCode($addressManageDto->postalCode)
             : null;
     }
 
-    private function region(AddressManageDto $addressManageDto): ?string
+    private function region(AddressManageDTO $addressManageDto): ?string
     {
         return null !== $addressManageDto->region && '' !== trim($addressManageDto->region)
             ? (string) new Subdivision($addressManageDto->region)

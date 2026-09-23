@@ -3,11 +3,11 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Addressing\Http\Dto;
+namespace App\Addressing\DTO;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-final class AddressManageDto
+final class AddressManageDTO
 {
     #[Assert\NotBlank]
     #[Assert\Length(min: 2, max: 256)]

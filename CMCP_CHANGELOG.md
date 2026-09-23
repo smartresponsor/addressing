@@ -210,3 +210,62 @@
 
 Что имеем? Чистая post-PR #81 интеграционная ветка на свежем `origin/master`, полный acceptance green, воспроизводимая coverage evidence и проверенный migration sequence.
 Что осталось? Создать signed integration commit, опубликовать `rc/addressing-rc-final`, открыть conflict-free PR, закрыть superseded #82 и пройти GitHub merge gate.
+
+## 2026-09-20 — Current-tree RC verification and dependency-drift pass
+
+### Reconnaissance baseline
+
+- Re-read the current Addressing instructions, README, development/production Composer manifests, CMCP journal, architecture/boundary/runtime documentation, Deptrac policy, and Addressing platform canon rule set.
+- Re-read the required Objecting, Cruding, Viewing, and Interfacing contracts and Composer identities, plus Gating and the authoritative Canonization rules relevant to Addressing.
+- Canonization consulted: Canon017, Canon021, Canon022–029, Canon039–041, Canon043–045. Mapping: runtime documentation parity; Cruding ownership of generic CRUD; standalone dependency/path/package/runtime topology; PHP 8.4/Symfony 8.1; PostgreSQL/SQLite Doctrine topology; standard PHP/browser test tooling; dev-master local sibling linkage; entity-native Objecting fields; root Composer repository closure.
+- Market/open-source comparison kept provider-side postal verification, geocoding, mapping UI, generic CRUD, collection mechanics, and final presentation outside Addressing ownership.
+- Git baseline before this pass was clean `rc/addressing-rc-final-v2` at `6521566aa8e7a42948fbe7f804f9694e8e645dbe`, tracking `origin/rc/addressing-rc-final-v2` at 0/0. GitHub PR #83 for that exact head is merged; superseded PR #82 is closed.
+
+### Current acceptance evidence
+
+- `composer qa:phpstan`: PASS — 165 paths, 0 errors.
+- `composer qa:deptrac`: PASS — 136 paths, 0 violations/warnings/errors.
+- `composer qa:trust-surface`: PASS — route inventory and documentation/runtime evidence ready.
+- `composer test`: PASS — PHPUnit 12.5.35, 22 tests, 112 assertions, 1 intentional skip, 1 notice.
+- `composer gating`: PASS — Canon022–029, 8/8, no failures or warnings.
+- `composer smoke:doctrine`: PASS — all three Addressing ORM entities present and mapped.
+- `composer smoke:container` and `composer smoke:runtime`: BLOCKED by current symlinked Cruding container wiring, not by Addressing source. `CrudBulkMutationHandlerResolver::$handlers` loses its tagged-iterator argument because Cruding's generic `App\\Cruding\\Resolver\\` resource is declared after the resolver-specific definition in `Cruding/config/services.yaml` and overwrites it.
+- Symfony cache clear reproduces the same Cruding compile failure, excluding stale Addressing cache as the cause.
+
+### RC disposition
+
+- Do not add a compensating Addressing service override: that would duplicate Cruding-owned DI mechanics and violate the component boundary.
+- Addressing remains blocked for standalone runtime/container acceptance until the Cruding-owned service-definition ordering defect is corrected and the affected Addressing smokes are rerun.
+- Growth work remains separate: provider adapters, richer international normalization, confidence/precision UX, and additional operator diagnostics are post-RC.
+
+Что имеем? Addressing-owned architecture, tests, Gating, trust-surface, and Doctrine mapping are green; exact prior Git integration is already merged via PR #83. After cache invalidation, PHPStan and standalone container/runtime compilation are all blocked by the same newly reproduced external Cruding DI regression.
+Что осталось? Fix the owning Cruding DI definition ordering, then rerun Addressing `qa:phpstan`, `smoke:container`, `smoke:runtime`, cache/container lint, full QA, and final integration verification.
+
+### Addressing-owned hardening implemented in this pass
+
+- Read Canon001, Canon002, Canon003, Canon004, Canon005, Canon006, Canon019, Canon020, Canon034, and Canon037 in addition to the rules listed above; the hard actionable finding was Canon003 DTO placement/casing.
+- Migrated `App\Addressing\Http\Dto\AddressManageDto` from `src/Http/Dto/AddressManageDto.php` to canonical `App\Addressing\DTO\AddressManageDTO` in `src/DTO/AddressManageDTO.php`; updated all current callers and removed the old path/type rather than leaving an alias.
+- Added `canon.003.dto_explicit` to `tools/qa/addressing-platform-canon.yaml` so the repository now enforces this hard DTO invariant executablely; Gating passes 9/9.
+- Closed one pre-existing PHP-CS-Fixer drift in `tests/Entity/AddressLifecycleCompatibilityTest.php`.
+- Applied Canon034 repository hygiene to Deptrac's generated quality cache: `/.deptrac.cache` is now ignored and removed from Git tracking while the local cache file remains disposable.
+- Post-change checks: PHP lint PASS (201 files); PHP-CS-Fixer PASS (167 files, 0 fixable); Deptrac PASS (136 paths, 0 violations/warnings/errors); PHPUnit PASS (22 tests, 112 assertions, 1 intentional skip, 1 notice); Rector dry-run PASS; Composer validate strict/check-lock PASS; Composer audit PASS; Gating PASS (Canon003 + Canon022–029, 9/9).
+- `qa:phpstan` after cache invalidation is BLOCKED during Symfony container compilation by the Cruding resolver wiring defect before source analysis completes. This is the same external blocker as `smoke:container` and `smoke:runtime`, not a separate Addressing finding.
+
+Что имеем? Addressing now has a concrete Canon003 migration, executable DTO guard, and generated-cache hygiene with all independent Addressing gates green. The remaining acceptance blocker is owned by the symlinked Cruding dependency.
+Что осталось? Integrate this Addressing change set on a fresh branch/PR without modifying Cruding, and leave RC completion pending until Cruding is fixed and the blocked Addressing gates can be rerun.
+
+## 2026-09-23 — Gating package consumption and RC re-verification
+
+- Re-read Addressing, required Objecting/Cruding/Viewing/Interfacing contracts, Gating, and Canonization rules Canon003, Canon021–029, Canon039–041, Canon043–045.
+- Market/open-source boundary check kept address lifecycle/evidence in Addressing and provider postal validation/geocoding outside it.
+- Git baseline: `rc/addressing-rc-final-v2` was already ahead by commit `f65314d` (`Retain Gating artifact surface`) with the Canon003/Composer worktree still dirty.
+- Installed the declared `gating/gate` local path package; `vendor/bin/gating` is now the executable source of truth.
+- Rewired the targeted `gating` script from copied `.gating/bin/gating` to `vendor/bin/gating`; consumer `.gating/*` is ignored generated artifact state while its README remains tracked.
+- Preserved the Canon003 DTO migration, Deptrac cache hygiene, production Composer package contract, and product capability audit.
+- PASS: `composer gating` (Canon003 + Canon022–029, 9/9), strict Composer validation/check-lock, Composer audit, Deptrac (136 paths, zero findings), PHPUnit (22 tests, 112 assertions), Doctrine mapping smoke.
+- BLOCKED externally: `smoke:container`, `smoke:runtime`, and complete PHPStan analysis fail while the current symlinked Viewing worktree expects `App\\Viewing\\Controller\\ViewHomeController` at a path whose declaration no longer matches. No Addressing-local DI override was added.
+- Aggregate lint invocation later exceeded the orchestration-channel timeout and is not claimed as a fresh pass; the immediately preceding 2026-09-20 tree had passed lint/CS/Rector before these Gating-consumption-only edits.
+- Growth stays separate: richer international normalization, address history/versioning, privacy lifecycle, provider-evidence integration, and operator UX.
+
+Что имеем? Addressing now consumes Gating through Composer, the consumer `.gating` surface is artifact-only, and all independent Addressing gates exercised in this pass are green.
+Что осталось? Commit/publish this checkpoint; rerun standalone runtime and PHPStan after the owning Viewing repository repairs its controller/service-prototype mismatch.
