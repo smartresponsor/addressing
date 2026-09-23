@@ -15,9 +15,18 @@ doctrine:
         entity_managers:
             default:
                 connection: infra
+                auto_mapping: false
+                naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
                 mappings:
                     Addressing:
                         type: attribute
+                        is_bundle: false
                         dir: '%kernel.project_dir%/src/Entity'
                         prefix: 'App\Addressing\Entity'
                         alias: Addressing
+                    ObjectingEmbeddable:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/../Objecting/src/Embeddable'
+                        prefix: 'App\Objecting\Embeddable'
+                        alias: ObjectingEmbeddable
