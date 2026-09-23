@@ -283,3 +283,15 @@
 
 Что имеем? Clean rebased branch `rc/addressing-rc-final-v3`, mergeable PR #85, current targeted Addressing acceptance green, and superseded PR #84 closed.
 Что осталось? Remote review/Actions infrastructure must become green before merge. After the owning Viewing repository repairs its controller/service-prototype mismatch, rerun full standalone runtime and PHPStan acceptance before declaring the wider RC fully closed.
+
+### Runtime blocker cleared
+
+- Rechecked the current symlinked `Viewing` dependency: `App\Viewing\Controller\ViewHomeController` is now present under the expected Symfony service-prototype path.
+- `composer smoke:container`: PASS.
+- `composer smoke:runtime`: PASS.
+- `composer qa:phpstan`: PASS with no errors across 165 analysed files.
+- PR #85 remains `MERGEABLE` on GitHub. All currently reported remote failures (Addressing gate, Security/gitleaks, Security/semgrep, CodeQL, and Qodana configuration upload) terminate with empty `steps: []`; representative jobs expose no runner log. This is a pre-runner GitHub/Actions infrastructure condition rather than an Addressing-local test failure.
+- Review is still required; no merge, admin bypass, or policy override was attempted.
+
+Что имеем? Addressing-local RC acceptance is now green, including standalone container/runtime and PHPStan. PR #85 is conflict-free and mergeable.
+Что осталось? Only GitHub-side review and Actions infrastructure need to clear before merge; no known Addressing-local RC blocker remains.
