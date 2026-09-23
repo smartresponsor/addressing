@@ -78,6 +78,7 @@ jobs:
       MIN_COVERAGE: "80"
       PANTHER_EXTERNAL_BASE_URI: "http://127.0.0.1:8000"
       APP_ENV: "test"
+      ADDRESS_PARITY_DATABASE_URL: "postgresql://smartresponsor:smartresponsor@127.0.0.1:5432/smartresponsor?serverVersion=15&charset=utf8"
 
       PG_DSN: pgsql:host=127.0.0.1;port=5432;dbname=smartresponsor
       PG_USER: smartresponsor
@@ -114,6 +115,9 @@ jobs:
 
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Doctrine schema parity
+        run: composer schema:parity
 
       - name: Domain gate (strict)
         shell: bash

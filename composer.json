@@ -11,6 +11,7 @@
     "cruding/crud": "dev-master",
     "tabling/table": "dev-master",
     "doctrine/doctrine-bundle": "^3.2",
+    "doctrine/doctrine-migrations-bundle": "^4.0",
     "doctrine/orm": "^2.15 || ^3.0",
     "easycorp/easyadmin-bundle": "^5.0",
     "interfacing/interface": "dev-master",
@@ -127,6 +128,13 @@
     "smoke:fixtures": "@php tools/php/php84.php tools/smoke/address-fixture-sanity.php",
     "smoke:container": "@php tools/php/php84.php tools/smoke/address-container-boot-smoke.php",
     "smoke:doctrine": "@php tools/php/php84.php tools/smoke/address-doctrine-mapping-smoke.php",
+    "doctrine:schema:validate": "@php bin/console doctrine:schema:validate --em=parity --env=test --no-interaction",
+    "doctrine:migrations:up-to-date": "@php bin/console doctrine:migrations:up-to-date --em=parity --fail-on-unregistered --env=test --no-interaction",
+    "schema:parity": [
+      "@php bin/console doctrine:migrations:migrate --em=parity --env=test --no-interaction",
+      "@doctrine:schema:validate",
+      "@doctrine:migrations:up-to-date"
+    ],
     "smoke:fixture-load": "@php tools/php/php84.php tools/smoke/address-fixture-load-smoke.php",
     "smoke:graphql": "@php tools/php/php84.php tools/smoke/address-graphql-smoke.php",
     "report:owner-overlap": "@php tools/php/php84.php tools/inspection/AddressOwnerOverlapReport.php",

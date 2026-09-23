@@ -295,3 +295,16 @@
 
 Что имеем? Addressing-local RC acceptance is now green, including standalone container/runtime and PHPStan. PR #85 is conflict-free and mergeable.
 Что осталось? Only GitHub-side review and Actions infrastructure need to clear before merge; no known Addressing-local RC blocker remains.
+
+### Canon030 and silent-failure hardening
+
+- Re-ran the unrestricted `composer gate` rather than relying only on the targeted Addressing profile. This confirmed legacy structural failures in Canon001/004/006/018/020 and PHPDoc debt in Canon031; those remain a separate structural/growth migration track.
+- Closed Canon030 materially: added `doctrine/doctrine-migrations-bundle` 4.x to development/production manifests, registered DoctrineMigrationsBundle, configured the Addressing migration namespace, and added a dedicated PostgreSQL `parity` Doctrine connection/entity manager that reuses current Addressing/Objecting ORM metadata while leaving the default SQLite runtime unchanged.
+- Added executable Composer contracts `doctrine:schema:validate`, `doctrine:migrations:up-to-date`, and `schema:parity`; the existing GitHub PostgreSQL service now supplies `ADDRESS_PARITY_DATABASE_URL` and executes `composer schema:parity` before the remaining gate.
+- Composer resolved DoctrineMigrationsBundle 4.0.1 and Doctrine Migrations 3.9.7; the Symfony console exposes the complete `doctrine:migrations:*` command family.
+- Canon030 now passes in the unrestricted Gating profile. Targeted Gating remains 9/9 green; standalone container/runtime, PHPStan (165 files), and PHPUnit (22 tests / 112 assertions) remain green.
+- Closed Canon011 by removing silent JSON/date fallbacks in `AddressValidated`: JSON encoding now uses `JSON_THROW_ON_ERROR`, malformed date strings are no longer swallowed into null, and the unrestricted gate reports Canon011 PASS.
+- Parallel `LICENSE` and `NOTICE` files appeared during this workstream. They belong to the independent licensing task and were intentionally not incorporated into this Addressing RC change set.
+
+Что имеем? Canon011 and Canon030 are now green in the unrestricted gate, with executable PostgreSQL schema-parity wiring in CI and no regression in runtime/static/test acceptance.
+Что осталось? The unrestricted gate is still red only on the legacy structural migration families Canon001/004/006/018/020; Canon031 remains documentation coverage debt. PR review/Actions infrastructure also remains external to the local code gate.

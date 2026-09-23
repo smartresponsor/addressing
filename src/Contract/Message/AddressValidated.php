@@ -142,10 +142,10 @@ final readonly class AddressValidated implements \JsonSerializable
     public function fingerprint(): string
     {
         $serialized = $this->jsonSerialize();
-        $json = json_encode($serialized, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        if (false === $json) {
-            $json = '';
-        }
+        $json = json_encode(
+            $serialized,
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
+        );
 
         return hash('sha256', $json);
     }
@@ -237,12 +237,10 @@ final readonly class AddressValidated implements \JsonSerializable
             return null;
         }
 
-        $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        if (false === $json) {
-            return null;
-        }
-
-        return $json;
+        return json_encode(
+            $data,
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
+        );
     }
 
     private static function asNullableString(mixed $value): ?string
@@ -308,18 +306,14 @@ final readonly class AddressValidated implements \JsonSerializable
         if (null === $value || '' === $value) {
             return null;
         }
-        try {
-            if ($value instanceof \DateTimeInterface) {
-                return \DateTimeImmutable::createFromInterface($value);
-            }
-            if (is_string($value)) {
-                return new \DateTimeImmutable($value);
-            }
-            if (is_int($value)) {
-                return new \DateTimeImmutable('@'.$value);
-            }
-        } catch (\Throwable) {
-            return null;
+        if ($value instanceof \DateTimeInterface) {
+            return \DateTimeImmutable::createFromInterface($value);
+        }
+        if (is_string($value)) {
+            return new \DateTimeImmutable($value);
+        }
+        if (is_int($value)) {
+            return new \DateTimeImmutable('@'.$value);
         }
 
         return null;
