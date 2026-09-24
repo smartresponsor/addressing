@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Addressing\Factory;
 
 use App\Addressing\Contract\Message\AddressValidated;
-use App\Addressing\Entity\Record\AddressRecord;
 use App\Addressing\Policy\AddressRecordPolicy;
+use App\Addressing\Value\Record\AddressRecord;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Uid\Ulid;
 

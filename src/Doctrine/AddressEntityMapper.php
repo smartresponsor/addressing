@@ -6,8 +6,8 @@ namespace App\Addressing\Doctrine;
 
 use App\Addressing\Entity\AddressEntity;
 use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
-use App\Addressing\Entity\Record\AddressData;
 use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
+use App\Addressing\Value\Record\AddressData;
 
 final class AddressEntityMapper
 {

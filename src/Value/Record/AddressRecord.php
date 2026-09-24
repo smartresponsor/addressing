@@ -3,7 +3,7 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Addressing\Entity\Record;
+namespace App\Addressing\Value\Record;
 
 use App\Addressing\EntityInterface\Record\AddressGovernanceStateInterface;
 use App\Addressing\EntityInterface\Record\AddressInterface;

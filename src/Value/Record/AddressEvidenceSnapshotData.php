@@ -1,17 +1,12 @@
 <?php
 
-/*
- * Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
- * Author: Oleksandr Tishchenko <dev@smartresponsor.com>
- * Owner: Marketing America Corp
- */
 declare(strict_types=1);
 
-namespace App\Addressing\Entity\Record;
+namespace App\Addressing\Value\Record;
 
 use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
 
-final class AddressEvidenceSnapshotRecord implements AddressEvidenceSnapshotInterface
+final readonly class AddressEvidenceSnapshotData implements AddressEvidenceSnapshotInterface
 {
     /**
      * @param array<string, mixed>|null $rawInputSnapshot
@@ -19,23 +14,23 @@ final class AddressEvidenceSnapshotRecord implements AddressEvidenceSnapshotInte
      * @param array<string, mixed>|null $validationIssues
      */
     public function __construct(
-        public string $id,
-        public string $addressId,
-        public ?string $ownerId,
-        public ?string $vendorId,
-        public ?string $sourceSystem,
-        public ?string $sourceType,
-        public ?string $sourceReference,
-        public ?string $validatedBy,
-        public ?string $validatedAt,
-        public ?string $normalizationVersion,
-        public ?array $rawInputSnapshot,
-        public ?array $normalizedSnapshot,
-        public string $validationStatus,
-        public ?int $validationScore,
-        public ?array $validationIssues,
-        public ?string $providerDigest,
-        public string $createdAt,
+        private string $id,
+        private string $addressId,
+        private ?string $ownerId,
+        private ?string $vendorId,
+        private ?string $sourceSystem,
+        private ?string $sourceType,
+        private ?string $sourceReference,
+        private ?string $validatedBy,
+        private ?string $validatedAt,
+        private ?string $normalizationVersion,
+        private ?array $rawInputSnapshot,
+        private ?array $normalizedSnapshot,
+        private string $validationStatus,
+        private ?int $validationScore,
+        private ?array $validationIssues,
+        private ?string $providerDigest,
+        private string $createdAt,
     ) {
     }
 
@@ -99,12 +94,14 @@ final class AddressEvidenceSnapshotRecord implements AddressEvidenceSnapshotInte
         return $this->normalizationVersion;
     }
 
+    /** @return array<string, mixed>|null */
     #[\Override]
     public function rawInputSnapshot(): ?array
     {
         return $this->rawInputSnapshot;
     }
 
+    /** @return array<string, mixed>|null */
     #[\Override]
     public function normalizedSnapshot(): ?array
     {
@@ -123,6 +120,7 @@ final class AddressEvidenceSnapshotRecord implements AddressEvidenceSnapshotInte
         return $this->validationScore;
     }
 
+    /** @return array<string, mixed>|null */
     #[\Override]
     public function validationIssues(): ?array
     {

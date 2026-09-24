@@ -8,13 +8,13 @@ use App\Addressing\Doctrine\AddressEntityMapper;
 use App\Addressing\Entity\AddressEntity;
 use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
 use App\Addressing\Entity\AddressOutboxEntity;
-use App\Addressing\Entity\Record\AddressData;
-use App\Addressing\Entity\Record\AddressEvidenceSnapshotData;
 use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
 use App\Addressing\EntityInterface\Record\AddressInterface;
 use App\Addressing\Message\AddressOutboxEventMessage;
 use App\Addressing\Policy\AddressGovernancePolicy;
 use App\Addressing\Policy\AddressRecordPolicy;
+use App\Addressing\Value\Record\AddressData;
+use App\Addressing\Value\Record\AddressEvidenceSnapshotData;
 use Doctrine\ORM\EntityManagerInterface;
 
 abstract readonly class AbstractDoctrineAddressRepository

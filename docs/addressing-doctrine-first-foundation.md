@@ -20,7 +20,7 @@ These classes are the intended host-facing schema authority for:
 
 The legacy PDO-first runtime remains present during migration.
 
-Current write/read runtime still relies on custom persistence services and record classes under `App\Addressing\Entity\Record\*`.
+Current write/read runtime still relies on custom persistence services and record classes under `App\Addressing\Value\Record\*`.
 That runtime is now considered transitional and should converge toward Doctrine-backed repositories in subsequent waves.
 
 ## Host integration

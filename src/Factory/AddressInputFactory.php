@@ -6,10 +6,10 @@ declare(strict_types=1);
 namespace App\Addressing\Factory;
 
 use App\Addressing\DTO\AddressManageDTO;
-use App\Addressing\Entity\Record\AddressRecord;
 use App\Addressing\Policy\AddressRecordPolicy;
 use App\Addressing\Value\CountryCode;
 use App\Addressing\Value\PostalCode;
+use App\Addressing\Value\Record\AddressRecord;
 use App\Addressing\Value\StreetLine;
 use App\Addressing\Value\Subdivision;
 use Symfony\Component\Uid\Ulid;
