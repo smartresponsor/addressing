@@ -29,7 +29,7 @@ class AddressProvinceEntity
     #[ORM\Column(name: 'code', type: 'string', length: 32)]
     private string $code = '';
 
-    #[ORM\Column(name: 'nameEntity', type: 'string', length: 128)]
+    #[ORM\Column(name: 'name_entity', type: 'string', length: 128)]
     private string $nameEntity = '';
 
     #[ORM\Column(name: 'type', type: 'string', length: 32, nullable: true)]

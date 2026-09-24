@@ -32,7 +32,7 @@ class AddressCountryEntity
     #[ORM\Column(name: 'numeric_code', type: 'string', length: 3, nullable: true)]
     private ?string $numericCode = null;
 
-    #[ORM\Column(name: 'nameEntity', type: 'string', length: 128)]
+    #[ORM\Column(name: 'name_entity', type: 'string', length: 128)]
     private string $nameEntity = '';
 
     #[ORM\Column(name: 'native_name', type: 'string', length: 128, nullable: true)]
