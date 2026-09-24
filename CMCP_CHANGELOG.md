@@ -322,3 +322,13 @@
 
 Что имеем? Canon006 and Canon020 are closed without suppressions, and the moved runtime remains green under static, functional, container, and runtime verification.
 Что осталось? Continue with the smaller configuration debt (Canon034/038) or the larger structural migrations Canon001/004/018; keep licensing changes isolated.
+
+### Configuration canon convergence
+
+- Canon034: added `.env` to the local-environment ignore baseline; unrestricted Gating now reports Canon034 PASS.
+- Canon038: a parallel configuration workstream renamed component-owned YAML from the old `addressing_*`/generic naming to the canonical `address_*` subject prefix and updated its direct references. This workstream was not staged or claimed here.
+- Re-ran unrestricted Gating on the current combined worktree: Canon034 PASS and Canon038 PASS, while Canon006/020 remain PASS.
+- Remaining hard structural families are now Canon001, Canon004, and Canon018. Canon031 remains PHPDoc coverage debt and Canon040 reports stale coverage evidence.
+
+Что имеем? The small configuration canon debt is closed in the current worktree: Canon034 and Canon038 both pass.
+Что осталось? Continue the larger coordinated structural migration across Canon001/004/018, while preserving the parallel configuration and licensing workstreams.

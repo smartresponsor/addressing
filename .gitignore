@@ -34,6 +34,11 @@ Thumbs.db
 /.docker/
 /docker-compose.override.yml
 
+# Local environment overrides
+.env
+.env.local
+.env.*.local
+
 # Node
 node_modules/
 **/node_modules/
