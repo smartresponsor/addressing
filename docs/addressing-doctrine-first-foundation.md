@@ -27,6 +27,6 @@ That runtime is now considered transitional and should converge toward Doctrine-
 
 Import the provided Doctrine mapping file:
 
-- `config/packages/addressing_doctrine.yaml`
+- `config/packages/address_doctrine.yaml`
 
 The host application should treat the top-level `App\Addressing\Entity\*` classes from this component as the schema authority, not the `Record` namespace classes.

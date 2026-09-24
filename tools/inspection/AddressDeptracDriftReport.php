@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 $root = dirname(__DIR__, 2);
-$deptracPath = $root.'/config/addressing_deptrac.yaml';
+$deptracPath = $root.'/config/address_deptrac.yaml';
 $deptracContent = is_file($deptracPath) ? (string) file_get_contents($deptracPath) : '';
 
 $signals = [

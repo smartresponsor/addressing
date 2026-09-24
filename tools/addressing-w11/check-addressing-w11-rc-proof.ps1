@@ -26,6 +26,6 @@ Invoke-Step "Container lint" { php .\bin\console lint:container --no-debug }
 Invoke-Step "YAML lint" { php .\bin\console lint:yaml .\config --parse-tags }
 Invoke-Step "PHPUnit" { php vendor/bin/phpunit }
 Invoke-Step "PHPStan" { php vendor/bin/phpstan analyse }
-Invoke-Step "Deptrac" { php vendor/bin/deptrac analyse --config-file=config/addressing_deptrac.yaml }
+Invoke-Step "Deptrac" { php vendor/bin/deptrac analyse --config-file=config/address_deptrac.yaml }
 
 Write-Host "W11 RC proof passed." -ForegroundColor Green

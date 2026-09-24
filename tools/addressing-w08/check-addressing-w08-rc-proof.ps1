@@ -25,6 +25,6 @@ Write-Host "== PHPStan ==" -ForegroundColor Cyan
 php vendor/bin/phpstan analyse
 
 Write-Host "== Deptrac ==" -ForegroundColor Cyan
-php vendor/bin/deptrac analyse --config-file=config/addressing_deptrac.yaml
+php vendor/bin/deptrac analyse --config-file=config/address_deptrac.yaml
 
 Write-Host "W08 RC proof passed." -ForegroundColor Green
