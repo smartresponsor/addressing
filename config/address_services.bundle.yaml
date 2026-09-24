@@ -19,6 +19,8 @@ services:
         public: true
     App\Addressing\Service\Http\Address\AddressOperationalHttpService:
         public: true
+    App\Addressing\Service\Application\AddressOutboxDrainerService:
+        public: true
 
     App\Addressing\RepositoryInterface\AddressWriteRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressWriteRepository'
     App\Addressing\RepositoryInterface\AddressReadRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressReadRepository'
@@ -28,6 +30,10 @@ services:
     App\Addressing\RepositoryInterface\AddressGovernanceRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressGovernanceRepository'
     App\Addressing\RepositoryInterface\AddressPortfolioRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressPortfolioRepository'
     App\Addressing\RepositoryInterface\AddressIndex\AddressIndexRepositoryInterface: '@App\Addressing\Repository\AddressIndex\DoctrineAddressIndexRepository'
+    App\Addressing\RepositoryInterface\AddressSchemaRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressSchemaRepository'
+    App\Addressing\RepositoryInterface\AddressOutboxDispatchRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressOutboxDispatchRepository'
+    App\Addressing\RepositoryInterface\AddressValidatedPersistenceRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressValidatedPersistenceRepository'
+    App\Addressing\RepositoryInterface\AddressRateLimitRepositoryInterface: '@App\Addressing\Repository\DoctrineAddressRateLimitRepository'
 
     App\Addressing\Service\Http\Address\AddressRateLimiterService:
         public: true

@@ -5,15 +5,14 @@ declare(strict_types=1);
 namespace App\Addressing\Service\Application;
 
 use App\Addressing\Config\Application\AddressOutboxDispatchConfig;
-use App\Addressing\Entity\AddressOutboxEntity;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Addressing\RepositoryInterface\AddressOutboxDispatchRepositoryInterface;
 
 final class AddressOutboxDrainerService
 {
     /** @var callable(string, array<string, mixed>, int, int, int, ?string): bool|null */
     private $sender;
 
-    public function __construct(private readonly EntityManagerInterface $entityManager, ?callable $sender = null)
+    public function __construct(private readonly AddressOutboxDispatchRepositoryInterface $addressOutboxDispatchRepository, ?callable $sender = null)
     {
         $this->sender = $sender;
     }
@@ -41,46 +40,7 @@ final class AddressOutboxDrainerService
     /** @return array<int, array<string, mixed>> */
     private function reserveRows(string $lockId, int $limit): array
     {
-        $this->entityManager->beginTransaction();
-
-        try {
-            /** @var list<AddressOutboxEntity> $entities */
-            $entities = $this->entityManager->getRepository(AddressOutboxEntity::class)->findBy(
-                ['publishedAt' => null, 'lockedAt' => null],
-                ['id' => 'ASC'],
-                max(1, $limit),
-            );
-
-            if ([] === $entities) {
-                $this->entityManager->commit();
-
-                return [];
-            }
-
-            $rows = [];
-            $now = new \DateTimeImmutable('now');
-            foreach ($entities as $entity) {
-                $entity->setLockedAt($now);
-                $entity->setLockedBy($lockId);
-                $rows[] = [
-                    'id' => $entity->getId(),
-                    'event_name' => $entity->getEventName(),
-                    'event_version' => $entity->getEventVersion(),
-                    'payload' => $entity->getPayload(),
-                ];
-            }
-
-            $this->entityManager->flush();
-            $this->entityManager->commit();
-
-            return $rows;
-        } catch (\Throwable $throwable) {
-            if ($this->entityManager->getConnection()->isTransactionActive()) {
-                $this->entityManager->rollback();
-            }
-
-            throw $throwable;
-        }
+        return $this->addressOutboxDispatchRepository->reserve($lockId, $limit);
     }
 
     /** @param array<string, mixed> $row */
@@ -149,35 +109,12 @@ final class AddressOutboxDrainerService
 
     private function markPublished(int $id): void
     {
-        $entity = $this->entityManager->find(AddressOutboxEntity::class, $id);
-        if (!$entity instanceof AddressOutboxEntity) {
-            return;
-        }
-
-        $entity
-            ->setPublishedAt(new \DateTimeImmutable('now'))
-            ->setLockedAt(null)
-            ->setLockedBy(null)
-            ->setPublishedAttempt($entity->getPublishedAttempt() + 1)
-            ->setLastError(null);
-
-        $this->entityManager->flush();
+        $this->addressOutboxDispatchRepository->markPublished($id);
     }
 
     private function markDispatchFailure(int $id, ?string $error): void
     {
-        $entity = $this->entityManager->find(AddressOutboxEntity::class, $id);
-        if (!$entity instanceof AddressOutboxEntity) {
-            return;
-        }
-
-        $entity
-            ->setLockedAt(null)
-            ->setLockedBy(null)
-            ->setPublishedAttempt($entity->getPublishedAttempt() + 1)
-            ->setLastError($error);
-
-        $this->entityManager->flush();
+        $this->addressOutboxDispatchRepository->markDispatchFailure($id, $error);
     }
 
     /** @param array<string, mixed> $data */
