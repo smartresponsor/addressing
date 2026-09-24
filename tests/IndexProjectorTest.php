@@ -7,7 +7,7 @@ namespace Tests;
 
 use App\Addressing\Entity\AddressIndexEntity;
 use App\Addressing\Event\AddressCreatedEvent;
-use App\Addressing\Projection\AddressIndex\AddressIndexNormalizer;
+use App\Addressing\Normalizer\AddressIndexNormalizer;
 use App\Addressing\Projection\AddressIndex\AddressIndexProjector;
 use App\Addressing\Repository\AddressIndex\DoctrineAddressIndexRepository;
 use App\Addressing\Service\Projection\AddressIndex\AddressIndexProjectorService;

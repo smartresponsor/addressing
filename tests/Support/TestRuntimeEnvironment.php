@@ -5,8 +5,12 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
+use Symfony\Component\Filesystem\Filesystem;
+
 final class TestRuntimeEnvironment
 {
+    private static ?string $runtimeVarDir = null;
+
     public static function configureSqliteAddressRuntime(string $sqlitePath): void
     {
         $dsn = 'sqlite:'.$sqlitePath;
@@ -17,10 +21,11 @@ final class TestRuntimeEnvironment
         putenv('ADDRESS_DB_DSN='.$dsn);
         $_ENV['ADDRESS_DB_DSN'] = $dsn;
         $_SERVER['ADDRESS_DB_DSN'] = $dsn;
-        $runtimeVarDir = dirname($sqlitePath).'/runtime-'.sha1($sqlitePath);
+        $runtimeVarDir = dirname($sqlitePath).'/runtime-'.sha1($sqlitePath.'|'.(string) hrtime(true));
         if (!is_dir($runtimeVarDir)) {
             mkdir($runtimeVarDir, 0777, true);
         }
+        self::$runtimeVarDir = $runtimeVarDir;
 
         putenv('APP_VAR_DIR='.$runtimeVarDir);
         $_ENV['APP_VAR_DIR'] = $runtimeVarDir;
@@ -38,5 +43,11 @@ final class TestRuntimeEnvironment
         putenv('APP_VAR_DIR');
         unset($_ENV['APP_VAR_DIR'], $_SERVER['APP_VAR_DIR']);
         unset($_SERVER['APP_ENV'], $_SERVER['APP_DEBUG']);
+
+        if (null !== self::$runtimeVarDir && is_dir(self::$runtimeVarDir)) {
+            (new Filesystem())->remove(self::$runtimeVarDir);
+        }
+
+        self::$runtimeVarDir = null;
     }
 }

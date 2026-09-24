@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Addressing\Http\Factory;
+namespace App\Addressing\Factory;
 
 use App\Addressing\EntityInterface\Record\AddressInterface;
 

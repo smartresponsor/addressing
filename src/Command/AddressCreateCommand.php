@@ -6,7 +6,7 @@ declare(strict_types=1);
 namespace App\Addressing\Command;
 
 use App\Addressing\DTO\AddressManageDTO;
-use App\Addressing\Http\Factory\AddressInputFactory;
+use App\Addressing\Factory\AddressInputFactory;
 use App\Addressing\Service\Application\AddressWriteService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;

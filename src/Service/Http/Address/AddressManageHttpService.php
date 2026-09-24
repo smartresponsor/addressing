@@ -6,8 +6,8 @@ declare(strict_types=1);
 namespace App\Addressing\Service\Http\Address;
 
 use App\Addressing\DTO\AddressManageDTO;
-use App\Addressing\Http\Factory\AddressInputFactory;
-use App\Addressing\Http\Factory\AddressViewArrayFactory;
+use App\Addressing\Factory\AddressInputFactory;
+use App\Addressing\Factory\AddressViewArrayFactory;
 use App\Addressing\Http\Form\AddressManageType;
 use App\Addressing\Service\Application\AddressReadService;
 use App\Addressing\Service\Application\AddressWriteService;

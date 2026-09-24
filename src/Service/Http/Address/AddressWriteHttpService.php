@@ -5,7 +5,8 @@ declare(strict_types=1);
 
 namespace App\Addressing\Service\Http\Address;
 
-use App\Addressing\Http\Factory\AddressApiPayloadFactory;
+use App\Addressing\Factory\AddressApiPayloadFactory;
+use App\Addressing\Responder\AddressResponder;
 use App\Addressing\Service\Application\AddressWriteService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,7 +18,7 @@ final readonly class AddressWriteHttpService
         private AddressWriteService $addressWriteService,
         private AddressApiPayloadFactory $addressApiPayloadFactory,
         private AddressHttpScopeService $addressHttpScopeService,
-        private AddressHttpResponderService $addressHttpResponderService,
+        private AddressResponder $addressResponder,
     ) {
     }
 
@@ -28,7 +29,7 @@ final readonly class AddressWriteHttpService
             $addressData = $this->addressApiPayloadFactory->createAddressEntity($payload);
             $this->addressWriteService->create($addressData);
         } catch (\Throwable $exception) {
-            return $this->addressHttpResponderService->invalidRequest($exception);
+            return $this->addressResponder->invalidRequest($exception);
         }
 
         return new JsonResponse(['id' => $addressData->id()], Response::HTTP_CREATED);

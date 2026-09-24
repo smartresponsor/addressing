@@ -3,7 +3,7 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Addressing\Projection\AddressIndex;
+namespace App\Addressing\Normalizer;
 
 use App\Addressing\Value\CountryCode;
 use App\Addressing\Value\PostalCode;

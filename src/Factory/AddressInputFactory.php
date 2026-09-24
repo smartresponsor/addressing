@@ -3,7 +3,7 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Addressing\Http\Factory;
+namespace App\Addressing\Factory;
 
 use App\Addressing\DTO\AddressManageDTO;
 use App\Addressing\Entity\Record\AddressRecord;

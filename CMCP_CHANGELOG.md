@@ -308,3 +308,17 @@
 
 Что имеем? Canon011 and Canon030 are now green in the unrestricted gate, with executable PostgreSQL schema-parity wiring in CI and no regression in runtime/static/test acceptance.
 Что осталось? The unrestricted gate is still red only on the legacy structural migration families Canon001/004/006/018/020; Canon031 remains documentation coverage debt. PR review/Actions infrastructure also remains external to the local code gate.
+
+### Structural role-root convergence
+
+- Moved HTTP factories from `src/Http/Factory/` into the canonical `src/Factory/` technical-role root and updated active imports/documentation.
+- Moved `AddressIndexNormalizer` into `src/Normalizer/` and updated projector/test imports.
+- Replaced the mixed-role `AddressHttpResponderService` with canonical `src/Responder/AddressResponder.php`; dependent HTTP services now inject the responder from its technical-role root.
+- Fixed the functional-test runtime harness so each kernel boot receives a fresh `APP_VAR_DIR`; teardown removes that runtime directory, preventing stale compiled DI containers after namespace moves.
+- Kept CSRF enabled. The manage-form functional test now supplies a mock session through the actual `RequestStack`, matching the framework contract rather than disabling security in test configuration.
+- Verification after convergence: PHPUnit PASS (22 tests, 112 assertions, 1 notice, 1 skipped), PHPStan PASS across 165 files, container smoke PASS, runtime smoke PASS, targeted Gating PASS 9/9.
+- Unrestricted Gating confirmed Canon006 PASS and Canon020 PASS. Remaining hard structural families are Canon001/004/018; Canon031 remains documentation-coverage debt, with Canon034/038 surfaced as additional small configuration debt.
+- Parallel licensing state (`composer.json` license hunk, `LICENSE`, `NOTICE`) remains deliberately excluded from this workstream.
+
+Что имеем? Canon006 and Canon020 are closed without suppressions, and the moved runtime remains green under static, functional, container, and runtime verification.
+Что осталось? Continue with the smaller configuration debt (Canon034/038) or the larger structural migrations Canon001/004/018; keep licensing changes isolated.

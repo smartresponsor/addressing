@@ -3,14 +3,14 @@
 // Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-namespace App\Addressing\Service\Http\Address;
+namespace App\Addressing\Responder;
 
 use App\Addressing\EntityInterface\Record\AddressInterface;
-use App\Addressing\Http\Factory\AddressViewArrayFactory;
+use App\Addressing\Factory\AddressViewArrayFactory;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
-final readonly class AddressHttpResponderService
+final readonly class AddressResponder
 {
     public function __construct(private AddressViewArrayFactory $addressViewArrayFactory)
     {

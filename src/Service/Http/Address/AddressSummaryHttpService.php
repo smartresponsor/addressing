@@ -5,7 +5,8 @@ declare(strict_types=1);
 
 namespace App\Addressing\Service\Http\Address;
 
-use App\Addressing\Http\Factory\AddressQueryFilterFactory;
+use App\Addressing\Factory\AddressQueryFilterFactory;
+use App\Addressing\Responder\AddressResponder;
 use App\Addressing\Service\Application\AddressGovernanceSummaryService;
 use App\Addressing\Service\Application\AddressPortfolioSummaryService;
 use App\Addressing\Service\Application\AddressQueueSummaryService;
@@ -20,7 +21,7 @@ final readonly class AddressSummaryHttpService
         private AddressPortfolioSummaryService $addressPortfolioSummaryService,
         private AddressQueryFilterFactory $addressQueryFilterFactory,
         private AddressHttpScopeService $addressHttpScopeService,
-        private AddressHttpResponderService $addressHttpResponderService,
+        private AddressResponder $addressResponder,
     ) {
     }
 
@@ -48,7 +49,7 @@ final readonly class AddressSummaryHttpService
             $this->addressQueryFilterFactory->operationalFilters($request),
         );
 
-        return $this->addressHttpResponderService->summaryItems($summary);
+        return $this->addressResponder->summaryItems($summary);
     }
 
     public function sourcePortfolioSummary(Request $request): JsonResponse
@@ -62,7 +63,7 @@ final readonly class AddressSummaryHttpService
             $this->addressQueryFilterFactory->portfolioFilters($request, true),
         );
 
-        return $this->addressHttpResponderService->summaryItems($summary);
+        return $this->addressResponder->summaryItems($summary);
     }
 
     public function validationPortfolioSummary(Request $request): JsonResponse
@@ -76,7 +77,7 @@ final readonly class AddressSummaryHttpService
             $this->addressQueryFilterFactory->portfolioFilters($request, true, true),
         );
 
-        return $this->addressHttpResponderService->summaryItems($summary);
+        return $this->addressResponder->summaryItems($summary);
     }
 
     public function normalizationPortfolioSummary(Request $request): JsonResponse
@@ -90,7 +91,7 @@ final readonly class AddressSummaryHttpService
             $this->addressQueryFilterFactory->portfolioFilters($request, true, true, true),
         );
 
-        return $this->addressHttpResponderService->summaryItems($summary);
+        return $this->addressResponder->summaryItems($summary);
     }
 
     public function governanceClusterSummary(Request $request, string $id): JsonResponse
@@ -98,7 +99,7 @@ final readonly class AddressSummaryHttpService
         [$ownerId, $vendorId] = $this->addressHttpScopeService->tenantScope($request);
         $summary = $this->addressGovernanceSummaryService->summarize($id, $ownerId, $vendorId);
         if (0 === $summary['clusterSize']) {
-            return $this->addressHttpResponderService->notFound();
+            return $this->addressResponder->notFound();
         }
 
         return new JsonResponse($summary);
