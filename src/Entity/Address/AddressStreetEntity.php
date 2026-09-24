@@ -9,7 +9,7 @@ use App\Objecting\EntityTrait\Embeddable\ObjectIdentityEmbeddableTrait;
 use App\Objecting\EntityTrait\Embeddable\ObjectStateEmbeddableTrait;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: \App\Addressing\Repository\Address\AddressStreetEntityRepository::class)]
+#[ORM\Entity(repositoryClass: \App\Addressing\Repository\AddressStreetEntityRepository::class)]
 #[ORM\Table(name: 'address_street')]
 #[ORM\Index(name: 'address_street_lookup_idx', columns: ['country_code', 'city_name', 'street_name'])]
 class AddressStreetEntity

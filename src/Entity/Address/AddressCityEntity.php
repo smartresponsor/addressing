@@ -9,7 +9,7 @@ use App\Objecting\EntityTrait\Embeddable\ObjectIdentityEmbeddableTrait;
 use App\Objecting\EntityTrait\Embeddable\ObjectStateEmbeddableTrait;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: \App\Addressing\Repository\Address\AddressCityEntityRepository::class)]
+#[ORM\Entity(repositoryClass: \App\Addressing\Repository\AddressCityEntityRepository::class)]
 #[ORM\Table(name: 'address_city')]
 #[ORM\Index(name: 'address_city_country_name_idx', columns: ['country_code', 'nameEntity'])]
 class AddressCityEntity
