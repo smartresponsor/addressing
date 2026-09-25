@@ -5,18 +5,18 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value;
 
-final readonly class PostalCode implements \Stringable
+final readonly class AddressStreetLine implements \Stringable
 {
     private string $value;
 
     public function __construct(string $value)
     {
         $value = trim($value);
-        if ('' === $value || strlen($value) < 3) {
-            throw new \InvalidArgumentException('PostalCode is too short');
+        if ('' === $value || strlen($value) < 2) {
+            throw new \InvalidArgumentException('StreetLine is too short');
         }
-        if (strlen($value) > 32) {
-            throw new \InvalidArgumentException('PostalCode is too long');
+        if (strlen($value) > 256) {
+            throw new \InvalidArgumentException('StreetLine is too long');
         }
         $this->value = $value;
     }

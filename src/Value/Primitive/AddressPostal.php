@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value\Primitive;
 
-final readonly class Postal implements \Stringable
+final readonly class AddressPostal implements \Stringable
 {
     private string $value;
 

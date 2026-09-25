@@ -5,15 +5,18 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value;
 
-final readonly class CountryCode implements \Stringable
+final readonly class AddressPostalCode implements \Stringable
 {
     private string $value;
 
     public function __construct(string $value)
     {
-        $value = strtoupper(trim($value));
-        if (!preg_match('/^[A-Z]{2}$/', $value)) {
-            throw new \InvalidArgumentException('CountryCode must be ISO 3166-1 alpha-2');
+        $value = trim($value);
+        if ('' === $value || strlen($value) < 3) {
+            throw new \InvalidArgumentException('PostalCode is too short');
+        }
+        if (strlen($value) > 32) {
+            throw new \InvalidArgumentException('PostalCode is too long');
         }
         $this->value = $value;
     }

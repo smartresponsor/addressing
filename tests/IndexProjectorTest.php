@@ -9,7 +9,7 @@ use App\Addressing\Entity\AddressIndexEntity;
 use App\Addressing\Event\AddressCreatedEvent;
 use App\Addressing\Normalizer\AddressIndexNormalizer;
 use App\Addressing\Projection\AddressIndex\AddressIndexProjector;
-use App\Addressing\Repository\AddressIndex\DoctrineAddressIndexRepository;
+use App\Addressing\Repository\AddressIndex\AddressDoctrineIndexRepository;
 use App\Addressing\Service\Projection\AddressIndex\AddressIndexProjectorService;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
@@ -19,7 +19,7 @@ final class AddressIndexProjectorTest extends TestCase
     public function testProjectionIntoRepository(): void
     {
         $entityManager = TestDatabase::createInMemoryEntityManager([AddressIndexEntity::class]);
-        $repo = new DoctrineAddressIndexRepository($entityManager);
+        $repo = new AddressDoctrineIndexRepository($entityManager);
         $projector = new AddressIndexProjector($repo, new AddressIndexNormalizer(), new AddressIndexProjectorService());
 
         $evt = new AddressCreatedEvent('123 Main St', null, 'Houston', 'TX', '77002', 'US');

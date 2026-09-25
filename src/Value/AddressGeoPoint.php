@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value;
 
-final readonly class GeoPoint implements \Stringable
+final readonly class AddressGeoPoint implements \Stringable
 {
     private float $lat;
     private float $lon;

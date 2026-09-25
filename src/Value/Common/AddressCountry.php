@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value\Common;
 
-final readonly class Country implements \Stringable
+final readonly class AddressCountry implements \Stringable
 {
     private string $code;
 

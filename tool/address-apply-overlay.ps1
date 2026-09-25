@@ -65,11 +65,11 @@ $files = @(
 'src\Entity\Address\AddressData.php',
 'src\Repository\Address\AddressRepository.php',
 'src\Service\Address\AddressProjection.php',
-'src\Value\CountryCode.php',
-'src\Value\GeoPoint.php',
-'src\Value\PostalCode.php',
-'src\Value\StreetLine.php',
-'src\Value\Subdivision.php'
+'src\Value\AddressCountryCode.php',
+'src\Value\AddressGeoPoint.php',
+'src\Value\AddressPostalCode.php',
+'src\Value\AddressStreetLine.php',
+'src\Value\AddressSubdivision.php'
 )
 
 foreach ($f in $files)

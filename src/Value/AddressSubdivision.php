@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value;
 
-final readonly class Subdivision implements \Stringable
+final readonly class AddressSubdivision implements \Stringable
 {
     private string $code;
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value\Primitive;
 
-final readonly class Region implements \Stringable
+final readonly class AddressRegion implements \Stringable
 {
     private string $value;
 

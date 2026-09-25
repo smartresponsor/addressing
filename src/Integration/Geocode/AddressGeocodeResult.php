@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Integration\Geocode;
 
-final readonly class GeocodeResult
+final readonly class AddressGeocodeResult
 {
     public function __construct(
         public ?float $lat,

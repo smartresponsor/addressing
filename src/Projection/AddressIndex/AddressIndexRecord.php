@@ -5,11 +5,11 @@ declare(strict_types=1);
 
 namespace App\Addressing\Projection\AddressIndex;
 
-use App\Addressing\Integration\Geocode\GeocodeResult;
-use App\Addressing\Value\CountryCode;
-use App\Addressing\Value\PostalCode;
-use App\Addressing\Value\Primitive\Region;
-use App\Addressing\Value\StreetLine;
+use App\Addressing\Integration\Geocode\AddressGeocodeResult;
+use App\Addressing\Value\AddressCountryCode;
+use App\Addressing\Value\AddressPostalCode;
+use App\Addressing\Value\AddressStreetLine;
+use App\Addressing\Value\Primitive\AddressRegion;
 
 final readonly class AddressIndexRecord
 {
@@ -42,9 +42,9 @@ final readonly class AddressIndexRecord
     }
 
     /**
-     * @param array{line1: StreetLine, line2: ?StreetLine, city: string, region: Region, postal: PostalCode, country: CountryCode, digest: string} $norm
+     * @param array{line1: AddressStreetLine, line2: ?AddressStreetLine, city: string, region: AddressRegion, postal: AddressPostalCode, country: AddressCountryCode, digest: string} $norm
      */
-    public static function fromNormalized(array $norm, ?GeocodeResult $geocodeResult = null): self
+    public static function fromNormalized(array $norm, ?AddressGeocodeResult $geocodeResult = null): self
     {
         $lat = $geocodeResult?->lat;
         $lon = $geocodeResult?->lon;

@@ -7,11 +7,11 @@ namespace App\Addressing\Factory;
 
 use App\Addressing\DTO\AddressManageDTO;
 use App\Addressing\Policy\AddressRecordPolicy;
-use App\Addressing\Value\CountryCode;
-use App\Addressing\Value\PostalCode;
+use App\Addressing\Value\AddressCountryCode;
+use App\Addressing\Value\AddressPostalCode;
+use App\Addressing\Value\AddressStreetLine;
+use App\Addressing\Value\AddressSubdivision;
 use App\Addressing\Value\Record\AddressRecord;
-use App\Addressing\Value\StreetLine;
-use App\Addressing\Value\Subdivision;
 use Symfony\Component\Uid\Ulid;
 
 final class AddressInputFactory
@@ -23,8 +23,8 @@ final class AddressInputFactory
     {
         $createdAt = new \DateTimeImmutable();
         $now = $this->stringOverride($overrides, 'createdAt') ?? $createdAt->format('Y-m-d H:i:sP');
-        $line1 = (string) new StreetLine($addressManageDto->line1);
-        $countryCode = (string) new CountryCode($addressManageDto->countryCode);
+        $line1 = (string) new AddressStreetLine($addressManageDto->line1);
+        $countryCode = (string) new AddressCountryCode($addressManageDto->countryCode);
         $postalCode = $this->postalCode($addressManageDto);
         $region = $this->region($addressManageDto);
         $city = trim($addressManageDto->city);
@@ -173,14 +173,14 @@ final class AddressInputFactory
     private function postalCode(AddressManageDTO $addressManageDto): ?string
     {
         return null !== $addressManageDto->postalCode && '' !== trim($addressManageDto->postalCode)
-            ? (string) new PostalCode($addressManageDto->postalCode)
+            ? (string) new AddressPostalCode($addressManageDto->postalCode)
             : null;
     }
 
     private function region(AddressManageDTO $addressManageDto): ?string
     {
         return null !== $addressManageDto->region && '' !== trim($addressManageDto->region)
-            ? (string) new Subdivision($addressManageDto->region)
+            ? (string) new AddressSubdivision($addressManageDto->region)
             : null;
     }
 

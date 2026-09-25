@@ -7,18 +7,18 @@ namespace Tests\Projection;
 
 use App\Addressing\Entity\AddressIndexEntity;
 use App\Addressing\Projection\AddressIndex\AddressIndexRecord;
-use App\Addressing\Repository\AddressIndex\DoctrineAddressIndexRepository;
+use App\Addressing\Repository\AddressIndex\AddressDoctrineIndexRepository;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
 
 final class AddressIndexRepositoryTest extends TestCase
 {
-    private DoctrineAddressIndexRepository $repo;
+    private AddressDoctrineIndexRepository $repo;
 
     protected function setUp(): void
     {
         $entityManager = TestDatabase::createInMemoryEntityManager([AddressIndexEntity::class]);
-        $this->repo = new DoctrineAddressIndexRepository($entityManager);
+        $this->repo = new AddressDoctrineIndexRepository($entityManager);
     }
 
     public function testUpsertAndFetch(): void
