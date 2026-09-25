@@ -16,8 +16,8 @@ function Invoke-RcStep {
 }
 
 Write-Host "== Cleanup runtime cache ==" -ForegroundColor Cyan
-if (Test-Path ".\var\cache") { Remove-Item ".\var\cache" -Recurse -Force }
-if (Test-Path ".\var\phpstan") { Remove-Item ".\var\phpstan" -Recurse -Force }
+if (Test-Path ".\var\cache") { [System.IO.Directory]::Delete((Resolve-Path ".\var\cache").Path, $true) }
+if (Test-Path ".\var\phpstan") { [System.IO.Directory]::Delete((Resolve-Path ".\var\phpstan").Path, $true) }
 
 Invoke-RcStep "Composer validate" { composer validate --strict }
 Invoke-RcStep "Composer autoload" { composer dump-autoload }

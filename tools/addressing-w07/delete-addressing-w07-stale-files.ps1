@@ -8,7 +8,12 @@ $RemovePaths = @(
 foreach ($Path in $RemovePaths) {
     $Full = Join-Path $Repo $Path
     if (Test-Path $Full) {
-        Remove-Item $Full -Recurse -Force
+        $item = Get-Item -LiteralPath $Full
+        if ($item.PSIsContainer) {
+            [System.IO.Directory]::Delete($item.FullName, $true)
+        } else {
+            [System.IO.File]::Delete($item.FullName)
+        }
         Write-Host "Removed: $Path" -ForegroundColor Yellow
     } else {
         Write-Host "Already absent: $Path" -ForegroundColor DarkGray

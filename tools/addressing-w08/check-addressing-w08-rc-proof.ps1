@@ -3,8 +3,8 @@ $Repo = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 Set-Location $Repo
 
 Write-Host "== Cleanup runtime cache ==" -ForegroundColor Cyan
-if (Test-Path ".\var\cache") { Remove-Item ".\var\cache" -Recurse -Force }
-if (Test-Path ".\var\phpstan") { Remove-Item ".\var\phpstan" -Recurse -Force }
+if (Test-Path ".\var\cache") { [System.IO.Directory]::Delete((Resolve-Path ".\var\cache").Path, $true) }
+if (Test-Path ".\var\phpstan") { [System.IO.Directory]::Delete((Resolve-Path ".\var\phpstan").Path, $true) }
 
 Write-Host "== Composer validate ==" -ForegroundColor Cyan
 composer validate --strict

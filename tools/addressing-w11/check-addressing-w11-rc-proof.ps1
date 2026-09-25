@@ -18,7 +18,7 @@ function Invoke-Step {
     }
 }
 
-Remove-Item .\var\phpstan -Recurse -Force -ErrorAction SilentlyContinue
+if (Test-Path ".\var\phpstan") { [System.IO.Directory]::Delete((Resolve-Path ".\var\phpstan").Path, $true) }
 
 Invoke-Step "Composer validate" { composer validate --strict }
 Invoke-Step "Composer autoload" { composer dump-autoload }
