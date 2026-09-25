@@ -2,7 +2,7 @@
   "name": "addressing/address",
   "description": "Addressing process app",
   "type": "library",
-  "license": "MIT",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "require": {
     "php": "^8.4",
     "ext-curl": "*",

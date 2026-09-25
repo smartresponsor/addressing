@@ -370,3 +370,13 @@
 
 Что имеем? Addressing now has a fully green executable Gating profile and green local static/test/runtime acceptance on the converged RC branch.
 Что осталось? Publish the accumulated signed commits, refresh PR evidence, and treat PHPDoc/coverage expansion as post-hard-gate quality debt rather than an RC blocker.
+
+### License metadata consistency
+
+- Confirmed the repository `LICENSE` already adopted PolyForm Noncommercial 1.0.0 in commit `11e2d7d`; this pass does not introduce a new licensing decision.
+- Removed an invalid package-level Gating README copy from the consumer `.gating/` artifact surface and restored the tracked artifact-only boundary text.
+- Aligned both `composer.json` and `composer.prod.json` license metadata with the existing repository license: `PolyForm-Noncommercial-1.0.0`.
+- Root `composer validate --strict --check-lock` passes after the metadata alignment.
+
+Что имеем? License text and Composer package metadata now express one existing repository license, while `.gating/` remains consumer-owned artifact state rather than duplicated Gating package documentation.
+Что осталось? Commit and publish this isolated metadata consistency tail, then verify the resulting PR/integration state.
