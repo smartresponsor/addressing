@@ -7,7 +7,7 @@ namespace App\Addressing\Repository;
 use App\Addressing\Entity\AddressEntity;
 use App\Addressing\RepositoryInterface\AddressPortfolioRepositoryInterface;
 
-final readonly class DoctrineAddressPortfolioRepository extends AbstractDoctrineAddressRepository implements AddressPortfolioRepositoryInterface
+final readonly class AddressDoctrinePortfolioRepository extends AddressAbstractDoctrineRepository implements AddressPortfolioRepositoryInterface
 {
     #[\Override]
     public function summarizeCountryPortfolio(?string $ownerId, ?string $vendorId, ?string $q, array $filters = []): array

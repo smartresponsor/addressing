@@ -7,7 +7,7 @@ namespace App\Addressing\Repository;
 use App\Addressing\Entity\AddressEntity;
 use App\Addressing\RepositoryInterface\AddressOperationalRepositoryInterface;
 
-final readonly class DoctrineAddressOperationalRepository extends AbstractDoctrineAddressRepository implements AddressOperationalRepositoryInterface
+final readonly class AddressDoctrineOperationalRepository extends AddressAbstractDoctrineRepository implements AddressOperationalRepositoryInterface
 {
     #[\Override]
     public function patchOperational(string $id, ?string $ownerId, ?string $vendorId, array $patch): bool

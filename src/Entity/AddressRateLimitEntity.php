@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'rate_limit')]
-class RateLimitEntity
+class AddressRateLimitEntity
 {
     #[ORM\Id]
     #[ORM\Column(name: 'client', type: 'string', length: 255)]

@@ -10,7 +10,7 @@ use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
 use App\Addressing\EntityInterface\Record\AddressInterface;
 use App\Addressing\RepositoryInterface\AddressEvidenceRepositoryInterface;
 
-final readonly class DoctrineAddressEvidenceRepository extends AbstractDoctrineAddressRepository implements AddressEvidenceRepositoryInterface
+final readonly class AddressDoctrineEvidenceRepository extends AddressAbstractDoctrineRepository implements AddressEvidenceRepositoryInterface
 {
     #[\Override]
     public function appendEvidenceSnapshot(AddressInterface $address): ?AddressEvidenceSnapshotInterface

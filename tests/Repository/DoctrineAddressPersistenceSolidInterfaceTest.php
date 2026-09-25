@@ -5,13 +5,13 @@ declare(strict_types=1);
 
 namespace Tests\Repository;
 
-use App\Addressing\Repository\DoctrineAddressEvidenceRepository;
-use App\Addressing\Repository\DoctrineAddressGovernanceRepository;
-use App\Addressing\Repository\DoctrineAddressOperationalRepository;
-use App\Addressing\Repository\DoctrineAddressPortfolioRepository;
-use App\Addressing\Repository\DoctrineAddressQueueRepository;
-use App\Addressing\Repository\DoctrineAddressReadRepository;
-use App\Addressing\Repository\DoctrineAddressWriteRepository;
+use App\Addressing\Repository\AddressDoctrineEvidenceRepository;
+use App\Addressing\Repository\AddressDoctrineGovernanceRepository;
+use App\Addressing\Repository\AddressDoctrineOperationalRepository;
+use App\Addressing\Repository\AddressDoctrinePortfolioRepository;
+use App\Addressing\Repository\AddressDoctrineQueueRepository;
+use App\Addressing\Repository\AddressDoctrineReadRepository;
+use App\Addressing\Repository\AddressDoctrineWriteRepository;
 use App\Addressing\RepositoryInterface\AddressEvidenceRepositoryInterface;
 use App\Addressing\RepositoryInterface\AddressGovernanceRepositoryInterface;
 use App\Addressing\RepositoryInterface\AddressOperationalRepositoryInterface;
@@ -25,12 +25,12 @@ final class DoctrineAddressPersistenceSolidInterfaceTest extends TestCase
 {
     public function testRepositoryImplementationsExposeOnlyTheirNarrowSolidContracts(): void
     {
-        self::assertSame([AddressWriteRepositoryInterface::class], array_values(class_implements(DoctrineAddressWriteRepository::class)));
-        self::assertSame([AddressReadRepositoryInterface::class], array_values(class_implements(DoctrineAddressReadRepository::class)));
-        self::assertSame([AddressEvidenceRepositoryInterface::class], array_values(class_implements(DoctrineAddressEvidenceRepository::class)));
-        self::assertSame([AddressOperationalRepositoryInterface::class], array_values(class_implements(DoctrineAddressOperationalRepository::class)));
-        self::assertSame([AddressQueueRepositoryInterface::class], array_values(class_implements(DoctrineAddressQueueRepository::class)));
-        self::assertSame([AddressGovernanceRepositoryInterface::class], array_values(class_implements(DoctrineAddressGovernanceRepository::class)));
-        self::assertSame([AddressPortfolioRepositoryInterface::class], array_values(class_implements(DoctrineAddressPortfolioRepository::class)));
+        self::assertSame([AddressWriteRepositoryInterface::class], array_values(class_implements(AddressDoctrineWriteRepository::class)));
+        self::assertSame([AddressReadRepositoryInterface::class], array_values(class_implements(AddressDoctrineReadRepository::class)));
+        self::assertSame([AddressEvidenceRepositoryInterface::class], array_values(class_implements(AddressDoctrineEvidenceRepository::class)));
+        self::assertSame([AddressOperationalRepositoryInterface::class], array_values(class_implements(AddressDoctrineOperationalRepository::class)));
+        self::assertSame([AddressQueueRepositoryInterface::class], array_values(class_implements(AddressDoctrineQueueRepository::class)));
+        self::assertSame([AddressGovernanceRepositoryInterface::class], array_values(class_implements(AddressDoctrineGovernanceRepository::class)));
+        self::assertSame([AddressPortfolioRepositoryInterface::class], array_values(class_implements(AddressDoctrinePortfolioRepository::class)));
     }
 }

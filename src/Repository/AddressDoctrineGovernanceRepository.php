@@ -7,7 +7,7 @@ namespace App\Addressing\Repository;
 use App\Addressing\Entity\AddressEntity;
 use App\Addressing\RepositoryInterface\AddressGovernanceRepositoryInterface;
 
-final readonly class DoctrineAddressGovernanceRepository extends AbstractDoctrineAddressRepository implements AddressGovernanceRepositoryInterface
+final readonly class AddressDoctrineGovernanceRepository extends AddressAbstractDoctrineRepository implements AddressGovernanceRepositoryInterface
 {
     #[\Override]
     public function summarizeGovernanceCluster(string $addressId, ?string $ownerId, ?string $vendorId): array

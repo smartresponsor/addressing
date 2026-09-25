@@ -6,7 +6,7 @@ declare(strict_types=1);
 namespace Tests\Service;
 
 use App\Addressing\Entity\AddressOutboxEntity;
-use App\Addressing\Repository\DoctrineAddressOutboxDispatchRepository;
+use App\Addressing\Repository\AddressDoctrineOutboxDispatchRepository;
 use App\Addressing\Service\Application\AddressOutboxDrainerService;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
@@ -27,7 +27,7 @@ final class AddressOutboxDrainerTest extends TestCase
         $published = [];
 
         $drainer2 = new AddressOutboxDrainerService(
-            new DoctrineAddressOutboxDispatchRepository($entityManager2),
+            new AddressDoctrineOutboxDispatchRepository($entityManager2),
             function (
                 string $url,
                 array $data,
@@ -43,7 +43,7 @@ final class AddressOutboxDrainerTest extends TestCase
         );
 
         $drainer1 = new AddressOutboxDrainerService(
-            new DoctrineAddressOutboxDispatchRepository($entityManager1),
+            new AddressDoctrineOutboxDispatchRepository($entityManager1),
             function (
                 string $url,
                 array $data,

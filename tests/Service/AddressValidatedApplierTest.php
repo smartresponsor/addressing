@@ -9,7 +9,7 @@ use App\Addressing\Contract\Message\AddressValidated;
 use App\Addressing\Entity\AddressEntity;
 use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
 use App\Addressing\Entity\AddressOutboxEntity;
-use App\Addressing\Repository\DoctrineAddressValidatedPersistenceRepository;
+use App\Addressing\Repository\AddressDoctrineValidatedPersistenceRepository;
 use App\Addressing\Service\Application\AddressValidatedApplierService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
@@ -27,7 +27,7 @@ final class AddressValidatedApplierTest extends TestCase
             AddressEvidenceSnapshotEntity::class,
             AddressOutboxEntity::class,
         ]);
-        $this->applier = new AddressValidatedApplierService(new DoctrineAddressValidatedPersistenceRepository($this->entityManager));
+        $this->applier = new AddressValidatedApplierService(new AddressDoctrineValidatedPersistenceRepository($this->entityManager));
     }
 
     public function testApplyWorksOnSqliteWithoutPgsqlLockSyntax(): void

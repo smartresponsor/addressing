@@ -9,7 +9,7 @@ use App\Addressing\Projection\AddressIndex\AddressIndexRecord;
 use App\Addressing\RepositoryInterface\AddressIndex\AddressIndexRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
-final readonly class DoctrineAddressIndexRepository implements AddressIndexRepositoryInterface
+final readonly class AddressDoctrineIndexRepository implements AddressIndexRepositoryInterface
 {
     public function __construct(private EntityManagerInterface $entityManager)
     {

@@ -8,7 +8,7 @@ use App\Addressing\Entity\AddressEntity;
 use App\Addressing\EntityInterface\Record\AddressInterface;
 use App\Addressing\RepositoryInterface\AddressWriteRepositoryInterface;
 
-final readonly class DoctrineAddressWriteRepository extends AbstractDoctrineAddressRepository implements AddressWriteRepositoryInterface
+final readonly class AddressDoctrineWriteRepository extends AddressAbstractDoctrineRepository implements AddressWriteRepositoryInterface
 {
     #[\Override]
     public function create(AddressInterface $address): void

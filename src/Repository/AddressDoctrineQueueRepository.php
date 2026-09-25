@@ -6,7 +6,7 @@ namespace App\Addressing\Repository;
 
 use App\Addressing\RepositoryInterface\AddressQueueRepositoryInterface;
 
-final readonly class DoctrineAddressQueueRepository extends AbstractDoctrineAddressRepository implements AddressQueueRepositoryInterface
+final readonly class AddressDoctrineQueueRepository extends AddressAbstractDoctrineRepository implements AddressQueueRepositoryInterface
 {
     #[\Override]
     public function summarizeOperationalQueues(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array

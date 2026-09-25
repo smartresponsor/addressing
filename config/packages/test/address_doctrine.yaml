@@ -7,5 +7,5 @@ services:
                 'App\Addressing\Entity\AddressEvidenceSnapshotEntity',
                 'App\Addressing\Entity\AddressOutboxEntity',
                 'App\Addressing\Entity\AddressIndexEntity',
-                'App\Addressing\Entity\RateLimitEntity',
+                'App\Addressing\Entity\AddressRateLimitEntity',
             ]

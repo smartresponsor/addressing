@@ -11,7 +11,7 @@ use App\Addressing\RepositoryInterface\AddressSchemaRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 
-final readonly class DoctrineAddressSchemaRepository implements AddressSchemaRepositoryInterface
+final readonly class AddressDoctrineSchemaRepository implements AddressSchemaRepositoryInterface
 {
     public function __construct(private EntityManagerInterface $entityManager)
     {

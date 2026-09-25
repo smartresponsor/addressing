@@ -17,7 +17,7 @@ use App\Addressing\Value\Record\AddressData;
 use App\Addressing\Value\Record\AddressEvidenceSnapshotData;
 use Doctrine\ORM\EntityManagerInterface;
 
-abstract readonly class AbstractDoctrineAddressRepository
+abstract readonly class AddressAbstractDoctrineRepository
 {
     public function __construct(
         protected EntityManagerInterface $entityManager,

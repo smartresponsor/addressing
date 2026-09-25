@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Addressing\Repository;
 
-use App\Addressing\Entity\RateLimitEntity;
+use App\Addressing\Entity\AddressRateLimitEntity;
 use App\Addressing\RepositoryInterface\AddressRateLimitRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
-final readonly class DoctrineAddressRateLimitRepository implements AddressRateLimitRepositoryInterface
+final readonly class AddressDoctrineRateLimitRepository implements AddressRateLimitRepositoryInterface
 {
     public function __construct(private EntityManagerInterface $entityManager)
     {
@@ -21,9 +21,9 @@ final readonly class DoctrineAddressRateLimitRepository implements AddressRateLi
         $this->entityManager->beginTransaction();
 
         try {
-            $entity = $this->entityManager->find(RateLimitEntity::class, ['client' => $client, 'rkey' => $key]);
-            if (!$entity instanceof RateLimitEntity) {
-                $entity = (new RateLimitEntity())
+            $entity = $this->entityManager->find(AddressRateLimitEntity::class, ['client' => $client, 'rkey' => $key]);
+            if (!$entity instanceof AddressRateLimitEntity) {
+                $entity = (new AddressRateLimitEntity())
                     ->setClient($client)
                     ->setRkey($key)
                     ->setTs($now)

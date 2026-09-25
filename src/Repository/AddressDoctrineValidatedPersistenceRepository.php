@@ -10,7 +10,7 @@ use App\Addressing\Entity\AddressOutboxEntity;
 use App\Addressing\RepositoryInterface\AddressValidatedPersistenceRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
-final readonly class DoctrineAddressValidatedPersistenceRepository implements AddressValidatedPersistenceRepositoryInterface
+final readonly class AddressDoctrineValidatedPersistenceRepository implements AddressValidatedPersistenceRepositoryInterface
 {
     public function __construct(private EntityManagerInterface $entityManager)
     {

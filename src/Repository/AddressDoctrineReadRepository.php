@@ -9,7 +9,7 @@ use App\Addressing\EntityInterface\Record\AddressInterface;
 use App\Addressing\RepositoryInterface\AddressReadRepositoryInterface;
 use App\Addressing\Value\Persistence\AddressPageCriteria;
 
-final readonly class DoctrineAddressReadRepository extends AbstractDoctrineAddressRepository implements AddressReadRepositoryInterface
+final readonly class AddressDoctrineReadRepository extends AddressAbstractDoctrineRepository implements AddressReadRepositoryInterface
 {
     #[\Override]
     public function get(string $id, ?string $ownerId, ?string $vendorId): ?AddressInterface

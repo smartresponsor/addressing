@@ -8,7 +8,7 @@ use App\Addressing\Entity\AddressOutboxEntity;
 use App\Addressing\RepositoryInterface\AddressOutboxDispatchRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
-final readonly class DoctrineAddressOutboxDispatchRepository implements AddressOutboxDispatchRepositoryInterface
+final readonly class AddressDoctrineOutboxDispatchRepository implements AddressOutboxDispatchRepositoryInterface
 {
     public function __construct(private EntityManagerInterface $entityManager)
     {
