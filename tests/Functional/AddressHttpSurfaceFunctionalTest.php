@@ -11,6 +11,9 @@ use App\Addressing\Service\Http\Address\AddressReadHttpService;
 use App\Addressing\Service\Http\Address\AddressWriteHttpService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Tests\Support\TestDatabase;
 use Tests\Support\TestRuntimeEnvironment;
 
@@ -63,7 +66,15 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
     public function testManageFormRendersBootstrapLayout(): void
     {
         $services = $this->bootServices(__FUNCTION__);
-        $response = $services['manage']->manage(new Request());
+        $request = new Request();
+        $request->setSession(new Session(new MockArraySessionStorage()));
+        $services['requestStack']->push($request);
+
+        try {
+            $response = $services['manage']->manage($request);
+        } finally {
+            $services['requestStack']->pop();
+        }
 
         self::assertSame(200, $response->getStatusCode());
         self::assertStringContainsString('Address manager', (string) $response->getContent());
@@ -71,7 +82,7 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
     }
 
     /**
-     * @return array{write: AddressWriteHttpService, read: AddressReadHttpService, manage: AddressManageHttpService}
+     * @return array{write: AddressWriteHttpService, read: AddressReadHttpService, manage: AddressManageHttpService, requestStack: RequestStack}
      */
     private function bootServices(string $suffix): array
     {
@@ -91,11 +102,14 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
         $addressReadHttpService = $kernel->getContainer()->get(AddressReadHttpService::class);
         /** @var AddressManageHttpService $addressManageHttpService */
         $addressManageHttpService = $kernel->getContainer()->get(AddressManageHttpService::class);
+        /** @var RequestStack $requestStack */
+        $requestStack = $kernel->getContainer()->get('request_stack');
 
         return [
             'write' => $addressWriteHttpService,
             'read' => $addressReadHttpService,
             'manage' => $addressManageHttpService,
+            'requestStack' => $requestStack,
         ];
     }
 }

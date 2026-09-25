@@ -12,15 +12,15 @@ use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
 use App\Addressing\Entity\AddressOutboxEntity;
 use App\Addressing\Factory\Application\AddressValidatedPayloadFactory;
 use App\Addressing\Message\AddressOutboxEventMessage;
+use App\Addressing\RepositoryInterface\AddressValidatedPersistenceRepositoryInterface;
 use App\Addressing\ServiceInterface\Application\AddressValidatedApplierServiceInterface;
-use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class AddressValidatedApplierService implements AddressValidatedApplierServiceInterface
 {
     private AddressValidatedPayloadFactory $addressValidatedPayloadFactory;
 
     public function __construct(
-        private EntityManagerInterface $entityManager,
+        private AddressValidatedPersistenceRepositoryInterface $addressValidatedPersistenceRepository,
         ?AddressValidatedPayloadFactory $payloadFactory = null,
     ) {
         $this->addressValidatedPayloadFactory = $payloadFactory ?? new AddressValidatedPayloadFactory();
@@ -37,10 +37,10 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
             throw new \RuntimeException('not_found');
         }
 
-        $this->entityManager->beginTransaction();
+        $this->addressValidatedPersistenceRepository->beginTransaction();
         try {
             if ($entity->getValidationFingerprint() === $fingerprint) {
-                $this->entityManager->commit();
+                $this->addressValidatedPersistenceRepository->commit();
 
                 return;
             }
@@ -99,7 +99,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 $validationIssues,
             );
             if ($snapshot instanceof AddressEvidenceSnapshotEntity) {
-                $this->entityManager->persist($snapshot);
+                $this->addressValidatedPersistenceRepository->persistEvidenceSnapshot($snapshot);
             }
 
             $outbox = (new AddressOutboxEntity())
@@ -128,14 +128,12 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                     $addressValidated,
                 ))))
                 ->setCreatedAt($now);
-            $this->entityManager->persist($outbox);
+            $this->addressValidatedPersistenceRepository->persistOutbox($outbox);
 
-            $this->entityManager->flush();
-            $this->entityManager->commit();
+            $this->addressValidatedPersistenceRepository->flush();
+            $this->addressValidatedPersistenceRepository->commit();
         } catch (\Throwable $throwable) {
-            if ($this->entityManager->getConnection()->isTransactionActive()) {
-                $this->entityManager->rollback();
-            }
+            $this->addressValidatedPersistenceRepository->rollbackIfActive();
 
             if ($throwable instanceof \RuntimeException) {
                 throw $throwable;
@@ -147,17 +145,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
 
     private function findAddressEntity(string $id, ?string $ownerId, ?string $vendorId): ?AddressEntity
     {
-        $criteria = ['id' => $id, 'deletedAt' => null];
-        if (null !== $ownerId) {
-            $criteria['ownerId'] = $ownerId;
-        }
-        if (null !== $vendorId) {
-            $criteria['vendorId'] = $vendorId;
-        }
-
-        $entity = $this->entityManager->getRepository(AddressEntity::class)->findOneBy($criteria);
-
-        return $entity instanceof AddressEntity ? $entity : null;
+        return $this->addressValidatedPersistenceRepository->findScopedAddress($id, $ownerId, $vendorId);
     }
 
     private function normalizeValidationStatus(string $status): string

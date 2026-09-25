@@ -1,0 +1,53 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+doctrine:
+    dbal:
+        default_connection: infra
+        connections:
+            infra:
+                driver: 'pdo_sqlite'
+                path: '%env(resolve:ADDRESS_DB_PATH)%'
+            parity:
+                url: '%env(ADDRESS_PARITY_DATABASE_URL)%'
+                server_version: '15'
+                charset: utf8
+    orm:
+        default_entity_manager: default
+        entity_managers:
+            default:
+                connection: infra
+                auto_mapping: false
+                naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+                mappings:
+                    Addressing:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Entity'
+                        prefix: 'App\Addressing\Entity'
+                        alias: Addressing
+                    ObjectingEmbeddable:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/../Objecting/src/Embeddable'
+                        prefix: 'App\Objecting\Embeddable'
+                        alias: ObjectingEmbeddable
+            parity:
+                connection: parity
+                auto_mapping: false
+                naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+                mappings:
+                    Addressing:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Entity'
+                        prefix: 'App\Addressing\Entity'
+                        alias: Addressing
+                    ObjectingEmbeddable:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/../Objecting/src/Embeddable'
+                        prefix: 'App\Objecting\Embeddable'
+                        alias: ObjectingEmbeddable

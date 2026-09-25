@@ -14,7 +14,7 @@ use Doctrine\ORM\Mapping as ORM;
 class AddressEvidenceSnapshotEntity
 {
     #[ORM\Id]
-    #[ORM\Column(name: 'id', type: 'string', length: 32, unique: true)]
+    #[ORM\Column(name: 'id', type: 'string', length: 32)]
     private string $id;
 
     #[ORM\ManyToOne(targetEntity: AddressEntity::class)]

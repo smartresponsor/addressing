@@ -20,7 +20,7 @@ $httpServicePaths = [
     'src/Service/Http/Address/AddressSummaryHttpService.php',
     'src/Service/Http/Address/AddressOperationalHttpService.php',
     'src/Service/Http/Address/AddressHttpScopeService.php',
-    'src/Service/Http/Address/AddressHttpResponderService.php',
+    'src/Responder/AddressResponder.php',
 ];
 
 $services = [];

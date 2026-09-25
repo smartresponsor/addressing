@@ -11,8 +11,13 @@
 /allure-results/
 /allure-report/
 
-# PHPUnit
+# PHPUnit and quality-tool caches
 .phpunit.result.cache
+/.deptrac.cache
+
+# Gating consumer artifact surface
+/.gating/*
+!/.gating/README.md
 
 # IDE and editors
 /.idea/
@@ -28,6 +33,11 @@ Thumbs.db
 # Docker overrides
 /.docker/
 /docker-compose.override.yml
+
+# Local environment overrides
+.env
+.env.local
+.env.*.local
 
 # Node
 node_modules/

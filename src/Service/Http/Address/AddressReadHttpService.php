@@ -6,8 +6,9 @@ declare(strict_types=1);
 namespace App\Addressing\Service\Http\Address;
 
 use App\Addressing\EntityInterface\Record\AddressInterface;
-use App\Addressing\Http\Factory\AddressQueryFilterFactory;
-use App\Addressing\Http\Factory\AddressViewArrayFactory;
+use App\Addressing\Factory\AddressQueryFilterFactory;
+use App\Addressing\Factory\AddressViewArrayFactory;
+use App\Addressing\Responder\AddressResponder;
 use App\Addressing\Service\Application\AddressReadService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +20,7 @@ final readonly class AddressReadHttpService
         private AddressQueryFilterFactory $addressQueryFilterFactory,
         private AddressViewArrayFactory $addressViewArrayFactory,
         private AddressHttpScopeService $addressHttpScopeService,
-        private AddressHttpResponderService $addressHttpResponderService,
+        private AddressResponder $addressResponder,
     ) {
     }
 
@@ -29,8 +30,8 @@ final readonly class AddressReadHttpService
         $address = $this->addressReadService->get($id, $ownerId, $vendorId);
 
         return $address instanceof AddressInterface
-            ? $this->addressHttpResponderService->address($address)
-            : $this->addressHttpResponderService->notFound();
+            ? $this->addressResponder->address($address)
+            : $this->addressResponder->notFound();
     }
 
     public function page(Request $request): JsonResponse

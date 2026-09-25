@@ -1,0 +1,11 @@
+services:
+    Doctrine\ORM\EntityManagerInterface:
+        factory: ['Tests\Support\TestDatabase', 'createInMemoryEntityManager']
+        arguments:
+            - [
+                'App\Addressing\Entity\AddressEntity',
+                'App\Addressing\Entity\AddressEvidenceSnapshotEntity',
+                'App\Addressing\Entity\AddressOutboxEntity',
+                'App\Addressing\Entity\AddressIndexEntity',
+                'App\Addressing\Entity\AddressRateLimitEntity',
+            ]

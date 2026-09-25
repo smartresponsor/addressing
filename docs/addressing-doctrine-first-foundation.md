@@ -20,13 +20,13 @@ These classes are the intended host-facing schema authority for:
 
 The legacy PDO-first runtime remains present during migration.
 
-Current write/read runtime still relies on custom persistence services and record classes under `App\Addressing\Entity\Record\*`.
+Current write/read runtime still relies on custom persistence services and record classes under `App\Addressing\Value\Record\*`.
 That runtime is now considered transitional and should converge toward Doctrine-backed repositories in subsequent waves.
 
 ## Host integration
 
 Import the provided Doctrine mapping file:
 
-- `config/packages/addressing_doctrine.yaml`
+- `config/packages/address_doctrine.yaml`
 
 The host application should treat the top-level `App\Addressing\Entity\*` classes from this component as the schema authority, not the `Record` namespace classes.

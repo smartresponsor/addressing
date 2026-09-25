@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use App\Addressing\Http\AddressErrorMap;
-use App\Addressing\Http\Middleware\AddressCorsMiddleware;
-use App\Addressing\Http\Middleware\AddressIpGuardMiddleware;
+use App\Addressing\Middleware\AddressCorsMiddleware;
+use App\Addressing\Middleware\AddressIpGuardMiddleware;
 use App\Addressing\Service\Http\Address\AddressRateLimiterService;
-use App\Addressing\Http\Middleware\AddressRequestIdMiddleware;
-use App\Addressing\Http\Middleware\AddressSecurityHeadersMiddleware;
+use App\Addressing\Middleware\AddressRequestIdMiddleware;
+use App\Addressing\Middleware\AddressSecurityHeadersMiddleware;
 use App\Addressing\Kernel;
 use App\Addressing\Service\Http\Address\AddressManageHttpService;
 use App\Addressing\Service\Http\Address\AddressOperationalHttpService;

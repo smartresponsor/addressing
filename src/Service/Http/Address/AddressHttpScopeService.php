@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Service\Http\Address;
 
-use App\Addressing\Http\Factory\AddressQueryFilterFactory;
+use App\Addressing\Factory\AddressQueryFilterFactory;
 use Symfony\Component\HttpFoundation\Request;
 
 final readonly class AddressHttpScopeService

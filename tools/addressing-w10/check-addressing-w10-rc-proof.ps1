@@ -17,7 +17,7 @@ function Invoke-RcStep {
 }
 
 Write-Host "== Cleanup analysis cache ==" -ForegroundColor Cyan
-if (Test-Path ".\var\phpstan") { Remove-Item ".\var\phpstan" -Recurse -Force }
+if (Test-Path ".\var\phpstan") { [System.IO.Directory]::Delete((Resolve-Path ".\var\phpstan").Path, $true) }
 
 Invoke-RcStep "Composer validate" { composer validate --strict }
 Invoke-RcStep "Composer autoload" { composer dump-autoload }
@@ -25,6 +25,6 @@ Invoke-RcStep "Symfony DI/container" { php .\bin\console lint:container --no-deb
 Invoke-RcStep "YAML" { php .\bin\console lint:yaml .\config --parse-tags }
 Invoke-RcStep "PHPUnit" { php vendor/bin/phpunit }
 Invoke-RcStep "PHPStan" { php vendor/bin/phpstan analyse }
-Invoke-RcStep "Deptrac" { php vendor/bin/deptrac analyse --config-file=config/addressing_deptrac.yaml }
+Invoke-RcStep "Deptrac" { php vendor/bin/deptrac analyse --config-file=config/address_deptrac.yaml }
 
 Write-Host "W10 RC proof passed." -ForegroundColor Green

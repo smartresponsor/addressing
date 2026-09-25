@@ -19,6 +19,6 @@ final class AddressingExtension extends Extension
     public function load(array $configs, ContainerBuilder $container): void
     {
         $yamlFileLoader = new YamlFileLoader($container, new FileLocator(dirname(__DIR__, 2).'/config'));
-        $yamlFileLoader->load('services.bundle.yaml');
+        $yamlFileLoader->load('address_services.bundle.yaml');
     }
 }

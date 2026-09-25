@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use App\Addressing\Kernel;
 use App\Addressing\Service\Application\AddressOutboxDrainerService;
 use JetBrains\PhpStorm\NoReturn;
 
@@ -55,11 +56,12 @@ if (!is_string($url) || '' === $url || str_starts_with($url, '--')) {
 }
 
 $options = drain_opts($argv);
-$pdo = new PDO((string) getenv('PG_DSN'), (string) getenv('PG_USER'), (string) getenv('PG_PASS'), [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-]);
-
-$drainer = new AddressOutboxDrainerService($pdo);
+$kernel = new Kernel((string) (getenv('APP_ENV') ?: 'prod'), false);
+$kernel->boot();
+$drainer = $kernel->getContainer()->get(AddressOutboxDrainerService::class);
+if (!$drainer instanceof AddressOutboxDrainerService) {
+    throw new RuntimeException('address_outbox_drainer_service_unavailable');
+}
 $count = $drainer->drain(
     $url,
     $options['limit'],

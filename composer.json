@@ -1,235 +1,256 @@
 {
-    "name": "addressing/address",
-    "description": "Addressing process app",
-    "type": "library",
-    "license": "MIT",
-    "require": {
-        "php": "^8.4",
-        "ext-curl": "*",
-        "ext-pdo": "*",
-        "collectioning/collection": "dev-master",
-        "cruding/crud": "dev-master",
-        "tabling/table": "dev-master",
-        "doctrine/doctrine-bundle": "^3.2",
-        "doctrine/orm": "^2.15 || ^3.0",
-        "easycorp/easyadmin-bundle": "^5.0",
-        "interfacing/interface": "dev-master",
-        "objecting/object": "dev-master",
-        "viewing/view": "dev-master",
-        "symfony/console": "^8.1",
-        "symfony/form": "^8.1",
-        "symfony/framework-bundle": "^8.1",
-        "symfony/intl": "^8.1",
-        "symfony/property-access": "^8.1",
-        "symfony/property-info": "^8.1",
-        "symfony/security-bundle": "^8.1",
-        "symfony/security-csrf": "^8.1",
-        "symfony/serializer": "^8.1",
-        "symfony/translation": "^8.1",
-        "symfony/twig-bundle": "^8.1",
-        "symfony/uid": "^8.1",
-        "symfony/validator": "^8.1",
-        "symfony/yaml": "^8.1",
-        "twig/twig": "^3.24"
-    },
-    "require-dev": {
-        "dbrekelmans/bdi": "^1.4",
-        "deptrac/deptrac": "^3.0",
-        "fakerphp/faker": "^1.23",
-        "friendsofphp/php-cs-fixer": "^3.94",
-        "phpstan/phpstan": "^2.2",
-        "phpstan/phpstan-doctrine": "^2.0",
-        "phpstan/phpstan-symfony": "^2.0",
-        "phpunit/phpunit": "^12.5",
-        "rector/rector": "^2.6",
-        "symfony/dotenv": "^8.1",
-        "symfony/panther": "^2.2",
-        "symfony/test-pack": "^1.2",
-        "vimeo/psalm": "^7.0"
-    },
-    "autoload": {
-        "psr-4": {
-            "App\\Addressing\\": "src/"
+  "name": "addressing/address",
+  "description": "Addressing process app",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": "^8.4",
+    "ext-curl": "*",
+    "ext-pdo": "*",
+    "collectioning/collection": "dev-master",
+    "cruding/crud": "dev-master",
+    "tabling/table": "dev-master",
+    "doctrine/doctrine-bundle": "^3.2",
+    "doctrine/doctrine-migrations-bundle": "^4.0",
+    "doctrine/orm": "^2.15 || ^3.0",
+    "easycorp/easyadmin-bundle": "^5.0",
+    "interfacing/interface": "dev-master",
+    "objecting/object": "dev-master",
+    "viewing/view": "dev-master",
+    "symfony/console": "^8.1",
+    "symfony/form": "^8.1",
+    "symfony/framework-bundle": "^8.1",
+    "symfony/intl": "^8.1",
+    "symfony/property-access": "^8.1",
+    "symfony/property-info": "^8.1",
+    "symfony/security-bundle": "^8.1",
+    "symfony/security-csrf": "^8.1",
+    "symfony/serializer": "^8.1",
+    "symfony/translation": "^8.1",
+    "symfony/twig-bundle": "^8.1",
+    "symfony/uid": "^8.1",
+    "symfony/validator": "^8.1",
+    "symfony/yaml": "^8.1",
+    "twig/twig": "^3.24"
+  },
+  "require-dev": {
+    "dbrekelmans/bdi": "^1.4",
+    "deptrac/deptrac": "^3.0",
+    "fakerphp/faker": "^1.23",
+    "friendsofphp/php-cs-fixer": "^3.94",
+    "phpstan/phpstan": "^2.2",
+    "phpstan/phpstan-doctrine": "^2.0",
+    "phpstan/phpstan-symfony": "^2.0",
+    "phpunit/phpunit": "^12.5",
+    "rector/rector": "^2.6",
+    "symfony/dotenv": "^8.1",
+    "symfony/panther": "^2.2",
+    "symfony/test-pack": "^1.2",
+    "vimeo/psalm": "^7.0",
+    "gating/gate": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\Addressing\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "lint": "@php tools/qa/AddressPhpLint.php",
+    "phpstan": "vendor/bin/phpstan analyse src --level=max",
+    "psalm": "vendor/bin/psalm",
+    "test": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist",
+    "test:coverage": [
+      "@php -r \"if (!is_dir('var/coverage')) { mkdir('var/coverage', 0777, true); }\"",
+      "@php -d xdebug.mode=coverage vendor/bin/phpunit -c phpunit.xml.dist --path-coverage --coverage-text=var/coverage/summary.txt"
+    ],
+    "stan": "@stan:conservative",
+    "rector:dry": "vendor/bin/rector process --dry-run",
+    "rector:fix": "php vendor/bin/rector process",
+    "qodana": "pwsh -NoProfile -ExecutionPolicy Bypass -File bin/qodana-local.ps1",
+    "quality": [
+      "@stan",
+      "@rector:dry",
+      "@gate"
+    ],
+    "qa:phpstan": "php -d memory_limit=1G vendor/bin/phpstan analyse -c phpstan.neon.dist",
+    "phpstan:clear": "php vendor/bin/phpstan clear-result-cache -c phpstan.neon.dist",
+    "qa:rector": "php vendor/bin/rector process --dry-run",
+    "qa:deptrac": "php vendor/bin/deptrac analyse --config-file=config/address_deptrac.yaml",
+    "gating": "@php vendor/bin/gating check --target=. --rule-set=tools/qa/addressing-platform-canon.yaml",
+    "qa:trust-surface": "@php tools/php/php84.php tools/qa/AddressTrustSurfaceRunner.php",
+    "qa:cs": "php vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.dist.php",
+    "qa:qodana": "@qodana",
+    "qa": [
+      "@qa:phpstan",
+      "@qa:deptrac",
+      "@qa:trust-surface",
+      "@qa:rector"
+    ],
+    "cs:fix": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php",
+    "cs:check": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run --diff",
+    "cs:check-quiet": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run",
+    "stan:conservative": "tools/php/php82.php vendor/bin/phpstan analyse",
+    "stan:runtime-target": "@php tools/php/php84.php vendor/bin/phpstan analyse",
+    "test:unit": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite unit",
+    "test:object-identity": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist tests/Unit/Address/AddressingObjectIdentityContractTest.php",
+    "test:integration": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite integration",
+    "test:e2e": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite e2e",
+    "test:e2e:panther": [
+      "@app:server:wait",
+      "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite e2e"
+    ],
+    "test:e2e:playwright": "npm run test:e2e",
+    "test:e2e:full": [
+      "@test:e2e:panther",
+      "@test:e2e:playwright"
+    ],
+    "qa:style": [
+      "@lint",
+      "@cs:check"
+    ],
+    "qa:static": [
+      "@stan"
+    ],
+    "qa:test": [
+      "@test"
+    ],
+    "qa:full": [
+      "@qa:style",
+      "@qa",
+      "@qa:test"
+    ],
+    "smoke:runtime": "@php tools/php/php84.php tools/smoke/address-runtime-smoke.php",
+    "smoke:fixtures": "@php tools/php/php84.php tools/smoke/address-fixture-sanity.php",
+    "smoke:container": "@php tools/php/php84.php tools/smoke/address-container-boot-smoke.php",
+    "smoke:doctrine": "@php tools/php/php84.php tools/smoke/address-doctrine-mapping-smoke.php",
+    "doctrine:schema:validate": "@php bin/console doctrine:schema:validate --em=parity --env=test --no-interaction",
+    "doctrine:migrations:up-to-date": "@php bin/console doctrine:migrations:up-to-date --em=parity --fail-on-unregistered --env=test --no-interaction",
+    "schema:parity": [
+      "@php bin/console doctrine:migrations:migrate --em=parity --env=test --no-interaction",
+      "@doctrine:schema:validate",
+      "@doctrine:migrations:up-to-date"
+    ],
+    "smoke:fixture-load": "@php tools/php/php84.php tools/smoke/address-fixture-load-smoke.php",
+    "smoke:graphql": "@php tools/php/php84.php tools/smoke/address-graphql-smoke.php",
+    "report:owner-overlap": "@php tools/php/php84.php tools/inspection/AddressOwnerOverlapReport.php",
+    "report:route-inventory": "@php tools/php/php84.php tools/inspection/AddressRouteInventoryReport.php",
+    "report:class-alias": "@php tools/php/php84.php tools/inspection/AddressClassAliasReport.php",
+    "report:runtime-proof": "@php tools/php/php84.php tools/inspection/AddressRuntimeProofReport.php",
+    "report:bootstrap-drift": "@php tools/php/php84.php tools/inspection/AddressBootstrapDriftReport.php",
+    "report:deptrac-drift": "@php tools/php/php84.php tools/inspection/AddressDeptracDriftReport.php",
+    "report:legacy-runtime-surface": "@php tools/php/php84.php tools/inspection/AddressLegacyRuntimeSurfaceReport.php",
+    "report:runtime-sync": "@php tools/php/php84.php tools/inspection/AddressRuntimeSyncSummary.php",
+    "report:test-support": "@php tools/php/php84.php tools/inspection/AddressTestSupportSurfaceReport.php",
+    "report:package-surface": "@php tools/php/php84.php tools/inspection/AddressPackageSurfaceReport.php",
+    "report:validated-applier-surface": "@php tools/php/php84.php tools/inspection/AddressValidatedApplierSurfaceReport.php",
+    "test:security": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite security",
+    "security:composer-audit": "composer audit --locked --no-interaction",
+    "security:importmap-audit": "@php tools/qa/ImportmapAudit.php",
+    "security:gitleaks": "@php tools/qa/LocalSecurityRunner.php gitleaks",
+    "security:semgrep-ce": "@php tools/qa/LocalSecurityRunner.php semgrep-ce",
+    "security:semgrep": "@security:semgrep-ce",
+    "security:full": [
+      "@security:composer-audit",
+      "@security:importmap-audit",
+      "@security:gitleaks",
+      "@security:semgrep-ce",
+      "@test:security"
+    ],
+    "pipeline:local:security": [
+      "@security:full"
+    ],
+    "pipeline:local:full": [
+      "@qa:full",
+      "@security:full"
+    ],
+    "test:functional": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite functional",
+    "fixtures:demo": "php bin/address-demo-reset 50",
+    "app:server": "php -S 127.0.0.1:8000 -t public public/router.php",
+    "app:server:wait": "@php tools/e2e/wait-for-url.php http://127.0.0.1:8000/address/manage",
+    "app:server:dry-run": "@php tools/e2e/dry-run-server.php",
+    "gate": "@php vendor/bin/gating check --target=."
+  },
+  "config": {
+    "sort-packages": true,
+    "preferred-install": "dist"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "repositories": [
+    {
+      "type": "path",
+      "url": "../Collectioning",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "collectioning/collection": "dev-master"
         }
+      }
     },
-    "autoload-dev": {
-        "psr-4": {
-            "Tests\\": "tests/"
+    {
+      "type": "path",
+      "url": "../Cruding",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "cruding/crud": "dev-master"
         }
+      }
     },
-    "scripts": {
-        "lint": "@php tools/qa/AddressPhpLint.php",
-        "phpstan": "vendor/bin/phpstan analyse src --level=max",
-        "psalm": "vendor/bin/psalm",
-        "test": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist",
-        "test:coverage": [
-            "@php -r \"if (!is_dir('var/coverage')) { mkdir('var/coverage', 0777, true); }\"",
-            "@php -d xdebug.mode=coverage vendor/bin/phpunit -c phpunit.xml.dist --path-coverage --coverage-text=var/coverage/summary.txt"
-        ],
-        "stan": "@stan:conservative",
-        "rector:dry": "vendor/bin/rector process --dry-run",
-        "rector:fix": "php vendor/bin/rector process",
-        "qodana": "pwsh -NoProfile -ExecutionPolicy Bypass -File bin/qodana-local.ps1",
-        "quality": [
-            "@stan",
-            "@rector:dry"
-        ],
-        "qa:phpstan": "php -d memory_limit=1G vendor/bin/phpstan analyse -c phpstan.neon.dist",
-        "phpstan:clear": "php vendor/bin/phpstan clear-result-cache -c phpstan.neon.dist",
-        "qa:rector": "php vendor/bin/rector process --dry-run",
-        "qa:deptrac": "php vendor/bin/deptrac analyse --config-file=config/addressing_deptrac.yaml",
-        "gating": "@php .gating/bin/gating check --target=. --profile=.gating/.gating/profile/component/_template.yaml --rule-set=tools/qa/addressing-platform-canon.yaml --policy-root=.gating/.gating --severity-config=.gating/.gating/config/severity.yaml",
-        "qa:trust-surface": "@php tools/php/php84.php tools/qa/AddressTrustSurfaceRunner.php",
-        "qa:cs": "php vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.dist.php",
-        "qa:qodana": "@qodana",
-        "qa": [
-            "@qa:phpstan",
-            "@qa:deptrac",
-            "@qa:trust-surface",
-            "@qa:rector"
-        ],
-        "cs:fix": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php",
-        "cs:check": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run --diff",
-        "cs:check-quiet": "@php tools/php/php84.php vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run",
-        "stan:conservative": "tools/php/php82.php vendor/bin/phpstan analyse",
-        "stan:runtime-target": "@php tools/php/php84.php vendor/bin/phpstan analyse",
-        "test:unit": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite unit",
-        "test:object-identity": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist tests/Unit/Address/AddressingObjectIdentityContractTest.php",
-        "test:integration": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite integration",
-        "test:e2e": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite e2e",
-        "test:e2e:panther": [
-            "@app:server:wait",
-            "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite e2e"
-        ],
-        "test:e2e:playwright": "npm run test:e2e",
-        "test:e2e:full": [
-            "@test:e2e:panther",
-            "@test:e2e:playwright"
-        ],
-        "qa:style": [
-            "@lint",
-            "@cs:check"
-        ],
-        "qa:static": [
-            "@stan"
-        ],
-        "qa:test": [
-            "@test"
-        ],
-        "qa:full": [
-            "@qa:style",
-            "@qa",
-            "@qa:test"
-        ],
-        "smoke:runtime": "@php tools/php/php84.php tools/smoke/address-runtime-smoke.php",
-        "smoke:fixtures": "@php tools/php/php84.php tools/smoke/address-fixture-sanity.php",
-        "smoke:container": "@php tools/php/php84.php tools/smoke/address-container-boot-smoke.php",
-        "smoke:doctrine": "@php tools/php/php84.php tools/smoke/address-doctrine-mapping-smoke.php",
-        "smoke:fixture-load": "@php tools/php/php84.php tools/smoke/address-fixture-load-smoke.php",
-        "smoke:graphql": "@php tools/php/php84.php tools/smoke/address-graphql-smoke.php",
-        "report:owner-overlap": "@php tools/php/php84.php tools/inspection/AddressOwnerOverlapReport.php",
-        "report:route-inventory": "@php tools/php/php84.php tools/inspection/AddressRouteInventoryReport.php",
-        "report:class-alias": "@php tools/php/php84.php tools/inspection/AddressClassAliasReport.php",
-        "report:runtime-proof": "@php tools/php/php84.php tools/inspection/AddressRuntimeProofReport.php",
-        "report:bootstrap-drift": "@php tools/php/php84.php tools/inspection/AddressBootstrapDriftReport.php",
-        "report:deptrac-drift": "@php tools/php/php84.php tools/inspection/AddressDeptracDriftReport.php",
-        "report:legacy-runtime-surface": "@php tools/php/php84.php tools/inspection/AddressLegacyRuntimeSurfaceReport.php",
-        "report:runtime-sync": "@php tools/php/php84.php tools/inspection/AddressRuntimeSyncSummary.php",
-        "report:test-support": "@php tools/php/php84.php tools/inspection/AddressTestSupportSurfaceReport.php",
-        "report:package-surface": "@php tools/php/php84.php tools/inspection/AddressPackageSurfaceReport.php",
-        "report:validated-applier-surface": "@php tools/php/php84.php tools/inspection/AddressValidatedApplierSurfaceReport.php",
-        "test:security": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite security",
-        "security:composer-audit": "composer audit --locked --no-interaction",
-        "security:importmap-audit": "@php tools/qa/ImportmapAudit.php",
-        "security:gitleaks": "@php tools/qa/LocalSecurityRunner.php gitleaks",
-        "security:semgrep-ce": "@php tools/qa/LocalSecurityRunner.php semgrep-ce",
-        "security:semgrep": "@security:semgrep-ce",
-        "security:full": [
-            "@security:composer-audit",
-            "@security:importmap-audit",
-            "@security:gitleaks",
-            "@security:semgrep-ce",
-            "@test:security"
-        ],
-        "pipeline:local:security": [
-            "@security:full"
-        ],
-        "pipeline:local:full": [
-            "@qa:full",
-            "@security:full"
-        ],
-        "test:functional": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist --testsuite functional",
-        "fixtures:demo": "php bin/address-demo-reset 50",
-        "app:server": "php -S 127.0.0.1:8000 -t public public/router.php",
-        "app:server:wait": "@php tools/e2e/wait-for-url.php http://127.0.0.1:8000/address/manage",
-        "app:server:dry-run": "@php tools/e2e/dry-run-server.php"
-    },
-    "config": {
-        "sort-packages": true,
-        "preferred-install": "dist"
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../Collectioning",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "collectioning/collection": "dev-master"
-                }
-            }
-        },
-        {
-            "type": "path",
-            "url": "../Cruding",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "cruding/crud": "dev-master"
-                }
-            }
-        },
-        {
-            "type": "path",
-            "url": "../Interfacing",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "interfacing/interface": "dev-master"
-                }
-            }
-        },
-        {
-            "type": "path",
-            "url": "../Objecting",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "objecting/object": "dev-master"
-                }
-            }
-        },
-        {
-            "type": "path",
-            "url": "../Tabling",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "tabling/table": "dev-master"
-                }
-            }
-        },
-        {
-            "type": "path",
-            "url": "../Viewing",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "viewing/view": "dev-master"
-                }
-            }
+    {
+      "type": "path",
+      "url": "../Interfacing",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "interfacing/interface": "dev-master"
         }
-    ]
+      }
+    },
+    {
+      "type": "path",
+      "url": "../Objecting",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "objecting/object": "dev-master"
+        }
+      }
+    },
+    {
+      "type": "path",
+      "url": "../Tabling",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "tabling/table": "dev-master"
+        }
+      }
+    },
+    {
+      "type": "path",
+      "url": "../Viewing",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "viewing/view": "dev-master"
+        }
+      }
+    },
+    {
+      "type": "path",
+      "url": "../Gating",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "gating/gate": "dev-master"
+        }
+      }
+    }
+  ]
 }

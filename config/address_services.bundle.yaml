@@ -1,0 +1,42 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\Addressing\:
+        resource: '../src/'
+        exclude:
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    App\Addressing\Service\Http\Address\AddressManageHttpService:
+        public: true
+    App\Addressing\Service\Http\Address\AddressWriteHttpService:
+        public: true
+    App\Addressing\Service\Http\Address\AddressReadHttpService:
+        public: true
+    App\Addressing\Service\Http\Address\AddressSummaryHttpService:
+        public: true
+    App\Addressing\Service\Http\Address\AddressOperationalHttpService:
+        public: true
+    App\Addressing\Service\Application\AddressOutboxDrainerService:
+        public: true
+
+    App\Addressing\RepositoryInterface\AddressWriteRepositoryInterface: '@App\Addressing\Repository\AddressDoctrineWriteRepository'
+    App\Addressing\RepositoryInterface\AddressReadRepositoryInterface: '@App\Addressing\Repository\AddressDoctrineReadRepository'
+    App\Addressing\RepositoryInterface\AddressEvidenceRepositoryInterface: '@App\Addressing\Repository\AddressDoctrineEvidenceRepository'
+    App\Addressing\RepositoryInterface\AddressOperationalRepositoryInterface: '@App\Addressing\Repository\AddressDoctrineOperationalRepository'
+    App\Addressing\RepositoryInterface\AddressQueueRepositoryInterface: '@App\Addressing\Repository\AddressDoctrineQueueRepository'
+    App\Addressing\RepositoryInterface\AddressGovernanceRepositoryInterface: '@App\Addressing\Repository\AddressDoctrineGovernanceRepository'
+    App\Addressing\RepositoryInterface\AddressPortfolioRepositoryInterface: '@App\Addressing\Repository\AddressDoctrinePortfolioRepository'
+    App\Addressing\RepositoryInterface\AddressIndex\AddressIndexRepositoryInterface: '@App\Addressing\Repository\AddressIndex\AddressDoctrineIndexRepository'
+    App\Addressing\RepositoryInterface\AddressSchemaRepositoryInterface: '@App\Addressing\Repository\AddressDoctrineSchemaRepository'
+    App\Addressing\RepositoryInterface\AddressOutboxDispatchRepositoryInterface: '@App\Addressing\Repository\AddressDoctrineOutboxDispatchRepository'
+    App\Addressing\RepositoryInterface\AddressValidatedPersistenceRepositoryInterface: '@App\Addressing\Repository\AddressDoctrineValidatedPersistenceRepository'
+    App\Addressing\RepositoryInterface\AddressRateLimitRepositoryInterface: '@App\Addressing\Repository\AddressDoctrineRateLimitRepository'
+
+    App\Addressing\Service\Http\Address\AddressRateLimiterService:
+        public: true
+
+    App\Addressing\Service\Fixture\AddressDemoFixtureService:
+        public: true

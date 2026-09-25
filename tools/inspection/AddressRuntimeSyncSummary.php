@@ -9,7 +9,7 @@ $files = [
     'tests/console-application.php',
     'bin/address-demo-reset',
     'bin/console',
-    'config/addressing_deptrac.yaml',
+    'config/address_deptrac.yaml',
     'docs/test-environments.md',
     'tools/inspection/AddressRuntimeProofReport.php',
     'tools/inspection/AddressBootstrapDriftReport.php',

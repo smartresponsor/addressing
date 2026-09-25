@@ -1,0 +1,35 @@
+= Product Capability Audit: Addressing
+:revdate: 2026-09-20
+
+== Boundary verdict
+
+Addressing owns durable address records and validation/evidence snapshots. Locating computes/provider-validates address facts. Objecting owns reusable identity/audit/state fields.
+
+== Capability matrix
+
+[cols="3,1,4",options="header"]
+|===
+|Capability |Status |Audit
+|Durable address entity |PARITY |Explicit primary mapping exists.
+|Address lifecycle |PARITY |Current entity-first work is substantial.
+|Country/region/locality/postal structure |PARTIAL |Must support international formats without US-centric assumptions.
+|Validation status/evidence snapshot |AHEAD |Dedicated evidence snapshot entity is a strong auditability feature.
+|Normalized address snapshot |PARTIAL |Should preserve provider result without making Locating stateful.
+|Multiple address types/labels |PARTIAL |Billing/shipping/home/work semantics should be consumer-safe.
+|Default/preferred address reference |PARTIAL |May be customer/account-owned preference rather than address truth.
+|Address history/versioning |PARTIAL |Important for order/billing reproducibility.
+|Outbox/integration |PARITY |AddressOutbox ownership is explicit.
+|Privacy/redaction/deletion policy |PARTIAL |Address PII requires explicit lifecycle policy.
+|===
+
+== Boundary risks
+
+* A recent duplicate enabled mapping showed real Objecting overlap; reusable state fields must remain canonical in Objecting.
+* Never absorb provider orchestration from Locating.
+
+== Milestone direction
+
+M1: finish system-field canon cleanup and international structure.
+M2: history/versioning and privacy lifecycle.
+M3: Locating validation evidence + Ordering/Billing/Shipping snapshot contracts.
+

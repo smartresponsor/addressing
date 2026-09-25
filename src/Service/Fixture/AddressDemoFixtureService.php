@@ -6,8 +6,8 @@ declare(strict_types=1);
 namespace App\Addressing\Service\Fixture;
 
 use App\Addressing\Doctrine\AddressDoctrineSchemaManager;
-use App\Addressing\Http\Dto\AddressManageDto;
-use App\Addressing\Http\Factory\AddressInputFactory;
+use App\Addressing\DTO\AddressManageDTO;
+use App\Addressing\Factory\AddressInputFactory;
 use App\Addressing\Service\Application\AddressWriteService;
 use Faker\Factory;
 use Faker\Generator;
@@ -75,9 +75,9 @@ final readonly class AddressDemoFixtureService
         return $count;
     }
 
-    private function buildDto(): AddressManageDto
+    private function buildDto(): AddressManageDTO
     {
-        $addressManageDto = new AddressManageDto();
+        $addressManageDto = new AddressManageDTO();
         $addressManageDto->line1 = $this->generator->streetAddress();
         $line2 = $this->generator->optional(0.35)->randomElement([
             'Suite '.$this->generator->buildingNumber(),

@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Http\Form;
 
-use App\Addressing\Http\Dto\AddressManageDto;
+use App\Addressing\DTO\AddressManageDTO;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CountryType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -13,7 +13,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/** @extends AbstractType<AddressManageDto> */
+/** @extends AbstractType<AddressManageDTO> */
 final class AddressManageType extends AbstractType
 {
     #[\Override]
@@ -43,7 +43,7 @@ final class AddressManageType extends AbstractType
         parent::configureOptions($resolver);
 
         $resolver->setDefaults([
-            'data_class' => AddressManageDto::class,
+            'data_class' => AddressManageDTO::class,
         ]);
     }
 }

@@ -10,7 +10,12 @@ function Remove-PathSafe([string]$Path, [switch]$Apply)
     {
         if ($Apply)
         {
-            Remove-Item -Recurse -Force $Path
+            $resolved = (Resolve-Path -LiteralPath $Path).Path
+            if ((Get-Item -LiteralPath $resolved).PSIsContainer) {
+                [System.IO.Directory]::Delete($resolved, $true)
+            } else {
+                [System.IO.File]::Delete($resolved)
+            }
             Write-Host "Deleted: $Path"
         }
         else

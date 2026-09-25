@@ -7,7 +7,7 @@ use App\Addressing\Entity\AddressEntity;
 use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
 use App\Addressing\Entity\AddressIndexEntity;
 use App\Addressing\Entity\AddressOutboxEntity;
-use App\Addressing\Entity\RateLimitEntity;
+use App\Addressing\Entity\AddressRateLimitEntity;
 use Tests\Support\TestDatabase;
 
 require_once __DIR__.'/../vendor/autoload.php';
@@ -17,7 +17,7 @@ $entityManager = TestDatabase::createInMemoryEntityManager([
     AddressEvidenceSnapshotEntity::class,
     AddressOutboxEntity::class,
     AddressIndexEntity::class,
-    RateLimitEntity::class,
+    AddressRateLimitEntity::class,
 ]);
 
 return $entityManager;

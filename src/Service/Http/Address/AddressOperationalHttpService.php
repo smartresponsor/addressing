@@ -6,7 +6,8 @@ declare(strict_types=1);
 namespace App\Addressing\Service\Http\Address;
 
 use App\Addressing\EntityInterface\Record\AddressInterface;
-use App\Addressing\Http\Factory\AddressApiPayloadFactory;
+use App\Addressing\Factory\AddressApiPayloadFactory;
+use App\Addressing\Responder\AddressResponder;
 use App\Addressing\Service\Application\AddressOperationalService;
 use App\Addressing\Service\Application\AddressReadService;
 use App\Addressing\Service\Application\AddressValidatedApplierService;
@@ -22,7 +23,7 @@ final readonly class AddressOperationalHttpService
         private AddressValidatedApplierService $addressValidatedApplierService,
         private AddressApiPayloadFactory $addressApiPayloadFactory,
         private AddressHttpScopeService $addressHttpScopeService,
-        private AddressHttpResponderService $addressHttpResponderService,
+        private AddressResponder $addressResponder,
     ) {
     }
 
@@ -48,8 +49,8 @@ final readonly class AddressOperationalHttpService
         $address = $this->addressReadService->get($id, $ownerId, $vendorId);
 
         return $address instanceof AddressInterface
-            ? $this->addressHttpResponderService->address($address)
-            : $this->addressHttpResponderService->notFound();
+            ? $this->addressResponder->address($address)
+            : $this->addressResponder->notFound();
     }
 
     public function patchOperationalBatch(Request $request): JsonResponse
@@ -61,7 +62,7 @@ final readonly class AddressOperationalHttpService
             $ids = $this->addressApiPayloadFactory->requireStringList($payload, 'ids');
             $patch = $this->addressApiPayloadFactory->operationalPatch($payload);
         } catch (\RuntimeException $exception) {
-            return $this->addressHttpResponderService->invalidRequest($exception, 'invalid_batch_payload', Response::HTTP_UNPROCESSABLE_ENTITY);
+            return $this->addressResponder->invalidRequest($exception, 'invalid_batch_payload', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $patchedIds = [];
@@ -93,13 +94,13 @@ final readonly class AddressOperationalHttpService
             $addressValidated = $this->addressApiPayloadFactory->createAddressValidated($payload);
             $this->addressValidatedApplierService->apply($id, $addressValidated, $ownerId, $vendorId);
         } catch (\RuntimeException $exception) {
-            return $this->addressHttpResponderService->invalidRequest($exception, 'invalid_validated_payload', Response::HTTP_UNPROCESSABLE_ENTITY);
+            return $this->addressResponder->invalidRequest($exception, 'invalid_validated_payload', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $address = $this->addressReadService->get($id, $ownerId, $vendorId);
 
         return $address instanceof AddressInterface
-            ? $this->addressHttpResponderService->address($address)
-            : $this->addressHttpResponderService->notFound();
+            ? $this->addressResponder->address($address)
+            : $this->addressResponder->notFound();
     }
 }

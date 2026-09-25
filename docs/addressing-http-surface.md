@@ -33,11 +33,11 @@ The JSON API paths are:
 
 ## HTTP helpers
 
-- `src/Http/Factory/AddressQueryFilterFactory.php` builds scoped query, limit, country-code, operational, and portfolio filters.
-- `src/Http/Factory/AddressViewArrayFactory.php` builds response payload arrays and preview rows for `AddressInterface` records.
-- `src/Http/Factory/AddressApiPayloadFactory.php` decodes JSON requests and assembles address creation, validated-event, operational-patch, and string-id-list payloads.
+- `src/Factory/AddressQueryFilterFactory.php` builds scoped query, limit, country-code, operational, and portfolio filters.
+- `src/Factory/AddressViewArrayFactory.php` builds response payload arrays and preview rows for `AddressInterface` records.
+- `src/Factory/AddressApiPayloadFactory.php` decodes JSON requests and assembles address creation, validated-event, operational-patch, and string-id-list payloads.
 - `src/Service/Http/Address/AddressHttpScopeService.php` resolves request ownership/vendor scope.
-- `src/Service/Http/Address/AddressHttpResponderService.php` owns shared JSON response shaping.
+- `src/Responder/AddressResponder.php` owns shared JSON response shaping.
 
 ## Route-drift safeguard
 

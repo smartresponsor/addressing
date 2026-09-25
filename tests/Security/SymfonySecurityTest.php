@@ -5,8 +5,9 @@ declare(strict_types=1);
 
 namespace Tests\Security;
 
-use App\Addressing\Entity\RateLimitEntity;
-use App\Addressing\Http\Middleware\AddressIpGuardMiddleware;
+use App\Addressing\Entity\AddressRateLimitEntity;
+use App\Addressing\Middleware\AddressIpGuardMiddleware;
+use App\Addressing\Repository\AddressDoctrineRateLimitRepository;
 use App\Addressing\Service\Http\Address\AddressRateLimiterService;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
@@ -30,8 +31,8 @@ final class SymfonySecurityTest extends TestCase
 
     public function testRateLimiterBlocksAfterBurstLimit(): void
     {
-        $entityManager = TestDatabase::createInMemoryEntityManager([RateLimitEntity::class]);
-        $limiter = new AddressRateLimiterService($entityManager, 2, 1);
+        $entityManager = TestDatabase::createInMemoryEntityManager([AddressRateLimitEntity::class]);
+        $limiter = new AddressRateLimiterService(new AddressDoctrineRateLimitRepository($entityManager), 2, 1);
 
         self::assertTrue($limiter->check('client-1', 'address_lookup'));
         self::assertTrue($limiter->check('client-1', 'address_lookup'));

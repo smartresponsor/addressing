@@ -7,6 +7,7 @@ namespace App\Addressing\Projection\AddressIndex;
 
 use App\Addressing\Event\AddressCreatedEvent;
 use App\Addressing\Event\AddressUpdatedEvent;
+use App\Addressing\Normalizer\AddressIndexNormalizer;
 use App\Addressing\RepositoryInterface\AddressIndex\AddressIndexRepositoryInterface;
 use App\Addressing\Service\Projection\AddressIndex\AddressIndexProjectorService;
 
