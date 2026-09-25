@@ -14,7 +14,9 @@ return static function (RectorConfig $rectorConfig): void {
         RenameParamToMatchTypeRector::class,
         __DIR__ . '/src/Entity/AddressEvidenceSnapshotEntity.php',
         __DIR__ . '/src/Doctrine/AddressEntityMapper.php',
-        __DIR__ . '/src/Repository/AbstractDoctrineAddressRepository.php',
+        __DIR__ . '/src/Repository/AddressAbstractDoctrineRepository.php',
+        __DIR__ . '/src/Repository/AddressDoctrineRateLimitRepository.php',
+        __DIR__ . '/src/Repository/AddressDoctrineSchemaRepository.php',
         __DIR__ . '/src/Service/Application/AddressValidatedApplierService.php',
         __DIR__ . '/src/Service/Http/Address/AddressRateLimiterService.php',
     ]);

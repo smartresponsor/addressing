@@ -323,6 +323,19 @@
 Что имеем? Canon006 and Canon020 are closed without suppressions, and the moved runtime remains green under static, functional, container, and runtime verification.
 Что осталось? Continue with the smaller configuration debt (Canon034/038) or the larger structural migrations Canon001/004/018; keep licensing changes isolated.
 
+### Configuration canon closure
+
+- Renamed component-owned YAML files to the Canon018-derived `address_` prefix: Deptrac, Doctrine, Framework, Twig, test Doctrine, and bundle service configuration.
+- Updated Composer, bundle extension, inspection tooling, RC proof scripts, and current documentation to the renamed configuration paths.
+- Added `.env.local` and `.env.*.local` ignore coverage, closing the missing local-environment category in the repository noise baseline.
+- Canon034 now PASS and Canon038 now PASS in unrestricted Gating.
+- Runtime/container smoke and Deptrac remain green after the renames.
+- A concurrent repository-flattening workstream moved Address-scoped repositories/interfaces into flat role roots while this pass was running. That work was preserved; stale interface imports were completed only where required to restore PSR-4/runtime consistency. The unrestricted gate now reports Canon004 only for seven legacy `Entity/Record` terminal classes.
+- First unrestricted-gate retry exposed a transient Gating mutation-safety race against a disappearing `var/runtime-*` test directory; an immediate stable retry completed normally.
+
+Что имеем? Canon034/038 are closed, bundle/runtime configuration remains green, and Canon004 has materially narrowed due to the parallel repository convergence.
+Что осталось? Hard debt now centers on Canon001, the seven Canon004 Entity/Record classes, Canon018 identity naming, and Canon047 Doctrine-manager ownership; Canon031/040/042 remain warning/growth evidence debt.
+
 ### Configuration canon convergence
 
 - Canon034: added `.env` to the local-environment ignore baseline; unrestricted Gating now reports Canon034 PASS.
@@ -332,3 +345,28 @@
 
 Что имеем? The small configuration canon debt is closed in the current worktree: Canon034 and Canon038 both pass.
 Что осталось? Continue the larger coordinated structural migration across Canon001/004/018, while preserving the parallel configuration and licensing workstreams.
+
+### Repository subject-folder flattening
+
+- Flattened all eight `src/Repository/Address/*` repositories into `src/Repository/*` and all eight matching `src/RepositoryInterface/Address/*` interfaces into their technical-role root.
+- Updated namespaces and Doctrine `repositoryClass` metadata for the eight Address reference entities.
+- PHPStan remains green across 165 files; PHPUnit remains green at 22 tests / 112 assertions.
+- Unrestricted Gating reduced Canon004 from 23 findings to 7: all 16 premature repository/interface subject-folder findings are gone. The remaining Canon004 findings are the seven `Entity/Record/*` terminal classes that do not yet use the `Entity` suffix.
+- Full Gating also surfaced Canon047 Doctrine-manager ownership as a separate hard architecture family; it is not mixed into this repository-path slice.
+
+Что имеем? Repository topology is now flat and canonical for all eight Address reference repositories/interfaces, with no runtime/static regression.
+Что осталось? Canon004 now consists only of seven Entity/Record suffix migrations; Canon001/018 and the newly surfaced Canon047 remain separate coordinated waves.
+
+### RC hard-gate convergence closure
+
+- Closed Canon004 by moving non-entity record/value carriers out of `Entity/Record` into the canonical `Value/Record` role root.
+- Closed Canon047 by moving Doctrine manager ownership behind explicit repository contracts for schema, outbox dispatch, validated persistence, and rate limiting.
+- Closed Canon052 by restoring consumer `.gating/` to artifact-only state; executable/normative copies were removed while the tracked README boundary remained.
+- Closed Canon018 by renaming component-owned repository, entity, integration, and value types to the canonical `Address*` subject vocabulary.
+- Canon054 is green on current Doctrine metadata and naming strategy.
+- Moved all middleware from `src/Http/Middleware/` to the canonical `src/Middleware/` role root, closing the typed-layer location failure.
+- Replaced broad recursive PowerShell deletion patterns with exact-path guarded file/directory deletion, closing the mutation safety firewall without removing the historical RC tooling.
+- Final local verification on the converged tree: PHPStan PASS (173 files, 0 errors), PHPUnit PASS (22 tests, 112 assertions, 1 notice, 1 skipped), container smoke PASS, runtime smoke PASS, and unrestricted `composer gate` PASS with 0 failed / 0 warning.
+
+Что имеем? Addressing now has a fully green executable Gating profile and green local static/test/runtime acceptance on the converged RC branch.
+Что осталось? Publish the accumulated signed commits, refresh PR evidence, and treat PHPDoc/coverage expansion as post-hard-gate quality debt rather than an RC blocker.
