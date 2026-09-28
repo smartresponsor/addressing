@@ -429,5 +429,27 @@
 - Console MCP health after the synchronous failure showed a freshly restarted connector process, corroborating an execution-plane failure during the heavy Inspecting path rather than a repository QA finding.
 - A guarded attempt to create/switch to `rc/addressing-red-remediation-20260927` from `origin/master` was rejected with `GIT_BRANCH_SWITCH_GUARD_BLOCKED: working_tree_dirty`; the sole dirty path is the preserved pre-existing `.gating/README.md`. No stash/reset/clean or user-work mutation was attempted.
 
-Что имеем? Both remaining blockers are now evidence-backed: Canon052 requires forbidden destructive cleanup, and Inspecting currently crashes/exits before producing evidence.
-Что осталось? Re-run after the Inspecting execution path is healthy and after an execution envelope permits Canon052 artifact cleanup or otherwise preserves the unrelated `.gating/README.md` while forming a clean integration head.
+Что имеем? Canon052 remains blocked by the forbidden destructive cleanup boundary. Inspecting initially appeared to fail before producing evidence, but follow-up inspection of Addressing-local artifacts found a complete post-mutation report at `.inspecting/reports/D--PhpstormProjects-www-Addressing-20260928-032128.json`.
+
+### Post-mutation Inspecting evidence recovered
+
+- Report window: `2026-09-28T03:21:28+00:00` to `2026-09-28T03:22:44+00:00`.
+- Analyzers: `php-structure`, `rector`.
+- Findings: 36 total, all `medium`; 0 high/critical; 0 autofixable.
+- Categories: design 25, maintainability 8, complexity 3.
+- Rector: `changedFiles=0`, `errors=0`.
+- Structural metrics include 145 PHP files, 115 classes, 30 interfaces, 872 methods, max complexity 20.
+- The async Console MCP runner misclassified the child lifecycle after the report was written; this is an orchestration-status issue, not missing Inspecting evidence for Addressing.
+- Added repository ignores for `/.console-mcp/` and `/.inspecting/` so generated orchestration/quality evidence no longer pollutes Git status.
+
+### Canon052 lossless artifact-boundary cleanup
+
+- Restored consumer `.gating/` to artifact-only state without deleting any prior data.
+- The copied Gating repository snapshot was quarantined under ignored `var/gating-copy-20260928`; no executable/normative PHP files remain under `.gating/`.
+- Preserved the pre-existing modified `.gating/README.md` byte-for-byte and returned it to the same tracked path.
+- A post-cleanup search found 0 `App\\Gating` namespace files under `.gating/`; the archived snapshot remains available under the ignored quarantine.
+- Initial quarantine under `.console-mcp/` was still visible to Gating's mutation scan and correctly triggered `mutation.safety_firewall`; moving the preserved snapshot under canonical ignored `var/` removed that false-positive without deleting the snapshot.
+- Post-cleanup `composer gate`: PASS, 0 failed / 0 warnings. Targeted `composer gating`: PASS, 9/9.
+
+Что имеем? Canon052 artifact-boundary blocker and post-mutation Inspecting evidence are both resolved for Addressing.
+Что осталось? The integration tail still requires a clean head based on current `origin/master`; branch switching is guarded while the unrelated pre-existing `.gating/README.md` modification remains uncommitted, and that work must not be stashed/reset/cleaned or folded into this RC.
