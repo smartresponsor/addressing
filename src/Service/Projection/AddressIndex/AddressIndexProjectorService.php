@@ -5,11 +5,11 @@ declare(strict_types=1);
 
 namespace App\Addressing\Service\Projection\AddressIndex;
 
-use App\Addressing\Integration\Geocode\AddressGeocodeResult;
 use App\Addressing\Projection\AddressIndex\AddressIndexRecord;
 use App\Addressing\Value\AddressCountryCode;
 use App\Addressing\Value\AddressPostalCode;
 use App\Addressing\Value\AddressStreetLine;
+use App\Addressing\Value\Geocode\AddressGeocodeResult;
 use App\Addressing\Value\Primitive\AddressRegion;
 
 final class AddressIndexProjectorService

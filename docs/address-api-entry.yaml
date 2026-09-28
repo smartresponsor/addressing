@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info:
+    title: Addressing API compatibility entry point
+    version: 0.1.0
+    description: |
+        Thin documentation entry point for the current Addressing API.
+        The canonical contract and schemas are maintained in ../config/openapi/address_openapi.yaml.
+paths:
+    /api/address:
+        $ref: '../config/openapi/address_openapi.yaml#/paths/~1api~1address'
+    /api/address/page:
+        $ref: '../config/openapi/address_openapi.yaml#/paths/~1api~1address~1page'
+    /api/address/search:
+        $ref: '../config/openapi/address_openapi.yaml#/paths/~1api~1address~1search'
+    /api/address/queue-summary:
+        $ref: '../config/openapi/address_openapi.yaml#/paths/~1api~1address~1queue-summary'
+    /api/address/country-portfolio:
+        $ref: '../config/openapi/address_openapi.yaml#/paths/~1api~1address~1country-portfolio'
+    /api/address/source-portfolio:
+        $ref: '../config/openapi/address_openapi.yaml#/paths/~1api~1address~1source-portfolio'
+    /api/address/validation-portfolio:
+        $ref: '../config/openapi/address_openapi.yaml#/paths/~1api~1address~1validation-portfolio'
+    /api/address/normalization-portfolio:
+        $ref: '../config/openapi/address_openapi.yaml#/paths/~1api~1address~1normalization-portfolio'
+    /api/address/operational-batch:
+        $ref: '../config/openapi/address_openapi.yaml#/paths/~1api~1address~1operational-batch'
+    /api/address/{id}:
+        $ref: '../config/openapi/address_openapi.yaml#/paths/~1api~1address~1{id}'
+    /api/address/{id}/validated:
+        $ref: '../config/openapi/address_openapi.yaml#/paths/~1api~1address~1{id}~1validated'
+    /api/address/{id}/governance-cluster:
+        $ref: '../config/openapi/address_openapi.yaml#/paths/~1api~1address~1{id}~1governance-cluster'

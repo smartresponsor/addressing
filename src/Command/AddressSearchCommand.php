@@ -65,7 +65,7 @@ final class AddressSearchCommand extends Command
             ],
         );
 
-        $items = array_map(static fn (\App\Addressing\EntityInterface\Record\AddressInterface $address): array => [
+        $items = array_map(static fn (\App\Addressing\Contract\AddressInterface $address): array => [
             'id' => $address->id(),
             'line1' => $address->line1(),
             'city' => $address->city(),

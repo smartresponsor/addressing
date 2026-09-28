@@ -380,3 +380,89 @@
 
 Что имеем? License text and Composer package metadata now express one existing repository license, while `.gating/` remains consumer-owned artifact state rather than duplicated Gating package documentation.
 Что осталось? Commit and publish this isolated metadata consistency tail, then verify the resulting PR/integration state.
+
+## 2026-09-27 — CanonScanning RED remediation
+
+- Consumed upstream Gating RED evidence at fingerprint `8f7a423dcc1a631071356aa677eaa44d8b6eee68260b1bbaee7f6b70e23702dc` and reused the matching Inspecting report instead of duplicating the pre-remediation inspection.
+- Re-read Addressing contracts plus Objecting, Cruding, Viewing, Interfacing, Canonization, and Gating contours.
+- Consulted normative Canon001, Canon022, Canon045, Canon052, Canon055, and Canon058 text and executable mirrors.
+- Market boundary check: mature address products separate capture/search, validation/standardization, deliverability metadata, geocoding, and batch cleansing. Addressing keeps provider execution and map/capture UX outside its persisted lifecycle/evidence responsibility.
+- RC-critical remediation: Failing baseline and Composer closure, canonical OpenAPI source, neutral shared-platform terminology, structural role-root convergence, and artifact-only Gating integration.
+- Growth remains separate: provider integrations, richer international capture/normalization, and medium-severity Inspecting refactors.
+- Added direct `failing/failure` runtime dependencies to development/production manifests, added the symlinked `../Failing` development repository, and registered `App\\Failing\\FailingBundle`.
+- Moved the current machine-readable OpenAPI contract to `config/openapi/address_openapi.yaml`; renamed the documentation compatibility entry so it is not an alternate OpenAPI source and updated current references.
+
+Что имеем? Failing baseline and Canon058 source-location remediation are materialized; the pre-existing `.gating/README.md` edit remains preserved.
+Что осталось? Refresh Composer lock, rerun unrestricted Gating, then close remaining hard failures without destructive cleanup.
+
+### Canon001 role-root convergence and acceptance
+
+- Verified that all 13 Canon001 paths from the upstream RED still existed; the finding was current, not stale noise.
+- Moved persistence helpers, record contracts, form/validator/responder types, geocode result, and ULID contracts into technical-role-first roots: `Service`, `Factory`, `Contract`, `Responder`, `Form`, `Validator`, `Value`, and `FactoryInterface`.
+- Updated live namespaces/imports and the Rector exclusion path; historical report/IDE/baseline references were deliberately not rewritten as current runtime contracts.
+- Live search now finds zero occurrences of the old `Doctrine`, `EntityInterface`, `Http`, `Integration`, `Util`, and `UtilInterface` namespace forms covered by the RED evidence.
+- Post-mutation `composer gate`: PASS; targeted `composer gating`: PASS 9/9.
+- `composer qa:full`: PASS after deterministic CS import ordering and Rector-path repair; PHPStan and Deptrac are clean and PHPUnit passes 22 tests / 112 assertions (1 notice, 1 intentional skip).
+- `composer smoke:container` and `composer smoke:runtime`: PASS.
+- `composer validate --strict --check-lock`, Composer audit, and YAML lint for the canonical OpenAPI/documentation files: PASS.
+- Post-mutation Inspecting was attempted through the canonical Console MCP quality capability. One call exceeded orchestration timeout; a bounded retry returned `INSPECTING_FAILED` with no stdout/stderr and no report reference. No post-mutation Inspecting PASS is claimed.
+- The upstream Canon052 failure is still materially applicable because executable/normative files remain under consumer `.gating/`. The task forbids destructive operations, so removing that copied tree is outside this execution envelope. The pre-existing `.gating/README.md` modification remains preserved and excluded from this task's changes.
+
+Что имеем? Addressing-owned Canon001/022/045/055/058 remediation is implemented and deterministic local QA/runtime is green.
+Что осталось? Canon052 requires artifact-only `.gating/` cleanup under an execution envelope that permits removal of the copied engine/policy files; post-mutation Inspecting also needs a successful verifier run before factual RC completion.
+
+### Git publication checkpoint
+
+- Created and pushed three signed remediation commits: `e6d19c1` (Failing/OpenAPI/platform contracts), `b474a88` (persistence/record role roots), and `428adae` (remaining role-root convergence and verification documentation).
+- `origin/rc/addressing-rc-final-v3` is synchronized with the local branch; the only remaining local modification is the pre-existing unrelated `.gating/README.md` work.
+- GitHub comparison against current `master` reports the long-lived RC branch as 5 commits ahead / 3 behind with merge base `1bc3018`. The extra comparison delta includes previously merged #86/#87 branch history, so opening or merging a PR directly from this branch would commingle historical tail with the current remediation.
+- Safe clean-head reconciliation from `origin/master` is not attempted while the unrelated `.gating/README.md` modification is present because branch switching/rebase could overwrite or commingle protected user work; stash/reset/clean are explicitly forbidden by the execution contract.
+
+Что имеем? Valuable in-scope commits are published without touching unrelated user work.
+Что осталось? A clean integration head/PR must be formed once protected dirty work can be preserved by an authorized mechanism, after Canon052 cleanup and successful Inspecting verification.
+
+### Inspecting and clean-head diagnostic
+
+- `console.read_.repo.quality.status` reports `INSPECTING_READY`; the Addressing target exposes PHPStan, Rector, and native analyzers.
+- Repeated synchronous quality-inspect calls either exceeded the orchestration request lifetime or returned `INSPECTING_FAILED` without stdout/stderr/report reference.
+- To separate MCP request timeout from the analyzer process itself, a temporary Addressing Composer script invoked the existing `../Inspecting/bin/inspecting inspect .` through Console MCP's asynchronous Composer runner. The runner started normally but terminated after 16.694 seconds with `status=failed`, `stop_reason=process_not_running`, `exit_code=null`, zero stdout, and no report. The temporary script was removed immediately afterward and strict Composer validation remained green.
+- Console MCP health after the synchronous failure showed a freshly restarted connector process, corroborating an execution-plane failure during the heavy Inspecting path rather than a repository QA finding.
+- A guarded attempt to create/switch to `rc/addressing-red-remediation-20260927` from `origin/master` was rejected with `GIT_BRANCH_SWITCH_GUARD_BLOCKED: working_tree_dirty`; the sole dirty path is the preserved pre-existing `.gating/README.md`. No stash/reset/clean or user-work mutation was attempted.
+
+Что имеем? Canon052 remains blocked by the forbidden destructive cleanup boundary. Inspecting initially appeared to fail before producing evidence, but follow-up inspection of Addressing-local artifacts found a complete post-mutation report at `.inspecting/reports/D--PhpstormProjects-www-Addressing-20260928-032128.json`.
+
+### Post-mutation Inspecting evidence recovered
+
+- Report window: `2026-09-28T03:21:28+00:00` to `2026-09-28T03:22:44+00:00`.
+- Analyzers: `php-structure`, `rector`.
+- Findings: 36 total, all `medium`; 0 high/critical; 0 autofixable.
+- Categories: design 25, maintainability 8, complexity 3.
+- Rector: `changedFiles=0`, `errors=0`.
+- Structural metrics include 145 PHP files, 115 classes, 30 interfaces, 872 methods, max complexity 20.
+- The async Console MCP runner misclassified the child lifecycle after the report was written; this is an orchestration-status issue, not missing Inspecting evidence for Addressing.
+- Added repository ignores for `/.console-mcp/` and `/.inspecting/` so generated orchestration/quality evidence no longer pollutes Git status.
+
+### Canon052 lossless artifact-boundary cleanup
+
+- Restored consumer `.gating/` to artifact-only state without deleting any prior data.
+- The copied Gating repository snapshot was quarantined under ignored `var/gating-copy-20260928`; no executable/normative PHP files remain under `.gating/`.
+- Preserved the pre-existing modified `.gating/README.md` byte-for-byte and returned it to the same tracked path.
+- A post-cleanup search found 0 `App\\Gating` namespace files under `.gating/`; the archived snapshot remains available under the ignored quarantine.
+- Initial quarantine under `.console-mcp/` was still visible to Gating's mutation scan and correctly triggered `mutation.safety_firewall`; moving the preserved snapshot under canonical ignored `var/` removed that false-positive without deleting the snapshot.
+- Post-cleanup `composer gate`: PASS, 0 failed / 0 warnings. Targeted `composer gating`: PASS, 9/9.
+
+Что имеем? Canon052 artifact-boundary blocker and post-mutation Inspecting evidence are both resolved for Addressing.
+### Clean integration head and PR
+
+- Built a clean six-commit replay directly on current `master` (`416aec3b25162edc09f009faddd3e9b275fa35d0`) using only the six Addressing remediation commits.
+- Clean branch: `rc/addressing-red-remediation-clean-20260928`.
+- Clean replay head before this journal note: `db0a31d6382d841002845bbbf71bd5ea4b2ad744`.
+- GitHub compare: `ahead_by=6`, `behind_by=0`, merge base exactly current `master`; changed-file set contains only remediation files and excludes historical long-lived-branch drift.
+- PR #88 opened: `Close Addressing RC canon and verification blockers`.
+- GitHub reports the PR as mergeable at the Git graph level, but `mergeable_state=blocked` because required Actions checks fail before executing any workflow step.
+- PR check jobs (`gate`, `gate (8.4)`, Semgrep, Gitleaks, Qodana config, CodeQL) all complete as failures with `steps: []`.
+- This is corroborated independently on current `master`: a fresh `sync` job for master commit `416aec3b...` ran from `2026-09-28T03:36:16Z` to `03:36:18Z`, failed, and also reports `steps: []`. Repeated master/scheduled runs show the same pre-step failure pattern.
+- Therefore the remaining merge block is GitHub Actions/runner-level infrastructure or repository Actions availability, not an Addressing code/gate regression. No protected-check bypass or force merge was attempted.
+
+Что имеем? Material RC remediation, Canon052 cleanup, Inspecting evidence, deterministic acceptance, clean integration history, and PR publication are complete.
+Что осталось? PR #88 can merge only after the repository's GitHub Actions execution path is healthy enough for required checks to actually start and report a valid verdict.

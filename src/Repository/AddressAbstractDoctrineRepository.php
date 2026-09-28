@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Addressing\Repository;
 
-use App\Addressing\Doctrine\AddressEntityMapper;
+use App\Addressing\Contract\AddressEvidenceSnapshotInterface;
+use App\Addressing\Contract\AddressInterface;
 use App\Addressing\Entity\AddressEntity;
 use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
 use App\Addressing\Entity\AddressOutboxEntity;
-use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
-use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\Factory\AddressEntityMapper;
 use App\Addressing\Message\AddressOutboxEventMessage;
 use App\Addressing\Policy\AddressGovernancePolicy;
 use App\Addressing\Policy\AddressRecordPolicy;

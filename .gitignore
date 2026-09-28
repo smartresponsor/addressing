@@ -15,6 +15,10 @@
 .phpunit.result.cache
 /.deptrac.cache
 
+# Local orchestration and quality artifacts
+/.console-mcp/
+/.inspecting/
+
 # Gating consumer artifact surface
 /.gating/*
 !/.gating/README.md

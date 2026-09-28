@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
-use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\Contract\AddressInterface;
 use App\Addressing\RepositoryInterface\AddressReadRepositoryInterface;
 use App\Addressing\Service\Application\AddressReadService;
 use App\Addressing\Value\Persistence\AddressPageCriteria;

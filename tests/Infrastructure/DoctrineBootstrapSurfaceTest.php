@@ -14,7 +14,7 @@ final class DoctrineBootstrapSurfaceTest extends TestCase
 
         self::assertFileDoesNotExist($root.'/src/Integration/Persistence/AddressPdoFactory.php');
         self::assertFileDoesNotExist($root.'/src/Integration/Persistence/AddressSchemaManager.php');
-        self::assertFileExists($root.'/src/Doctrine/AddressDoctrineSchemaManager.php');
+        self::assertFileExists($root.'/src/Service/AddressDoctrineSchemaManager.php');
         self::assertFileExists($root.'/src/Entity/AddressOutboxEntity.php');
     }
 }

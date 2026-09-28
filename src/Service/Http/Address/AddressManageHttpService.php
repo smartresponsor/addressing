@@ -8,7 +8,7 @@ namespace App\Addressing\Service\Http\Address;
 use App\Addressing\DTO\AddressManageDTO;
 use App\Addressing\Factory\AddressInputFactory;
 use App\Addressing\Factory\AddressViewArrayFactory;
-use App\Addressing\Http\Form\AddressManageType;
+use App\Addressing\Form\AddressManageType;
 use App\Addressing\Service\Application\AddressReadService;
 use App\Addressing\Service\Application\AddressWriteService;
 use Symfony\Component\Form\FormFactoryInterface;
