@@ -1,7 +1,7 @@
 # Address data platform
 
 ## Overview
-AddressEntity is the system of record for canonical address entities. It stores user-supplied address data, normalized snapshots, validation outcomes, governance links, revalidation state, and emits outbox events for downstream consumers. The public API surface is documented in `openapi/address.yaml`, while the persistence contract lives in:
+AddressEntity is the system of record for canonical address entities. It stores user-supplied address data, normalized snapshots, validation outcomes, governance links, revalidation state, and emits outbox events for downstream consumers. The public API surface is documented in `config/openapi/address_openapi.yaml`, while the persistence contract lives in:
 
 - `sql/postgres/001_address.sql`
 - `sql/postgres/002_address_validation_verdict.sql`
@@ -124,7 +124,7 @@ Example payload stored inside `address_outbox.payload` for a validated apply:
 ```
 
 ## End-to-end traceability
-- **API contract → Address record:** request/response surfaces in `openapi/address.yaml` map to `address_entity` columns.
+- **API contract → Address record:** request/response surfaces in `config/openapi/address_openapi.yaml` map to `address_entity` columns.
 - **Validation contract → Stored state:** `App\Addressing\Contract\Message\AddressValidated` and `AddressValidatedMutationPlan*` populate `validation_*`, governance, provenance, and revalidation columns.
 - **Validated apply → Evidence history:** `AddressEvidenceSnapshotWriter` captures the validation/evidence companion row.
 - **Write path → Event emission:** CRUD and validation updates append payloads into `address_outbox`, and `AddressOutboxDrainerService` emits `{ name, version, payload }` envelopes.

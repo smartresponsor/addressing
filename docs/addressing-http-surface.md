@@ -43,4 +43,4 @@ The JSON API paths are:
 
 `composer report:route-inventory` derives exact and regex-backed route evidence from the current front controller. `composer qa:trust-surface` verifies that the report still proves the core HTTP methods, `/address/manage`, `/api/address`, and the dynamic route family.
 
-The canonical machine-readable API description is `openapi/address.yaml`.
+The canonical machine-readable API description is `config/openapi/address_openapi.yaml`.
