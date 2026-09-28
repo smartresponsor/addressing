@@ -1,6 +1,6 @@
 # Addressing
 
-Addressing is the Symfony address-lifecycle component of the Smart Responsor platform. It owns address records, normalization and validation evidence, operational state, governance links, scoped search, portfolio summaries, and address-specific HTTP/CLI operations.
+Addressing is the Symfony address-lifecycle component of the multi-domain SaaS platform. It owns address records, normalization and validation evidence, operational state, governance links, scoped search, portfolio summaries, and address-specific HTTP/CLI operations.
 
 Addressing does **not** own generic CRUD mechanics, collection-query infrastructure, final presentation, shared interface shells, mapping UI, routing, or an external geocoding/postal-verification provider. Generic CRUD belongs to Cruding; provider integrations may feed Addressing validation evidence through explicit component contracts.
 
@@ -83,4 +83,4 @@ Production consumers use the packaged dependency contract and do not rely on sib
 - [HTTP surface](docs/addressing-http-surface.md)
 - [Entity boundary contract](docs/addressing-entity-boundary-contract.md)
 - [Architecture remediation history](docs/addressing-architecture-remediation-plan.md)
-- [Canonical OpenAPI contract](openapi/address.yaml)
+- [Canonical OpenAPI contract](config/openapi/address_openapi.yaml)

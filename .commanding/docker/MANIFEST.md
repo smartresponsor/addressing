@@ -1,6 +1,6 @@
 # Docker Base (Commanding)
 
-This folder is a reusable base for containerized dependencies across SmartResponsor consumers.
+This folder is a reusable base for containerized dependencies across platform consumers.
 
 Contents:
 

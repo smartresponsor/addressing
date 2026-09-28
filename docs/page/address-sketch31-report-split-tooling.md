@@ -27,5 +27,5 @@ Suggested workflow
 
 Notes
 
-- Some src/* files are marked as legacy because the current layout is not Symfony/SmartResponsor-canonical. Move them
+- Some src/* files are marked as legacy because the current layout is not Symfony/platform-canonical. Move them
   into the right layers inside the target repo.

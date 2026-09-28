@@ -1,6 +1,6 @@
 # Addressing
 
-This repository is the reference component for end-to-end automation in SmartResponsor:
+This repository is the reference component for end-to-end automation in the multi-domain SaaS platform:
 
 - Domain overlay gates (Canon/Health/Ai)
 - CI checks on PR

@@ -1,4 +1,4 @@
-Automation kit (Smartresponsor-style)
+Automation kit (platform style)
 
 What is included:
 

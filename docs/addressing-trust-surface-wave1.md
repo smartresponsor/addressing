@@ -1,6 +1,6 @@
 # Addressing trust-surface wave 1
 
-This note documents the first trust-surface batch for `smartresponsor/addressing`.
+This note documents the first trust-surface batch for the Addressing component.
 
 ## Goal
 
