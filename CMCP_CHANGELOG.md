@@ -452,4 +452,17 @@
 - Post-cleanup `composer gate`: PASS, 0 failed / 0 warnings. Targeted `composer gating`: PASS, 9/9.
 
 Что имеем? Canon052 artifact-boundary blocker and post-mutation Inspecting evidence are both resolved for Addressing.
-Что осталось? The integration tail still requires a clean head based on current `origin/master`; branch switching is guarded while the unrelated pre-existing `.gating/README.md` modification remains uncommitted, and that work must not be stashed/reset/cleaned or folded into this RC.
+### Clean integration head and PR
+
+- Built a clean six-commit replay directly on current `master` (`416aec3b25162edc09f009faddd3e9b275fa35d0`) using only the six Addressing remediation commits.
+- Clean branch: `rc/addressing-red-remediation-clean-20260928`.
+- Clean replay head before this journal note: `db0a31d6382d841002845bbbf71bd5ea4b2ad744`.
+- GitHub compare: `ahead_by=6`, `behind_by=0`, merge base exactly current `master`; changed-file set contains only remediation files and excludes historical long-lived-branch drift.
+- PR #88 opened: `Close Addressing RC canon and verification blockers`.
+- GitHub reports the PR as mergeable at the Git graph level, but `mergeable_state=blocked` because required Actions checks fail before executing any workflow step.
+- PR check jobs (`gate`, `gate (8.4)`, Semgrep, Gitleaks, Qodana config, CodeQL) all complete as failures with `steps: []`.
+- This is corroborated independently on current `master`: a fresh `sync` job for master commit `416aec3b...` ran from `2026-09-28T03:36:16Z` to `03:36:18Z`, failed, and also reports `steps: []`. Repeated master/scheduled runs show the same pre-step failure pattern.
+- Therefore the remaining merge block is GitHub Actions/runner-level infrastructure or repository Actions availability, not an Addressing code/gate regression. No protected-check bypass or force merge was attempted.
+
+Что имеем? Material RC remediation, Canon052 cleanup, Inspecting evidence, deterministic acceptance, clean integration history, and PR publication are complete.
+Что осталось? PR #88 can merge only after the repository's GitHub Actions execution path is healthy enough for required checks to actually start and report a valid verdict.
