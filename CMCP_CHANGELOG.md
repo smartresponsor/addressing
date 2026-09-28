@@ -410,3 +410,13 @@
 
 Что имеем? Addressing-owned Canon001/022/045/055/058 remediation is implemented and deterministic local QA/runtime is green.
 Что осталось? Canon052 requires artifact-only `.gating/` cleanup under an execution envelope that permits removal of the copied engine/policy files; post-mutation Inspecting also needs a successful verifier run before factual RC completion.
+
+### Git publication checkpoint
+
+- Created and pushed three signed remediation commits: `e6d19c1` (Failing/OpenAPI/platform contracts), `b474a88` (persistence/record role roots), and `428adae` (remaining role-root convergence and verification documentation).
+- `origin/rc/addressing-rc-final-v3` is synchronized with the local branch; the only remaining local modification is the pre-existing unrelated `.gating/README.md` work.
+- GitHub comparison against current `master` reports the long-lived RC branch as 5 commits ahead / 3 behind with merge base `1bc3018`. The extra comparison delta includes previously merged #86/#87 branch history, so opening or merging a PR directly from this branch would commingle historical tail with the current remediation.
+- Safe clean-head reconciliation from `origin/master` is not attempted while the unrelated `.gating/README.md` modification is present because branch switching/rebase could overwrite or commingle protected user work; stash/reset/clean are explicitly forbidden by the execution contract.
+
+Что имеем? Valuable in-scope commits are published without touching unrelated user work.
+Что осталось? A clean integration head/PR must be formed once protected dirty work can be preserved by an authorized mechanism, after Canon052 cleanup and successful Inspecting verification.
