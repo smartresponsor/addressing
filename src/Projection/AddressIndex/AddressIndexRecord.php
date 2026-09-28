@@ -5,10 +5,10 @@ declare(strict_types=1);
 
 namespace App\Addressing\Projection\AddressIndex;
 
-use App\Addressing\Integration\Geocode\AddressGeocodeResult;
 use App\Addressing\Value\AddressCountryCode;
 use App\Addressing\Value\AddressPostalCode;
 use App\Addressing\Value\AddressStreetLine;
+use App\Addressing\Value\Geocode\AddressGeocodeResult;
 use App\Addressing\Value\Primitive\AddressRegion;
 
 final readonly class AddressIndexRecord

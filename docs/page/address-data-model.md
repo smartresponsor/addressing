@@ -3,7 +3,7 @@
 This page documents the canonical `address_entity` contract as it exists across the current Address runtime slice. It is the field-level bridge between:
 
 - `src/Entity/Record/AddressEntity.php`
-- `src/EntityInterface/Record/AddressInterface.php`
+- `src/Contract/AddressInterface.php`
 - `src/Integration/Persistence/AddressSchemaManager.php` (SQLite runtime authority)
 - `sql/postgres/001_address.sql`
 - `sql/postgres/002_address_validation_verdict.sql`
