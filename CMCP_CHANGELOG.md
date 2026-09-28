@@ -420,3 +420,14 @@
 
 Что имеем? Valuable in-scope commits are published without touching unrelated user work.
 Что осталось? A clean integration head/PR must be formed once protected dirty work can be preserved by an authorized mechanism, after Canon052 cleanup and successful Inspecting verification.
+
+### Inspecting and clean-head diagnostic
+
+- `console.read_.repo.quality.status` reports `INSPECTING_READY`; the Addressing target exposes PHPStan, Rector, and native analyzers.
+- Repeated synchronous quality-inspect calls either exceeded the orchestration request lifetime or returned `INSPECTING_FAILED` without stdout/stderr/report reference.
+- To separate MCP request timeout from the analyzer process itself, a temporary Addressing Composer script invoked the existing `../Inspecting/bin/inspecting inspect .` through Console MCP's asynchronous Composer runner. The runner started normally but terminated after 16.694 seconds with `status=failed`, `stop_reason=process_not_running`, `exit_code=null`, zero stdout, and no report. The temporary script was removed immediately afterward and strict Composer validation remained green.
+- Console MCP health after the synchronous failure showed a freshly restarted connector process, corroborating an execution-plane failure during the heavy Inspecting path rather than a repository QA finding.
+- A guarded attempt to create/switch to `rc/addressing-red-remediation-20260927` from `origin/master` was rejected with `GIT_BRANCH_SWITCH_GUARD_BLOCKED: working_tree_dirty`; the sole dirty path is the preserved pre-existing `.gating/README.md`. No stash/reset/clean or user-work mutation was attempted.
+
+Что имеем? Both remaining blockers are now evidence-backed: Canon052 requires forbidden destructive cleanup, and Inspecting currently crashes/exits before producing evidence.
+Что осталось? Re-run after the Inspecting execution path is healthy and after an execution envelope permits Canon052 artifact cleanup or otherwise preserves the unrelated `.gating/README.md` while forming a clean integration head.
