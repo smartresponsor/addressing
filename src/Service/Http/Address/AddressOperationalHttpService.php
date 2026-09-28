@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Service\Http\Address;
 
-use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\Contract\AddressInterface;
 use App\Addressing\Factory\AddressApiPayloadFactory;
 use App\Addressing\Responder\AddressResponder;
 use App\Addressing\Service\Application\AddressOperationalService;

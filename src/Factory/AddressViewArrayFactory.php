@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Factory;
 
-use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\Contract\AddressInterface;
 
 final readonly class AddressViewArrayFactory
 {

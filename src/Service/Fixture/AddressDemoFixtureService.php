@@ -5,9 +5,9 @@ declare(strict_types=1);
 
 namespace App\Addressing\Service\Fixture;
 
-use App\Addressing\Doctrine\AddressDoctrineSchemaManager;
 use App\Addressing\DTO\AddressManageDTO;
 use App\Addressing\Factory\AddressInputFactory;
+use App\Addressing\Service\AddressDoctrineSchemaManager;
 use App\Addressing\Service\Application\AddressWriteService;
 use Faker\Factory;
 use Faker\Generator;

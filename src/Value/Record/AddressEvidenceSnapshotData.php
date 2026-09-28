@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value\Record;
 
-use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
+use App\Addressing\Contract\AddressEvidenceSnapshotInterface;
 
 final readonly class AddressEvidenceSnapshotData implements AddressEvidenceSnapshotInterface
 {

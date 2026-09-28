@@ -5,8 +5,8 @@ declare(strict_types=1);
 
 namespace App\Addressing\RepositoryInterface;
 
-use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
-use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\Contract\AddressEvidenceSnapshotInterface;
+use App\Addressing\Contract\AddressInterface;
 
 interface AddressEvidenceRepositoryInterface
 {
