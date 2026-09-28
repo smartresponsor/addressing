@@ -2,7 +2,7 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-use App\Addressing\Http\AddressErrorMap;
+use App\Addressing\Responder\AddressErrorMap;
 use App\Addressing\Middleware\AddressCorsMiddleware;
 use App\Addressing\Middleware\AddressIpGuardMiddleware;
 use App\Addressing\Service\Http\Address\AddressRateLimiterService;

@@ -380,3 +380,33 @@
 
 Что имеем? License text and Composer package metadata now express one existing repository license, while `.gating/` remains consumer-owned artifact state rather than duplicated Gating package documentation.
 Что осталось? Commit and publish this isolated metadata consistency tail, then verify the resulting PR/integration state.
+
+## 2026-09-27 — CanonScanning RED remediation
+
+- Consumed upstream Gating RED evidence at fingerprint `8f7a423dcc1a631071356aa677eaa44d8b6eee68260b1bbaee7f6b70e23702dc` and reused the matching Inspecting report instead of duplicating the pre-remediation inspection.
+- Re-read Addressing contracts plus Objecting, Cruding, Viewing, Interfacing, Canonization, and Gating contours.
+- Consulted normative Canon001, Canon022, Canon045, Canon052, Canon055, and Canon058 text and executable mirrors.
+- Market boundary check: mature address products separate capture/search, validation/standardization, deliverability metadata, geocoding, and batch cleansing. Addressing keeps provider execution and map/capture UX outside its persisted lifecycle/evidence responsibility.
+- RC-critical remediation: Failing baseline and Composer closure, canonical OpenAPI source, neutral shared-platform terminology, structural role-root convergence, and artifact-only Gating integration.
+- Growth remains separate: provider integrations, richer international capture/normalization, and medium-severity Inspecting refactors.
+- Added direct `failing/failure` runtime dependencies to development/production manifests, added the symlinked `../Failing` development repository, and registered `App\\Failing\\FailingBundle`.
+- Moved the current machine-readable OpenAPI contract to `config/openapi/address_openapi.yaml`; renamed the documentation compatibility entry so it is not an alternate OpenAPI source and updated current references.
+
+Что имеем? Failing baseline and Canon058 source-location remediation are materialized; the pre-existing `.gating/README.md` edit remains preserved.
+Что осталось? Refresh Composer lock, rerun unrestricted Gating, then close remaining hard failures without destructive cleanup.
+
+### Canon001 role-root convergence and acceptance
+
+- Verified that all 13 Canon001 paths from the upstream RED still existed; the finding was current, not stale noise.
+- Moved persistence helpers, record contracts, form/validator/responder types, geocode result, and ULID contracts into technical-role-first roots: `Service`, `Factory`, `Contract`, `Responder`, `Form`, `Validator`, `Value`, and `FactoryInterface`.
+- Updated live namespaces/imports and the Rector exclusion path; historical report/IDE/baseline references were deliberately not rewritten as current runtime contracts.
+- Live search now finds zero occurrences of the old `Doctrine`, `EntityInterface`, `Http`, `Integration`, `Util`, and `UtilInterface` namespace forms covered by the RED evidence.
+- Post-mutation `composer gate`: PASS; targeted `composer gating`: PASS 9/9.
+- `composer qa:full`: PASS after deterministic CS import ordering and Rector-path repair; PHPStan and Deptrac are clean and PHPUnit passes 22 tests / 112 assertions (1 notice, 1 intentional skip).
+- `composer smoke:container` and `composer smoke:runtime`: PASS.
+- `composer validate --strict --check-lock`, Composer audit, and YAML lint for the canonical OpenAPI/documentation files: PASS.
+- Post-mutation Inspecting was attempted through the canonical Console MCP quality capability. One call exceeded orchestration timeout; a bounded retry returned `INSPECTING_FAILED` with no stdout/stderr and no report reference. No post-mutation Inspecting PASS is claimed.
+- The upstream Canon052 failure is still materially applicable because executable/normative files remain under consumer `.gating/`. The task forbids destructive operations, so removing that copied tree is outside this execution envelope. The pre-existing `.gating/README.md` modification remains preserved and excluded from this task's changes.
+
+Что имеем? Addressing-owned Canon001/022/045/055/058 remediation is implemented and deterministic local QA/runtime is green.
+Что осталось? Canon052 requires artifact-only `.gating/` cleanup under an execution envelope that permits removal of the copied engine/policy files; post-mutation Inspecting also needs a successful verifier run before factual RC completion.
