@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Service\Application;
 
-use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\Contract\AddressInterface;
 use App\Addressing\RepositoryInterface\AddressReadRepositoryInterface;
 use App\Addressing\Value\Persistence\AddressPageCriteria;
 

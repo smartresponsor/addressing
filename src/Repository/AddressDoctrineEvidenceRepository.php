@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Addressing\Repository;
 
+use App\Addressing\Contract\AddressEvidenceSnapshotInterface;
+use App\Addressing\Contract\AddressInterface;
 use App\Addressing\Entity\AddressEntity;
 use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
-use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
-use App\Addressing\EntityInterface\Record\AddressInterface;
 use App\Addressing\RepositoryInterface\AddressEvidenceRepositoryInterface;
 
 final readonly class AddressDoctrineEvidenceRepository extends AddressAbstractDoctrineRepository implements AddressEvidenceRepositoryInterface

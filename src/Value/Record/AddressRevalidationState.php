@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value\Record;
 
-use App\Addressing\EntityInterface\Record\AddressRevalidationStateInterface;
+use App\Addressing\Contract\AddressRevalidationStateInterface;
 
 final readonly class AddressRevalidationState implements AddressRevalidationStateInterface
 {

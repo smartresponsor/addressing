@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value\Record;
 
-use App\Addressing\EntityInterface\Record\AddressGovernanceStateInterface;
-use App\Addressing\EntityInterface\Record\AddressInterface;
-use App\Addressing\EntityInterface\Record\AddressRevalidationStateInterface;
-use App\Addressing\EntityInterface\Record\AddressValidationStateInterface;
+use App\Addressing\Contract\AddressGovernanceStateInterface;
+use App\Addressing\Contract\AddressInterface;
+use App\Addressing\Contract\AddressRevalidationStateInterface;
+use App\Addressing\Contract\AddressValidationStateInterface;
 
 final readonly class AddressData implements AddressInterface
 {
