@@ -16,7 +16,7 @@ The package surface is now aligned to the Doctrine-first runtime contract:
 
 ## Shared SQLite schema authority
 
-The shared schema authority lives in `src/Doctrine/AddressDoctrineSchemaManager.php`. Functional test support resets SQLite through Doctrine ORM metadata in `tests/Support/TestDatabase.php`.
+The shared schema authority lives in `src/Service/AddressDoctrineSchemaManager.php`. Functional test support resets SQLite through Doctrine ORM metadata in `tests/Support/TestDatabase.php`.
 
 That shared schema surface includes:
 

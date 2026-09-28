@@ -19,8 +19,8 @@ The current persistence path is Doctrine-first:
 - `App\Addressing\Entity\AddressEntity` owns the primary address mapping;
 - `App\Addressing\Entity\AddressEvidenceSnapshotEntity` owns validation/evidence snapshots;
 - `App\Addressing\Entity\AddressOutboxEntity` owns the local outbox mapping;
-- `App\Addressing\Doctrine\AddressEntityMapper` translates `AddressData` to and from `AddressEntity`;
-- `App\Addressing\Doctrine\AddressDoctrineSchemaManager` uses Doctrine `SchemaTool` for local/demo schema ensure/reset flows;
+- `App\Addressing\Factory\AddressEntityMapper` translates `AddressData` to and from `AddressEntity`;
+- `App\Addressing\Service\AddressDoctrineSchemaManager` uses Doctrine `SchemaTool` for local/demo schema ensure/reset flows;
 - `config/packages/address_doctrine.yaml` binds the Addressing mapping to the configured `infra` Doctrine connection/entity manager.
 
 The retired PDO factory/schema-manager topology is not a current runtime contract. Host applications consume Addressing through its Symfony bundle/package and Doctrine mappings rather than through component-owned raw SQL schema authority.
