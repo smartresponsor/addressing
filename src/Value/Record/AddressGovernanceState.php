@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value\Record;
 
-use App\Addressing\EntityInterface\Record\AddressGovernanceStateInterface;
+use App\Addressing\Contract\AddressGovernanceStateInterface;
 
 final readonly class AddressGovernanceState implements AddressGovernanceStateInterface
 {

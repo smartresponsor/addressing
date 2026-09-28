@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Addressing\Repository;
 
+use App\Addressing\Contract\AddressInterface;
 use App\Addressing\Entity\AddressEntity;
-use App\Addressing\EntityInterface\Record\AddressInterface;
 use App\Addressing\RepositoryInterface\AddressWriteRepositoryInterface;
 
 final readonly class AddressDoctrineWriteRepository extends AddressAbstractDoctrineRepository implements AddressWriteRepositoryInterface

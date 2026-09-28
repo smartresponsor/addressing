@@ -13,7 +13,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->skip([
         RenameParamToMatchTypeRector::class,
         __DIR__ . '/src/Entity/AddressEvidenceSnapshotEntity.php',
-        __DIR__ . '/src/Doctrine/AddressEntityMapper.php',
+        __DIR__ . '/src/Factory/AddressEntityMapper.php',
         __DIR__ . '/src/Repository/AddressAbstractDoctrineRepository.php',
         __DIR__ . '/src/Repository/AddressDoctrineRateLimitRepository.php',
         __DIR__ . '/src/Repository/AddressDoctrineSchemaRepository.php',

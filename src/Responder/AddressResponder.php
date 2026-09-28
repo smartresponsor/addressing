@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Responder;
 
-use App\Addressing\EntityInterface\Record\AddressInterface;
+use App\Addressing\Contract\AddressInterface;
 use App\Addressing\Factory\AddressViewArrayFactory;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
