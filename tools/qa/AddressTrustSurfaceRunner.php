@@ -31,7 +31,7 @@ foreach ($reports as $report) {
     ];
 }
 
-$routeSource = file_get_contents($root.'/public/index.php');
+$routeSource = file_get_contents($root.'/src/Controller/AddressApiController.php');
 $routeInventory = false === $routeSource
     ? ['method_tokens' => [], 'uri_tokens' => [], 'uri_patterns' => []]
     : addressRouteInventory($routeSource);

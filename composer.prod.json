@@ -16,6 +16,7 @@
     "easycorp/easyadmin-bundle": "^5.0",
     "failing/failure": "*",
     "interfacing/interface": "*",
+    "nelmio/api-doc-bundle": "^5.12",
     "objecting/object": "*",
     "viewing/view": "*",
     "symfony/console": "^8.1",

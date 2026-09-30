@@ -2,13 +2,13 @@
 
 ## Current posture
 
-The standalone runtime currently dispatches Addressing-owned business HTTP operations from `public/index.php` to narrow Symfony HTTP services. There is no monolithic `AddressHttpService` in the current runtime.
+The standalone runtime dispatches Addressing-owned business HTTP operations through Symfony Router metadata in `src/Controller/AddressApiController.php`; the controller delegates to narrow Symfony HTTP services. `public/index.php` retains the pre-routing security/middleware boundary and hands the request to Symfony `HttpKernel`. There is no monolithic `AddressHttpService` in the current runtime.
 
 Generic application CRUD grammar remains owned by Cruding. The services below are Addressing-specific transport/application boundaries for the current standalone API and operational workflows; they are not a reusable CRUD router or generic CRUD engine.
 
 ## Runtime dispatch
 
-`public/index.php` delegates to:
+`AddressApiController` delegates to:
 
 - `AddressManageHttpService` for `GET|POST /address/manage`;
 - `AddressWriteHttpService` for address creation and soft deletion;
@@ -41,6 +41,6 @@ The JSON API paths are:
 
 ## Route-drift safeguard
 
-`composer report:route-inventory` derives exact and regex-backed route evidence from the current front controller. `composer qa:trust-surface` verifies that the report still proves the core HTTP methods, `/address/manage`, `/api/address`, and the dynamic route family.
+`composer report:route-inventory` derives deterministic path/method evidence from the current Symfony `#[Route]` attributes in `AddressApiController`. `composer qa:trust-surface` verifies that the report still proves the core HTTP methods, `/address/manage`, `/api/address`, and the dynamic route family.
 
 The canonical machine-readable API description is `config/openapi/address_openapi.yaml`.

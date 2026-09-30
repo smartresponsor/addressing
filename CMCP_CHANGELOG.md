@@ -466,3 +466,76 @@
 
 Что имеем? Material RC remediation, Canon052 cleanup, Inspecting evidence, deterministic acceptance, clean integration history, and PR publication are complete.
 Что осталось? PR #88 can merge only after the repository's GitHub Actions execution path is healthy enough for required checks to actually start and report a valid verdict.
+
+## 2026-09-29 — CanonScanning regression baseline and OpenAPI producer remediation
+
+### Reconnaissance baseline
+
+- Current branch: `rc/addressing-rc-final-v3`; initial worktree contained one pre-existing modification, `.gating/README.md`.
+- Consumed upstream CanonScanning fingerprint `f793fe8ca090ef86b6a43f42731380ebd1c75724a1dd91d886335f9131c74bd5` and RED report from `20260929-030002`.
+- Hard RED backlog: Canon052 consumer Gating artifact boundary, Canon056 external API/OpenAPI path parity, Canon061 direct Nelmio producer dependency, Canon063 external API method parity.
+- Warnings remain separate evidence/debt: Canon031 PHPDoc coverage, Canon040 stale PHPUnit coverage evidence, Canon042 missing behavioral/UI evidence.
+- Re-read Addressing root instructions/manifests/runtime surface plus Objecting, Cruding, Viewing, Interfacing, Gating, and Canonization contracts.
+- Normative rules consulted directly: Canon052, Canon056, Canon061, Canon063. Canon056/063 require Symfony routing metadata/configuration as the runtime inventory; the current manual dispatcher in `public/index.php` therefore does not satisfy the runtime-side evidence contract.
+- Market/open-source baseline confirms the existing Addressing boundary: normalization/parsing, validation evidence, and geocoding/provider execution are separable concerns; provider integrations remain outside this RC remediation.
+
+### Target-to-canon mapping
+
+- Canon052: consumer `.gating/` must remain artifact-only; copied Gating engine/policy belongs only to the Gating owner package.
+- Canon056: canonical OpenAPI paths must mirror deterministic Symfony external API runtime paths.
+- Canon061: OpenAPI-owning Addressing must directly require `nelmio/api-doc-bundle`.
+- Canon063: each external `HTTP_METHOD + normalized_path` operation must mirror bidirectionally between Symfony routing metadata and canonical OpenAPI.
+
+### Material implementation in this execution window
+
+- Added direct runtime dependency `nelmio/api-doc-bundle:^5.12` to development and production Composer manifests.
+- Registered `Nelmio\\ApiDocBundle\\NelmioApiDocBundle` in the standalone bundle registry.
+- Updated the lock/install set; Composer resolved Nelmio `v5.12.2` and its required Swagger/type-info support.
+- `composer validate --strict --check-lock`: PASS after the dependency change.
+- Existing repository-local `composer gate` and targeted `composer gating` remain GREEN, but those configured contours do not execute the upstream CanonScanning Canon052/056/061/063 set.
+
+### Constraint and residual work
+
+- Canon052 remediation previously worked by relocating the embedded Gating snapshot out of consumer `.gating/` while preserving it under ignored `var/`; the copied owner tree has reappeared. The current task explicitly forbids destructive operations, so deleting or relocating that tree is not performed in this execution window.
+- Canon056/063 require a real Symfony-routing runtime conversion, not declarative fake routes layered on top of the manual dispatcher. That conversion remains the next Addressing-owned remediation front and must preserve request-id, CORS, IP guard, security headers, rate limiting, and existing service behavior.
+- Canon040/042 evidence refresh and UI/behavioral verification remain applicable after runtime-routing remediation.
+
+Что имеем? Canon061 is materially remediated in manifests/runtime registration with a validated lock; the remaining hard failures are isolated to Gating artifact contamination and the manual-dispatcher versus Symfony-routing architecture gap.
+Что осталось? Complete real Symfony routing migration, refresh behavioral/coverage evidence, re-run upstream canon verification and Inspecting, then integrate only the verified Addressing-owned changes.
+
+### Routing, behavioral evidence, and acceptance closure
+
+- Replaced manual path/method dispatch in `public/index.php` with the Symfony `HttpKernel`; pre-routing request-id, CORS, security-header, IP-guard, and rate-limit safeguards remain in the front controller.
+- Added `AddressApiController` as the standalone transport boundary with explicit Symfony `#[Route]` metadata for the current manage and external API operations; `Kernel::configureRoutes()` imports the controller attributes.
+- `debug:router --show-controllers` proves 15 bounded routes. Canon056 now passes with 12 mirrored external API paths, and Canon063 passes with 14 mirrored external METHOD+path operations.
+- Route inventory/trust diagnostics now consume the Symfony route-attribute source rather than parsing the retired manual dispatcher; `qa:trust-surface` reports `ready`.
+- Added the required direct `nelmio/api-doc-bundle:^5.12` runtime dependency and bundle registration; Canon061 passes.
+- Repaired the repository-owned Playwright runtime so it uses an isolated disposable SQLite database, full Doctrine schema bootstrap, isolated Symfony var/cache, and the same parity-DSN contract used by CI.
+- Aligned Playwright/Panther manage fixtures with the current mutually exclusive owner/vendor scope invariant. Playwright browser creation flow passes and writes its success screenshot to the central `www/var/Addressing/<date>/routing-rc` Visual Gallery contract.
+- Added `report:behavioral-ui-coverage` and persistent Canon042 evidence. Current evidence is intentionally non-inflated: functional 2/16 (12.5%, HIGH_BEHAVIORAL_TEST_DEBT), behavioral 2/2, UI 2/2, critical 1/1.
+- Refreshed Canon040 PHPUnit coverage: lines 32.7% (1250/3824), methods 34.9% (311/891), branches 26.8% (640/2388), classified HIGH_TEST_DEBT rather than hidden debt.
+- Promoted Canon031/040/042/052/056/061/063 into `tools/qa/addressing-platform-canon.yaml` so the repository-local gate now mirrors the upstream remediation front.
+
+### Final local verification
+
+- Composer strict/check-lock validation: PASS.
+- Changed PHP lint: PASS.
+- PHP-CS-Fixer: PASS, 0 fixable files.
+- PHPStan: PASS, 0 errors.
+- Deptrac: PASS, 0 violations/warnings/errors.
+- Rector dry-run: PASS.
+- PHPUnit: PASS, 22 tests / 112 assertions / 1 intentional skip / 1 notice.
+- PHPUnit E2E suite: PASS with the configured Panther case skipped because the local ChromeDriver is unavailable.
+- Playwright: PASS, 1/1 browser manage-create flow.
+- Container/runtime/Doctrine smokes: PASS.
+- Trust surface: PASS/ready.
+- Visual Gallery server: healthy on the task-specified Tailscale URL.
+- Canon gate: Canon056 PASS, Canon061 PASS, Canon063 PASS; Canon031/040/042 are explicit warnings/debt; Canon052 remains the only hard failure because executable Gating owner files are present under consumer `.gating/`.
+
+### Residual blocker
+
+- Canon052 requires the copied Gating owner tree to leave consumer `.gating/`. The task capability envelope explicitly marks destructive operations FORBIDDEN. The previously proven remediation is relocation/removal of that copied tree while preserving useful evidence under ignored `var/`; that filesystem move is not executed under the current envelope.
+- A post-mutation heavy RC/Inspecting job was requested but Console MCP refused to start it under `RUNTIME_CAPACITY_DRAIN` (`WATCHDOG_STALE`, `STABILITY_CRITICAL`, `ACTIVE_RUNTIME_FAILURE`, `ENGINE_BACKLOG_HIGH`). An attempted watchdog helper call from the Addressing workspace was unavailable because that workspace does not own `tool/dev-console.ps1`; no cross-repository runtime mutation was substituted.
+
+Что имеем? Three of the four original hard CanonScanning failures are materially fixed and verified; browser behavior and central visual evidence are GREEN; deterministic local quality gates are GREEN except the truthful Canon052 hard fail and documented coverage/PHPDoc warnings.
+Что осталось? Preserve and publish this coherent remediation without the pre-existing `.gating/README.md`, then Canon052 requires a future execution envelope that authorizes the non-destructive-preservation relocation/removal needed to restore consumer `.gating/` to artifact-only state; post-mutation Inspecting should then be rerun when heavy runtime capacity is available.
