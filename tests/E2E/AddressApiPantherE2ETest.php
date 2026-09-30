@@ -30,7 +30,6 @@ final class AddressApiPantherE2ETest extends TestCase
         $suffix = bin2hex(random_bytes(4));
         $line1 = '100 Panther Way '.$suffix;
         $ownerId = 'panther-owner-'.$suffix;
-        $vendorId = 'panther-vendor-'.$suffix;
 
         $client = Client::createChromeClient(null, [
             '--headless=new',
@@ -48,7 +47,6 @@ final class AddressApiPantherE2ETest extends TestCase
             'address_manage[city]' => 'Austin',
             'address_manage[countryCode]' => 'US',
             'address_manage[ownerId]' => $ownerId,
-            'address_manage[vendorId]' => $vendorId,
         ]);
 
         $client->submit($form);

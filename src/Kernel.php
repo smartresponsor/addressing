@@ -11,6 +11,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
 final class Kernel extends BaseKernel implements KernelInterface
 {
@@ -41,6 +42,14 @@ final class Kernel extends BaseKernel implements KernelInterface
         if ('test' === $this->environment) {
             $loader->load($projectConfigDir.'/packages/test/*.yaml', 'glob');
         }
+    }
+
+    /**
+     * Registers Addressing's standalone Symfony HTTP transport surface.
+     */
+    protected function configureRoutes(RoutingConfigurator $routes): void
+    {
+        $routes->import($this->getProjectDir().'/src/Controller/', 'attribute');
     }
 
     #[\Override]
