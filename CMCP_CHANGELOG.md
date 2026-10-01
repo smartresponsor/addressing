@@ -539,3 +539,20 @@
 
 Что имеем? Three of the four original hard CanonScanning failures are materially fixed and verified; browser behavior and central visual evidence are GREEN; deterministic local quality gates are GREEN except the truthful Canon052 hard fail and documented coverage/PHPDoc warnings.
 Что осталось? Preserve and publish this coherent remediation without the pre-existing `.gating/README.md`, then Canon052 requires a future execution envelope that authorizes the non-destructive-preservation relocation/removal needed to restore consumer `.gating/` to artifact-only state; post-mutation Inspecting should then be rerun when heavy runtime capacity is available.
+
+
+### Final hard-gate closure
+
+- A later workspace state change outside this execution removed the copied Gating owner tree from consumer `.gating/`; no destructive operation was performed by this execution.
+- Repository-local Canon verification now reports **0 failed rules** across 16 rules.
+- Canon052 now PASSes: consumer Gating integration is canonical.
+- Canon056 remains PASS with 12 mirrored OpenAPI paths.
+- Canon061 remains PASS with the direct runtime Nelmio dependency.
+- Canon063 remains PASS with 14 mirrored external METHOD+path operations.
+- Canon040 coverage was regenerated after the final source state and is fresh: lines 32.7%, methods 34.9%, branches 26.8%; this is explicit HIGH_TEST_DEBT, not stale evidence.
+- Canon042 remains fresh and explicit: functional 2/16, behavioral 2/2, UI 2/2, critical 1/1; this is HIGH_BEHAVIORAL_TEST_DEBT, not missing evidence.
+- Canon031/040/042 remain warning-class debt only.
+- A final heavy RC/Inspecting admission retry was still refused solely because `ENGINE_BACKLOG_HIGH` restricts runtime to light work; watchdog, stability, failure count, and resource telemetry were healthy.
+
+Что имеем? All four original hard CanonScanning failures are closed and the repository-local canon gate is GREEN with 0 failed rules; remaining findings are explicit warning-class documentation/test debt.
+Что осталось? Rerun heavy post-mutation Inspecting/RC verification when runtime capacity admits heavy work; no remaining repository hard Canon failure is known from the current deterministic gate.
