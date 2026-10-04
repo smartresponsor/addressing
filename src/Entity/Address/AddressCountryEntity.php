@@ -12,6 +12,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: \App\Addressing\Repository\AddressCountryEntityRepository::class)]
 #[ORM\Table(name: 'address_country')]
 #[ORM\Index(name: 'address_country_iso2_idx', columns: ['iso2'])]
+/**
+ * Persists canonical country metadata used by Addressing normalization and reference-data lookups.
+ *
+ * Country semantics remain local to Addressing while Objecting supplies reusable identity, audit, and state fields.
+ */
 class AddressCountryEntity
 {
     use ObjectIdentityEmbeddableTrait;
