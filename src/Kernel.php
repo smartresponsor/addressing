@@ -13,10 +13,14 @@ use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
+/**
+ * Boots the standalone Addressing Symfony runtime and binds its bundle, service, route, cache, and log configuration.
+ */
 final class Kernel extends BaseKernel implements KernelInterface
 {
     use MicroKernelTrait;
 
+    /** Register the Symfony bundles enabled for the current standalone Addressing environment. */
     #[\Override]
     public function registerBundles(): iterable
     {
