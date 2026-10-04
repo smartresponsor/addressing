@@ -14,6 +14,12 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Exposes Addressing governance-cluster summaries through the Symfony console.
+ *
+ * The command keeps tenant-scope normalization at the transport boundary and delegates
+ * relationship aggregation to the Addressing-owned governance summary service.
+ */
 #[AsCommand(name: 'address:summary:governance-cluster', description: 'Summarize linked governance relationships for an address.')]
 final class AddressGovernanceClusterSummaryCommand extends Command
 {
@@ -22,6 +28,9 @@ final class AddressGovernanceClusterSummaryCommand extends Command
         parent::__construct();
     }
 
+    /**
+     * Declares the address identity and optional owner/vendor scope for the governance query.
+     */
     #[\Override]
     protected function configure(): void
     {
@@ -32,7 +41,11 @@ final class AddressGovernanceClusterSummaryCommand extends Command
             ->addOption('vendor-id', null, InputOption::VALUE_OPTIONAL);
     }
 
-    /** @noinspection PhpMissingParentCallCommonInspection */
+    /**
+     * Resolves the scoped governance cluster and emits its stable JSON representation.
+     *
+     * @noinspection PhpMissingParentCallCommonInspection
+     */
     #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
