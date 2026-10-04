@@ -22,7 +22,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/AddressResponse'
+                                $ref: '#/components/schemas/AddressCreatedResponse'
                 '400':
                     description: Bad request
     /api/address/page:
@@ -243,31 +243,14 @@ components:
         AddressCreateRequest:
             type: object
             required:
-                - ownerId
                 - line1
                 - city
-                - region
-                - postalCode
-                - country
+                - countryCode
             properties:
                 ownerId:
                     type: string
+                    nullable: true
                 vendorId:
-                    type: string
-                    nullable: true
-                tag:
-                    type: string
-                    nullable: true
-                name:
-                    type: string
-                    nullable: true
-                company:
-                    type: string
-                    nullable: true
-                phone:
-                    type: string
-                    nullable: true
-                email:
                     type: string
                     nullable: true
                 line1:
@@ -279,9 +262,11 @@ components:
                     type: string
                 region:
                     type: string
+                    nullable: true
                 postalCode:
                     type: string
-                country:
+                    nullable: true
+                countryCode:
                     type: string
                     minLength: 2
                     maxLength: 2
@@ -292,11 +277,6 @@ components:
                 longitude:
                     type: number
                     format: float
-                    nullable: true
-                raw:
-                    description: Free-form raw payload (stored as JSON)
-                    type: object
-                    additionalProperties: true
                     nullable: true
         AddressValidatedRequest:
             type: object
@@ -356,16 +336,20 @@ components:
                             type: object
                             additionalProperties: true
                             nullable: true
+        AddressCreatedResponse:
+            type: object
+            required:
+                - id
+            properties:
+                id:
+                    type: string
         AddressResponse:
             type: object
             required:
                 - id
-                - ownerId
                 - line1
                 - city
-                - region
-                - postalCode
-                - country
+                - countryCode
                 - createdAt
                 - updatedAt
             properties:
@@ -373,22 +357,8 @@ components:
                     type: string
                 ownerId:
                     type: string
+                    nullable: true
                 vendorId:
-                    type: string
-                    nullable: true
-                tag:
-                    type: string
-                    nullable: true
-                name:
-                    type: string
-                    nullable: true
-                company:
-                    type: string
-                    nullable: true
-                phone:
-                    type: string
-                    nullable: true
-                email:
                     type: string
                     nullable: true
                 line1:
@@ -400,9 +370,11 @@ components:
                     type: string
                 region:
                     type: string
+                    nullable: true
                 postalCode:
                     type: string
-                country:
+                    nullable: true
+                countryCode:
                     type: string
                 line1Norm:
                     type: string
@@ -427,10 +399,10 @@ components:
                 geohash:
                     type: string
                     nullable: true
-                status:
+                validationStatus:
                     type: string
                     nullable: true
-                provider:
+                validationProvider:
                     type: string
                     nullable: true
                 createdAt:
