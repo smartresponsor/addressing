@@ -30,49 +30,60 @@ final readonly class AddressDemoFixtureService
 
         for ($index = 1; $index <= $count; ++$index) {
             $dto = $this->buildDto();
-            $governanceStatus = match (true) {
-                0 === $index % 11 => 'conflict',
-                0 === $index % 7 => 'duplicate',
-                0 === $index % 5 => 'alias',
-                default => 'canonical',
-            };
-            $validationStatus = 0 === $index % 4 ? 'validated' : 'pending';
-            $lastValidationStatus = 'validated' === $validationStatus ? 'validated' : 'uncertain';
-
-            $address = $this->addressInputFactory->fromManageDto($dto, [
-                'id' => sprintf('demo-%04d', $index),
-                'createdAt' => $this->generator->dateTimeBetween('-120 days', '-3 days')->format('Y-m-d H:i:sP'),
-                'latitude' => $this->generator->latitude(25, 49),
-                'longitude' => $this->generator->longitude(-124, -67),
-                'validationStatus' => $validationStatus,
-                'validationProvider' => 'validated' === $validationStatus ? 'faker-validator' : null,
-                'validatedAt' => 'validated' === $validationStatus ? $this->generator->dateTimeBetween('-60 days')->format('Y-m-d H:i:sP') : null,
-                'sourceSystem' => 'symfony-fixture',
-                'sourceType' => 0 === $index % 3 ? 'import' : 'manual',
-                'sourceReference' => 'fixture-run-'.$index,
-                'normalizationVersion' => 0 === $index % 2 ? 'canon-v2' : 'canon-v1',
-                'validationFingerprint' => hash('sha256', 'demo-'.$index),
-                'validationRaw' => ['provider' => 'faker-validator', 'input' => $dto->line1],
-                'validationVerdict' => ['quality' => $this->generator->numberBetween(70, 99)],
-                'validationDeliverable' => true,
-                'validationGranularity' => 'premise',
-                'validationQuality' => $this->generator->numberBetween(70, 99),
-                'providerDigest' => 'sha256:'.hash('sha256', 'provider-'.$index),
-                'governanceStatus' => $governanceStatus,
-                'duplicateOfId' => 'duplicate' === $governanceStatus ? 'demo-0001' : null,
-                'aliasOfId' => 'alias' === $governanceStatus ? 'demo-0002' : null,
-                'conflictWithId' => 'conflict' === $governanceStatus ? 'demo-0003' : null,
-                'revalidationDueAt' => $this->generator->dateTimeBetween('-2 days', '+90 days')->format('Y-m-d H:i:sP'),
-                'revalidationPolicy' => 0 === $index % 2 ? 'quarterly' : 'monthly',
-                'lastValidationProvider' => 'faker-validator',
-                'lastValidationStatus' => $lastValidationStatus,
-                'lastValidationScore' => $this->generator->numberBetween(70, 99),
-            ]);
-
+            $address = $this->addressInputFactory->fromManageDto($dto, $this->fixtureOverrides($dto, $index));
             $this->addressWriteService->create($address);
         }
 
         return $count;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function fixtureOverrides(AddressManageDTO $dto, int $index): array
+    {
+        $governanceStatus = $this->governanceStatus($index);
+        $validationStatus = 0 === $index % 4 ? 'validated' : 'pending';
+
+        return [
+            'id' => sprintf('demo-%04d', $index),
+            'createdAt' => $this->generator->dateTimeBetween('-120 days', '-3 days')->format('Y-m-d H:i:sP'),
+            'latitude' => $this->generator->latitude(25, 49),
+            'longitude' => $this->generator->longitude(-124, -67),
+            'validationStatus' => $validationStatus,
+            'validationProvider' => 'validated' === $validationStatus ? 'faker-validator' : null,
+            'validatedAt' => 'validated' === $validationStatus ? $this->generator->dateTimeBetween('-60 days')->format('Y-m-d H:i:sP') : null,
+            'sourceSystem' => 'symfony-fixture',
+            'sourceType' => 0 === $index % 3 ? 'import' : 'manual',
+            'sourceReference' => 'fixture-run-'.$index,
+            'normalizationVersion' => 0 === $index % 2 ? 'canon-v2' : 'canon-v1',
+            'validationFingerprint' => hash('sha256', 'demo-'.$index),
+            'validationRaw' => ['provider' => 'faker-validator', 'input' => $dto->line1],
+            'validationVerdict' => ['quality' => $this->generator->numberBetween(70, 99)],
+            'validationDeliverable' => true,
+            'validationGranularity' => 'premise',
+            'validationQuality' => $this->generator->numberBetween(70, 99),
+            'providerDigest' => 'sha256:'.hash('sha256', 'provider-'.$index),
+            'governanceStatus' => $governanceStatus,
+            'duplicateOfId' => 'duplicate' === $governanceStatus ? 'demo-0001' : null,
+            'aliasOfId' => 'alias' === $governanceStatus ? 'demo-0002' : null,
+            'conflictWithId' => 'conflict' === $governanceStatus ? 'demo-0003' : null,
+            'revalidationDueAt' => $this->generator->dateTimeBetween('-2 days', '+90 days')->format('Y-m-d H:i:sP'),
+            'revalidationPolicy' => 0 === $index % 2 ? 'quarterly' : 'monthly',
+            'lastValidationProvider' => 'faker-validator',
+            'lastValidationStatus' => 'validated' === $validationStatus ? 'validated' : 'uncertain',
+            'lastValidationScore' => $this->generator->numberBetween(70, 99),
+        ];
+    }
+
+    private function governanceStatus(int $index): string
+    {
+        return match (true) {
+            0 === $index % 11 => 'conflict',
+            0 === $index % 7 => 'duplicate',
+            0 === $index % 5 => 'alias',
+            default => 'canonical',
+        };
     }
 
     private function buildDto(): AddressManageDTO
