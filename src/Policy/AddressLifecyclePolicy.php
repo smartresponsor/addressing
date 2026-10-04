@@ -24,6 +24,9 @@ final class AddressLifecyclePolicy
         'archived' => [],
     ];
 
+    /**
+     * Determines whether the normalized lifecycle state may move to the requested target state.
+     */
     public function canTransition(string $from, string $to): bool
     {
         $from = $this->normalize($from);
@@ -36,6 +39,9 @@ final class AddressLifecyclePolicy
         return \in_array($to, self::TRANSITIONS[$from] ?? [], true);
     }
 
+    /**
+     * Enforces the lifecycle transition contract and rejects transitions outside the allowed state graph.
+     */
     public function assertCanTransition(string $from, string $to): void
     {
         if (!$this->canTransition($from, $to)) {
@@ -43,7 +49,11 @@ final class AddressLifecyclePolicy
         }
     }
 
-    /** @return list<string> */
+    /**
+     * Returns the normalized lifecycle states that can directly follow the current state.
+     *
+     * @return list<string>
+     */
     public function allowedNextStatuses(string $from): array
     {
         return self::TRANSITIONS[$this->normalize($from)] ?? [];
