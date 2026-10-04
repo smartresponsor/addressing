@@ -590,68 +590,83 @@ abstract readonly class AddressAbstractDoctrineRepository
     {
         /** @var array<string, T&array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int}> $groups */
         $groups = [];
+        $now = new \DateTimeImmutable('now');
 
         foreach ($entities as $entity) {
             $key = $groupKey($entity);
-            $groups[$key] ??= $groupMeta($entity) + [
-                'total' => 0,
-                'canonical' => 0,
-                'duplicate' => 0,
-                'superseded' => 0,
-                'alias' => 0,
-                'conflict' => 0,
-                'evidenceBacked' => 0,
-                'evidenceMissing' => 0,
-                'dueForRevalidation' => 0,
-                'uncertainValidation' => 0,
-                'staleNormalization' => 0,
-            ];
-
-            ++$groups[$key]['total'];
-            match ($entity->getGovernanceStatus()) {
-                'canonical' => ++$groups[$key]['canonical'],
-                'duplicate' => ++$groups[$key]['duplicate'],
-                'superseded' => ++$groups[$key]['superseded'],
-                'alias' => ++$groups[$key]['alias'],
-                'conflict' => ++$groups[$key]['conflict'],
-                default => null,
-            };
-
-            if ($this->hasEvidenceEntity($entity)) {
-                ++$groups[$key]['evidenceBacked'];
-            } else {
-                ++$groups[$key]['evidenceMissing'];
-            }
-
-            if (null !== $entity->getRevalidationDueAt() && $entity->getRevalidationDueAt() <= new \DateTimeImmutable('now')) {
-                ++$groups[$key]['dueForRevalidation'];
-            }
-
-            if ('uncertain' === $entity->getValidationStatus() || 'uncertain' === $entity->getLastValidationStatus()) {
-                ++$groups[$key]['uncertainValidation'];
-            }
-
             $meta = $groupMeta($entity);
-            if (isset($meta['staleNormalization']) && is_int($meta['staleNormalization'])) {
-                $groups[$key]['staleNormalization'] += $meta['staleNormalization'];
-            }
+            $groups[$key] ??= $meta + $this->emptyPortfolioCounters();
+            $this->accumulatePortfolioMetrics($groups[$key], $entity, $meta, $now);
         }
 
         /** @var list<T&array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int}> $rows */
         $rows = array_values($groups);
-
-        usort($rows, function (array $left, array $right): int {
-            if ($left['total'] !== $right['total']) {
-                return $right['total'] <=> $left['total'];
-            }
-
-            $leftKey = $this->portfolioSortKey($left);
-            $rightKey = $this->portfolioSortKey($right);
-
-            return $leftKey <=> $rightKey;
-        });
+        usort($rows, $this->comparePortfolioRows(...));
 
         return $rows;
+    }
+
+    /**
+     * @return array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int}
+     */
+    private function emptyPortfolioCounters(): array
+    {
+        return [
+            'total' => 0,
+            'canonical' => 0,
+            'duplicate' => 0,
+            'superseded' => 0,
+            'alias' => 0,
+            'conflict' => 0,
+            'evidenceBacked' => 0,
+            'evidenceMissing' => 0,
+            'dueForRevalidation' => 0,
+            'uncertainValidation' => 0,
+            'staleNormalization' => 0,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $group
+     * @param array<string, mixed> $meta
+     */
+    private function accumulatePortfolioMetrics(array &$group, AddressEntity $entity, array $meta, \DateTimeImmutable $now): void
+    {
+        ++$group['total'];
+        $governanceStatus = $entity->getGovernanceStatus();
+        if (isset($group[$governanceStatus]) && is_int($group[$governanceStatus])) {
+            ++$group[$governanceStatus];
+        }
+
+        ++$group[$this->hasEvidenceEntity($entity) ? 'evidenceBacked' : 'evidenceMissing'];
+
+        $revalidationDueAt = $entity->getRevalidationDueAt();
+        if (null !== $revalidationDueAt && $revalidationDueAt <= $now) {
+            ++$group['dueForRevalidation'];
+        }
+
+        if ('uncertain' === $entity->getValidationStatus() || 'uncertain' === $entity->getLastValidationStatus()) {
+            ++$group['uncertainValidation'];
+        }
+
+        if (isset($meta['staleNormalization']) && is_int($meta['staleNormalization'])) {
+            $group['staleNormalization'] += $meta['staleNormalization'];
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $left
+     * @param array<string, mixed> $right
+     */
+    private function comparePortfolioRows(array $left, array $right): int
+    {
+        $leftTotal = is_int($left['total'] ?? null) ? $left['total'] : 0;
+        $rightTotal = is_int($right['total'] ?? null) ? $right['total'] : 0;
+        if ($leftTotal !== $rightTotal) {
+            return $rightTotal <=> $leftTotal;
+        }
+
+        return $this->portfolioSortKey($left) <=> $this->portfolioSortKey($right);
     }
 
     protected function asRecord(AddressInterface $address): AddressData
