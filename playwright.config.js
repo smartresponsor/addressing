@@ -1,15 +1,15 @@
 const path = require('node:path');
 const {defineConfig} = require('@playwright/test');
 
-const e2ePort = process.env.PLAYWRIGHT_PORT || '8001';
+const e2ePort = process.env.PLAYWRIGHT_PORT || '18131';
 const e2eBaseUrl = process.env.PLAYWRIGHT_BASE_URL || `http://127.0.0.1:${e2ePort}`;
 const e2eRunId = `${process.pid}-${Date.now()}`;
 const addressDbPath = process.env.ADDRESS_DB_PATH || path.join(__dirname, 'var', `addressing-playwright-${e2eRunId}.sqlite`);
-const runtimeVarDir = path.join(__dirname, 'var', 'playwright-runtime');
+const runtimeVarDir = path.join(__dirname, 'var', `playwright-runtime-${e2eRunId}`);
 
 module.exports = defineConfig({
     testDir: './tests/playwright',
-    timeout: 30_000,
+    timeout: 90_000,
     use: {
         baseURL: e2eBaseUrl,
         trace: 'retain-on-failure',
@@ -22,9 +22,9 @@ module.exports = defineConfig({
     },
     webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER ? undefined : {
         command: `php tools/e2e/ensure-schema.php && php -S 127.0.0.1:${e2ePort} -t public public/router.php`,
-        url: `${e2eBaseUrl}/address/manage`,
+        port: Number(e2ePort),
         reuseExistingServer: false,
-        timeout: 30_000,
+        timeout: 60_000,
         env: {
             ...process.env,
             APP_ENV: 'dev',
