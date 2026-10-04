@@ -10,9 +10,16 @@ use App\Addressing\Value\Record\AddressRecord;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Uid\Ulid;
 
+/**
+ * Converts Addressing HTTP request payloads into validated application records and message inputs.
+ */
 final readonly class AddressApiPayloadFactory
 {
-    /** @return array<string, mixed> */
+    /**
+     * Decodes the request body as a JSON object and rejects malformed or non-object payloads.
+     *
+     * @return array<string, mixed>
+     */
     public function decodeJsonRequest(Request $request): array
     {
         $raw = $request->getContent();
@@ -24,7 +31,11 @@ final readonly class AddressApiPayloadFactory
         return $data;
     }
 
-    /** @param array<string, mixed> $in */
+    /**
+     * Creates a new Addressing record from transport input with canonical lifecycle defaults and normalized policy tokens.
+     *
+     * @param array<string, mixed> $in
+     */
     public function createAddressEntity(array $in): AddressRecord
     {
         $id = (string) new Ulid();
@@ -81,7 +92,11 @@ final readonly class AddressApiPayloadFactory
         );
     }
 
-    /** @param array<string, mixed> $in */
+    /**
+     * Builds the validated-address message contract from an inbound validation result payload.
+     *
+     * @param array<string, mixed> $in
+     */
     public function createAddressValidated(array $in): AddressValidated
     {
         return AddressValidated::fromArray($this->validatedPayload($in));
@@ -120,6 +135,8 @@ final readonly class AddressApiPayloadFactory
     }
 
     /**
+     * Extracts a required non-empty string list, trimming values and removing duplicate entries.
+     *
      * @param array<string, mixed> $in
      *
      * @return list<string>
