@@ -585,6 +585,61 @@
 Что имеем? Historical CanonScanning hard failures are factually closed on the current tree, fresh Inspecting evidence exists, and a bounded parser-hardening remediation is selected from current evidence.
 Что осталось? Complete the parser refactor and regression tests, run deterministic/static/runtime gates plus post-mutation Inspecting, then commit/publish only the coherent current-task files while preserving pre-existing dirty work.
 
+## 2026-10-04 — Parser hardening verification and integration closure
+
+### Task and inherited baseline
+
+- Task ID: `engine-20261004051433-addressing-9185ce`.
+- Continued from the immediately preceding parser-hardening baseline on `rc/addressing-rc-final-v3` without reclassifying the preserved pre-existing `.gating/README.md` deletion or `AGENTS.md` modification as task-owned work.
+- Re-consumed the upstream CanonScanning RED report for fingerprint `f793fe8ca090ef86b6a43f42731380ebd1c75724a1dd91d886335f9131c74bd5` and verified that its historical hard failures were Canon052, Canon056, Canon061, and Canon063.
+- Re-read the mandatory Objecting, Cruding, Viewing, and Interfacing dependency contracts plus Gating and authoritative Canonization rule text for Canon021, Canon022, Canon052, Canon056, Canon061, and Canon063. Interfacing has no root `MANIFEST.json`; its available AGENTS/README/Composer contracts were consumed instead.
+- Boundary comparison remains unchanged: Addressing owns address lifecycle, normalization/validation evidence, governance and address-specific operations; provider-side geocoding/postal verification, generic CRUD, generic collection mechanics, final rendering and shell concerns remain outside the component. Growth work remains broader provider integration, deeper international normalization and richer operator UX rather than an RC prerequisite.
+
+### Material implementation and regression protection
+
+- Simplified `AddressValidated::fromArray()` into explicit named-argument construction backed by narrow coercion helpers while preserving the legacy `validationVerdict` alias, null-array behavior, date semantics and policy normalization.
+- Simplified `AddressValidationVerdict::fromArray()` into bounded coercion helpers for booleans, strings, quality scores and signal payloads.
+- Added regression tests covering verdict coercion/bounds, invalid payload sanitization and the legacy validation-verdict alias.
+- Preserved the existing parenthesized `SymfonyStyle` construction and corresponding Rector exclusion required by the repository's parser/tooling compatibility contract.
+
+### Deterministic acceptance
+
+- Changed-file PHP syntax: PASS for all five changed PHP files.
+- `composer test:integration`: PASS — 7 tests / 57 assertions.
+- `composer gating`: PASS — 16 rules, 0 failed; Canon052/056/061/063 remain green. Canon031/040/042 remain explicit warning-class documentation/test debt.
+- `composer qa:phpstan`: PASS — 175 analysed files, 0 errors.
+- `composer qa:rector`: PASS.
+- `composer qa:deptrac`: PASS — 146 paths, 0 violations/warnings/errors.
+- `composer test`: PASS — 24 tests / 127 assertions, with 1 existing PHPUnit notice and 1 intentional skip.
+- `composer qa:style`: PASS — repository lint 213 PHP files; PHP-CS-Fixer 177 files / 0 fixable.
+- `composer smoke:container`: PASS (`ready`).
+- `composer smoke:runtime`: PASS (`ready`).
+
+### Post-mutation Inspecting
+
+- Inspecting completed at `2026-10-04T05:22:26Z`–`05:23:44Z`.
+- Report: `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261004-052226.json`.
+- Findings decreased from the pre-remediation 37 medium findings to 35 medium findings; 0 high/critical and 0 autofixable findings.
+- The selected findings for `AddressValidated::fromArray()` long-method debt and `AddressValidationVerdict::fromArray()` complexity are absent from the post-mutation report.
+- Maximum reported cyclomatic complexity decreased from 20 to 16; Rector reports 0 changed files and 0 errors.
+- Remaining findings are medium design/maintainability debt in larger entities, repositories, services and interfaces and are not promoted to RC blockers by the applicable canon/gates.
+
+Что имеем? Bounded parser hardening is materially implemented, regression-tested and independently verified by a cleaner post-mutation Inspecting report while all applicable hard canon/runtime/static gates remain green.
+Что осталось? Complete final Composer/trust/security acceptance, create an explicit-file signed commit that excludes preserved unrelated dirty paths, publish the current branch, and inspect the post-push repository state.
+
+### Final acceptance and concurrent integration observation
+
+- `composer validate --strict --check-lock`: PASS.
+- `composer qa:trust-surface`: PASS (`ready`); runtime/API route inventory and documentation/runtime proof surfaces are present.
+- `composer audit --format=summary`: PASS — no security vulnerability advisories found.
+- After the guarded remote fetch, HEAD advanced concurrently from `14acced810ba48b982e96077b8c77c61abc8e692` to `181fd2db4f043b1e009ec58955aebf21563ff0e9` (`Harden Addressing validation parsers`). The same commit is already present at `origin/rc/addressing-rc-final-v3`.
+- Commit-range inspection confirms `181fd2d` contains the parser refactor, focused tests, Rector/parser compatibility tail, and the preceding CMCP journal baseline/acceptance. No duplicate implementation commit is required.
+- The only remaining task-owned worktree delta is this current Task ID closure in `CMCP_CHANGELOG.md`; preserved unrelated `.gating/README.md` deletion and `AGENTS.md` modification remain untouched.
+- No user-observable UI source changed, so screenshot/Panther/Playwright execution is not applicable to this parser-only remediation.
+
+Что имеем? Implementation commit `181fd2d` is already published and synchronized with its upstream; all applicable deterministic/static/runtime/security checks are GREEN, hard Gating is 0-failure, and Inspecting confirms the selected parser debt is removed.
+Что осталось? Commit and publish only this current-task journal closure, then verify final HEAD/upstream and preserved unrelated dirty state.
+
 ### Implementation and acceptance
 
 - Refactored `AddressValidated::fromArray()` into named-argument construction with typed extraction helpers; legacy `validationVerdict` fallback remains supported and invalid array payloads remain nullable.
