@@ -21,8 +21,6 @@ final class AddressInputFactory
      */
     public function fromManageDto(AddressManageDTO $addressManageDto, array $overrides = []): AddressRecord
     {
-        $createdAt = new \DateTimeImmutable();
-        $now = $this->stringOverride($overrides, 'createdAt') ?? $createdAt->format('Y-m-d H:i:sP');
         $line1 = (string) new AddressStreetLine($addressManageDto->line1);
         $countryCode = (string) new AddressCountryCode($addressManageDto->countryCode);
         $postalCode = $this->postalCode($addressManageDto);
@@ -32,6 +30,18 @@ final class AddressInputFactory
         $vendorId = $this->nullableTrimmed($addressManageDto->vendorId);
         $line2 = $this->nullableTrimmed($addressManageDto->line2);
         $normalized = $this->normalizedAddress($line1, $city, $region, $postalCode);
+
+        return $this->recordFromInput($overrides, $line1, $line2, $city, $region, $postalCode, $countryCode, $ownerId, $vendorId, $normalized);
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     * @param array{line1Norm: string, cityNorm: string, regionNorm: ?string, postalCodeNorm: ?string} $normalized
+     */
+    private function recordFromInput(array $overrides, string $line1, ?string $line2, string $city, ?string $region, ?string $postalCode, string $countryCode, ?string $ownerId, ?string $vendorId, array $normalized): AddressRecord
+    {
+        $createdAt = new \DateTimeImmutable();
+        $now = $this->stringOverride($overrides, 'createdAt') ?? $createdAt->format('Y-m-d H:i:sP');
         $dedupeKey = $this->dedupeKey($normalized, $countryCode, $ownerId, $vendorId);
         $validationDeliverable = isset($overrides['validationDeliverable']) && is_bool($overrides['validationDeliverable'])
             ? $overrides['validationDeliverable']
@@ -47,7 +57,7 @@ final class AddressInputFactory
                 'countryCode' => $countryCode,
             ];
 
-        return new AddressRecord(
+        $addressRecord = new AddressRecord(
             $this->stringOverride($overrides, 'id') ?? (string) new Ulid(),
             $ownerId,
             $vendorId,
@@ -71,32 +81,42 @@ final class AddressInputFactory
             $now,
             $this->stringOverride($overrides, 'updatedAt'),
             $this->stringOverride($overrides, 'deletedAt'),
-            $this->stringOverride($overrides, 'validationFingerprint'),
-            isset($overrides['validationRaw']) && is_array($overrides['validationRaw']) ? $overrides['validationRaw'] : null,
-            isset($overrides['validationVerdict']) && is_array($overrides['validationVerdict']) ? $overrides['validationVerdict'] : null,
-            $validationDeliverable,
-            $this->stringOverride($overrides, 'validationGranularity'),
-            $this->intOverride($overrides, 'validationQuality'),
-            $this->stringOverride($overrides, 'sourceSystem') ?? 'symfony-demo',
-            AddressRecordPolicy::normalizeSourceType($this->stringOverride($overrides, 'sourceType') ?? 'manual'),
-            $this->stringOverride($overrides, 'sourceReference'),
-            $this->stringOverride($overrides, 'normalizationVersion') ?? 'demo-v1',
-            $rawInputSnapshot,
-            isset($overrides['normalizedSnapshot']) && is_array($overrides['normalizedSnapshot'])
-                ? $overrides['normalizedSnapshot']
-                : $normalized,
-            $this->stringOverride($overrides, 'providerDigest') ?? 'sha256:'.hash('sha256', $line1.'|'.$city.'|'.$countryCode),
-            AddressRecordPolicy::normalizeGovernanceStatus($this->stringOverride($overrides, 'governanceStatus') ?? 'canonical'),
-            $this->stringOverride($overrides, 'duplicateOfId'),
-            $this->stringOverride($overrides, 'supersededById'),
-            $this->stringOverride($overrides, 'aliasOfId'),
-            $this->stringOverride($overrides, 'conflictWithId'),
-            $this->stringOverride($overrides, 'revalidationDueAt'),
-            AddressRecordPolicy::normalizeRevalidationPolicy($this->stringOverride($overrides, 'revalidationPolicy') ?? 'quarterly'),
-            $this->stringOverride($overrides, 'lastValidationProvider'),
-            AddressRecordPolicy::normalizeLastValidationStatus($this->stringOverride($overrides, 'lastValidationStatus')),
-            $this->intOverride($overrides, 'lastValidationScore'),
         );
+        $this->applyOptionalOverrides($addressRecord, $overrides, $validationDeliverable, $rawInputSnapshot, $normalized, $line1, $city, $countryCode);
+
+        return $addressRecord;
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     * @param array<string, mixed> $rawInputSnapshot
+     * @param array{line1Norm: string, cityNorm: string, regionNorm: ?string, postalCodeNorm: ?string} $normalized
+     */
+    private function applyOptionalOverrides(AddressRecord $record, array $overrides, ?bool $validationDeliverable, array $rawInputSnapshot, array $normalized, string $line1, string $city, string $countryCode): void
+    {
+        $record->validationFingerprint = $this->stringOverride($overrides, 'validationFingerprint');
+        $record->validationRaw = isset($overrides['validationRaw']) && is_array($overrides['validationRaw']) ? $overrides['validationRaw'] : null;
+        $record->validationVerdict = isset($overrides['validationVerdict']) && is_array($overrides['validationVerdict']) ? $overrides['validationVerdict'] : null;
+        $record->validationDeliverable = $validationDeliverable;
+        $record->validationGranularity = $this->stringOverride($overrides, 'validationGranularity');
+        $record->validationQuality = $this->intOverride($overrides, 'validationQuality');
+        $record->sourceSystem = $this->stringOverride($overrides, 'sourceSystem') ?? 'symfony-demo';
+        $record->sourceType = AddressRecordPolicy::normalizeSourceType($this->stringOverride($overrides, 'sourceType') ?? 'manual');
+        $record->sourceReference = $this->stringOverride($overrides, 'sourceReference');
+        $record->normalizationVersion = $this->stringOverride($overrides, 'normalizationVersion') ?? 'demo-v1';
+        $record->rawInputSnapshot = $rawInputSnapshot;
+        $record->normalizedSnapshot = isset($overrides['normalizedSnapshot']) && is_array($overrides['normalizedSnapshot']) ? $overrides['normalizedSnapshot'] : $normalized;
+        $record->providerDigest = $this->stringOverride($overrides, 'providerDigest') ?? 'sha256:'.hash('sha256', $line1.'|'.$city.'|'.$countryCode);
+        $record->governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($this->stringOverride($overrides, 'governanceStatus') ?? 'canonical');
+        $record->duplicateOfId = $this->stringOverride($overrides, 'duplicateOfId');
+        $record->supersededById = $this->stringOverride($overrides, 'supersededById');
+        $record->aliasOfId = $this->stringOverride($overrides, 'aliasOfId');
+        $record->conflictWithId = $this->stringOverride($overrides, 'conflictWithId');
+        $record->revalidationDueAt = $this->stringOverride($overrides, 'revalidationDueAt');
+        $record->revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy($this->stringOverride($overrides, 'revalidationPolicy') ?? 'quarterly');
+        $record->lastValidationProvider = $this->stringOverride($overrides, 'lastValidationProvider');
+        $record->lastValidationStatus = AddressRecordPolicy::normalizeLastValidationStatus($this->stringOverride($overrides, 'lastValidationStatus'));
+        $record->lastValidationScore = $this->intOverride($overrides, 'lastValidationScore');
     }
 
     /**
