@@ -27,7 +27,7 @@ final class AddressSchemaEnsureCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->addressDoctrineSchemaManager->ensureSchema();
-        new SymfonyStyle($input, $output)->success('Addressing schema is ready.');
+        (new SymfonyStyle($input, $output))->success('Addressing schema is ready.');
 
         return Command::SUCCESS;
     }

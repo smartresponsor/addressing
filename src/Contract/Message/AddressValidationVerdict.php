@@ -28,51 +28,65 @@ final readonly class AddressValidationVerdict implements \JsonSerializable
             return null;
         }
 
-        $deliverable = null;
-        if (array_key_exists('deliverable', $data)) {
-            $rawDeliverable = $data['deliverable'];
-            if (is_bool($rawDeliverable)) {
-                $deliverable = $rawDeliverable;
-            } elseif (is_int($rawDeliverable) || is_float($rawDeliverable)) {
-                $deliverable = ((int) $rawDeliverable) === 1;
-            } elseif (is_string($rawDeliverable)) {
-                $normalizedDeliverable = strtolower(trim($rawDeliverable));
-                if (in_array($normalizedDeliverable, ['1', 'true', 'yes'], true)) {
-                    $deliverable = true;
-                } elseif (in_array($normalizedDeliverable, ['0', 'false', 'no'], true)) {
-                    $deliverable = false;
-                }
-            }
+        return new self(
+            self::asNullableBool($data['deliverable'] ?? null),
+            self::asNullableString($data['granularity'] ?? null),
+            self::asQualityScore($data['quality'] ?? null),
+            self::asSignal($data['signal'] ?? null),
+        );
+    }
+
+    private static function asNullableBool(mixed $value): ?bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_int($value) || is_float($value)) {
+            return 1 === (int) $value;
+        }
+        if (!is_string($value)) {
+            return null;
         }
 
-        $granularity = null;
-        if (array_key_exists('granularity', $data) && is_string($data['granularity'])) {
-            $normalizedGranularity = trim($data['granularity']);
-            $granularity = '' === $normalizedGranularity ? null : $normalizedGranularity;
+        return match (strtolower(trim($value))) {
+            '1', 'true', 'yes' => true,
+            '0', 'false', 'no' => false,
+            default => null,
+        };
+    }
+
+    private static function asNullableString(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
         }
 
-        $quality = null;
-        if (array_key_exists('quality', $data)) {
-            $rawQuality = $data['quality'];
-            if (is_int($rawQuality)) {
-                $quality = $rawQuality;
-            } elseif (is_float($rawQuality)) {
-                $quality = (int) round($rawQuality);
-            } elseif (is_string($rawQuality) && is_numeric($rawQuality)) {
-                $quality = (int) round((float) $rawQuality);
-            }
-            if (null !== $quality) {
-                $quality = max(0, min(100, $quality));
-            }
+        $normalized = trim($value);
+
+        return '' === $normalized ? null : $normalized;
+    }
+
+    private static function asQualityScore(mixed $value): ?int
+    {
+        $quality = match (true) {
+            is_int($value) => $value,
+            is_float($value) => (int) round($value),
+            is_string($value) && is_numeric($value) => (int) round((float) $value),
+            default => null,
+        };
+
+        return null === $quality ? null : max(0, min(100, $quality));
+    }
+
+    /** @return array<string, mixed> */
+    private static function asSignal(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
         }
 
-        $signal = [];
-        if (array_key_exists('signal', $data) && is_array($data['signal'])) {
-            /** @var array<string, mixed> $signal */
-            $signal = $data['signal'];
-        }
-
-        return new self($deliverable, $granularity, $quality, $signal);
+        /** @var array<string, mixed> $value */
+        return $value;
     }
 
     /** @return array<string, mixed> */
