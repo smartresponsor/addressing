@@ -12,6 +12,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: \App\Addressing\Repository\AddressFormatEntityRepository::class)]
 #[ORM\Table(name: 'address_format')]
 #[ORM\Index(name: 'address_format_country_code_idx', columns: ['country_code', 'format_code'])]
+/**
+ * Persists country-specific address formatting rules used by Addressing normalization and presentation metadata.
+ *
+ * The entity owns required and allowed field policy plus postal-code patterns while Objecting supplies shared lifecycle state.
+ */
 class AddressFormatEntity
 {
     use ObjectIdentityEmbeddableTrait;
