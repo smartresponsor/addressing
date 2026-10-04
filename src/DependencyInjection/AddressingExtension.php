@@ -9,6 +9,11 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
+/**
+ * Registers Addressing-owned Symfony services when the component bundle is loaded by a host runtime.
+ *
+ * The extension keeps service wiring inside Addressing while shared helper capabilities remain Composer dependencies.
+ */
 final class AddressingExtension extends Extension
 {
     public function getAlias(): string
@@ -16,6 +21,9 @@ final class AddressingExtension extends Extension
         return 'addressing';
     }
 
+    /**
+     * Loads the component service definition consumed by standalone and host-application bundle runtimes.
+     */
     public function load(array $configs, ContainerBuilder $container): void
     {
         $yamlFileLoader = new YamlFileLoader($container, new FileLocator(dirname(__DIR__, 2).'/config'));
