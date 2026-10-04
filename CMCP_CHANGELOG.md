@@ -1,5 +1,364 @@
 # CMCP Orchestration Journal
 
+## 2026-10-04 — engine-20261004232502-addressing-34c1ac
+
+### Baseline and selected work
+- Resolved `D:\\PhpstormProjects\\www\\Addressing` through Console MCP on `rc/addressing-rc-final-v3`; branch started synchronized with origin and all pre-existing dirty paths were preserved without reset, stash, cleanup, deletion, or re-attribution.
+- Read Addressing plus required Objecting, Cruding, Viewing, Interfacing, Gating, and Canonization contracts. Canon021 keeps generic CRUD in Cruding; Canon031 requires meaningful PHPDoc; Objecting owns reusable system fields; Viewing/Interfacing own presentation and shell boundaries.
+- Consumed the supplied 2026-09-29 static-analysis RED as historical evidence; its obsolete PHPStan configuration failure is absent from current `phpstan.neon.dist`, and fresh Canon029 is GREEN.
+- Fresh Gating baseline is 16 rules, 0 hard failures; Canon031 is 58/148 classes (39.2%) and 200/497 contract methods (40.2%), while Canon040/Canon042 are warning-only stale-evidence queues.
+- Market/maturity contour keeps deterministic normalization/index records and validation evidence inside Addressing; external provider verification/geocoding, map/capture UX, and enrichment remain growth work outside this RC patch.
+- Selected clean RC-critical seam: `src/Projection/AddressIndex/AddressIndexRecord.php`, explicitly reported by Canon031 for missing/tags-only descriptions; no executable/UI behavior changes.
+
+### Canon mapping and verification plan
+- Canon021: no generic CRUD machinery is added or modified.
+- Canon031: document `AddressIndexRecord`, `geokey()`, `fromNormalized()`, and `toArray()` while preserving signatures and payload semantics.
+- Verification: changed-file lint, PHPStan, PHPUnit, evidence refresh where admitted, final Gating, and fresh post-mutation Inspecting; visual capture is not applicable to this documentation-only source change.
+- Integrate only task-owned source when gates are green and preserve unrelated dirty paths.
+
+Что имеем? Factual baseline, dependency/canon contour, protected concurrent state, and a clean Canon031 remediation are established.
+Что осталось? Verify the mutation, refresh applicable evidence, run Inspecting, then commit/publish only task-owned source when safe.
+
+### Verification and integration
+- PHP lint and Composer strict/check-lock validation GREEN.
+- PHPStan GREEN at 185/185 files; PHPUnit GREEN at 56 tests / 293 assertions with one existing notice and one intentional skip.
+- Coverage refreshed at lines 53.4%, methods 43.4%, branches 47.4%; Canon040 remains warning-level HIGH_TEST_DEBT. Canon042 is GREEN at functional 13/16, behavioral 2/2, UI 2/2, critical 1/1.
+- Final Gating: 16 rules, 0 failed, two warning-only debt queues; Canon031 is 62/148 classes and 206/497 contract methods amid concurrent documentation work.
+- Fresh Inspecting report `D:\\PhpstormProjects\\www\\Inspecting\\.inspecting\\reports\\D--PhpstormProjects-www-Addressing-20261004-233553.json`: PHPStan 0 errors, Rector 0 changes/errors, 27 medium observations, 0 high/critical/autofixable findings.
+- No browser/mobile UI, navigation, forms, routes, interactions, or user flows changed; screenshot capture is not applicable.
+- Signed commit `9ea6670edd8660a16917125f62357e2840b4d5f7` (`Document Addressing index projection contract`) contains only `src/Projection/AddressIndex/AddressIndexRecord.php` and is published to `origin/rc/addressing-rc-final-v3`; branch is 0 ahead / 0 behind.
+
+Что имеем? AddressIndexRecord remediation is deterministic-gate GREEN with fresh Inspecting evidence.
+Что осталось? Commit and publish only task-owned projection source; repository-wide Canon031/Canon040 and medium Inspecting observations remain follow-up queues.
+
+## 2026-10-04 — engine-20261004224343-addressing-9b5bdc
+
+### Baseline and selected work
+- Resolved `D:\\PhpstormProjects\\www\\Addressing` exclusively through Console MCP on `rc/addressing-rc-final-v3`; preserved pre-existing/concurrent `.gating/README.md`, `AGENTS.md`, journal, entity/factory/policy edits without reset, stash, cleanup, deletion, or re-attribution.
+- Consumed the supplied 2026-09-29 static-analysis RED: PHPStan aborted before source analysis on obsolete configuration keys. Current `phpstan.neon` delegates to `phpstan.neon.dist`, where those keys are absent; current Gating reports Canon029 GREEN.
+- Read the Addressing responsibility contract and Composer/runtime surface, Objecting ownership guidance, and authoritative Canonization Canon031 plus Guard Matrix material. Addressing owns normalized address lifecycle, validation evidence, governance and address-specific event metadata; generic CRUD, reusable system-field primitives, final rendering, shell concerns, and provider-side verification/geocoding remain outside this remediation boundary.
+- Market/maturity contour: Google Address Validation combines validation, standardization and geocoding; Smarty combines validation/standardization with deliverability metadata; libpostal focuses on international parsing/normalization. Provider integrations and capture UX remain growth work; RC-critical work remains deterministic local contracts and verification.
+- Fresh Gating baseline: 16 rules, 0 failed, warnings for Canon031 plus stale Canon040/Canon042 evidence. Selected clean `src/Message/AddressOutboxEventMessage.php` because Canon031 reported the class and `eventVersions()` as uncovered/tags-only; documentation is extended across the public event metadata contract without executable behavior changes.
+
+### Canon mapping and verification plan
+- Canon031: meaningful descriptions for the outbox event contract class and public contract-significant methods; preserve signatures, schema-version registry, payload decoration semantics, and async boundary shape.
+- RC-critical workstream: contract documentation plus deterministic lint/static/test/Gating/Inspecting verification and publication when safe.
+- Growth workstream: provider breadth, geocoding/maps, capture UX and richer normalization remain post-RC and outside this patch.
+- No browser/mobile UI, navigation, form, route, interaction, or user-flow behavior is changed; new visual capture is not applicable.
+
+Что имеем? Factual baseline, RED root cause, canon mapping, concurrency ownership, and a clean RC-critical remediation seam are established.
+Что осталось? Verify the documentation-only mutation, refresh stale evidence where applicable, run post-mutation Inspecting, and integrate only task-owned source when gates permit.
+
+## 2026-10-04 — engine-20261004222145-addressing-966450
+
+### Baseline and selected work
+- Resolved Addressing through Console MCP on `rc/addressing-rc-final-v3`; preserved concurrent `.gating/README.md`, `AGENTS.md`, shared journal edits, `src/Form/AddressManageType.php`, `src/Policy/AddressRecordPolicy.php`, and `src/Validator/AddressSchemaValidator.php` without reset, stash, cleanup, deletion, or re-attribution.
+- Read Addressing repository contracts plus Objecting, Cruding, Viewing, Interfacing, Gating, and authoritative Canonization Canon031/Guard Matrix material. Addressing owns normalized address lifecycle, validation evidence, governance and address-specific payload semantics; generic CRUD, reusable system fields, final rendering, shell concerns, and provider-side verification/geocoding remain outside this remediation boundary.
+- Current Gating baseline: 16 rules, 0 failed, warning-only Canon031 documentation coverage (47/148 classes; 190/496 contract methods) and Canon040 measured coverage debt; Canon029, behavioral/UI coverage, OpenAPI path parity, and method parity are GREEN.
+- Historical upstream static-analysis RED is stale: current PHPStan configuration no longer contains the obsolete options that caused the 2026-09-29 abort, and current Canon029 executable evidence is GREEN.
+- Market/maturity contour: mature address systems separate deterministic local normalization/provenance/governance from provider-side verification, geocoding and capture UX. Provider expansion remains growth work; RC-critical work stays on deterministic local contracts, quality and evidence.
+- Selected clean RC-critical Canon031 seam: `src/Factory/Application/AddressValidatedPayloadFactory.php`, specifically the uncovered `providerDigest()`, `sanitizeGovernanceLink()`, and tags-only `outboxPayload()` contracts. No executable behavior will change.
+
+### Canon mapping and verification plan
+- Canon021/boundary: no generic CRUD surface is introduced or modified.
+- Canon031: add meaningful descriptions to the three reported contract-significant methods while preserving signatures and behavior.
+- Re-run targeted PHP lint, PHPStan, PHPUnit, Gating, and post-mutation Inspecting when admitted. No browser/mobile UI, navigation, form, route, interaction, or user-flow behavior is changed, so new visual capture is not applicable.
+
+Что имеем? Factual baseline, dependency/canon contour, concurrency ownership, and one clean remediation target are established.
+Что осталось? Apply the bounded Canon031 remediation, verify the resulting state, refresh Inspecting evidence as required, and integrate only task-owned source when gates permit.
+
+### Verification and integration
+- `src/Factory/Application/AddressValidatedPayloadFactory.php` PHP lint GREEN; PHPStan GREEN at 185/185 files; PHPUnit GREEN at 56 tests / 293 assertions with one existing notice and one intentional skip.
+- Coverage evidence refreshed after mutation: lines 53.8%, methods 43.4%, branches 47.4%; Canon040 remains warning-level HIGH_TEST_DEBT. Behavioral/UI evidence refreshed and Canon042 is GREEN at functional 13/16, behavioral 2/2, UI 2/2, critical 1/1.
+- Canon031 contract-method coverage improved from 190/496 to 193/496 for the three task-owned methods; later concurrent class documentation changes raised class coverage from 47/148 to 51/148 and are not attributed to this task.
+- Composer strict/check-lock validation GREEN; PHP-CS-Fixer dry-run GREEN. Final Gating is hard-GREEN: 16 rules, 0 failed, two warning-only debt queues (Canon031, Canon040).
+- Fresh post-mutation Inspecting report: `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261004-224446.json`; PHPStan 0 errors, Rector 0 changes/errors, 27 medium observations, 0 high/critical/autofixable findings.
+- No browser/mobile UI, navigation, forms, routes, interactions, or user flows changed; new screenshot capture is not applicable.
+- Signed commit `3f13316` (`Document Addressing validated payload contracts`) contains only `src/Factory/Application/AddressValidatedPayloadFactory.php` and was pushed to `origin/rc/addressing-rc-final-v3`.
+
+Что имеем? The bounded validated-payload Canon031 remediation is verified, signed, published, and all hard gates are GREEN.
+Что осталось? Repository-wide Canon031/Canon040 warning debt and medium Inspecting observations remain explicit follow-up queues; no task-owned implementation or publication tail remains.
+
+## 2026-10-04 — engine-20261004220739-addressing-8064a3
+
+### Baseline and selected work
+- Resolved Addressing through Console MCP on `rc/addressing-rc-final-v3`; branch starts synchronized with `origin`, while concurrent `.gating/README.md`, `AGENTS.md`, `CMCP_CHANGELOG.md`, `src/Factory/Identifier/AddressUlid.php`, `src/FactoryInterface/Identifier/AddressUlidInterface.php`, and `src/Policy/AddressRecordPolicy.php` changes are preserved and not re-attributed.
+- Consumed the supplied 2026-09-29 static-analysis RED: PHPStan aborted before source analysis because obsolete configuration keys were present then. Current `phpstan.neon` delegates to `phpstan.neon.dist`, and those keys are absent.
+- Read Addressing repository contracts plus Objecting, Cruding, Viewing, Interfacing, Gating, and authoritative Canonization Canon021/Canon031 and guard-matrix material. Addressing owns normalized address lifecycle, validation evidence, governance, persistence, and address-specific operations; generic CRUD, reusable system fields, final rendering, and shell concerns remain outside its boundary.
+- Market/maturity contour: mature address systems separate local normalization/validation evidence from provider-side postal verification, geocoding, map/capture UX, and provider enrichment. Provider expansion remains growth work; RC-critical work remains deterministic local contract quality and verification.
+- Fresh Gating execution was admitted as heavy work but deferred by runtime capacity (`ADMIT_LIGHT_ONLY`, resource pressure WATCH, engine backlog HIGH); no process was started. Reusable 2026-10-04 Inspecting evidence reports PHPStan 0 errors, Rector 0 changes/errors, 27 medium structural observations, and no high/critical/autofixable findings.
+- Selected clean RC-critical Canon031 seam: `src/Validator/AddressSchemaValidator.php`, whose class is undocumented and `validate()` has tags-only PHPDoc. The change will add semantic class/method descriptions without altering schema validation behavior.
+
+### Canon mapping and verification plan
+- Canon021: no generic CRUD surface is introduced or modified.
+- Canon031: add a meaningful description to the validator class and to the contract-significant `validate()` method while preserving existing type tags and behavior.
+- After mutation run changed-file lint first, then PHPStan/tests/Gating and fresh Inspecting when runtime capacity admits. No browser/mobile UI, navigation, forms, routes, interactions, or user flows are affected, so visual capture is not applicable unless verification proves otherwise.
+
+### Verification and integration
+- PHP lint GREEN for `src/Validator/AddressSchemaValidator.php` and `src/Form/AddressManageType.php`.
+- Composer strict/check-lock validation GREEN.
+- PHPStan GREEN: 185/185 files, 0 errors.
+- PHPUnit GREEN: 56 tests / 293 assertions, with one existing notice and one intentional skip.
+- Coverage evidence refreshed: lines 53.4%, methods 43.4%, branches 47.4%; Canon040 remains warning-level HIGH_TEST_DEBT.
+- Behavioral/UI evidence refreshed and Canon042 GREEN: functional 13/16 (81.2%), behavioral 2/2, UI 2/2, critical 1/1.
+- Final Gating: 16 rules / 0 failed / 2 warnings. Canon031 improved to classes 47/148 and contract methods 190/496; Canon040 remains measured warning debt.
+- Fresh post-mutation Inspecting report: `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261004-222841.json`; PHPStan 0 errors, Rector 0 changes/errors, 27 medium observations, 0 high/critical/autofixable findings.
+- Signed commit `2e683dc` (`Document Addressing validation and form contracts`) contains only the two task-owned source files and was pushed to `origin/rc/addressing-rc-final-v3`.
+- Concurrent `.gating/README.md`, `AGENTS.md`, shared `CMCP_CHANGELOG.md`, and `src/Policy/AddressRecordPolicy.php` remain preserved and outside the task-owned commit.
+- No browser/mobile UI, navigation, route, interaction, or user-flow behavior changed; the form mutation is documentation-only, so screenshot capture is not applicable.
+
+Что имеем? The historical static-analysis RED is no longer reproducible; the selected validator/form Canon031 remediation is verified, signed, published, and all hard Gating rules are GREEN.
+Что осталось? Repository-wide Canon031 and Canon040 warning debt plus 27 medium Inspecting observations remain explicit follow-up queues; no task-owned implementation or publication tail remains.
+
+## 2026-10-04 — engine-20261004220321-addressing-9c1cf4
+
+### Baseline and selected work
+- Resolved Addressing through Console MCP on `rc/addressing-rc-final-v3`; preserved concurrent `.gating/README.md`, `AGENTS.md`, shared journal edits, and `src/Policy/AddressRecordPolicy.php` without reset, stash, cleanup, deletion, or re-attribution.
+- Consumed the supplied 2026-09-29 RED static-analysis report: PHPStan had aborted on obsolete configuration keys. Current `phpstan.neon` delegates to `phpstan.neon.dist`, those keys are absent, and fresh PHPStan is GREEN.
+- Read Addressing repository contracts plus Objecting, Cruding, Viewing, Interfacing and authoritative Canonization Canon031/Guard Matrix material; generic CRUD, reusable system fields, final rendering, interface shell and provider-side geocoding/verification remain outside Addressing ownership.
+- Market contour: mature address products combine validation/standardization with optional geocoding/enrichment, while parser libraries focus on normalization. Provider expansion and capture UX remain growth work; RC-critical work stays on deterministic local contracts and quality.
+- Fresh Gating baseline was 16 rules / 0 failed / 2 warnings. Selected clean Canon031 candidates `AddressUlid` and `AddressUlidInterface` for documentation-only remediation.
+
+### Canon mapping and verification
+- Canon031: added meaningful class/interface and `generate()` contract descriptions without changing signatures or executable behavior.
+- Changed-file PHP lint GREEN; PHPStan GREEN at 185/185 files; PHPUnit GREEN at 56 tests / 293 assertions with one existing notice and one intentional skip.
+- Post-change Gating improved Canon031 from classes 43/148 and methods 186/496 to 45/148 and 188/496; hard rules remain GREEN. Coverage evidence was refreshed successfully after the production-source change: lines 53.4%, methods 43.4%, branches 47.4%; Canon040 remains warning-class HIGH_TEST_DEBT. Behavioral/UI evidence was refreshed successfully and Canon042 remains GREEN.
+- Fresh post-mutation Inspecting report: `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261004-221346.json`; PHPStan 0 errors, Rector 0 changes/errors, 27 medium observations, 0 high/critical/autofixable findings.
+- No browser/mobile UI, navigation, form, route, interaction, or user-flow behavior changed; screenshots are not applicable to this documentation-only remediation.
+
+Что имеем? Canon031 ULID contract coverage is materially improved and deterministic source verification is GREEN.
+Что осталось? Repository-wide Canon031 documentation debt, measured Canon040 test debt, and medium Inspecting observations remain explicit follow-up queues. Task-owned source commit `5caa4d217c19c6cfbda280cd1eda220d4d12d12b` (`Document Addressing ULID contract`) is published and branch/upstream are synchronized (0 ahead / 0 behind); concurrent unrelated source/documentation edits remain preserved.
+
+## 2026-10-04 — engine-20261004215010-addressing-55de59
+
+### Baseline and selected work
+- Resolved Addressing exclusively through Console MCP on `rc/addressing-rc-final-v3`; preserved concurrent `.gating/README.md`, `AGENTS.md`, `src/Factory/AddressApiPayloadFactory.php`, `src/Factory/AddressInputFactory.php`, and `src/Policy/AddressRecordPolicy.php` changes without reset, stash, cleanup, deletion, or re-attribution.
+- Consumed the supplied 2026-09-29 RED static-analysis log. It failed before source analysis on obsolete PHPStan configuration keys; current `phpstan.neon` delegates to `phpstan.neon.dist`, which no longer contains those keys, and fresh Gating reports Canon029 GREEN.
+- Read Addressing repository contracts plus Objecting, Cruding, Viewing, Interfacing, Gating, and authoritative Canonization Canon031 material. Addressing owns normalized address lifecycle, validation evidence, governance and transport projection semantics; generic CRUD, reusable system fields, final rendering, and shell concerns remain with their owning components.
+- Market/maturity contour: Google Address Validation combines validation/standardization/geocoding; Smarty exposes verification/standardization plus rich deliverability metadata; libpostal focuses on international parsing/normalization. Provider integrations, geocoding/maps, and capture UX remain growth work outside this RC-critical seam.
+- Fresh Gating baseline: 16 rules, 0 failed, warnings for Canon031 and stale Canon040/Canon042 evidence. Selected clean `src/Factory/AddressViewArrayFactory.php` because Canon031 reports the class plus `toArray()` and `previewRow()` as uncovered/tags-only.
+
+### Canon mapping and verification plan
+- Canon031: add meaningful descriptions to the view-projection factory class and its two contract-significant public projection methods without changing signatures or executable behavior.
+- RC-critical workstream: deterministic contract documentation, static/test/gate verification, stale evidence refresh, and fresh post-mutation Inspecting.
+- Growth workstream: provider breadth, geocoding/maps, address-capture UX, transliteration, and richer normalization intelligence remain post-RC capabilities.
+- No browser/mobile UI, navigation, forms, routes, interactions, or user-flow behavior is changed by this documentation-only source remediation; screenshots are not applicable unless verification proves otherwise.
+
+### Verification and integration
+- `src/Factory/AddressViewArrayFactory.php` PHP lint GREEN; PHPStan GREEN at 185/185 files with 0 errors.
+- PHPUnit GREEN: 56 tests / 293 assertions, with one existing notice and one intentional skip. Coverage evidence refreshed: lines 53.4%, methods 43.4%, branches 47.4%; Canon040 remains warning-level HIGH_TEST_DEBT.
+- Behavioral/UI evidence refreshed successfully; Canon042 GREEN at functional 13/16 (81.2%), behavioral 2/2, UI 2/2, critical 1/1.
+- PHP-CS-Fixer dry-run GREEN (0/187 fixable files). Composer strict/check-lock validation GREEN.
+- Final Gating: 16 rules / 0 failed / 2 warnings. Canon031 improved to classes 43/148 and contract methods 186/496; Canon040 remains measured warning debt.
+- Fresh post-mutation Inspecting report: `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261004-220202.json`; PHPStan 0 errors, Rector 0 changes/errors, 27 medium observations, 0 high/critical/autofixable findings.
+- No browser/mobile UI, navigation, forms, routes, interactions, or user flows changed; screenshots are not applicable to this documentation-only remediation.
+
+- Signed commit `e31399162e96334f7d9dc0bc2ada0241202ceaca` (`Document Addressing view projection contract`) contains only `src/Factory/AddressViewArrayFactory.php` and was pushed to `origin/rc/addressing-rc-final-v3`.
+- Concurrent `.gating/README.md`, `AGENTS.md`, shared `CMCP_CHANGELOG.md`, and `src/Policy/AddressRecordPolicy.php` remain preserved and outside the task-owned commit.
+
+Что имеем? The selected view-projection Canon031 remediation is verified, signed, published, and synchronized; all hard Gating rules are GREEN.
+Что осталось? Repository-wide Canon031/Canon040 warning debt and the 27 medium Inspecting observations remain explicit follow-up queues; no task-owned implementation or publication tail remains.
+
+## 2026-10-04 — engine-20261004214549-addressing-07b14e
+
+### Baseline and selected work
+- Resolved Addressing exclusively through Console MCP on `rc/addressing-rc-final-v3`; preserved pre-existing/concurrent `.gating/README.md`, `AGENTS.md`, `CMCP_CHANGELOG.md`, `src/Factory/AddressQueryFilterFactory.php`, and `src/Policy/AddressRecordPolicy.php` changes without reset, stash, cleanup, deletion, or re-attribution.
+- Read Addressing repository contracts plus Objecting, Cruding, Viewing, Interfacing, Gating, and authoritative Canonization Canon031/Guard Matrix material. Addressing owns address lifecycle, normalization/validation evidence, governance, persistence, and local address-specific operations; generic CRUD, reusable system fields, final rendering, shell concerns, provider-side geocoding/verification, and map/capture UX remain outside this component.
+- Market/maturity contour: mature providers combine address validation/standardization with optional geocoding/enrichment; provider expansion and capture UX remain growth work, while RC-critical work stays on deterministic local contracts and quality.
+- Fresh Gating baseline: 16 rules, 0 failed, warnings for Canon031 documentation coverage plus stale Canon040/Canon042 evidence. Selected clean `src/Factory/AddressInputFactory.php`, reported as class-missing and `fromManageDto()` tags-only under Canon031.
+
+### Canon mapping and verification plan
+- Canon031: add meaningful class and contract-method descriptions without changing signatures, normalization logic, persistence, routes, API payloads, or UI behavior.
+- Re-run changed-file/static/tests/Gating and fresh post-mutation Inspecting. Refresh stale coverage/behavioral evidence where runtime admission permits.
+- No browser/mobile UI, navigation, forms, routes, interactions, or user flows are changed; visual capture is not applicable unless verification proves otherwise.
+
+### Verification and integration
+- PHPStan GREEN: 185/185 files, 0 errors. PHPUnit GREEN: 56 tests / 293 assertions, with one existing notice and one intentional skip.
+- Coverage evidence refreshed: lines 53.4%, methods 43.4%, branches 47.4%; Canon040 remains warning-class HIGH_TEST_DEBT.
+- Behavioral/UI evidence refreshed and Canon042 GREEN: functional 13/16 (81.2%), behavioral 2/2, UI 2/2, critical 1/1.
+- Fresh post-mutation Inspecting report: `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261004-215907.json`; PHPStan 0 errors, Rector 0 changes/errors, 27 medium observations, 0 high/critical/autofixable findings.
+- Final Gating: 16 rules / 0 failed / 2 warnings. Canon031 improved during concurrent documentation work to 43/148 classes and 186/496 contract methods; this task removed `AddressInputFactory` and `fromManageDto()` from the representative uncovered backlog. Canon040 remains measured warning debt.
+- Signed commit `1c52ca6` (`Document Addressing input factory contract`) contains only `src/Factory/AddressInputFactory.php` and was pushed to `origin/rc/addressing-rc-final-v3`.
+- No browser/mobile UI, navigation, forms, routes, interactions, or user flows changed; screenshots are not applicable to this documentation-only mutation.
+
+Что имеем? The bounded AddressInputFactory Canon031 remediation is verified, signed, published, and hard Gating rules are GREEN.
+Что осталось? Repository-wide Canon031/Canon040 warning debt and medium Inspecting observations remain explicit follow-up queues; no task-owned implementation or publication tail remains.
+
+## 2026-10-04 — engine-20261004214010-addressing-6c23d4
+
+### Baseline and selected work
+- Resolved Addressing exclusively through Console MCP on `rc/addressing-rc-final-v3`; preserved concurrent `.gating/README.md`, `AGENTS.md`, `src/Factory/AddressEntityMapper.php`, `src/Factory/AddressQueryFilterFactory.php`, and `src/Policy/AddressRecordPolicy.php` changes without reset, stash, cleanup, deletion, or re-attribution.
+- Read the supplied 2026-09-29 RED static-analysis log: PHPStan aborted before source analysis on obsolete configuration options. Current `phpstan.neon` delegates to `phpstan.neon.dist`, which no longer contains those options; fresh Gating reports Canon029 GREEN.
+- Read Addressing contracts plus Objecting, Cruding, Viewing, Interfacing, Gating, and authoritative Canonization Canon031/Guard Matrix material. Addressing owns address lifecycle, validation evidence, governance and transport payload semantics; provider-side verification/geocoding, generic CRUD, final rendering, and shell concerns remain outside this component.
+- Market/maturity contour: Google Address Validation and Loqate combine validation/standardization with provider-side enrichment, while libpostal focuses on parsing/normalization. Provider expansion, geocoding/maps, and capture UX remain growth work; RC-critical work stays on deterministic local contract quality.
+- Fresh Gating baseline: 16 rules, 0 failed, warnings for Canon031 documentation coverage and Canon040 measured test-coverage debt. Selected clean `src/Factory/AddressApiPayloadFactory.php` because Gating reports its class and four public payload methods as uncovered/tags-only.
+
+### Canon mapping and verification plan
+- Canon031: add meaningful descriptions to the payload factory class and the reported public methods without changing signatures or executable behavior.
+- Re-run changed-file lint, PHPStan, PHPUnit, Gating, and fresh post-mutation Inspecting. No browser/mobile UI, navigation, form, route, interaction, or user-flow behavior is changed; visual capture is not applicable unless verification proves otherwise.
+
+### Verification and integration
+- `composer lint` GREEN for 223 PHP files. `composer qa:phpstan` GREEN for 185/185 analyzed files with 0 errors. PHPUnit GREEN: 56 tests / 293 assertions, with one existing notice and one intentional skip.
+- Canon031 moved from the observed 40/148 classes and 179/496 contract methods to 43/148 and 186/496 while concurrent Addressing documentation changes also landed during this execution window.
+- Coverage and behavioral/UI evidence were refreshed successfully, but further concurrent production-source mutations made Canon040/Canon042 freshness warnings reappear before the final Gating pass. Final Gating remains hard-GREEN: 16 rules, 0 failed, with warning-only Canon031 plus stale-evidence Canon040/Canon042.
+- Fresh post-mutation Inspecting report: `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261004-215659.json`; PHPStan 0 errors, Rector 0 changes/errors, 27 medium observations, 0 high/critical/autofixable findings.
+- Signed commit `702f4909e56d80f55dbf298409d4a5dcb896be3c` (`Document Addressing API payload contract`) contains only `src/Factory/AddressApiPayloadFactory.php` and was pushed to `origin/rc/addressing-rc-final-v3`; post-push branch state is 0 ahead / 0 behind.
+- Concurrent `.gating/README.md`, `AGENTS.md`, shared `CMCP_CHANGELOG.md`, `src/Factory/AddressInputFactory.php`, `src/Factory/AddressViewArrayFactory.php`, and `src/Policy/AddressRecordPolicy.php` changes remain preserved and outside the task-owned commit.
+- No browser/mobile UI, navigation, forms, routes, interaction, or user-flow behavior changed; screenshot capture is not applicable to this documentation-only source remediation.
+
+Что имеем? The historical static-analysis failure is no longer reproducible, the selected Canon031 API-payload seam is materially remediated, verified, signed, and published with all hard gates GREEN.
+Что осталось? Repository-wide Canon031/Canon040 debt and concurrent evidence-freshness churn remain explicit follow-up work; no task-owned implementation or publication tail remains.
+
+## 2026-10-04 — engine-20261004213641-addressing-a041fd
+
+### Baseline and selected work
+- Resolved Addressing exclusively through Console MCP on `rc/addressing-rc-final-v3`; preserved concurrent `.gating/README.md`, `AGENTS.md`, shared journal edits, and `src/Policy/AddressRecordPolicy.php` without reset, stash, cleanup, or re-attribution.
+- Consumed the supplied 2026-09-29 RED static-analysis report: PHPStan aborted on obsolete `checkMissingIterableValueType` and `checkGenericClassInNonGenericObjectType` keys. Current `phpstan.neon` delegates to `phpstan.neon.dist`, which contains neither option; fresh Gating reports Canon029 GREEN.
+- Read Addressing contracts plus Objecting, Cruding, Viewing, Interfacing, Gating, and authoritative Canonization Canon021/Canon031 + Guard Matrix material. Addressing owns address lifecycle/query/governance semantics; generic CRUD, reusable Objecting fields, final rendering, and shell concerns remain outside the component.
+- Market/maturity contour: Google Address Validation separates validation/standardization/geocoding into a provider service, while libpostal focuses on parsing/normalization primitives. Addressing therefore keeps provider-side verification/geocoding and capture UX outside this RC remediation; those remain growth/integration work.
+- Fresh Gating baseline: 16 rules, 0 failed, warnings for Canon031 plus stale Canon040/Canon042 evidence.
+- Selected RC-critical remediation: document the clean `AddressQueryFilterFactory` public contract to close current Canon031 candidates without changing signatures, query semantics, routing, persistence, or UI behavior.
+
+### Canon mapping and verification plan
+- Canon021: no generic CRUD surface introduced; remediation remains inside Addressing-specific query-filter semantics.
+- Canon031: add meaningful class and public contract descriptions to `AddressQueryFilterFactory`; private helpers remain outside the denominator.
+- Re-run changed-file PHP lint, PHPStan, PHPUnit, Gating, refresh stale coverage/behavioral evidence when admitted, and run fresh Inspecting after production-source mutation.
+- No browser/mobile UI, navigation, forms, route grammar, interaction, or user-flow behavior is changed; visual capture is not applicable unless verification proves otherwise.
+
+### Verification and integration
+- Changed-file PHP lint GREEN. PHPStan GREEN: 185/185 files, 0 errors. PHPUnit GREEN: 56 tests / 293 assertions, with one notice and one intentional skip.
+- PHPUnit coverage evidence refreshed successfully; Canon040 is now measured warning debt rather than stale evidence: lines 53.4%, methods 43.4%, branches 47.4%.
+- Behavioral/UI evidence refreshed successfully; Canon042 GREEN at functional 13/16 (81.2%), behavioral 2/2, UI 2/2, critical 1/1.
+- Final Gating after remediation: 16 rules / 0 failed / 2 warnings. Canon031 improved from 39/148 classes and 173/496 contract methods to 40/148 classes and 179/496 contract methods; Canon040 remains warning-level HIGH_TEST_DEBT.
+- Fresh post-mutation Inspecting report: `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261004-214542.json`; PHPStan 0 errors, Rector 0 changes/errors, 27 medium observations, 0 high/critical/autofixable findings.
+- No browser/mobile UI, navigation, forms, routes, interaction, or user-flow behavior changed; screenshots are not applicable to this documentation-only source remediation.
+
+- Signed commit `0d6ee813da29b9014dbba265f90b3de7416e267e` (`Document Addressing query filter contract`) contains only `src/Factory/AddressQueryFilterFactory.php` and was pushed to `origin/rc/addressing-rc-final-v3`; final branch state is 0 ahead / 0 behind.
+- Concurrent `.gating/README.md`, `AGENTS.md`, shared `CMCP_CHANGELOG.md`, and `src/Policy/AddressRecordPolicy.php` remain preserved and were not included in the task-owned commit.
+
+Что имеем? The bounded query-filter contract remediation is verified, signed, published, and synchronized; all hard Gating rules are GREEN.
+Что осталось? Repository-wide Canon031/Canon040 warning debt and medium Inspecting observations remain explicit follow-up queues; no task-owned implementation or publication tail remains.
+
+## 2026-10-04 — engine-20261004213507-addressing-c45d4d
+
+### Baseline and selected work
+- Resolved Addressing exclusively through Console MCP on `rc/addressing-rc-final-v3`; preserved concurrent `.gating/README.md`, `AGENTS.md`, shared journal, and `src/Policy/AddressRecordPolicy.php` edits without reset, stash, cleanup, deletion, or re-attribution.
+- Read the supplied 2026-09-29 static-analysis RED. It failed before source analysis because PHPStan then contained obsolete configuration keys; the current `phpstan.neon.dist` no longer contains them, and fresh `composer qa:phpstan` is GREEN at 185/185 files with 0 errors.
+- Read Addressing repository contracts and authoritative Canonization Canon031/guard material; verified the declared Objecting/Cruding/Viewing/Interfacing dependency contour in `composer.json` and local symlink repository configuration. Objecting lifecycle/system fields, Cruding generic CRUD mechanics, Viewing presentation, and Interfacing shell/public-interface concerns remain outside Addressing ownership.
+- Market/maturity contour: mature address platforms such as Google Address Validation, Loqate, Smarty, and libpostal-style normalization separate provider-specific verification/geocoding/capture from application-owned normalized address state, provenance, governance, persistence, and evidence. Provider expansion, maps, capture UX, and geocoding remain growth work outside this RC-critical seam.
+- Fresh Gating baseline: 16 rules, 0 failed, warnings only for Canon031 documentation coverage and stale Canon040 coverage evidence. Selected the clean Addressing-owned `AddressEntityMapper` persistence boundary for semantic Canon031 remediation.
+
+### Canon mapping and workstreams
+- RC-critical: document the mapper class plus `toDoctrine`, `fromDoctrine`, and `toDoctrineSnapshot` contracts without changing signatures, mapping logic, schema, routes, API payloads, UI, or persistence semantics.
+- Growth: provider breadth, postal/geocoding integrations, map/capture UX, richer normalization intelligence, and broader DX remain post-RC work and do not block this remediation.
+- Canon031: meaningful descriptions must precede eligible classes and contract-significant methods; private helpers/accessors remain outside its denominator.
+- Verification plan: changed-file lint, PHPStan, tests, Gating, and fresh Inspecting after mutation. No browser/mobile UI behavior changes, so screenshots are not applicable unless verification proves otherwise.
+
+### Verification and integration
+- Changed-file PHP lint GREEN. PHPStan GREEN: 185/185 files, 0 errors. PHPUnit GREEN: 56 tests / 293 assertions, with one existing notice and one intentional skip.
+- Fresh post-mutation Inspecting report: `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261004-214021.json`; PHPStan 0 errors, Rector 0 changes/errors, 27 medium observations, 0 high/critical/autofixable findings.
+- Canon031 improved from the initial 38/148 classes and 170/496 contract methods to at least 39/148 and 173/496 from this mapper change; later Gating observed 40/148 and 179/496 because concurrent Addressing documentation work also landed during this execution window.
+- Coverage evidence refreshed: lines 53.4%, methods 43.4%, branches 47.4%; Canon040 remains warning-class HIGH_TEST_DEBT. Behavioral/UI evidence was refreshed successfully, though later concurrent source mutation made Canon042 freshness warning reappear; no task-owned browser/mobile UI, route, navigation, form, interaction, or user-flow behavior changed.
+- Signed commit `9acb63fe74f0c19e10f0587bfa10ef053cdf4fb7` (`Document Addressing entity mapping contract`) contains only `src/Factory/AddressEntityMapper.php` and was pushed to `origin/rc/addressing-rc-final-v3`.
+- Concurrent dirty paths remain preserved and intentionally outside the task-owned commit.
+
+Что имеем? The stale static-analysis RED is resolved in the current repository, the selected Canon031 mapper seam is verified, signed, and published, and all hard Gating rules remain GREEN.
+Что осталось? Repository-wide Canon031/Canon040 debt and medium Inspecting structural observations remain explicit follow-up queues; no task-owned implementation or publication tail remains.
+
+## 2026-10-04 — engine-20261004204257-addressing-73f43f
+
+### Baseline and selected work
+- Resolved Addressing through Console MCP on `rc/addressing-rc-final-v3`; preserved pre-existing `.gating/README.md`, `AGENTS.md`, and shared journal edits without reset, stash, cleanup, or re-attribution.
+- Read Addressing contracts plus Objecting, Cruding, Viewing, Interfacing, Gating, and authoritative Canonization Canon021/Canon031 and guard-matrix material.
+- Consumed the supplied 2026-09-29 static-analysis RED. It aborted on obsolete PHPStan configuration keys; current PHPStan configuration no longer contains those keys, and fresh Gating reports Canon029 GREEN.
+- Market/maturity contour remains bounded to Addressing ownership: mature address systems separate provider capture/verification/geocoding from application-owned normalized lifecycle, provenance, governance, persistence, and evidence. Provider expansion, maps, and capture UX stay growth work, not this RC remediation.
+- Fresh Gating baseline: 16 rules, 0 failed, warnings only for Canon031 documentation coverage and stale Canon040/Canon042 evidence.
+- Selected RC-critical remediation from Gating's representative Canon031 backlog: document `AddressEntity` lifecycle responsibility plus `AddressCreatedEvent`, `AddressUpdatedEvent`, and `AddressEventInterface` contracts without changing executable behavior, routes, schema, API payloads, or UI.
+
+### Canon mapping and verification plan
+- Canon021: no generic CRUD surface introduced; EasyAdmin exception unchanged and irrelevant to these files.
+- Canon031: add meaningful descriptions only to classes and contract-significant methods explicitly reported as uncovered.
+- Re-run PHP lint, PHPStan, tests, coverage evidence, behavioral/UI coverage evidence, Gating, and post-mutation Inspecting as applicable. No browser/mobile UI behavior is changed by this documentation-only remediation, so screenshots are not required.
+
+### Verification and integration
+- Changed-file PHP lint GREEN. PHPStan GREEN: 185/185 files, 0 errors. PHPUnit GREEN: 56 tests / 293 assertions, with one notice and one intentional skip. PHP-CS-Fixer dry-run GREEN and Composer strict/check-lock validation GREEN.
+- Behavioral/UI evidence refreshed and Canon042 GREEN: functional 13/16 (81.2%), behavioral 2/2, UI 2/2, critical 1/1.
+- Final Gating after remediation: 16 rules / 0 failed / 2 warnings. Canon031 improved from 34/148 classes and 162/496 contract methods to 38/148 classes and 170/496 contract methods. Canon040 remains warning-only because coverage evidence refresh was refused twice by repository capacity control (`ADMIT_LIGHT_ONLY`, resource pressure WATCH, engine backlog HIGH); the heavy process was not started.
+- Fresh post-mutation Inspecting: `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261004-210751.json`; PHPStan 0 errors, Rector 0 changes/errors, 27 medium observations, 0 high/critical/autofixable findings.
+- Signed commit `2dcae2f` (`Document Addressing lifecycle events`) contains only the four task-owned source files and was pushed to `origin/rc/addressing-rc-final-v3`.
+- Concurrent `.gating/README.md`, `AGENTS.md`, shared `CMCP_CHANGELOG.md`, and `src/Policy/AddressRecordPolicy.php` remain preserved and were not included in the task-owned commit.
+- No browser/mobile UI, navigation, form, route, interaction, schema, or user-flow behavior changed; screenshots are not applicable to this documentation-only remediation.
+
+Что имеем? The bounded Canon031 lifecycle/event remediation is verified by hard gates and fresh Inspecting, signed, and published; hard Gating rules are GREEN.
+Что осталось? Canon031 repository-wide documentation debt, Canon040 coverage-debt/evidence refresh, and medium Inspecting structural observations remain explicit follow-up queues; no task-owned source publication tail remains.
+
+## 2026-10-04 — engine-20261004203845-addressing-1acc37
+
+### Baseline and selected work
+- Resolved Addressing exclusively through Console MCP on `rc/addressing-rc-final-v3`; initial dirty state was limited to pre-existing/concurrent `.gating/README.md`, `AGENTS.md`, and `CMCP_CHANGELOG.md`, all preserved without reset, stash, cleanup, or re-attribution.
+- Consumed the supplied 2026-09-29 static-analysis RED: PHPStan aborted on obsolete `checkMissingIterableValueType` and `checkGenericClassInNonGenericObjectType` configuration keys. Current `phpstan.neon` delegates to `phpstan.neon.dist`, which contains neither obsolete key.
+- Read Addressing AGENTS/README/composer/PHPStan/test contracts plus Objecting, Cruding, Viewing, Interfacing, Gating, and authoritative Canonization Canon021/Canon031 + Guard Matrix material. Addressing remains responsible for address lifecycle/governance/validation state; generic CRUD, reusable Objecting system fields, final rendering, and interface shell ownership remain outside the component.
+- Market/maturity contour: mature address-lifecycle systems separate normalized address state and validation provenance from provider-specific verification/geocoding and UI capture concerns. RC-critical work stays on deterministic lifecycle contracts and quality; provider breadth/geocoding/capture UX remain growth work.
+- Selected clean Addressing-owned seam `src/Policy/AddressRecordPolicy.php`; added meaningful Canon031 descriptions for the class and five contract-significant normalization methods without changing signatures, runtime behavior, persistence, routes, or UI.
+
+### Canonization mapping and verification plan
+- Canon021: no generic CRUD machinery introduced; remediation is non-applicable beyond preserving Cruding ownership.
+- Canon031: class and five public policy methods now have meaningful descriptions satisfying the rule's minimum semantic threshold.
+- Preserve all concurrent dirty documentation/artifact work; verify changed PHP syntax first, then run PHPStan/Gating/tests and fresh post-mutation Inspecting when runtime capacity admits heavy work.
+- No browser/mobile UI, navigation, form, route, interaction, or user-flow behavior changed; visual capture is not applicable to this documentation-only source mutation.
+
+Что имеем? A bounded Canon031 remediation is implemented in a clean Addressing-owned policy file while concurrent work remains untouched.
+Что осталось? Complete deterministic/static verification, refresh Inspecting after mutation, then commit/push only task-owned implementation plus the orchestration journal entry if safe.
+
+## 2026-10-04 — engine-20261004201131-addressing-9dcf44
+
+### Baseline and selected work
+- Resolved Addressing through Console MCP on `rc/addressing-rc-final-v3`; preserved all pre-existing dirty paths without reset, stash, cleanup, deletion, or re-attribution.
+- Consumed the supplied 2026-09-29 static-analysis RED: PHPStan aborted on obsolete configuration keys. Current `phpstan.neon.dist` no longer contains those keys, so the historical failure is configuration-stale rather than current source evidence.
+- Read Addressing contracts plus Objecting, Cruding, Viewing, Interfacing, Gating, and authoritative Canonization Canon021/Canon031 and Guard Matrix material. Generic CRUD, reusable system fields, final rendering, and shell ownership remain outside Addressing; `App\\Addressing\\` remains the canonical component namespace.
+- Market/maturity contour: mature address systems separate provider capture/geocoding/verification from application-owned normalized lifecycle, governance, evidence, and state transitions. Provider breadth and map/capture UX remain growth work; RC-critical work stays on local contract clarity and deterministic quality.
+- Selected a clean Addressing-owned seam: `src/Policy/AddressLifecyclePolicy.php`. Added meaningful Canon031 documentation to its three contract-significant lifecycle methods without changing signatures, transition data, runtime behavior, persistence, routes, or UI.
+- Initial fresh Gating execution was deferred by Console MCP runtime capacity (`ADMIT_LIGHT_ONLY`, resource pressure/watch and high engine backlog); no process was started.
+
+### Canonization mapping and verification plan
+- Canon021: no generic CRUD machinery introduced; non-applicable to the lifecycle-policy patch beyond boundary preservation.
+- Canon031: meaningful method descriptions added for `canTransition`, `assertCanTransition`, and `allowedNextStatuses`; class coverage was already meaningful.
+- Run changed-file PHP lint and other admitted deterministic checks now; re-run Gating/PHPStan/tests/Inspecting when heavy execution is admitted. No browser/mobile UI behavior changed, so visual capture is not applicable to this patch.
+
+Что имеем? A clean Addressing-owned lifecycle-policy seam is materially remediated under Canon031 without behavior change, while concurrent dirty work remains untouched.
+Что осталось? Complete deterministic/static verification under available capacity, then integrate only the independently owned policy file and confirm post-push state.
+
+## 2026-10-04 — engine-20261004093536-addressing-fa2085
+
+### Baseline
+- Resolved `D:\PhpstormProjects\www\Addressing` exclusively through Console MCP on `rc/addressing-rc-final-v3`; preserved all pre-existing/concurrent dirty paths without reset, stash, cleanup, deletion, or re-attribution.
+- Read the supplied 2026-09-29 RED static-analysis log: PHPStan aborted before source analysis because obsolete `checkMissingIterableValueType` and `checkGenericClassInNonGenericObjectType` options were present at scan time. Current `phpstan.neon.dist` no longer contains those options; current Gating hard rules are GREEN.
+- Read Addressing AGENTS/README/composer/static config, current HTTP/entity/OpenAPI architecture docs, and the supplied Inspecting baseline. `MANIFEST.json` is absent in the current Addressing tree.
+- Read Objecting, Cruding, Viewing, Interfacing, and Gating AGENTS/README/composer contracts. Addressing owns address lifecycle, validation evidence, governance, persistence, and local outbox state; generic CRUD, reusable Objecting system fields, final rendering, and interface shell concerns stay with their owning repositories.
+- Consulted authoritative Canonization `.canonization/Governance/Architecture/Rule/Canon031PhpDocCoverageRule.md` plus `GUARD_MATRIX.md`. Canon031 requires meaningful PHPDoc on classes and contract-significant methods and is warning-level below 70%.
+- Market/maturity contour: Google Address Validation combines validation, standardization and geocoding; Loqate combines verification/cleansing, geocoding and transliteration; provider breadth, capture UX and geocoding remain growth work outside this RC-critical documentation seam.
+
+### Selected RC-critical work
+- Improve Canon031 semantic coverage on clean `src/Entity/AddressOutboxEntity.php` by documenting the outbox persistence responsibility plus creation-order, publisher-claim, lock and unlock contracts without changing executable behavior, Doctrine mapping, routes, API payloads, persistence schema, or UI.
+- Preserve concurrent `.gating/README.md`, `AGENTS.md`, `src/Controller/AddressSummaryApiController.php`, `src/DTO/AddressManageDTO.php`, and pre-existing shared journal content.
+- Keep repository-wide Canon031 completion, Canon040 coverage uplift, provider breadth, geocoding/map UX, and medium Inspecting structural observations as separate debt/growth workstreams.
+
+### Risks and gates
+- Run syntax/static/tests/format/Composer/Gating plus fresh post-mutation Inspecting because production source changed.
+- No browser/mobile UI, navigation, form, route, interaction, or user-flow behavior is changed by this documentation-only mutation; visual capture is not applicable unless verification proves otherwise.
+
+### Verification and integration
+- PHPStan GREEN: 185/185 files, 0 errors. PHPUnit GREEN: 56 tests / 293 assertions, with one existing notice and one intentional skip.
+- PHP-CS-Fixer dry-run GREEN: 0/187 fixable files. Composer strict/check-lock validation GREEN.
+- Final Gating: 16 rules / 0 failed / 2 warnings. Canon031 moved from the observed baseline 28/148 classes and 150/489 contract methods to 33/148 classes and 155/489 contract methods while concurrent Addressing documentation work also landed; Canon040 remains warning-class HIGH_TEST_DEBT at lines 53.4%, methods 43.4%, branches 47.4%. Canon042/052/056/061/063 remain GREEN.
+- Fresh post-mutation Inspecting report: `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261004-201740.json`; PHPStan 0 errors, Rector 0 changes/errors, 27 medium observations, 0 high/critical/autofixable findings.
+- Signed commit `a4b1d4697f6ad20a3629ef17b56d10bace6e5109` (`Document Addressing outbox contract`) contains the isolated `src/Entity/AddressOutboxEntity.php` change and is synchronized with `origin/rc/addressing-rc-final-v3` (0 ahead / 0 behind).
+- No browser/mobile UI, navigation, forms, routes, interaction, or user-flow behavior changed; visual capture is not applicable to this documentation-only mutation.
+- Concurrent `.gating/README.md`, `AGENTS.md`, shared `CMCP_CHANGELOG.md`, and `src/Policy/AddressLifecyclePolicy.php` remain intentionally uncommitted/preserved.
+
+Что имеем? The selected outbox contract seam is documented, hard deterministic/static verification is GREEN, fresh Inspecting has no high/critical findings, and the isolated signed commit is published.
+Что осталось? Repository-wide Canon031/Canon040 warning debt and medium structural observations remain explicit follow-up queues; no task-owned RC-critical implementation or publication tail remains.
+
 ## 2026-10-04 — engine-20261004200119-addressing-a49e0f
 
 ### Baseline
@@ -25,8 +384,19 @@
 - Run PHP lint/static analysis/tests/Gating and post-mutation Inspecting because production source changed.
 - No browser/mobile UI, navigation, forms, routes, interaction, or user-flow semantics are changed; visual capture is not applicable unless verification proves otherwise.
 
-Что имеем? A bounded Canon031 remediation is implemented on four clean Addressing-owned entities without behavior changes.
-Что осталось? Run deterministic verification, refresh Inspecting evidence, integrate only task-owned source files, and confirm post-push branch state.
+### Verification and integration
+- PHPStan GREEN: 185/185 files, 0 errors. PHPUnit GREEN: 56 tests / 293 assertions, with one existing notice and one intentional skip.
+- Coverage evidence refreshed successfully; Canon040 remains warning-class HIGH_TEST_DEBT at lines 53.4%, methods 43.4%, branches 47.4%.
+- Behavioral/UI evidence refreshed and GREEN: functional 13/16 (81.2%), behavioral 2/2, UI 2/2, critical 1/1.
+- PHP-CS-Fixer dry-run GREEN: 0/187 fixable files.
+- Final Gating: 16 rules / 0 failed / 2 warnings. Canon031 is classes 33/148 and contract methods 155/489; Canon040 remains measured warning debt. Hard Canon029/042/052/056/061/063 checks are GREEN.
+- Fresh post-mutation Inspecting report: `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261004-201646.json`; PHPStan 0 errors, Rector 0 changes/errors, 27 medium observations, 0 high/critical/autofixable findings.
+- No browser/mobile UI, navigation, forms, routes, interactions, or user flows changed; screenshot capture is not applicable.
+- Signed commit `c05bae3` (`Document Addressing reference entities`) contains only the four task-owned Entity files and was pushed to `origin/rc/addressing-rc-final-v3`.
+- Concurrent dirty work changed during this execution window (`AddressOutboxEntity` and `AddressLifecyclePolicy` appeared while earlier controller/DTO dirt disappeared); it was not staged, reset, or re-attributed.
+
+Что имеем? The bounded Canon031 remediation is verified, signed, and published with all hard deterministic/static gates GREEN.
+Что осталось? Repository-wide Canon031 completion, Canon040 test-coverage uplift, and medium Inspecting structural observations remain explicit debt queues; no task-owned RC-critical publication tail remains.
 
 ## 2026-10-04 — engine-20261004195308-addressing-d9891a
 
