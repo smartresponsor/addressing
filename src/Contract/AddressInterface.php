@@ -5,12 +5,28 @@ declare(strict_types=1);
 
 namespace App\Addressing\Contract;
 
+/**
+ * Defines the complete read contract for one persisted address aggregate.
+ *
+ * Consumers use this boundary to inspect address identity, normalized and validated data,
+ * provenance, governance relations, revalidation state, and lifecycle timestamps without
+ * depending on the concrete Doctrine entity implementation.
+ */
 interface AddressInterface
 {
+    /**
+     * Exposes the validation state grouped behind its dedicated contract boundary.
+     */
     public function validationState(): AddressValidationStateInterface;
 
+    /**
+     * Exposes governance relationships and status through the dedicated governance contract.
+     */
     public function governanceState(): AddressGovernanceStateInterface;
 
+    /**
+     * Exposes revalidation scheduling and history through the dedicated state contract.
+     */
     public function revalidationState(): AddressRevalidationStateInterface;
 
     public function id(): string;
