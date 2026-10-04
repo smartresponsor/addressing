@@ -39,4 +39,34 @@ final class SymfonySecurityTest extends TestCase
         self::assertTrue($limiter->check('client-1', 'address_lookup'));
         self::assertFalse($limiter->check('client-1', 'address_lookup'));
     }
+
+    public function testRateLimiterResetsExpiredWindow(): void
+    {
+        $entityManager = TestDatabase::createInMemoryEntityManager([AddressRateLimitEntity::class]);
+        $limiter = new AddressRateLimiterService(new AddressDoctrineRateLimitRepository($entityManager), 1, 0);
+
+        self::assertTrue($limiter->check('client-1', 'address_lookup'));
+        self::assertFalse($limiter->check('client-1', 'address_lookup'));
+
+        $entity = $entityManager->find(AddressRateLimitEntity::class, ['client' => 'client-1', 'rkey' => 'address_lookup']);
+        self::assertInstanceOf(AddressRateLimitEntity::class, $entity);
+        $entity->setTs(time() - 61);
+        $entityManager->flush();
+
+        self::assertTrue($limiter->check('client-1', 'address_lookup'));
+        self::assertSame(1, $entity->getCnt());
+    }
+
+    public function testRateLimiterKeepsClientAndOperationCountersIndependent(): void
+    {
+        $entityManager = TestDatabase::createInMemoryEntityManager([AddressRateLimitEntity::class]);
+        $limiter = new AddressRateLimiterService(new AddressDoctrineRateLimitRepository($entityManager), 1, 0);
+
+        self::assertTrue($limiter->check('client-1', 'address_lookup'));
+        self::assertFalse($limiter->check('client-1', 'address_lookup'));
+
+        self::assertTrue($limiter->check('client-1', 'address_write'));
+        self::assertTrue($limiter->check('client-2', 'address_lookup'));
+        self::assertFalse($limiter->check('client-1', 'address_lookup'));
+    }
 }
