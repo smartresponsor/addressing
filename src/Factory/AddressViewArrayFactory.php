@@ -6,9 +6,16 @@ namespace App\Addressing\Factory;
 
 use App\Addressing\Contract\AddressInterface;
 
+/**
+ * Projects Addressing records into stable transport arrays enriched with review and governance signals.
+ */
 final readonly class AddressViewArrayFactory
 {
-    /** @return array<string, mixed> */
+    /**
+     * Builds the full address view payload and derives review state from validation, evidence, and governance metadata.
+     *
+     * @return array<string, mixed>
+     */
     public function toArray(AddressInterface $address, ?string $expectedNormalizationVersion): array
     {
         $flags = $this->reviewFlags($address, $expectedNormalizationVersion);
@@ -141,7 +148,11 @@ final readonly class AddressViewArrayFactory
         return false !== $timestamp && $timestamp <= time();
     }
 
-    /** @return array{id: string, line1: string, city: string, countryCode: string, governanceStatus: string, validationStatus: string} */
+    /**
+     * Builds the compact address projection used by preview and portfolio-oriented consumers.
+     *
+     * @return array{id: string, line1: string, city: string, countryCode: string, governanceStatus: string, validationStatus: string}
+     */
     public function previewRow(AddressInterface $address): array
     {
         return [
