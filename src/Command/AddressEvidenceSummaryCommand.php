@@ -14,6 +14,12 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Exposes Addressing evidence-history summaries through the Symfony console.
+ *
+ * Tenant-scope inputs are normalized at the CLI boundary before the application service
+ * resolves the persisted validation-evidence history for the requested address.
+ */
 #[AsCommand(name: 'address:summary:evidence', description: 'Summarize evidence history for an address.')]
 final class AddressEvidenceSummaryCommand extends Command
 {
@@ -22,6 +28,9 @@ final class AddressEvidenceSummaryCommand extends Command
         parent::__construct();
     }
 
+    /**
+     * Declares the address identity and optional owner/vendor scope used by the summary query.
+     */
     #[\Override]
     protected function configure(): void
     {
@@ -32,7 +41,11 @@ final class AddressEvidenceSummaryCommand extends Command
             ->addOption('vendor-id', null, InputOption::VALUE_OPTIONAL);
     }
 
-    /** @noinspection PhpMissingParentCallCommonInspection */
+    /**
+     * Loads the scoped evidence summary and emits a stable JSON representation to stdout.
+     *
+     * @noinspection PhpMissingParentCallCommonInspection
+     */
     #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
