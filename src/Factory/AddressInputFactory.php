@@ -14,9 +14,14 @@ use App\Addressing\Value\AddressSubdivision;
 use App\Addressing\Value\Record\AddressRecord;
 use Symfony\Component\Uid\Ulid;
 
+/**
+ * Builds canonical Addressing records from validated management input and controlled runtime overrides.
+ */
 final class AddressInputFactory
 {
     /**
+     * Converts management input into a normalized address record while applying explicit override values.
+     *
      * @param array<string, mixed> $overrides
      */
     public function fromManageDto(AddressManageDTO $addressManageDto, array $overrides = []): AddressRecord
