@@ -44,6 +44,12 @@ final class AddressValidatedApplierTest extends TestCase
             'normalizationVersion' => 'canon-w08',
             'rawInput' => ['line1' => '123 Main St', 'city' => 'Houston'],
             'normalizedSnapshot' => ['line1Norm' => 'main st', 'cityNorm' => 'houston'],
+            'raw' => ['providerResult' => 'verified'],
+            'verdict' => [
+                'deliverable' => true,
+                'granularity' => 'premise',
+                'quality' => 96,
+            ],
             'providerDigest' => 'digest-1',
             'governanceStatus' => 'superseded',
             'supersededById' => 'addr-2',
@@ -70,6 +76,11 @@ final class AddressValidatedApplierTest extends TestCase
         self::assertSame('unit', $address->getLastValidationProvider());
         self::assertSame('validated', $address->getLastValidationStatus());
         self::assertSame(87, $address->getLastValidationScore());
+        self::assertSame(['providerResult' => 'verified'], $address->getValidationRaw());
+        self::assertSame(['deliverable' => true, 'granularity' => 'premise', 'quality' => 96, 'signal' => []], $address->getValidationVerdict());
+        self::assertTrue($address->getValidationDeliverable());
+        self::assertSame('premise', $address->getValidationGranularity());
+        self::assertSame(96, $address->getValidationQuality());
 
         /** @var list<AddressEvidenceSnapshotEntity> $snapshots */
         $snapshots = $this->entityManager->getRepository(AddressEvidenceSnapshotEntity::class)->findBy(
@@ -86,6 +97,7 @@ final class AddressValidatedApplierTest extends TestCase
         self::assertSame('validated', $snapshot->getValidationStatus());
         self::assertSame(87, $snapshot->getValidationScore());
         self::assertSame('digest-1', $snapshot->getProviderDigest());
+        self::assertSame(['deliverable' => true, 'granularity' => 'premise', 'quality' => 96, 'signal' => []], $snapshot->getValidationIssues());
 
         /** @var list<AddressOutboxEntity> $outboxRows */
         $outboxRows = $this->entityManager->getRepository(AddressOutboxEntity::class)->findBy([], ['id' => 'DESC'], 1);
@@ -98,6 +110,13 @@ final class AddressValidatedApplierTest extends TestCase
         self::assertSame('AddressValidatedApplied', $payload['eventName'] ?? null);
         self::assertSame('address-outbox.v1', $payload['schemaVersion'] ?? null);
         self::assertSame(1, $payload['eventVersion'] ?? null);
+        self::assertTrue($payload['deliverable'] ?? false);
+        self::assertSame('premise', $payload['granularity'] ?? null);
+        self::assertSame(96, $payload['quality'] ?? null);
+        self::assertSame('digest-1', $payload['providerDigest'] ?? null);
+        self::assertTrue($payload['hasEvidence'] ?? false);
+        self::assertSame('superseded', $payload['governanceStatus'] ?? null);
+        self::assertSame('addr-2', $payload['governanceLinkId'] ?? null);
     }
 
     public function testApplyRejectsWrongTenantScope(): void
