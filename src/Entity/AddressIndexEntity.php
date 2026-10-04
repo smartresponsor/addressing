@@ -12,6 +12,9 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'idx_city', columns: ['city'])]
 #[ORM\Index(name: 'idx_region', columns: ['region'])]
 #[ORM\Index(name: 'idx_geo', columns: ['geo_key'])]
+/**
+ * Persists the denormalized Addressing index record used for normalized lookup and optional geocode metadata.
+ */
 class AddressIndexEntity
 {
     #[ORM\Id]
