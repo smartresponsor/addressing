@@ -5,6 +5,12 @@ declare(strict_types=1);
 
 namespace App\Addressing\Validator;
 
+/**
+ * Validates Addressing request payloads against the component-owned lightweight schema definitions.
+ *
+ * The validator reports deterministic missing-field and type errors without invoking provider-side
+ * address verification, persistence, or transport concerns.
+ */
 final class AddressSchemaValidator
 {
     /**
@@ -29,6 +35,8 @@ final class AddressSchemaValidator
     ];
 
     /**
+     * Validates one request payload against a named Addressing schema and returns the first deterministic contract error.
+     *
      * @param array<string, mixed> $data
      *
      * @return array{ok: true}|array{ok: false, error: non-empty-string}
