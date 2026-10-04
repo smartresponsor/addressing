@@ -12,6 +12,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: \App\Addressing\Repository\AddressStreetEntityRepository::class)]
 #[ORM\Table(name: 'address_street')]
 #[ORM\Index(name: 'address_street_lookup_idx', columns: ['country_code', 'city_name', 'street_name'])]
+/**
+ * Persists canonical street reference data used by Addressing lookup and normalization workflows.
+ *
+ * Addressing owns locality and normalized street semantics while Objecting supplies shared identity, audit, and state fields.
+ */
 class AddressStreetEntity
 {
     use ObjectIdentityEmbeddableTrait;
