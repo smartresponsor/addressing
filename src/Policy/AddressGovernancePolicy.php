@@ -10,6 +10,9 @@ declare(strict_types=1);
 
 namespace App\Addressing\Policy;
 
+/**
+ * Normalizes and validates Addressing governance-state transitions and their canonical relationship links.
+ */
 final class AddressGovernancePolicy
 {
     /** @var array<string, list<string>> */
@@ -22,6 +25,8 @@ final class AddressGovernancePolicy
     ];
 
     /**
+     * Normalize a governance patch and reject invalid status transitions or self-referential relationship links.
+     *
      * @param array<string, mixed> $patch
      *
      * @return array<string, mixed>

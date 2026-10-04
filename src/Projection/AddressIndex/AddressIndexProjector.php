@@ -11,6 +11,9 @@ use App\Addressing\Normalizer\AddressIndexNormalizer;
 use App\Addressing\RepositoryInterface\AddressIndex\AddressIndexRepositoryInterface;
 use App\Addressing\Service\Projection\AddressIndex\AddressIndexProjectorService;
 
+/**
+ * Projects Addressing create and update events into the normalized address index persistence model.
+ */
 final readonly class AddressIndexProjector
 {
     public function __construct(
@@ -20,6 +23,7 @@ final readonly class AddressIndexProjector
     ) {
     }
 
+    /** Project a newly created address event into the normalized address index. */
     public function onAddressCreated(AddressCreatedEvent $addressCreatedEvent): void
     {
         $this->handle([
@@ -32,6 +36,7 @@ final readonly class AddressIndexProjector
         ]);
     }
 
+    /** Project an updated address event into the normalized address index. */
     public function onAddressUpdated(AddressUpdatedEvent $addressUpdatedEvent): void
     {
         $this->handle([
