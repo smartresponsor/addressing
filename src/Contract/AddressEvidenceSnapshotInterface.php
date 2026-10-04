@@ -44,17 +44,37 @@ interface AddressEvidenceSnapshotInterface
      */
     public function rawInputSnapshot(): ?array;
 
-    /** @return array<string, mixed>|null */
+    /**
+     * Return the normalized address snapshot retained as evidence for this validation event.
+     *
+     * @return array<string, mixed>|null
+     */
     public function normalizedSnapshot(): ?array;
 
+    /**
+     * Return the final validation status recorded for the immutable evidence snapshot.
+     */
     public function validationStatus(): string;
 
+    /**
+     * Return the optional validation confidence score captured with the evidence snapshot.
+     */
     public function validationScore(): ?int;
 
-    /** @return array<string, mixed>|null */
+    /**
+     * Return structured validation issues reported while producing this evidence snapshot.
+     *
+     * @return array<string, mixed>|null
+     */
     public function validationIssues(): ?array;
 
+    /**
+     * Return the optional digest that identifies the provider evidence behind this snapshot.
+     */
     public function providerDigest(): ?string;
 
+    /**
+     * Return the immutable snapshot creation timestamp in its serialized contract form.
+     */
     public function createdAt(): string;
 }
