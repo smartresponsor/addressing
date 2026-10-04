@@ -12,6 +12,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: \App\Addressing\Repository\AddressPostalCodeEntityRepository::class)]
 #[ORM\Table(name: 'address_postal_code')]
 #[ORM\Index(name: 'address_postal_country_code_idx', columns: ['country_code', 'postal_code'])]
+/**
+ * Persists postal-code reference data used to normalize geographic Addressing inputs.
+ *
+ * Addressing owns postal semantics and coordinates while Objecting supplies reusable identity, audit, and state fields.
+ */
 class AddressPostalCodeEntity
 {
     use ObjectIdentityEmbeddableTrait;

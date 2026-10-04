@@ -12,6 +12,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: \App\Addressing\Repository\AddressComponentEntityRepository::class)]
 #[ORM\Table(name: 'address_component')]
 #[ORM\Index(name: 'address_component_address_type_idx', columns: ['address_id', 'component_type'])]
+/**
+ * Stores one typed address component together with its normalized value, provenance, and confidence.
+ *
+ * The record remains Addressing-owned while Objecting provides reusable lifecycle and identity fields.
+ */
 class AddressComponentEntity
 {
     use ObjectIdentityEmbeddableTrait;
