@@ -7,8 +7,17 @@ namespace App\Addressing\Factory\Identifier;
 
 use App\Addressing\FactoryInterface\Identifier\AddressUlidInterface;
 
+/**
+ * Generates Addressing identifiers in canonical 26-character ULID-compatible form.
+ *
+ * The timestamp prefix preserves lexical ordering while the random suffix avoids
+ * coupling Addressing identity generation to persistence or external providers.
+ */
 final class AddressUlid implements AddressUlidInterface
 {
+    /**
+     * Creates a new Addressing identifier from the current millisecond timestamp and random entropy.
+     */
     #[\Override]
     public static function generate(): string
     {
