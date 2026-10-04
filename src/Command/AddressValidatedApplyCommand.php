@@ -15,6 +15,12 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Applies externally validated address evidence through the Addressing application boundary.
+ *
+ * The command owns console argument decoding and scope normalization while the application
+ * service owns mutation, evidence persistence, governance effects, and transactional safety.
+ */
 #[AsCommand(name: 'address:validated:apply', description: 'Apply a validated payload to an existing address.')]
 final class AddressValidatedApplyCommand extends Command
 {
@@ -23,6 +29,9 @@ final class AddressValidatedApplyCommand extends Command
         parent::__construct();
     }
 
+    /**
+     * Declares the validated payload, address identity, and optional ownership scope inputs.
+     */
     #[\Override]
     protected function configure(): void
     {
@@ -34,7 +43,11 @@ final class AddressValidatedApplyCommand extends Command
             ->addOption('vendor-id', null, InputOption::VALUE_OPTIONAL);
     }
 
-    /** @noinspection PhpMissingParentCallCommonInspection */
+    /**
+     * Decodes the validated payload and delegates its scoped application to the service layer.
+     *
+     * @noinspection PhpMissingParentCallCommonInspection
+     */
     #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
