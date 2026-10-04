@@ -8,6 +8,9 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'rate_limit')]
+/**
+ * Persists standalone Addressing rate-limit counters keyed by client and limiter identity.
+ */
 class AddressRateLimitEntity
 {
     #[ORM\Id]

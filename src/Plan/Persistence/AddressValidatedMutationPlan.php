@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Addressing\Plan\Persistence;
 
 /**
+ * Carries the normalized persistence mutation required after Addressing validation and governance evaluation complete.
+ *
  * @phpstan-type MutationParams array<string, mixed>
  * @phpstan-type MutationAssignments list<string>
  */
