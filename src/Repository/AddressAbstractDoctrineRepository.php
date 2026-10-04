@@ -378,7 +378,7 @@ abstract readonly class AddressAbstractDoctrineRepository
 
         $lastRow = end($rows);
 
-        return is_array($lastRow) && isset($lastRow['id']) && is_string($lastRow['id']) ? $lastRow['id'] : null;
+        return isset($lastRow['id']) && is_string($lastRow['id']) ? $lastRow['id'] : null;
     }
 
     /** @param array<string, mixed> $row */
@@ -988,10 +988,6 @@ abstract readonly class AddressAbstractDoctrineRepository
         }
 
         $addressEntity = end($entities);
-
-        if (!$addressEntity instanceof AddressEntity) {
-            return null;
-        }
 
         return $addressEntity->getId();
     }
