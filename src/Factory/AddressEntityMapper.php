@@ -9,8 +9,14 @@ use App\Addressing\Entity\AddressEntity;
 use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
 use App\Addressing\Value\Record\AddressData;
 
+/**
+ * Maps Addressing transport records to and from Doctrine entities without moving persistence ownership out of the component.
+ */
 final class AddressEntityMapper
 {
+    /**
+     * Materializes a persistence entity from the canonical Addressing record while preserving lifecycle and governance state.
+     */
     public function toDoctrine(AddressData $record): AddressEntity
     {
         return (new AddressEntity())
@@ -62,6 +68,9 @@ final class AddressEntityMapper
             ->setLastValidationScore($record->lastValidationScore());
     }
 
+    /**
+     * Reconstructs the Addressing record contract from a persisted entity using transport-safe scalar timestamps and values.
+     */
     public function fromDoctrine(AddressEntity $entity): AddressData
     {
         return new AddressData(
@@ -114,6 +123,9 @@ final class AddressEntityMapper
         );
     }
 
+    /**
+     * Materializes immutable validation evidence against its owning Address entity for repository persistence.
+     */
     public function toDoctrineSnapshot(AddressEvidenceSnapshotInterface $record, AddressEntity $address): AddressEvidenceSnapshotEntity
     {
         return (new AddressEvidenceSnapshotEntity())
