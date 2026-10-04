@@ -733,3 +733,12 @@
 
 Что имеем? The supplied static-quality RED is closed, the scanner-facing and managed PHPStan surfaces agree and pass, the prior projection refactor is verified, and post-mutation Inspecting has no HIGH/critical findings.
 Что осталось? Integrate only the coherent Addressing RC unit, publish the current branch if upstream remains synchronized, and inspect final HEAD/worktree/upstream state while preserving unrelated pre-existing `.gating/README.md` and `AGENTS.md` changes.
+
+### Final integration checkpoint
+
+- Signed commit `5993ade62fced083dd870faf33161ad1f868ed98` (`Harden Addressing static analysis and RC quality`) was published to `origin/rc/addressing-rc-final-v3`.
+- Post-push sync is 0 ahead / 0 behind. The only remaining worktree changes are the preserved pre-existing `.gating/README.md` deletion and `AGENTS.md` canon-projection edit; they were deliberately excluded from this RC unit and do not block publication of the committed work.
+- Current-branch `composer audit --no-interaction --format=summary`: GREEN, no security vulnerability advisories found. The GitHub push banner about default-branch Dependabot findings is therefore not evidence of a vulnerability in this checked current lockfile.
+
+Что имеем? The bounded static-quality objective is implemented, verified, signed and published with no current Composer advisory and no HIGH/critical Inspecting findings.
+Что осталось? Only separately owned pre-existing canon-projection work remains dirty; no authorized in-scope tail remains for this task.
