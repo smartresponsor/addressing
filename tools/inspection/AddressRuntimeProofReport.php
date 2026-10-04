@@ -16,7 +16,7 @@ $proof = [
     'legacy application facade removed' => !is_file($root.'/src/Service/Application/'.'Address'.'Service.php'),
     'legacy http god service removed' => !is_file($root.'/src/Service/Http/Address/'.'Address'.'Http'.'Service.php'),
     'public/index.php' => is_file($root.'/public/index.php'),
-    'config/addressing_services.yaml' => is_file($root.'/config/addressing_services.yaml'),
+    'config/address_services.bundle.yaml' => is_file($root.'/config/address_services.bundle.yaml'),
 ];
 
 fwrite(STDOUT, json_encode([
