@@ -15,6 +15,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(name: 'address:summary:portfolio', description: 'Summarize country/source/validation/normalization portfolios.')]
+/**
+ * Exposes Addressing portfolio summaries through a single operational CLI entrypoint.
+ *
+ * The command keeps portfolio selection and optional scope filters at the console boundary
+ * while delegating country, source, validation, and normalization aggregation to the application service.
+ */
 final class AddressPortfolioSummaryCommand extends Command
 {
     public function __construct(private readonly AddressPortfolioSummaryService $addressPortfolioSummaryService)
@@ -22,6 +28,9 @@ final class AddressPortfolioSummaryCommand extends Command
         parent::__construct();
     }
 
+    /**
+     * Declares the portfolio selector and optional Addressing-owned scope filters accepted by the command.
+     */
     #[\Override]
     protected function configure(): void
     {
@@ -34,7 +43,11 @@ final class AddressPortfolioSummaryCommand extends Command
             ->addOption('query', null, InputOption::VALUE_OPTIONAL);
     }
 
-    /** @noinspection PhpMissingParentCallCommonInspection */
+    /**
+     * Resolves the requested portfolio summary and emits its deterministic JSON representation.
+     *
+     * @noinspection PhpMissingParentCallCommonInspection
+     */
     #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
