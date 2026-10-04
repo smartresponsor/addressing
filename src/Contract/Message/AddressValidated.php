@@ -7,6 +7,12 @@ namespace App\Addressing\Contract\Message;
 
 use App\Addressing\Policy\AddressRecordPolicy;
 
+/**
+ * Carries the normalized address and validation evidence produced by one validation operation.
+ *
+ * The message is provider-neutral at the Addressing boundary: it preserves normalized values,
+ * provenance, governance and revalidation metadata while keeping provider execution outside the component.
+ */
 final readonly class AddressValidated implements \JsonSerializable
 {
     public function __construct(
@@ -83,6 +89,9 @@ final readonly class AddressValidated implements \JsonSerializable
         );
     }
 
+    /**
+     * Computes a stable SHA-256 fingerprint of the complete serialized validation message.
+     */
     public function fingerprint(): string
     {
         $serialized = $this->jsonSerialize();
@@ -94,7 +103,11 @@ final readonly class AddressValidated implements \JsonSerializable
         return hash('sha256', $json);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Converts the message into the persistence-column payload consumed by Addressing storage.
+     *
+     * @return array<string, mixed>
+     */
     public function toDbArray(): array
     {
         $verdictData = $this->addressValidationVerdict?->jsonSerialize();
@@ -135,7 +148,11 @@ final readonly class AddressValidated implements \JsonSerializable
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Serializes the provider-neutral validation message using the public Addressing contract keys.
+     *
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function jsonSerialize(): array
     {
