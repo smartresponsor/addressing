@@ -7,6 +7,12 @@ namespace App\Addressing\Context\Persistence;
 use App\Addressing\Contract\Message\AddressValidated;
 use App\Addressing\Plan\Persistence\AddressValidatedMutationPlan;
 
+/**
+ * Carries the immutable validation evidence needed to persist one Addressing snapshot.
+ *
+ * The context keeps persistence inputs explicit while leaving mutation-plan calculation
+ * and evidence-entity construction in their owning application and persistence services.
+ */
 final readonly class AddressEvidenceSnapshotContext
 {
     /** @param array<string, mixed>|null $normalizedSnapshot */
@@ -22,6 +28,9 @@ final readonly class AddressEvidenceSnapshotContext
     ) {
     }
 
+    /**
+     * Projects validated-event data and the calculated mutation plan into snapshot persistence inputs.
+     */
     public static function fromMutationPlan(
         string $addressId,
         ?string $ownerId,
