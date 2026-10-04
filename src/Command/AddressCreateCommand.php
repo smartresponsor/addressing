@@ -15,6 +15,9 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Creates one canonical Addressing record from explicit CLI inputs.
+ */
 #[AsCommand(name: 'address:create', description: 'Create a canonical address record from CLI inputs.')]
 final class AddressCreateCommand extends Command
 {
@@ -25,6 +28,9 @@ final class AddressCreateCommand extends Command
         parent::__construct();
     }
 
+    /**
+     * Declares the scalar address, ownership, and provenance options accepted by the command.
+     */
     #[\Override]
     protected function configure(): void
     {
@@ -42,7 +48,11 @@ final class AddressCreateCommand extends Command
             ->addOption('source-reference', null, InputOption::VALUE_OPTIONAL, default: 'address:create');
     }
 
-    /** @noinspection PhpMissingParentCallCommonInspection */
+    /**
+     * Persists the normalized command input and emits a stable JSON identity summary.
+     *
+     * @noinspection PhpMissingParentCallCommonInspection
+     */
     #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
