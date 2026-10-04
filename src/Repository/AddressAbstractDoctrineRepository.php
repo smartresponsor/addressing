@@ -860,6 +860,10 @@ abstract readonly class AddressAbstractDoctrineRepository
         }
 
         [$createdAt, $id] = explode("\n", $decoded, 2);
+        $parsedCreatedAt = \DateTimeImmutable::createFromFormat(DATE_ATOM, $createdAt);
+        if ('' === $createdAt || '' === trim($id) || str_contains($id, "\n") || false === $parsedCreatedAt || $parsedCreatedAt->format(DATE_ATOM) !== $createdAt) {
+            throw new \RuntimeException('invalid_evidence_cursor');
+        }
 
         return [$createdAt, $id];
     }
