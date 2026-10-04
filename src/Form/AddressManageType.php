@@ -13,9 +13,16 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/** @extends AbstractType<AddressManageDTO> */
+/**
+ * Defines the standalone Addressing management form used to capture canonical address input values.
+ *
+ * @extends AbstractType<AddressManageDTO>
+ */
 final class AddressManageType extends AbstractType
 {
+    /**
+     * Builds the address management input fields and submit action for the standalone Addressing form.
+     */
     #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -37,6 +44,9 @@ final class AddressManageType extends AbstractType
             ->add('save', SubmitType::class, ['label' => 'Create address']);
     }
 
+    /**
+     * Binds the management form to the Addressing input DTO used by the standalone create flow.
+     */
     #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
