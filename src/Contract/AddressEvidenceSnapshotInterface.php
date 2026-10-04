@@ -9,6 +9,12 @@ declare(strict_types=1);
 
 namespace App\Addressing\Contract;
 
+/**
+ * Defines the immutable evidence snapshot contract retained for validated Addressing records.
+ *
+ * Implementations expose validation provenance, normalized/raw snapshots, governance identity,
+ * and provider evidence without leaking persistence or transport-specific representations.
+ */
 interface AddressEvidenceSnapshotInterface
 {
     public function id(): string;
@@ -31,7 +37,11 @@ interface AddressEvidenceSnapshotInterface
 
     public function normalizationVersion(): ?string;
 
-    /** @return array<string, mixed>|null */
+    /**
+     * Return the original address input captured before normalization and validation processing.
+     *
+     * @return array<string, mixed>|null
+     */
     public function rawInputSnapshot(): ?array;
 
     /** @return array<string, mixed>|null */
