@@ -5,9 +5,14 @@ declare(strict_types=1);
 
 namespace App\Addressing\Middleware;
 
+/**
+ * Ensures each standalone Addressing request has a stable request identifier propagated to the response.
+ */
 final class AddressRequestIdMiddleware
 {
     /**
+     * Return the incoming request identifier or generate and publish a new one.
+     *
      * @throws \Exception
      */
     public static function ensure(): string
