@@ -5,6 +5,12 @@ declare(strict_types=1);
 
 namespace App\Addressing\Contract\Message;
 
+/**
+ * Carries the normalized validation verdict retained by Addressing after provider evidence is interpreted.
+ *
+ * The value keeps deliverability, granularity, quality, and provider signals transport-safe without exposing
+ * provider clients or persistence details to downstream application and message consumers.
+ */
 final readonly class AddressValidationVerdict implements \JsonSerializable
 {
     /**
@@ -20,6 +26,8 @@ final readonly class AddressValidationVerdict implements \JsonSerializable
     }
 
     /**
+     * Rehydrates a normalized validation verdict from the persisted or transported scalar payload.
+     *
      * @param array<string, mixed>|null $data
      */
     public static function fromArray(?array $data): ?self
@@ -89,7 +97,11 @@ final readonly class AddressValidationVerdict implements \JsonSerializable
         return $value;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Serializes the normalized verdict into the stable Addressing message payload shape.
+     *
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function jsonSerialize(): array
     {
