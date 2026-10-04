@@ -6,6 +6,12 @@ namespace App\Addressing\Context\Application;
 
 use App\Addressing\Plan\Persistence\AddressValidatedMutationPlan;
 
+/**
+ * Carries the immutable projection payload written to the validated-address outbox.
+ *
+ * The context is assembled from one validated mutation plan so persistence and dispatch
+ * consumers observe the same governance, evidence, and revalidation state atomically.
+ */
 final readonly class AddressValidatedOutboxContext
 {
     // noinspection PhpTooManyParametersInspection
@@ -30,7 +36,11 @@ final readonly class AddressValidatedOutboxContext
     ) {
     }
 
-    /** @noinspection PhpTooManyParametersInspection */
+    /**
+     * Build the outbox projection from the validated mutation plan selected for persistence.
+     *
+     * @noinspection PhpTooManyParametersInspection
+     */
     public static function fromMutationPlan(
         string $id,
         ?string $ownerId,
