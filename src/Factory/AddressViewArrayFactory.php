@@ -11,23 +11,25 @@ final readonly class AddressViewArrayFactory
     /** @return array<string, mixed> */
     public function toArray(AddressInterface $address, ?string $expectedNormalizationVersion): array
     {
-        $governanceLinkId = $this->primaryGovernanceLinkId($address);
         $flags = $this->reviewFlags($address, $expectedNormalizationVersion);
-        $hasEvidence = true === $flags['hasEvidence'];
-        $isEvidenceMissing = true === $flags['isEvidenceMissing'];
-        $isValidationUncertain = true === $flags['isValidationUncertain'];
-        $isGovernanceConflict = true === $flags['isGovernanceConflict'];
-        $isNormalizationStale = true === $flags['isNormalizationStale'];
-        $isRevalidationDue = true === $flags['isRevalidationDue'];
         $reviewReason = $this->reviewReason([
-            'isGovernanceConflict' => $isGovernanceConflict,
-            'isValidationUncertain' => $isValidationUncertain,
-            'isEvidenceMissing' => $isEvidenceMissing,
-            'isRevalidationDue' => $isRevalidationDue,
-            'isNormalizationStale' => $isNormalizationStale,
+            'isGovernanceConflict' => $flags['isGovernanceConflict'],
+            'isValidationUncertain' => $flags['isValidationUncertain'],
+            'isEvidenceMissing' => $flags['isEvidenceMissing'],
+            'isRevalidationDue' => $flags['isRevalidationDue'],
+            'isNormalizationStale' => $flags['isNormalizationStale'],
             'governanceStatus' => $address->governanceStatus(),
         ]);
 
+        return array_merge(
+            $this->addressPayload($address),
+            $this->reviewPayload($address, $flags, $reviewReason),
+        );
+    }
+
+    /** @return array<string, mixed> */
+    private function addressPayload(AddressInterface $address): array
+    {
         return [
             'id' => $address->id(),
             'ownerId' => $address->ownerId(),
@@ -56,11 +58,30 @@ final readonly class AddressViewArrayFactory
             'rawInputSnapshot' => $address->rawInputSnapshot(),
             'normalizedSnapshot' => $address->normalizedSnapshot(),
             'providerDigest' => $address->providerDigest(),
-            'hasEvidence' => $hasEvidence,
-            'isEvidenceMissing' => $isEvidenceMissing,
-            'isValidationUncertain' => $isValidationUncertain,
-            'isGovernanceConflict' => $isGovernanceConflict,
-            'isNormalizationStale' => $isNormalizationStale,
+        ];
+    }
+
+    /**
+     * @param array{
+     *   hasEvidence: bool,
+     *   isEvidenceMissing: bool,
+     *   isValidationUncertain: bool,
+     *   isGovernanceConflict: bool,
+     *   isNormalizationStale: bool,
+     *   isRevalidationDue: bool
+     * } $flags
+     * @return array<string, mixed>
+     */
+    private function reviewPayload(AddressInterface $address, array $flags, ?string $reviewReason): array
+    {
+        $governanceLinkId = $this->primaryGovernanceLinkId($address);
+
+        return [
+            'hasEvidence' => $flags['hasEvidence'],
+            'isEvidenceMissing' => $flags['isEvidenceMissing'],
+            'isValidationUncertain' => $flags['isValidationUncertain'],
+            'isGovernanceConflict' => $flags['isGovernanceConflict'],
+            'isNormalizationStale' => $flags['isNormalizationStale'],
             'requiresReview' => null !== $reviewReason,
             'reviewReason' => $reviewReason,
             'governanceStatus' => $address->governanceStatus(),
@@ -71,7 +92,7 @@ final readonly class AddressViewArrayFactory
             'aliasOfId' => $address->aliasOfId(),
             'conflictWithId' => $address->conflictWithId(),
             'revalidationDueAt' => $address->revalidationDueAt(),
-            'isRevalidationDue' => $isRevalidationDue,
+            'isRevalidationDue' => $flags['isRevalidationDue'],
             'revalidationPolicy' => $address->revalidationPolicy(),
             'lastValidationProvider' => $address->lastValidationProvider(),
             'lastValidationStatus' => $address->lastValidationStatus(),

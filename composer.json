@@ -63,7 +63,7 @@
   },
   "scripts": {
     "lint": "@php tools/qa/AddressPhpLint.php",
-    "phpstan": "vendor/bin/phpstan analyse src --level=max",
+    "phpstan": "php -d memory_limit=1G vendor/bin/phpstan analyse -c phpstan.neon.dist",
     "psalm": "vendor/bin/psalm",
     "test": "@php tools/php/php84.php vendor/bin/phpunit -c phpunit.xml.dist",
     "test:coverage": [

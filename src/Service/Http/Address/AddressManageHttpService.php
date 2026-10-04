@@ -40,16 +40,12 @@ final readonly class AddressManageHttpService
         $form = $this->formFactory->create(AddressManageType::class, new AddressManageDTO());
         $form->handleRequest($request);
 
+        $dto = $form->getData();
         if ($form->isSubmitted() && $form->isValid()) {
-            $dto = $form->getData();
-            if ($dto instanceof AddressManageDTO) {
-                $createdAddressId = $this->createFromManageDto($dto);
-            }
+            $createdAddressId = $this->createFromManageDto($dto);
         }
 
-        $previewRows = $form->getData() instanceof AddressManageDTO
-            ? $this->previewRows($form->getData())
-            : [];
+        $previewRows = $this->previewRows($dto);
 
         return new Response($this->twigEnvironment->render('address/manage.html.twig', [
             'manageForm' => $form->createView(),

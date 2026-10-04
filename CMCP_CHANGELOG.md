@@ -669,3 +669,67 @@
 
 Что имеем? Current hard canon is GREEN, parser-specific Inspecting debt dropped by two findings, deterministic/static/runtime verification is GREEN, and no UI verification obligation was introduced by this change.
 Что осталось? Create a coherent signed commit containing only this task's journal/code/test/tooling changes, publish the current branch if remote sync remains safe, and inspect final HEAD/upstream/worktree state while leaving pre-existing dirty files untouched.
+
+## 2026-10-04 — Task engine-20261004062551-addressing-b9350a current-state RC pass
+
+### Reconnaissance baseline
+
+- Execution workspace resolved through Console MCP as `D:\\PhpstormProjects\\www\\Addressing`; no container filesystem was used as repository authority.
+- Initial Git state: branch `rc/addressing-rc-final-v3`, HEAD `09c06d4289f5b48be73a8a78cc670926fdd4b17e`, synchronized with `origin/rc/addressing-rc-final-v3` at 0 ahead / 0 behind.
+- Preserved pre-existing dirty paths: deleted `.gating/README.md` and modified `AGENTS.md`. They are canon-related and coherent, but were not created by this task and are excluded from the task-owned implementation unit until provenance/integration is explicitly reconciled.
+- Re-read Addressing instructions, README, development/production Composer manifests, current HTTP/OpenAPI surfaces, quality scripts, and the orchestration journal.
+- Re-read mandatory Objecting, Cruding, Viewing, and Interfacing contracts; Interfacing has no root `MANIFEST.json`, so its available AGENTS/README/Composer contracts were consumed without inventing one.
+- Re-read Gating and authoritative Canonization material. Normative rules consulted for the current failure contour: Canon021, Canon052, Canon056, Canon057, Canon058, Canon059, Canon060, Canon061, Canon062, and Canon063.
+- Consumed the supplied 2026-09-29 CanonScanning RED and Inspecting evidence before selecting new work. Its hard failures were Canon052/056/061/063; the current tree already contains the corresponding runtime/package remediation: artifact-only Gating integration, Symfony route metadata, canonical `config/openapi/address_openapi.yaml`, direct Nelmio dependency, and explicit route methods.
+- Reused the newer post-mutation Inspecting report from 2026-10-04T05:22:26Z because it matches the current implementation lineage more closely than the September report: 35 medium findings, 0 high/critical, maximum cyclomatic complexity 16, Rector 0 changed files / 0 errors.
+
+### Boundary and workstream selection
+
+- Market/open-source/SaaS baseline remains consistent with the component boundary: mature address stacks separate parsing/normalization, validation/deliverability evidence, governance/deduplication and batch workflows from provider execution/geocoding and map UX.
+- RC-critical work remains correctness, deterministic contract parity, maintainability of current Addressing-owned projections, quality gates, observability/diagnostics and safe publication.
+- Growth remains separate: provider integrations, richer international normalization, mapping/capture UX, deeper quality/coverage expansion, and larger entity/repository decomposition.
+- Selected bounded current finding: `AddressViewArrayFactory::toArray()` remained a 72-line projection method in the latest Inspecting evidence. Refactor is restricted to private extraction while preserving the public method signature, response keys, key order and value semantics.
+
+### Material implementation
+
+- Split `AddressViewArrayFactory::toArray()` into a short orchestration method plus private address and review/governance payload builders.
+- Preserved the original response field ordering deliberately; no route, OpenAPI, UI, persistence, or public contract changes are introduced.
+- Initial changed-file lint invocation hit a transient Console MCP 502 before producing evidence; it is not counted as a pass and must be retried.
+
+Что имеем? Current historical hard CanonScanning causes are already represented by concrete remediation on the tree, and this pass adds one bounded maintainability improvement from fresh Inspecting evidence without widening Addressing ownership.
+Что осталось? Run deterministic/static/test/runtime gates, retry post-mutation Inspecting when capacity allows, update this journal with results, then create/publish an explicit-file commit that excludes the preserved pre-existing dirty paths.
+
+## 2026-10-04 — Task engine-20261004063242-addressing-05e527 static-quality closure
+
+### Baseline and canon mapping
+
+- Consumed the authoritative task specification and the supplied 2026-09-29 RED static-analysis report before mutation; the scanner-facing `phpstan` script failed before analysis because `phpstan.neon` still declared two PHPStan 2.2-incompatible options.
+- Confirmed Addressing is a standalone Symfony component with direct Objecting, Cruding, Viewing, Interfacing, Collectioning, Tabling, Failing and EasyAdmin runtime dependencies plus local path/symlink development wiring.
+- Consulted Canonization architecture authority and materialized Canon018/Canon021/Canon022 rules: `addressing/address` maps to `App\\Addressing\\`; generic application CRUD stays in Cruding; standalone baseline dependencies remain direct. Gating remains executable enforcement and consumer `.gating/` remains artifact-only.
+- Market/mature-stack boundary: RC expectations are deterministic normalization/validation evidence, scoped address lifecycle/governance, stable API contracts, diagnostics and reproducible quality gates. Provider geocoding/postal execution, map UX/autocomplete and speculative international-provider growth remain outside the RC-critical Addressing boundary.
+
+### Material implementation
+
+- Removed obsolete `checkMissingIterableValueType` and `checkGenericClassInNonGenericObjectType` from `phpstan.neon`.
+- Aligned active PHPStan bootstrap/scan behavior and `treatPhpDocTypesAsCertain: false` with the repository-managed `phpstan.neon.dist`.
+- Routed the scanner-facing `composer phpstan` script through the same managed `phpstan.neon.dist` contract as `qa:phpstan`, eliminating divergent duplicate static-analysis entrypoints.
+- Preserved and verified the already-present `AddressViewArrayFactory::toArray()` private-extraction refactor; post-mutation Inspecting no longer reports that long-method finding.
+- Integrated the concurrent narrow remediation already present in the same current tree for the first post-mutation Inspecting HIGH findings: removed redundant always-true row/entity `is_array`/`instanceof` guards in the Doctrine repositories and used the typed Symfony form DTO directly in `AddressManageHttpService`. These changes preserve declared method/data contracts and were verified by the subsequent gates below.
+
+### Verification
+
+- `composer validate --strict`: GREEN.
+- changed PHP lint: GREEN for `src/Factory/AddressViewArrayFactory.php`.
+- `composer phpstan`: GREEN, 175 analysed files, 0 errors.
+- `composer qa:phpstan`: GREEN, 175 analysed files, 0 errors.
+- `composer qa:deptrac`: GREEN, 0 violations/errors/warnings.
+- `composer qa:rector`: GREEN, 0 proposed changes.
+- `composer qa:trust-surface`: GREEN/ready with current route inventory and diagnostic surface.
+- `composer test:unit`: GREEN, 12 tests / 53 assertions, one PHPUnit notice.
+- `composer test`: GREEN, 24 tests / 127 assertions, one notice and one skipped test.
+- `composer smoke:runtime`: GREEN/ready without restarting runtime.
+- Post-mutation Inspecting first exposed 5 HIGH PHPStan findings caused by config drift; after alignment, rerun report `D:\\PhpstormProjects\\www\\Inspecting\\.inspecting\\reports\\D--PhpstormProjects-www-Addressing-20261004-064354.json` is 34 MEDIUM observational structural findings, 0 HIGH/critical, PHPStan 0 file errors, Rector 0 changed files/errors.
+- No browser/mobile UI, navigation, form or user-flow surface changed in this task; visual evidence is therefore not applicable.
+
+Что имеем? The supplied static-quality RED is closed, the scanner-facing and managed PHPStan surfaces agree and pass, the prior projection refactor is verified, and post-mutation Inspecting has no HIGH/critical findings.
+Что осталось? Integrate only the coherent Addressing RC unit, publish the current branch if upstream remains synchronized, and inspect final HEAD/worktree/upstream state while preserving unrelated pre-existing `.gating/README.md` and `AGENTS.md` changes.
