@@ -81,8 +81,88 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
         self::assertStringContainsString('btn', (string) $response->getContent());
     }
 
+    public function testApiReadSurfaceRoutesThroughKernel(): void
+    {
+        $services = $this->bootServices(__FUNCTION__);
+        $content = json_encode([
+            'ownerId' => 'owner-1',
+            'vendorId' => 'vendor-1',
+            'line1' => 'Main street 10',
+            'city' => 'Austin',
+            'countryCode' => 'us',
+        ], JSON_UNESCAPED_UNICODE);
+        self::assertIsString($content);
+
+        $createResponse = $services['kernel']->handle(Request::create(
+            '/api/address',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $content,
+        ));
+        self::assertSame(201, $createResponse->getStatusCode());
+
+        $createPayload = json_decode((string) $createResponse->getContent(), true);
+        self::assertIsArray($createPayload);
+        self::assertIsString($createPayload['id'] ?? null);
+        $id = $createPayload['id'];
+
+        $readUrls = [
+            '/api/address/'.$id.'?ownerId=owner-1',
+            '/api/address/page?ownerId=owner-1',
+            '/api/address/search?ownerId=owner-1&q=Main',
+            '/api/address/queue-summary?ownerId=owner-1',
+            '/api/address/country-portfolio?ownerId=owner-1',
+            '/api/address/source-portfolio?ownerId=owner-1',
+            '/api/address/validation-portfolio?ownerId=owner-1',
+            '/api/address/normalization-portfolio?ownerId=owner-1',
+            '/api/address/'.$id.'/governance-cluster?ownerId=owner-1',
+        ];
+
+        foreach ($readUrls as $url) {
+            $response = $services['kernel']->handle(Request::create($url, 'GET'));
+            self::assertSame(200, $response->getStatusCode(), $url);
+        }
+
+        $deleteResponse = $services['kernel']->handle(Request::create(
+            '/api/address/'.$id.'?ownerId=owner-1',
+            'DELETE',
+        ));
+        self::assertSame(204, $deleteResponse->getStatusCode());
+
+        $this->recordFunctionalCoverage([
+            'POST /api/address',
+            'GET /api/address/page',
+            'GET /api/address/search',
+            'GET /api/address/queue-summary',
+            'GET /api/address/country-portfolio',
+            'GET /api/address/source-portfolio',
+            'GET /api/address/validation-portfolio',
+            'GET /api/address/normalization-portfolio',
+            'GET /api/address/{id}',
+            'DELETE /api/address/{id}',
+            'GET /api/address/{id}/governance-cluster',
+        ]);
+    }
+
+    /** @param list<string> $covered */
+    private function recordFunctionalCoverage(array $covered): void
+    {
+        $coverageDir = dirname(__DIR__, 2).'/var/coverage';
+        if (!is_dir($coverageDir)) {
+            self::assertTrue(mkdir($coverageDir, 0777, true) || is_dir($coverageDir));
+        }
+
+        $encoded = json_encode([
+            'schema' => 'address-http-functional-v1',
+            'passedAt' => (new \DateTimeImmutable())->format(DATE_ATOM),
+            'covered' => $covered,
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+
+        self::assertNotFalse(file_put_contents($coverageDir.'/address-http-functional.json', $encoded.PHP_EOL));
+    }
+
     /**
-     * @return array{write: AddressWriteHttpService, read: AddressReadHttpService, manage: AddressManageHttpService, requestStack: RequestStack}
+     * @return array{write: AddressWriteHttpService, read: AddressReadHttpService, manage: AddressManageHttpService, requestStack: RequestStack, kernel: Kernel}
      */
     private function bootServices(string $suffix): array
     {
@@ -110,6 +190,7 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
             'read' => $addressReadHttpService,
             'manage' => $addressManageHttpService,
             'requestStack' => $requestStack,
+            'kernel' => $kernel,
         ];
     }
 }
