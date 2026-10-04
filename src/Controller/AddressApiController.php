@@ -7,7 +7,6 @@ namespace App\Addressing\Controller;
 use App\Addressing\Service\Http\Address\AddressManageHttpService;
 use App\Addressing\Service\Http\Address\AddressOperationalHttpService;
 use App\Addressing\Service\Http\Address\AddressReadHttpService;
-use App\Addressing\Service\Http\Address\AddressSummaryHttpService;
 use App\Addressing\Service\Http\Address\AddressWriteHttpService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,7 +29,6 @@ final readonly class AddressApiController
         private AddressManageHttpService $addressManageHttpService,
         private AddressWriteHttpService $addressWriteHttpService,
         private AddressReadHttpService $addressReadHttpService,
-        private AddressSummaryHttpService $addressSummaryHttpService,
         private AddressOperationalHttpService $addressOperationalHttpService,
     ) {
     }
@@ -57,36 +55,6 @@ final readonly class AddressApiController
     public function search(Request $request): JsonResponse
     {
         return $this->addressReadHttpService->page($request);
-    }
-
-    #[Route('/api/address/queue-summary', name: 'address_api_queue_summary', methods: ['GET'])]
-    public function queueSummary(Request $request): JsonResponse
-    {
-        return $this->addressSummaryHttpService->queueSummary($request);
-    }
-
-    #[Route('/api/address/country-portfolio', name: 'address_api_country_portfolio', methods: ['GET'])]
-    public function countryPortfolio(Request $request): JsonResponse
-    {
-        return $this->addressSummaryHttpService->countryPortfolioSummary($request);
-    }
-
-    #[Route('/api/address/source-portfolio', name: 'address_api_source_portfolio', methods: ['GET'])]
-    public function sourcePortfolio(Request $request): JsonResponse
-    {
-        return $this->addressSummaryHttpService->sourcePortfolioSummary($request);
-    }
-
-    #[Route('/api/address/validation-portfolio', name: 'address_api_validation_portfolio', methods: ['GET'])]
-    public function validationPortfolio(Request $request): JsonResponse
-    {
-        return $this->addressSummaryHttpService->validationPortfolioSummary($request);
-    }
-
-    #[Route('/api/address/normalization-portfolio', name: 'address_api_normalization_portfolio', methods: ['GET'])]
-    public function normalizationPortfolio(Request $request): JsonResponse
-    {
-        return $this->addressSummaryHttpService->normalizationPortfolioSummary($request);
     }
 
     #[Route('/api/address/operational-batch', name: 'address_api_operational_batch', methods: ['POST'])]
@@ -117,11 +85,5 @@ final readonly class AddressApiController
     public function applyValidated(Request $request, string $id): JsonResponse
     {
         return $this->addressOperationalHttpService->applyValidated($request, $id);
-    }
-
-    #[Route('/api/address/{id}/governance-cluster', name: 'address_api_governance_cluster', requirements: ['id' => self::ID_REQUIREMENT], methods: ['GET'])]
-    public function governanceCluster(Request $request, string $id): JsonResponse
-    {
-        return $this->addressSummaryHttpService->governanceClusterSummary($request, $id);
     }
 }
