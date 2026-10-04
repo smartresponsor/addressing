@@ -51,14 +51,36 @@ function addressRouteInventory(string $content): array
     ];
 }
 
+/** @return array{paths: list<string>, content: string} */
+function addressControllerRouteSources(string $root): array
+{
+    $controllerDir = $root.'/src/Controller';
+    $paths = glob($controllerDir.'/*Controller.php') ?: [];
+    sort($paths);
+
+    $relativePaths = [];
+    $contents = [];
+    foreach ($paths as $path) {
+        $relativePaths[] = str_replace('\\', '/', substr($path, strlen($root) + 1));
+        $source = file_get_contents($path);
+        if (false !== $source) {
+            $contents[] = $source;
+        }
+    }
+
+    return [
+        'paths' => $relativePaths,
+        'content' => implode("\n", $contents),
+    ];
+}
+
 $root = dirname(__DIR__, 2);
-$routeSourcePath = $root.'/src/Controller/AddressApiController.php';
-$content = is_file($routeSourcePath) ? (file_get_contents($routeSourcePath) ?: '') : '';
+$routeSources = addressControllerRouteSources($root);
 
 if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) {
     fwrite(STDOUT, json_encode([
         'component' => 'Addressing',
-        'source' => 'src/Controller/AddressApiController.php',
-        'routes' => addressRouteInventory($content),
+        'sources' => $routeSources['paths'],
+        'routes' => addressRouteInventory($routeSources['content']),
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
 }

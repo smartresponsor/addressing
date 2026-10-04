@@ -31,10 +31,8 @@ foreach ($reports as $report) {
     ];
 }
 
-$routeSource = file_get_contents($root.'/src/Controller/AddressApiController.php');
-$routeInventory = false === $routeSource
-    ? ['method_tokens' => [], 'uri_tokens' => [], 'uri_patterns' => []]
-    : addressRouteInventory($routeSource);
+$routeSources = addressControllerRouteSources($root);
+$routeInventory = addressRouteInventory($routeSources['content']);
 $routeInventoryReady = [] === array_diff(['DELETE', 'GET', 'PATCH', 'POST'], $routeInventory['method_tokens'])
     && in_array('/address/manage', $routeInventory['uri_tokens'], true)
     && in_array('/api/address', $routeInventory['uri_tokens'], true)
