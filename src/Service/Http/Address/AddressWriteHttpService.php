@@ -40,6 +40,6 @@ final readonly class AddressWriteHttpService
         [$ownerId, $vendorId] = $this->addressHttpScopeService->tenantScope($request);
         $this->addressWriteService->markDeleted($id, $ownerId, $vendorId);
 
-        return new JsonResponse(['ok' => true]);
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 }

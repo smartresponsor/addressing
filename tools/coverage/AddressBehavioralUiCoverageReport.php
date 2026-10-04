@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 $root = dirname(__DIR__, 2);
+$functionalMarkerPath = $root.'/var/coverage/address-http-functional.json';
 $markerPath = $root.'/var/coverage/address-manage-playwright.json';
 $marker = is_file($markerPath)
     ? json_decode((string) file_get_contents($markerPath), true)
@@ -31,6 +32,20 @@ $functionalEligible = [
     'GET /api/address/{id}/governance-cluster',
 ];
 
+$functionalMarker = is_file($functionalMarkerPath)
+    ? json_decode((string) file_get_contents($functionalMarkerPath), true)
+    : null;
+$functionalCovered = is_array($functionalMarker)
+    && 'address-http-functional-v1' === ($functionalMarker['schema'] ?? null)
+    && is_string($functionalMarker['passedAt'] ?? null)
+    && is_array($functionalMarker['covered'] ?? null)
+        ? array_values(array_intersect($functionalEligible, $functionalMarker['covered']))
+        : [];
+
+if ($manageCovered) {
+    $functionalCovered = array_values(array_unique([...$functionalCovered, 'GET /address/manage', 'POST /address/manage']));
+}
+
 $manageBehavior = [
     'manage.page.render',
     'manage.address.create.owner-scope',
@@ -46,7 +61,7 @@ $evidence = [
     'dimensions' => [
         'functional' => [
             'eligible' => $functionalEligible,
-            'covered' => $manageCovered ? ['GET /address/manage', 'POST /address/manage'] : [],
+            'covered' => $functionalCovered,
         ],
         'behavioral' => [
             'eligible' => $manageBehavior,
