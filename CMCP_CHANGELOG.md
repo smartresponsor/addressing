@@ -556,3 +556,61 @@
 
 Что имеем? All four original hard CanonScanning failures are closed and the repository-local canon gate is GREEN with 0 failed rules; remaining findings are explicit warning-class documentation/test debt.
 Что осталось? Rerun heavy post-mutation Inspecting/RC verification when runtime capacity admits heavy work; no remaining repository hard Canon failure is known from the current deterministic gate.
+
+## 2026-10-04 — Canon baseline and parser hardening
+
+### Task and factual baseline
+
+- Task ID: `engine-20261004050128-addressing-972a7e`.
+- Current branch at reconnaissance: `rc/addressing-rc-final-v3`, HEAD `14acced810ba48b982e96077b8c77c61abc8e692`, upstream synchronized at 0 ahead / 0 behind.
+- Pre-existing dirty state is preserved and excluded from this workstream: deleted `.gating/README.md` and modified `AGENTS.md`.
+- Re-read Addressing instructions, README, Composer/package/test surfaces, current CMCP journal, the upstream CanonScanning RED report, mandatory Objecting/Cruding/Viewing/Interfacing contracts, Gating, and Canonization textual rules.
+- Canonization rules consulted directly for this pass: Canon021, Canon022, Canon052, Canon056, Canon061, and Canon063.
+- Current targeted `composer gating` disproves the historical hard RED as current state: Canon052/056/061/063 all pass; 16 rules report 0 failures and only Canon031/040/042 warning-class documentation/test debt.
+
+### Boundary and market posture
+
+- Addressing remains responsible for address lifecycle, normalization/validation evidence, governance, scoped search/summaries, and address-specific HTTP/CLI behavior.
+- Mature address platforms keep provider execution, geocoding/map UX, generic CRUD, generic collection mechanics, and final rendering/shell concerns outside this component boundary; those capabilities remain growth/integration work owned elsewhere.
+- RC-critical work in this pass is limited to deterministic contract correctness, parser maintainability, current canon/runtime verification, and safe Git integration.
+- Growth remains separate: broader provider integrations, deeper international normalization, richer operator UX, and systematic expansion of functional/PHPDoc/coverage debt.
+
+### Fresh Inspecting baseline
+
+- Post-reconnaissance Inspecting completed successfully at `2026-10-04T05:04:30Z`–`05:05:56Z`.
+- Report: `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261004-050430.json`.
+- Findings: 37 total, all medium; 0 high/critical; Rector reports 0 changed files and 0 errors.
+- Selected bounded remediation from actionable findings: reduce `AddressValidated::fromArray()` long-method debt and `AddressValidationVerdict::fromArray()` cyclomatic complexity without changing external message semantics.
+
+Что имеем? Historical CanonScanning hard failures are factually closed on the current tree, fresh Inspecting evidence exists, and a bounded parser-hardening remediation is selected from current evidence.
+Что осталось? Complete the parser refactor and regression tests, run deterministic/static/runtime gates plus post-mutation Inspecting, then commit/publish only the coherent current-task files while preserving pre-existing dirty work.
+
+### Implementation and acceptance
+
+- Refactored `AddressValidated::fromArray()` into named-argument construction with typed extraction helpers; legacy `validationVerdict` fallback remains supported and invalid array payloads remain nullable.
+- Refactored `AddressValidationVerdict::fromArray()` into small coercion helpers while preserving boolean coercion, string trimming, quality rounding/clamping, and signal fallback semantics.
+- Added focused regression coverage in `tests/Service/AddressValidatedTest.php` for verdict coercion/bounds and the legacy alias path.
+- Closed an adjacent deterministic quality-tool conflict: `AddressSchemaEnsureCommand` now uses a parenthesized `SymfonyStyle` expression accepted by Deptrac, and `rector.php` excludes that parser-sensitive file so Rector does not reintroduce the incompatible spelling.
+- PHP syntax lint: GREEN for all changed PHP files.
+- PHPUnit: GREEN, 24 tests / 127 assertions; one existing PHPUnit notice and one skipped test remain non-blocking.
+- PHPStan: GREEN, 0 errors.
+- PHP-CS-Fixer dry run: GREEN, 0 fixable files.
+- Deptrac: GREEN, 0 violations / 0 warnings / 0 errors and no parser diagnostic after remediation.
+- Rector dry run: GREEN after the parser-stability exclusion.
+- Symfony container smoke: GREEN (`status: ready`).
+- Addressing runtime smoke: GREEN (`status: ready`).
+- Composer validate strict/check-lock: GREEN.
+- Refreshed `var/coverage/summary.txt` evidence through `composer test:coverage` and refreshed behavioral/UI coverage inventory through `composer report:behavioral-ui-coverage`.
+- Current targeted Gating after evidence refresh: 16 rules, 0 failed, 3 warning; historical Canon052/056/061/063 remain GREEN. Remaining Canon031/040/042 findings are explicit warning-class documentation/test-depth debt, not hard gate failures.
+- Post-mutation Inspecting report: `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261004-051658.json`; findings reduced from 37 to 35, all medium, with the selected `AddressValidated::fromArray()` long-method and `AddressValidationVerdict::fromArray()` complexity findings eliminated. Max reported complexity reduced from 20 to 16; Rector changed-files/errors remain 0/0.
+- Existing managed PHP server was probed first and not restarted. Its `/` probe timed out although the managed process remains running; independent container/runtime smokes are GREEN, so no restart was justified by this parser-only change.
+- No browser/mobile UI, navigation, form, or user-flow source changed in this pass; new screenshot execution is therefore not applicable. Existing behavioral/UI inventory was refreshed deterministically.
+- Aggregate `composer quality` invocation exceeded the Console MCP synchronous call window; its constituent applicable gates above were executed directly and are GREEN.
+
+### Residual debt and integration
+
+- Canon031 PHPDoc depth and Canon040/042 coverage depth remain warning-class growth/quality debt. They are recorded for systematic follow-up rather than being disguised as hard RC failures.
+- Pre-existing `.gating/README.md` deletion and `AGENTS.md` modification remain outside this task's commit scope and are preserved untouched.
+
+Что имеем? Current hard canon is GREEN, parser-specific Inspecting debt dropped by two findings, deterministic/static/runtime verification is GREEN, and no UI verification obligation was introduced by this change.
+Что осталось? Create a coherent signed commit containing only this task's journal/code/test/tooling changes, publish the current branch if remote sync remains safe, and inspect final HEAD/upstream/worktree state while leaving pre-existing dirty files untouched.
