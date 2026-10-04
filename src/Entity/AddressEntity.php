@@ -18,6 +18,9 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'address_last_validation_status_idx', columns: ['last_validation_status'])]
 #[ORM\Index(name: 'address_validation_fp_idx', columns: ['validation_fingerprint'])]
 #[ORM\UniqueConstraint(name: 'address_dedupe_unique', columns: ['dedupe_key'])]
+/**
+ * Persists the canonical Addressing record together with validation, provenance, and governance state.
+ */
 class AddressEntity
 {
     #[ORM\Id]
@@ -743,6 +746,9 @@ class AddressEntity
         return $this;
     }
 
+    /**
+     * Soft-deletes the address at the supplied instant or at the current time.
+     */
     public function delete(?\DateTimeImmutable $deletedAt = null): self
     {
         $this->deletedAt = $deletedAt ?? new \DateTimeImmutable();
@@ -750,6 +756,9 @@ class AddressEntity
         return $this;
     }
 
+    /**
+     * Restores the address by clearing its soft-deletion timestamp.
+     */
     public function restore(): self
     {
         $this->deletedAt = null;

@@ -7,6 +7,9 @@ namespace App\Addressing\Event;
 
 use App\Addressing\EventInterface\AddressEventInterface;
 
+/**
+ * Captures the normalized address payload published when an address is updated.
+ */
 final readonly class AddressUpdatedEvent implements AddressEventInterface
 {
     private \DateTimeImmutable $occurredAt;
@@ -22,12 +25,18 @@ final readonly class AddressUpdatedEvent implements AddressEventInterface
         $this->occurredAt = new \DateTimeImmutable('now');
     }
 
+    /**
+     * Returns the update event timestamp captured when this event was instantiated.
+     */
     #[\Override]
     public function occurredAt(): \DateTimeImmutable
     {
         return $this->occurredAt;
     }
 
+    /**
+     * Returns the stable event discriminator for updated addresses.
+     */
     #[\Override]
     public function nameEntity(): string
     {
