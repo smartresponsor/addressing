@@ -7,8 +7,12 @@ namespace App\Addressing\Middleware;
 
 use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * Applies the standalone Addressing CORS policy and terminates successful preflight requests.
+ */
 final class AddressCorsMiddleware
 {
+    /** Apply configured CORS response headers for the current request method and origin. */
     public static function handle(Request $request, string $method): void
     {
         $allow = getenv('CORS_ALLOW_ORIGINS') ?: '*';

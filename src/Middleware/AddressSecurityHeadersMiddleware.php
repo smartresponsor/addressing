@@ -5,8 +5,12 @@ declare(strict_types=1);
 
 namespace App\Addressing\Middleware;
 
+/**
+ * Applies the standalone Addressing security-header baseline to outgoing HTTP responses.
+ */
 final class AddressSecurityHeadersMiddleware
 {
+    /** Apply the configured CSP, transport, framing, and referrer protection headers. */
     public static function apply(): void
     {
         $csp = getenv('CSP') ?: "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";
