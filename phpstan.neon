@@ -1,36 +1,4 @@
+# Default PHPStan entrypoint delegates to the canonical repository configuration.
+# Keep analyzer policy in one place so implicit and Composer-invoked runs cannot drift.
 includes:
-    - vendor/phpstan/phpstan-symfony/extension.neon
-    - vendor/phpstan/phpstan-symfony/rules.neon
-    - vendor/phpstan/phpstan-doctrine/extension.neon
-    - vendor/phpstan/phpstan-doctrine/rules.neon
-
-parameters:
-    level: 8
-    treatPhpDocTypesAsCertain: false
-    paths:
-        - src
-        - tests
-
-    tmpDir: var/phpstan
-
-    excludePaths:
-        analyse:
-            - var/*
-            - vendor/*
-            - public/*
-            - migrations/*
-            - tests/Fixture/*
-            - tests/Fixtures/*
-            - tests/playwright/*
-
-    symfony:
-        consoleApplicationLoader: tests/console-application.php
-
-    doctrine:
-        objectManagerLoader: tests/object-manager.php
-
-    scanFiles:
-        - vendor/symfony/dependency-injection/Loader/Configurator/ContainerConfigurator.php
-
-    inferPrivatePropertyTypeFromConstructor: true
-    reportUnmatchedIgnoredErrors: true
+    - phpstan.neon.dist
