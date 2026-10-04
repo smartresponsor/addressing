@@ -12,6 +12,11 @@ $_SERVER['APP_DEBUG'] = '1';
 $_ENV['APP_ENV'] = 'test';
 $_ENV['APP_DEBUG'] = '1';
 
+$runtimeVarDir = dirname(__DIR__).'/var/phpstan-runtime/'.getmypid();
+putenv('APP_VAR_DIR='.$runtimeVarDir);
+$_SERVER['APP_VAR_DIR'] = $runtimeVarDir;
+$_ENV['APP_VAR_DIR'] = $runtimeVarDir;
+
 require_once __DIR__.'/../tools/support/AddressRuntimeBootstrap.php';
 
 $bootstrapClass = 'AddressRuntimeBootstrap';
