@@ -11,17 +11,22 @@ use App\Addressing\RepositoryInterface\AddressSchemaRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 
+/**
+ * Manages the standalone Doctrine schema for Addressing records, evidence snapshots, and outbox persistence.
+ */
 final readonly class AddressDoctrineSchemaRepository implements AddressSchemaRepositoryInterface
 {
     public function __construct(private EntityManagerInterface $entityManager)
     {
     }
 
+    /** Create or update the managed standalone Addressing schema without dropping existing data. */
     public function ensureSchema(): void
     {
         (new SchemaTool($this->entityManager))->updateSchema($this->managedClasses());
     }
 
+    /** Drop and recreate the managed standalone Addressing schema for controlled reset workflows. */
     public function resetSchema(): void
     {
         $schemaTool = new SchemaTool($this->entityManager);

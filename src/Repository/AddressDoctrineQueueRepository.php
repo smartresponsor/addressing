@@ -6,8 +6,12 @@ namespace App\Addressing\Repository;
 
 use App\Addressing\RepositoryInterface\AddressQueueRepositoryInterface;
 
+/**
+ * Summarizes tenant-scoped Addressing operational queues for revalidation, evidence, and governance review work.
+ */
 final readonly class AddressDoctrineQueueRepository extends AddressAbstractDoctrineRepository implements AddressQueueRepositoryInterface
 {
+    /** Summarize due, missing-evidence, uncertain, governance-review, and stale-normalization queue counts. */
     #[\Override]
     public function summarizeOperationalQueues(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
