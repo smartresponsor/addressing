@@ -19,6 +19,14 @@
         </testsuite>
         <testsuite name="integration">
             <directory>tests/Service</directory>
+            <directory>tests/Repository</directory>
+            <directory>tests/Projection</directory>
+            <directory>tests/Entity</directory>
+            <directory>tests/Infrastructure</directory>
+            <file>tests/AddressRecordBoundaryClustersTest.php</file>
+            <file>tests/AddressUlidTest.php</file>
+            <file>tests/HttpSchemaValidatorTest.php</file>
+            <file>tests/IndexProjectorTest.php</file>
         </testsuite>
         <testsuite name="functional">
             <directory>tests/Functional</directory>
