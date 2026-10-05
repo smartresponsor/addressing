@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Repository;
 
 use App\Addressing\Entity\AddressEntity;
+use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
 use App\Addressing\Entity\AddressOutboxEntity;
 use App\Addressing\Factory\AddressEntityMapper;
 use App\Addressing\Repository\AddressDoctrineEvidenceRepository;
@@ -145,6 +146,72 @@ final class DoctrineAddressPersistencePresenceTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('tenant_scope_required');
         $repository->patchOperational('addr-op-1', null, null, ['revalidationPolicy' => 'quarterly']);
+    }
+
+    public function testWriteRepositoryCreatesUpdatesAndSoftDeletesWithEvidenceAndOutbox(): void
+    {
+        $entityManager = TestDatabase::createInMemoryEntityManager([
+            AddressEntity::class,
+            AddressEvidenceSnapshotEntity::class,
+            AddressOutboxEntity::class,
+        ]);
+        $mapper = new AddressEntityMapper();
+        $repository = new AddressDoctrineWriteRepository($entityManager, $mapper);
+
+        $newEntity = (new AddressEntity())
+            ->setId('addr-write-1')
+            ->setOwnerId('owner-1')
+            ->setLine1('123 Main St')
+            ->setCity('Houston')
+            ->setCountryCode('US')
+            ->setValidationStatus('pending')
+            ->setGovernanceStatus('canonical')
+            ->setCreatedAt(new \DateTimeImmutable('2026-01-01T00:00:00+00:00'));
+
+        $repository->create($mapper->fromDoctrine($newEntity));
+
+        $persisted = $entityManager->find(AddressEntity::class, 'addr-write-1');
+        self::assertInstanceOf(AddressEntity::class, $persisted);
+        self::assertSame('123 Main St', $persisted->getLine1());
+
+        $persisted
+            ->setLine1('456 Main St')
+            ->setUpdatedAt(new \DateTimeImmutable('2026-01-02T00:00:00+00:00'))
+            ->setValidationStatus('validated')
+            ->setValidationProvider('provider-a')
+            ->setValidatedAt(new \DateTimeImmutable('2026-01-02T00:00:00+00:00'))
+            ->setRawInputSnapshot(['line1' => '456 Main St'])
+            ->setNormalizedSnapshot(['line1Norm' => '456 MAIN ST'])
+            ->setProviderDigest('digest-write-1');
+
+        $repository->update($mapper->fromDoctrine($persisted));
+        $entityManager->clear();
+
+        $updated = $entityManager->find(AddressEntity::class, 'addr-write-1');
+        self::assertInstanceOf(AddressEntity::class, $updated);
+        self::assertSame('456 Main St', $updated->getLine1());
+        self::assertSame('digest-write-1', $updated->getProviderDigest());
+        self::assertCount(1, $entityManager->getRepository(AddressEvidenceSnapshotEntity::class)->findAll());
+
+        $repository->delete('addr-write-1', 'owner-2', null);
+        $entityManager->clear();
+        $notDeleted = $entityManager->find(AddressEntity::class, 'addr-write-1');
+        self::assertInstanceOf(AddressEntity::class, $notDeleted);
+        self::assertNull($notDeleted->getDeletedAt());
+
+        $repository->delete('addr-write-1', 'owner-1', null);
+        $entityManager->clear();
+        $deleted = $entityManager->find(AddressEntity::class, 'addr-write-1');
+        self::assertInstanceOf(AddressEntity::class, $deleted);
+        self::assertNotNull($deleted->getDeletedAt());
+
+        /** @var list<AddressOutboxEntity> $outboxRows */
+        $outboxRows = $entityManager->getRepository(AddressOutboxEntity::class)->findBy([], ['id' => 'ASC']);
+        self::assertCount(3, $outboxRows);
+        self::assertSame(['AddressCreated', 'AddressUpdated', 'AddressDeleted'], array_map(
+            static fn (AddressOutboxEntity $row): string => $row->getEventName(),
+            $outboxRows,
+        ));
     }
 
     public function testReadRepositoryCoversScopedLookupDedupeAndCursorPagination(): void
