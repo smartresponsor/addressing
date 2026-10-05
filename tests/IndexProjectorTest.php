@@ -23,6 +23,8 @@ final class AddressIndexProjectorTest extends TestCase
         $projector = new AddressIndexProjector($repo, new AddressIndexNormalizer(), new AddressIndexProjectorService());
 
         $evt = new AddressCreatedEvent('123 Main St', null, 'Houston', 'TX', '77002', 'US');
+        self::assertSame('address.created', $evt->nameEntity());
+        self::assertInstanceOf(\DateTimeImmutable::class, $evt->occurredAt());
         $projector->onAddressCreated($evt);
 
         $list = $repo->search('Hou', 'US', 10);
