@@ -117,6 +117,120 @@ final class AddressValidatedTest extends TestCase
         ]);
     }
 
+    public function testMessageSerializationAndCoercionBranches(): void
+    {
+        $date = new \DateTimeImmutable('2026-01-02T03:04:05+00:00');
+        $stringable = new class () implements \Stringable {
+            public function __toString(): string
+            {
+                return ' stringable-value ';
+            }
+        };
+
+        $validated = AddressValidated::fromArray([
+            'line1Norm' => $stringable,
+            'cityNorm' => 123,
+            'regionNorm' => false,
+            'postalCodeNorm' => ' ',
+            'latitude' => 29,
+            'longitude' => '-95.5',
+            'validationProvider' => true,
+            'validatedAt' => $date,
+            'dedupeKey' => 42.5,
+            'raw' => ['provider' => 'demo'],
+            'verdict' => [
+                'deliverable' => true,
+                'granularity' => 'premise',
+                'quality' => 95,
+            ],
+            'rawInput' => ['line1' => 'Main St'],
+            'normalizedSnapshot' => ['line1Norm' => 'main st'],
+            'revalidationDueAt' => 0,
+            'lastValidationScore' => 88.9,
+        ]);
+
+        self::assertSame('stringable-value', $validated->line1Norm);
+        self::assertSame('123', $validated->cityNorm);
+        self::assertNull($validated->regionNorm);
+        self::assertNull($validated->postalCodeNorm);
+        self::assertSame(29.0, $validated->latitude);
+        self::assertSame(-95.5, $validated->longitude);
+        self::assertSame('1', $validated->validationProvider);
+        self::assertSame($date->format(DATE_ATOM), $validated->validatedAt?->format(DATE_ATOM));
+        self::assertSame('42.5', $validated->dedupeKey);
+        self::assertSame(88, $validated->lastValidationScore);
+        self::assertSame('1970-01-01T00:00:00+00:00', $validated->revalidationDueAt?->format(DATE_ATOM));
+
+        $serialized = $validated->jsonSerialize();
+        self::assertSame(['provider' => 'demo'], $serialized['raw']);
+        self::assertSame(95, $serialized['verdict']['quality'] ?? null);
+
+        $db = $validated->toDbArray();
+        self::assertSame('{"provider":"demo"}', $db['validation_raw']);
+        self::assertSame('{"deliverable":true,"granularity":"premise","quality":95,"signal":[]}', $db['validation_verdict']);
+        self::assertSame('{"line1":"Main St"}', $db['raw_input_snapshot']);
+        self::assertSame('{"line1Norm":"main st"}', $db['normalized_snapshot']);
+        self::assertSame(95, $db['validation_quality']);
+
+        $empty = AddressValidated::fromArray([]);
+        $emptyDb = $empty->toDbArray();
+        self::assertNull($emptyDb['validation_raw']);
+        self::assertNull($emptyDb['validation_verdict']);
+        self::assertNull($emptyDb['raw_input_snapshot']);
+        self::assertNull($emptyDb['normalized_snapshot']);
+    }
+
+    public function testPrivateCoercionHelpersCoverInvalidAndAlternateInputs(): void
+    {
+        $invoke = static function (string $methodName, array $arguments = []): mixed {
+            $method = new \ReflectionMethod(AddressValidated::class, $methodName);
+
+            return $method->invokeArgs(null, $arguments);
+        };
+
+        self::assertNull($invoke('asNullableArray', ['invalid']));
+        self::assertSame(['x' => 1], $invoke('asNullableArray', [['x' => 1]]));
+
+        self::assertNull($invoke('asNullableString', [null]));
+        self::assertNull($invoke('asNullableString', ['  ']));
+        self::assertNull($invoke('asNullableString', [[]]));
+        self::assertSame('12', $invoke('asNullableString', [12]));
+        self::assertSame('1.5', $invoke('asNullableString', [1.5]));
+
+        self::assertNull($invoke('asNullableFloat', [null]));
+        self::assertNull($invoke('asNullableFloat', ['']));
+        self::assertSame(4.0, $invoke('asNullableFloat', [4]));
+        self::assertSame(4.5, $invoke('asNullableFloat', [4.5]));
+        self::assertSame(5.25, $invoke('asNullableFloat', ['5.25']));
+        self::assertNull($invoke('asNullableFloat', ['invalid']));
+
+        self::assertNull($invoke('asNullableInt', [null]));
+        self::assertNull($invoke('asNullableInt', ['']));
+        self::assertSame(4, $invoke('asNullableInt', [4]));
+        self::assertSame(4, $invoke('asNullableInt', [4.9]));
+        self::assertNull($invoke('asNullableInt', ['  ']));
+        self::assertSame(-7, $invoke('asNullableInt', [' -7 ']));
+        self::assertNull($invoke('asNullableInt', ['7.5']));
+        self::assertNull($invoke('asNullableInt', [[]]));
+
+        self::assertNull($invoke('asNullableDate', [null]));
+        self::assertNull($invoke('asNullableDate', ['']));
+        self::assertInstanceOf(\DateTimeImmutable::class, $invoke('asNullableDate', [new \DateTime('2026-01-01T00:00:00+00:00')]));
+        self::assertSame('2026-01-01T00:00:00+00:00', $invoke('asNullableDate', ['2026-01-01T00:00:00+00:00'])?->format(DATE_ATOM));
+        self::assertSame('1970-01-01T00:00:01+00:00', $invoke('asNullableDate', [1])?->format(DATE_ATOM));
+        self::assertNull($invoke('asNullableDate', [[]]));
+
+        self::assertSame(['deliverable' => true], $invoke('validationVerdictData', [[
+            'verdict' => ['deliverable' => true],
+            'validationVerdict' => ['deliverable' => false],
+        ]]));
+        self::assertSame(['deliverable' => false], $invoke('validationVerdictData', [[
+            'verdict' => 'invalid',
+            'validationVerdict' => ['deliverable' => false],
+        ]]));
+        self::assertNull($invoke('validationVerdictData', [[]]));
+    }
+
     public function testValidationVerdictLegacyAliasRemainsSupported(): void
     {
         $validated = AddressValidated::fromArray([
