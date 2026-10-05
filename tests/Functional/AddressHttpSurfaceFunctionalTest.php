@@ -81,6 +81,36 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
         self::assertStringContainsString('btn', (string) $response->getContent());
     }
 
+    public function testManageServiceHelperPathsNormalizeScopeAndEmptyPreview(): void
+    {
+        $services = $this->bootServices(__FUNCTION__);
+        $manage = $services['manage'];
+
+        $timestampMethod = new \ReflectionMethod(AddressManageHttpService::class, 'currentTimestampLiteral');
+        $timestamp = $timestampMethod->invoke($manage);
+        self::assertIsString($timestamp);
+        self::assertNotFalse(\DateTimeImmutable::createFromFormat('Y-m-d H:i:sP', $timestamp));
+
+        $nullableMethod = new \ReflectionMethod(AddressManageHttpService::class, 'nullableFormString');
+        self::assertNull($nullableMethod->invoke($manage, [], 'ownerId'));
+        self::assertNull($nullableMethod->invoke($manage, ['ownerId' => null], 'ownerId'));
+        self::assertNull($nullableMethod->invoke($manage, ['ownerId' => '   '], 'ownerId'));
+        self::assertSame('owner-1', $nullableMethod->invoke($manage, ['ownerId' => ' owner-1 '], 'ownerId'));
+
+        try {
+            $nullableMethod->invoke($manage, ['ownerId' => ['invalid']], 'ownerId');
+            self::fail('Expected non-scalar ownerId to throw.');
+        } catch (\RuntimeException $exception) {
+            self::assertSame('invalid_ownerId', $exception->getMessage());
+        }
+
+        $dto = new \App\Addressing\DTO\AddressManageDTO();
+        $dto->ownerId = null;
+        $dto->vendorId = null;
+        $previewMethod = new \ReflectionMethod(AddressManageHttpService::class, 'previewRows');
+        self::assertSame([], $previewMethod->invoke($manage, $dto));
+    }
+
     public function testApiReadSurfaceRoutesThroughKernel(): void
     {
         $services = $this->bootServices(__FUNCTION__);
