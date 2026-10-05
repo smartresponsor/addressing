@@ -7,6 +7,7 @@ namespace Tests\Service;
 
 use App\Addressing\Contract\Message\AddressValidated;
 use App\Addressing\Contract\Message\AddressValidationVerdict;
+use App\Addressing\Policy\AddressGovernancePolicy;
 use PHPUnit\Framework\TestCase;
 
 final class AddressValidatedTest extends TestCase
@@ -69,6 +70,51 @@ final class AddressValidatedTest extends TestCase
         self::assertNull($bounded->granularity);
         self::assertSame(0, $bounded->quality);
         self::assertSame([], $bounded->signal);
+    }
+
+    public function testGovernancePolicyNormalizesTransitionsAndCanonicalLinks(): void
+    {
+        self::assertSame([], AddressGovernancePolicy::normalizePatch('canonical', 'addr-1', []));
+
+        self::assertSame([
+            'governance_status' => 'duplicate',
+            'duplicate_of_id' => 'addr-2',
+            'superseded_by_id' => null,
+            'alias_of_id' => null,
+            'conflict_with_id' => null,
+        ], AddressGovernancePolicy::normalizePatch('canonical', 'addr-1', [
+            'governanceStatus' => 'duplicate',
+            'duplicateOfId' => ' addr-2 ',
+        ]));
+
+        self::assertSame([
+            'governance_status' => 'canonical',
+            'duplicate_of_id' => null,
+            'superseded_by_id' => null,
+            'alias_of_id' => null,
+            'conflict_with_id' => null,
+        ], AddressGovernancePolicy::normalizePatch('conflict', 'addr-1', [
+            'governanceStatus' => 'canonical',
+        ]));
+    }
+
+    public function testGovernancePolicyRejectsInvalidAndSelfReferentialTransitions(): void
+    {
+        try {
+            AddressGovernancePolicy::normalizePatch('duplicate', 'addr-1', [
+                'governanceStatus' => 'canonical',
+            ]);
+            self::fail('Expected invalid governance transition to throw.');
+        } catch (\RuntimeException $exception) {
+            self::assertStringContainsString('Invalid governance transition', $exception->getMessage());
+        }
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('requires a non-self link id');
+        AddressGovernancePolicy::normalizePatch('canonical', 'addr-1', [
+            'governanceStatus' => 'alias',
+            'aliasOfId' => ' addr-1 ',
+        ]);
     }
 
     public function testValidationVerdictLegacyAliasRemainsSupported(): void
