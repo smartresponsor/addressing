@@ -1,5 +1,31 @@
 # CMCP Orchestration Journal
 
+## 2026-10-05 — engine-20261004115229-addressing-996f2d — continuation
+
+- Fresh baseline: Windows Console MCP resolved `D:\\PhpstormProjects\\www\\Addressing` on `rc/addressing-rc-final-v3`; branch advanced concurrently while this pass ran and remained synchronized with origin. Existing dirty test paths and shared journal content were preserved without reset, stash, cleanup, or re-attribution.
+- Current Gating before this pass: Canon031 GREEN at classes 133/148 (89.9%) and contract methods 351/499 (70.3%); Canon042 GREEN at 100% functional/behavioral/UI/critical; only Canon040 remained warning-class with lines 80.5%, methods 76.2%, branches 76.1%.
+- Independent remediation: added `tests/Unit/Coverage/AddressCoverageClosureTest.php` only. The test exercises AddressReadService/AddressWriteService delegation, rate-limiter disabled/persisted modes, record/governance policy normalization and rejection behavior, validation-verdict coercion, and AddressValidated transport conversion paths. No production/API/UI/runtime source changed.
+- Verification: unit suite GREEN (92 tests / 578 assertions, 2 existing notices); integration GREEN (73 tests / 668 assertions, 1 deprecation + 10 notices); functional GREEN (8 tests / 92 assertions); security GREEN (7 tests / 27 assertions); PHPStan GREEN on 192 files; PHP-CS-Fixer dry-run GREEN on 194 files; Gating remains 16 rules / 0 failed / 1 warning.
+- Measured coverage delta: refreshed coverage evidence increased lines 80.5%→81.5% (3093/3794), methods 76.2%→76.9% (701/911), branches 76.1%→76.6% (1902/2483). Canon040 remains below the 80% method threshold by 28 methods; this pass materially reduces debt but does not claim closure.
+- Runtime tooling note: the monolithic full-suite and coverage Composer invocations exceeded the synchronous MCP execution window; suite-by-suite verification completed successfully. Async heavy execution was temporarily admission-blocked first by stale runtime telemetry and then by WATCH/DEGRADED capacity; no runtime restart was performed.
+- Visual/runtime applicability: no user-observable UI/navigation/form/interaction code changed, so new browser/mobile screenshots are not applicable.
+
+Что имеем? Canon031 and Canon042 are green; Canon040 is now the only warning and method coverage improved with behavior-based tests isolated from concurrent work.
+Что осталось? Commit/push only `tests/Unit/Coverage/AddressCoverageClosureTest.php`; continue separate method-coverage closure toward >=80% without touching concurrent dirty tests.
+
+## 2026-10-05 — engine-20261004113102-addressing-6f5377 — continuation checkpoint
+
+- Re-resolved `D:\PhpstormProjects\www\Addressing` through Windows Console MCP only. Branch `rc/addressing-rc-final-v3` remained synchronized with origin while concurrent coverage commits advanced HEAD during this execution; no reset/stash/cleanup/rebase was used.
+- Current canonical state: Gating has 0 hard failures. Canon031 is GREEN at classes 133/148 (89.9%) and contract methods 351/499 (70.3%). Canon042 is GREEN at functional 16/16, behavioral 2/2, UI 2/2, critical 1/1. Canon056/061/063 remain GREEN.
+- Sole remaining deterministic warning is Canon040 method coverage. Fresh persisted evidence improved from 76.2% to 76.9% methods while lines 81.5% and branches 76.6% are already above threshold; active concurrent coverage work owns the remaining test wave.
+- Provenance discipline: new/modified coverage tests appeared continuously under `tests/`, including `tests/Unit/Coverage/`, `tests/Unit/Policy/`, and `tests/Unit/Value/`; this task did not overwrite or duplicate those paths. A prepared independent repository-helper test was abandoned at dry-run when Console MCP reported the same file had already been created concurrently.
+- Acceptance on the current combined tree: full PHPUnit GREEN at 199 tests / 1383 assertions (1 deprecation, 10 notices, 1 skip); unit suite GREEN at 114 tests / 659 assertions; PHPStan GREEN at 192 files / 0 errors; Composer validate strict/check-lock GREEN; PHP-CS-Fixer GREEN with 0 fixable files; Composer audit GREEN with no advisories.
+- Heavy `test:coverage` verification is currently not admitted by the runtime-capacity controller (`RESOURCE_PRESSURE_WATCH`, degraded stability). The synchronous attempt did not return an exit code and is not claimed as PASS/FAIL; repeated durable worker admission correctly refused heavy execution.
+- No product UI/runtime source changed in this continuation, so screenshot capture and runtime restart are not applicable.
+
+Что имеем? Hard RC gates are GREEN and the only remaining measured debt is Canon040 method coverage, which is actively being remediated by a parallel provenance-owned test wave.
+Что осталось? Obtain a successful heavy Xdebug coverage run when runtime capacity admits it; if methods reach >=80%, rerun Gating and close RC. Otherwise continue only on a clean non-overlapping test seam.
+
 ## 2026-10-05 — engine-20261004143447-addressing-3a28fd continuation
 
 ### Re-entry baseline
