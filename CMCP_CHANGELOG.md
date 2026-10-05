@@ -1,5 +1,30 @@
 # CMCP Orchestration Journal
 
+## 2026-10-05 — engine-20261004143447-addressing-3a28fd continuation
+
+### Re-entry baseline
+- Re-resolved `D:\\PhpstormProjects\\www\\Addressing` exclusively through Windows Console MCP on `rc/addressing-rc-final-v3` at HEAD `23c244c6352552b9b446c3fcaa2e6c35d170ffad`; upstream was synchronized 0 ahead / 0 behind.
+- The repository had advanced through parallel published waves since the prior checkpoint. Current dirty state was limited to `tests/Repository/AddressAbstractDoctrineRepositoryTest.php` and `tests/Service/AddressOutboxDrainerTest.php`; both are coverage-oriented Addressing tests and were treated as concurrent in-scope candidate work rather than silently attributed to this continuation.
+- Current Gating after the parallel waves: 16 rules / 0 failed / 1 warning. Canon031 is GREEN at classes 133/148 (89.9%) and contract methods 351/499 (70.3%); Canon042 is GREEN at functional 16/16, behavioral 2/2, UI 2/2, critical 1/1. The only remaining warning is Canon040 at lines 75.8%, methods 65.2%, branches 74.6%.
+
+### Selected continuation work
+- Validate and preserve the two existing coverage-oriented test changes if they are coherent, deterministic, and regression-free. Do not modify runtime/source behavior solely to chase coverage.
+- Full PHPUnit completed GREEN on the dirty candidate state: 156 tests / 1114 assertions, with one existing deprecation, nine notices, and one intentional skip.
+- `composer test:coverage` was attempted but Console MCP timed out before returning a final exit code; therefore no unverified coverage delta is claimed from these two files.
+
+### Continuation verification and integration
+- Parallel work advanced the branch while this continuation was active; previously dirty repository/outbox coverage tests were incorporated by that parallel wave. The remaining candidate surface became `tests/IndexProjectorTest.php` and `tests/Projection/AddressIndexRepositoryTest.php`, plus this orchestration journal.
+- Repository-owned `cs:check` exposed one import-order defect in `tests/IndexProjectorTest.php`; `cs:fix` corrected only that formatter defect, and the subsequent `cs:check` is GREEN with 0/192 fixable files.
+- Full PHPUnit on the final candidate tree: GREEN, 166 tests / 1186 assertions, with one existing deprecation, nine notices, and one intentional skip.
+- PHPStan: GREEN, 190/190 files and 0 errors.
+- Final Gating: 16 rules / 0 failed / 1 warning. Canon031 remains GREEN at classes 133/148 (89.9%) and contract methods 351/499 (70.3%); Canon042 remains GREEN at 100% across functional/behavioral/UI/critical inventories. Canon040 is the sole warning at lines 75.8%, methods 65.2%, branches 74.6%.
+- The added projection/index tests exercise geokey null-coordinate behavior, normalized-record construction with and without geocoding, projection payload serialization, and persistence-facing record paths. No runtime/source/API/UI behavior was changed.
+- Because the coverage producer timed out before returning a terminal result, this continuation does not claim a numerical Canon040 improvement from these final test files. Their value is established by deterministic test execution and branch/path assertions, not by an invented coverage delta.
+
+Что имеем? Addressing is at 0 hard Gating failures, Canon031 and Canon042 are GREEN, full PHPUnit/PHPStan/style verification is GREEN, and the only remaining canonical warning is measured Canon040 coverage debt.
+Что осталось? Publish the verified test-only/formatter/journal continuation as one coherent commit, then confirm post-push synchronization. Further Canon040 uplift remains a separate follow-up wave and should continue test-first rather than changing production behavior for coverage.
+
+
 ## 2026-10-05 — engine-20261004212131-addressing-a37d09
 
 ### Baseline and selected RC work
