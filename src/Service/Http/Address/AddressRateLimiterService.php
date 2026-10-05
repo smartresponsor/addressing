@@ -7,12 +7,16 @@ namespace App\Addressing\Service\Http\Address;
 
 use App\Addressing\RepositoryInterface\AddressRateLimitRepositoryInterface;
 
+/**
+ * Applies Addressing request-rate limits through the optional persisted counter repository.
+ */
 final readonly class AddressRateLimiterService
 {
     public function __construct(private ?AddressRateLimitRepositoryInterface $addressRateLimitRepository, private int $limitPerMinute = 60, private int $burst = 30)
     {
     }
 
+    /** Returns whether the client-key pair remains within the effective request allowance. */
     public function check(string $client, string $key): bool
     {
         if (!$this->addressRateLimitRepository instanceof AddressRateLimitRepositoryInterface) {

@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Handles Addressing create and delete commands exposed through HTTP endpoints.
+ */
 final readonly class AddressWriteHttpService
 {
     public function __construct(
@@ -22,6 +25,7 @@ final readonly class AddressWriteHttpService
     ) {
     }
 
+    /** Creates an address from the request payload and returns its identifier. */
     public function create(Request $request): JsonResponse
     {
         try {
@@ -35,6 +39,7 @@ final readonly class AddressWriteHttpService
         return new JsonResponse(['id' => $addressData->id()], Response::HTTP_CREATED);
     }
 
+    /** Deletes one scoped address and returns the canonical no-content response. */
     public function markDeleted(Request $request, string $id): JsonResponse
     {
         [$ownerId, $vendorId] = $this->addressHttpScopeService->tenantScope($request);

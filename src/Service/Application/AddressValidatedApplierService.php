@@ -15,6 +15,9 @@ use App\Addressing\Message\AddressOutboxEventMessage;
 use App\Addressing\RepositoryInterface\AddressValidatedPersistenceRepositoryInterface;
 use App\Addressing\ServiceInterface\Application\AddressValidatedApplierServiceInterface;
 
+/**
+ * Applies validated-address messages transactionally while persisting evidence and outbox state.
+ */
 final readonly class AddressValidatedApplierService implements AddressValidatedApplierServiceInterface
 {
     private AddressValidatedPayloadFactory $addressValidatedPayloadFactory;
@@ -26,6 +29,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         $this->addressValidatedPayloadFactory = $payloadFactory ?? new AddressValidatedPayloadFactory();
     }
 
+    /** Applies one validated-address message atomically to address state, evidence, and outbox records. */
     #[\Override]
     public function apply(string $id, AddressValidated $addressValidated, ?string $ownerId = null, ?string $vendorId = null): void
     {

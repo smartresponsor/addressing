@@ -25,6 +25,15 @@
 
 ## 2026-10-04 — engine-20261004232502-addressing-34c1ac
 
+### Continuation — Canon031 closure and RC verification
+- Continued from the synchronized `rc/addressing-rc-final-v3` workspace while preserving concurrent dirty files and excluding them from task commits.
+- Raised Canon031 semantic PHPDoc coverage from 61.5% classes / 56.2% contract methods to 89.9% classes / 70.3% contract methods; Canon031 is now GREEN.
+- Verification: `composer run-script cs:check` GREEN; `composer run-script qa:phpstan` GREEN; `composer run-script test:coverage` GREEN with 101 tests / 588 assertions (1 existing notice, 1 skip); behavioral/UI evidence refreshed at 81.2% functional / 100% behavioral / 100% UI / 100% critical.
+- Final Gating for this pass: 16 rules, 0 failed, 1 warning. Only Canon040 remains: lines 66.8% (2534/3794), methods 56.9% (518/911), branches 59.7% (1429/2394).
+- Fresh Inspecting report `D--PhpstormProjects-www-Addressing-20261005-022556.json`: PHPStan 0 errors, Rector 0 changed files / 0 errors, 27 medium design/maintainability findings, 0 high/critical.
+- No executable behavior, routes, payloads, forms, navigation, or user flows were changed by this remediation; visual evidence is therefore not applicable.
+
+
 ### Baseline and selected work
 - Resolved `D:\\PhpstormProjects\\www\\Addressing` through Console MCP on `rc/addressing-rc-final-v3`; branch started synchronized with origin and all pre-existing dirty paths were preserved without reset, stash, cleanup, deletion, or re-attribution.
 - Read Addressing plus required Objecting, Cruding, Viewing, Interfacing, Gating, and Canonization contracts. Canon021 keeps generic CRUD in Cruding; Canon031 requires meaningful PHPDoc; Objecting owns reusable system fields; Viewing/Interfacing own presentation and shell boundaries.

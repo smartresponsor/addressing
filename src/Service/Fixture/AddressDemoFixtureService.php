@@ -12,6 +12,9 @@ use App\Addressing\Service\Application\AddressWriteService;
 use Faker\Factory;
 use Faker\Generator;
 
+/**
+ * Rebuilds deterministic demo address data used by local development and fixture workflows.
+ */
 final readonly class AddressDemoFixtureService
 {
     private Generator $generator;
@@ -24,6 +27,7 @@ final readonly class AddressDemoFixtureService
         $this->generator = Factory::create('en_US');
     }
 
+    /** Resets the Addressing schema, generates demo records, and returns the inserted count. */
     public function resetAndLoad(int $count = 50): int
     {
         $this->addressDoctrineSchemaManager->resetSchema();

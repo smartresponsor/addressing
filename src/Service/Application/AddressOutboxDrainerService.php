@@ -7,6 +7,9 @@ namespace App\Addressing\Service\Application;
 use App\Addressing\Config\Application\AddressOutboxDispatchConfig;
 use App\Addressing\RepositoryInterface\AddressOutboxDispatchRepositoryInterface;
 
+/**
+ * Drains persisted address outbox rows and dispatches them with bounded retry semantics.
+ */
 final class AddressOutboxDrainerService
 {
     /** @var callable(string, array<string, mixed>, int, int, int, ?string): bool|null */
@@ -17,6 +20,7 @@ final class AddressOutboxDrainerService
         $this->sender = $sender;
     }
 
+    /** Dispatches a bounded batch of reserved outbox events and returns the processed row count. */
     public function drain(string $url, int $limit = 100, int $retryLimit = 3, int $timeoutSec = 10, int $backoffMs = 250): int
     {
         $addressOutboxDispatchConfig = new AddressOutboxDispatchConfig(
