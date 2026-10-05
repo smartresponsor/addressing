@@ -121,6 +121,84 @@ final class AddressInputFactoryTest extends TestCase
         self::assertSame('validated', $record->lastValidationStatus());
     }
 
+    public function testPrivateHelpersCoverAllCoercionAndNormalizationBranches(): void
+    {
+        $factory = new AddressInputFactory();
+        $invoke = static function (string $methodName, array $arguments = []) use ($factory): mixed {
+            $method = new \ReflectionMethod(AddressInputFactory::class, $methodName);
+
+            return $method->invokeArgs($factory, $arguments);
+        };
+
+        self::assertNull($invoke('stringOverride', [[], 'key']));
+        self::assertSame('value', $invoke('stringOverride', [['key' => 'value'], 'key']));
+        self::assertNull($invoke('stringOverride', [['key' => 10], 'key']));
+
+        self::assertNull($invoke('intOverride', [[], 'key']));
+        self::assertSame(7, $invoke('intOverride', [['key' => 7], 'key']));
+        self::assertSame(7, $invoke('intOverride', [['key' => 7.9], 'key']));
+        self::assertSame(8, $invoke('intOverride', [['key' => '8'], 'key']));
+        self::assertNull($invoke('intOverride', [['key' => 'bad'], 'key']));
+        self::assertNull($invoke('intOverride', [['key' => []], 'key']));
+
+        self::assertNull($invoke('floatOverride', [[], 'key']));
+        self::assertSame(7.0, $invoke('floatOverride', [['key' => 7], 'key']));
+        self::assertSame(7.9, $invoke('floatOverride', [['key' => 7.9], 'key']));
+        self::assertSame(8.5, $invoke('floatOverride', [['key' => '8.5'], 'key']));
+        self::assertNull($invoke('floatOverride', [['key' => 'bad'], 'key']));
+        self::assertNull($invoke('floatOverride', [['key' => []], 'key']));
+
+        self::assertNull($invoke('nullableTrimmed', [null]));
+        self::assertNull($invoke('nullableTrimmed', ['   ']));
+        self::assertSame('value', $invoke('nullableTrimmed', [' value ']));
+
+        $dto = new AddressManageDTO();
+        $dto->postalCode = null;
+        $dto->region = null;
+        self::assertNull($invoke('postalCode', [$dto]));
+        self::assertNull($invoke('region', [$dto]));
+        $dto->postalCode = '   ';
+        $dto->region = '   ';
+        self::assertNull($invoke('postalCode', [$dto]));
+        self::assertNull($invoke('region', [$dto]));
+        $dto->postalCode = '770 02';
+        $dto->region = 'tx';
+        self::assertSame('770 02', $invoke('postalCode', [$dto]));
+        self::assertSame('TX', $invoke('region', [$dto]));
+
+        self::assertSame([
+            'line1Norm' => 'main st',
+            'cityNorm' => 'houston',
+            'regionNorm' => null,
+            'postalCodeNorm' => null,
+        ], $invoke('normalizedAddress', ['Main St', 'Houston', null, null]));
+        self::assertSame([
+            'line1Norm' => 'main st',
+            'cityNorm' => 'houston',
+            'regionNorm' => 'tx',
+            'postalCodeNorm' => '77002',
+        ], $invoke('normalizedAddress', ['Main St', 'Houston', 'TX', '770 02']));
+
+        self::assertSame(
+            'main st|houston|us',
+            $invoke('dedupeKey', [[
+                'line1Norm' => 'main st',
+                'cityNorm' => 'houston',
+                'regionNorm' => null,
+                'postalCodeNorm' => null,
+            ], 'US', null, null]),
+        );
+        self::assertSame(
+            'main st|houston|tx|77002|us|owner-1|vendor-1',
+            $invoke('dedupeKey', [[
+                'line1Norm' => 'main st',
+                'cityNorm' => 'houston',
+                'regionNorm' => 'tx',
+                'postalCodeNorm' => '77002',
+            ], 'US', 'owner-1', 'vendor-1']),
+        );
+    }
+
     public function testFromManageDtoPreservesNormalizedRecordContract(): void
     {
         $dto = new AddressManageDTO();
