@@ -7,8 +7,12 @@ namespace App\Addressing\Repository;
 use App\Addressing\Entity\AddressEntity;
 use App\Addressing\RepositoryInterface\AddressGovernanceRepositoryInterface;
 
+/**
+ * Builds tenant-scoped governance cluster summaries from persisted Addressing relationships.
+ */
 final readonly class AddressDoctrineGovernanceRepository extends AddressAbstractDoctrineRepository implements AddressGovernanceRepositoryInterface
 {
+    /** Summarize outbound and inbound governance relationships for one address within the requested tenant scope. */
     #[\Override]
     public function summarizeGovernanceCluster(string $addressId, ?string $ownerId, ?string $vendorId): array
     {

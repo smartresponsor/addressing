@@ -7,8 +7,12 @@ namespace App\Addressing\Repository;
 use App\Addressing\Entity\AddressEntity;
 use App\Addressing\RepositoryInterface\AddressOperationalRepositoryInterface;
 
+/**
+ * Applies tenant-scoped operational governance and revalidation mutations to persisted Addressing records.
+ */
 final readonly class AddressDoctrineOperationalRepository extends AddressAbstractDoctrineRepository implements AddressOperationalRepositoryInterface
 {
+    /** Validate and persist one tenant-scoped operational patch and emit its canonical outbox event. */
     #[\Override]
     public function patchOperational(string $id, ?string $ownerId, ?string $vendorId, array $patch): bool
     {

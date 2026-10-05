@@ -10,8 +10,12 @@ use App\Addressing\Entity\AddressEntity;
 use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
 use App\Addressing\RepositoryInterface\AddressEvidenceRepositoryInterface;
 
+/**
+ * Persists and reads Addressing validation evidence snapshots within tenant-scoped Doctrine queries.
+ */
 final readonly class AddressDoctrineEvidenceRepository extends AddressAbstractDoctrineRepository implements AddressEvidenceRepositoryInterface
 {
+    /** Persist the current address evidence snapshot when the scoped address exists and carries evidence. */
     #[\Override]
     public function appendEvidenceSnapshot(AddressInterface $address): ?AddressEvidenceSnapshotInterface
     {
@@ -28,6 +32,7 @@ final readonly class AddressDoctrineEvidenceRepository extends AddressAbstractDo
         });
     }
 
+    /** Return the most recent evidence snapshot for one non-deleted address inside the requested tenant scope. */
     #[\Override]
     public function getLatestEvidenceSnapshot(string $addressId, ?string $ownerId, ?string $vendorId): ?AddressEvidenceSnapshotInterface
     {
@@ -50,6 +55,7 @@ final readonly class AddressDoctrineEvidenceRepository extends AddressAbstractDo
         return $entity instanceof AddressEvidenceSnapshotEntity ? $this->mapSnapshotEntity($entity) : null;
     }
 
+    /** Return a cursor-paginated evidence history ordered newest-first within the requested tenant scope. */
     #[\Override]
     public function findEvidenceHistoryPage(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array
     {
