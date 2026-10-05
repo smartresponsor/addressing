@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Repository;
 
+use App\Addressing\Entity\AddressEntity;
 use App\Addressing\Factory\AddressEntityMapper;
 use App\Addressing\Repository\AddressAbstractDoctrineRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -120,6 +121,82 @@ final class AddressAbstractDoctrineRepositoryTest extends TestCase
         self::assertSame('US|manual', $this->repository->sortKey(['countryCode' => 'US', 'sourceType' => 'manual']));
         self::assertSame('|', $this->repository->sortKey(['countryCode' => []]));
     }
+
+    public function testOperationalAndEntityHelpersCoverRuntimeBranches(): void
+    {
+        self::assertNull($this->repository->stringFilterValue([], 'x'));
+        self::assertNull($this->repository->stringFilterValue(['x' => '  '], 'x'));
+        self::assertSame('value', $this->repository->stringFilterValue(['x' => ' value '], 'x'));
+        self::assertTrue($this->repository->hasEvidenceFilterValue(['hasEvidence' => true]));
+        self::assertFalse($this->repository->hasEvidenceFilterValue(['hasEvidence' => false]));
+        self::assertNull($this->repository->hasEvidenceFilterValue(['hasEvidence' => 'yes']));
+
+        $patch = $this->repository->normalizePatch('addr-1', 'canonical', [
+            'revalidationDueAt' => '2026-12-01T00:00:00+00:00',
+            'revalidationPolicy' => 'monthly',
+            'lastValidationProvider' => 'provider-a',
+            'lastValidationStatus' => 'validated',
+            'lastValidationScore' => '91',
+        ]);
+        self::assertSame('monthly', $patch['revalidation_policy']);
+        self::assertSame(91, $patch['last_validation_score']);
+
+        $entity = (new AddressEntity())
+            ->setId('addr-1')
+            ->setGovernanceStatus('canonical')
+            ->setValidationStatus('pending')
+            ->setCreatedAt(new \DateTimeImmutable('2026-01-01T00:00:00+00:00'));
+        $updatedAt = new \DateTimeImmutable('2026-10-05T12:00:00+00:00');
+        $this->repository->applyPatch($entity, $patch, $updatedAt);
+        self::assertSame('monthly', $entity->getRevalidationPolicy());
+        self::assertSame('provider-a', $entity->getLastValidationProvider());
+        self::assertSame('validated', $entity->getLastValidationStatus());
+        self::assertSame(91, $entity->getLastValidationScore());
+        self::assertSame($updatedAt, $entity->getUpdatedAt());
+
+        self::assertFalse($this->repository->hasEvidenceEntityValue($entity));
+        $entity->setProviderDigest('digest');
+        self::assertTrue($this->repository->hasEvidenceEntityValue($entity));
+
+        self::assertNull($this->repository->entityCursor([], 1));
+        self::assertSame('addr-1', $this->repository->entityCursor([$entity], 1));
+        self::assertStringContainsString('rawInputSnapshot', $this->repository->evidenceClauseDqlValue('a', true));
+        self::assertStringStartsWith('NOT ', $this->repository->evidenceClauseDqlValue('a', false));
+        self::assertSame(12, $this->repository->intRowValueValue(['n' => '12'], 'n'));
+        self::assertSame(0, $this->repository->intRowValueValue(['n' => 'bad'], 'n'));
+        self::assertSame('42', $this->repository->stringValueValue(42));
+        self::assertSame('', $this->repository->stringValueValue([]));
+        self::assertSame('2026-10-05T12:00:00+00:00', $this->repository->nullableDateStringValue($updatedAt));
+        self::assertSame('2026-10-05T12:00:00+00:00', $this->repository->nullableDateTimeValue('2026-10-05T12:00:00+00:00')?->format(DATE_ATOM));
+    }
+
+    public function testGroupedPortfolioAccumulatesGovernanceEvidenceAndOperationalCounters(): void
+    {
+        $due = (new AddressEntity())
+            ->setId('a')
+            ->setCountryCode('US')
+            ->setGovernanceStatus('duplicate')
+            ->setValidationStatus('uncertain')
+            ->setRevalidationDueAt(new \DateTimeImmutable('2020-01-01T00:00:00+00:00'))
+            ->setProviderDigest('digest')
+            ->setCreatedAt(new \DateTimeImmutable('2026-01-01T00:00:00+00:00'));
+        $clean = (new AddressEntity())
+            ->setId('b')
+            ->setCountryCode('US')
+            ->setGovernanceStatus('canonical')
+            ->setValidationStatus('validated')
+            ->setCreatedAt(new \DateTimeImmutable('2026-01-01T00:00:00+00:00'));
+
+        $rows = $this->repository->groupPortfolio([$due, $clean]);
+        self::assertCount(1, $rows);
+        self::assertSame(2, $rows[0]['total']);
+        self::assertSame(1, $rows[0]['duplicate']);
+        self::assertSame(1, $rows[0]['canonical']);
+        self::assertSame(1, $rows[0]['evidenceBacked']);
+        self::assertSame(1, $rows[0]['evidenceMissing']);
+        self::assertSame(1, $rows[0]['dueForRevalidation']);
+        self::assertSame(1, $rows[0]['uncertainValidation']);
+    }
 }
 
 final readonly class AddressAbstractDoctrineRepositoryProbe extends AddressAbstractDoctrineRepository
@@ -187,5 +264,84 @@ final readonly class AddressAbstractDoctrineRepositoryProbe extends AddressAbstr
     public function decodeCursor(string $cursor): array
     {
         return $this->decodeEvidenceCursor($cursor);
+    }
+
+    /** @param array<string, mixed> $filters */
+    public function stringFilterValue(array $filters, string $key): ?string
+    {
+        return $this->stringFilter($filters, $key);
+    }
+
+    /** @param array<string, mixed> $filters */
+    public function hasEvidenceFilterValue(array $filters): ?bool
+    {
+        return $this->hasEvidenceFilter($filters);
+    }
+
+    /**
+     * @param array<string, mixed> $patch
+     *
+     * @return array<string, mixed>
+     */
+    public function normalizePatch(string $id, string $status, array $patch): array
+    {
+        return $this->normalizeOperationalPatch($id, $status, $patch);
+    }
+
+    /** @param array<string, mixed> $patch */
+    public function applyPatch(AddressEntity $entity, array $patch, \DateTimeImmutable $updatedAt): void
+    {
+        $this->applyOperationalPatchToEntity($entity, $patch, $updatedAt);
+    }
+
+    public function hasEvidenceEntityValue(AddressEntity $entity): bool
+    {
+        return $this->hasEvidenceEntity($entity);
+    }
+
+    /** @param list<AddressEntity> $entities */
+    public function entityCursor(array $entities, int $limit): ?string
+    {
+        return $this->pageCursorFromEntities($entities, $limit);
+    }
+
+    public function evidenceClauseDqlValue(string $alias, bool $hasEvidence): string
+    {
+        return $this->evidencePresenceClauseDql($alias, $hasEvidence);
+    }
+
+    /** @param array<string, mixed> $row */
+    public function intRowValueValue(array $row, string $key): int
+    {
+        return $this->intRowValue($row, $key);
+    }
+
+    public function stringValueValue(mixed $value): string
+    {
+        return $this->stringValue($value);
+    }
+
+    public function nullableDateStringValue(mixed $value): ?string
+    {
+        return $this->nullableDateString($value);
+    }
+
+    public function nullableDateTimeValue(mixed $value): ?\DateTimeImmutable
+    {
+        return $this->nullableDateTime($value);
+    }
+
+    /**
+     * @param list<AddressEntity> $entities
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function groupPortfolio(array $entities): array
+    {
+        return $this->buildGroupedPortfolio(
+            $entities,
+            static fn (AddressEntity $entity): string => $entity->getCountryCode(),
+            static fn (AddressEntity $entity): array => ['countryCode' => $entity->getCountryCode()],
+        );
     }
 }
