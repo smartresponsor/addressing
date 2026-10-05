@@ -9,7 +9,11 @@ use App\Addressing\RepositoryInterface\AddressPostalCodeEntityRepositoryInterfac
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-/** @extends ServiceEntityRepository<AddressPostalCodeEntity> */
+/**
+ * Provides Doctrine persistence access for canonical Addressing postal-code reference entities.
+ *
+ * @extends ServiceEntityRepository<AddressPostalCodeEntity>
+ */
 final class AddressPostalCodeEntityRepository extends ServiceEntityRepository implements AddressPostalCodeEntityRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)

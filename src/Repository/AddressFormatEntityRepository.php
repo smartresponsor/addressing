@@ -9,7 +9,11 @@ use App\Addressing\RepositoryInterface\AddressFormatEntityRepositoryInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-/** @extends ServiceEntityRepository<AddressFormatEntity> */
+/**
+ * Provides Doctrine persistence access for country-specific Addressing format reference entities.
+ *
+ * @extends ServiceEntityRepository<AddressFormatEntity>
+ */
 final class AddressFormatEntityRepository extends ServiceEntityRepository implements AddressFormatEntityRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)

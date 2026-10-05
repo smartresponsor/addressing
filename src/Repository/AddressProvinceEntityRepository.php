@@ -9,7 +9,11 @@ use App\Addressing\RepositoryInterface\AddressProvinceEntityRepositoryInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-/** @extends ServiceEntityRepository<AddressProvinceEntity> */
+/**
+ * Provides Doctrine persistence access for canonical Addressing province and region reference entities.
+ *
+ * @extends ServiceEntityRepository<AddressProvinceEntity>
+ */
 final class AddressProvinceEntityRepository extends ServiceEntityRepository implements AddressProvinceEntityRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)
