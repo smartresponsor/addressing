@@ -72,6 +72,51 @@ final class AddressOutboxDrainerTest extends TestCase
         static::assertNotNull($rows[1]->getPublishedAt());
     }
 
+    public function testDispatchRepositoryReleasesFailuresAndPublishesRetries(): void
+    {
+        $entityManager = TestDatabase::createInMemoryEntityManager([AddressOutboxEntity::class]);
+        $repository = new AddressDoctrineOutboxDispatchRepository($entityManager);
+        $this->insertOutbox($entityManager, 'AddressUpdated', 2, ['id' => 'addr-9']);
+
+        $reserved = $repository->reserve('worker-1', 0);
+        self::assertCount(1, $reserved);
+        self::assertSame('AddressUpdated', $reserved[0]['event_name']);
+        self::assertSame(2, $reserved[0]['event_version']);
+
+        $id = $reserved[0]['id'];
+        self::assertIsInt($id);
+        $entityManager->clear();
+        $locked = $entityManager->find(AddressOutboxEntity::class, $id);
+        self::assertInstanceOf(AddressOutboxEntity::class, $locked);
+        self::assertSame('worker-1', $locked->getLockedBy());
+        self::assertNotNull($locked->getLockedAt());
+
+        $repository->markDispatchFailure($id, 'network_error');
+        $entityManager->clear();
+        $failed = $entityManager->find(AddressOutboxEntity::class, $id);
+        self::assertInstanceOf(AddressOutboxEntity::class, $failed);
+        self::assertNull($failed->getLockedAt());
+        self::assertNull($failed->getLockedBy());
+        self::assertSame(1, $failed->getPublishedAttempt());
+        self::assertSame('network_error', $failed->getLastError());
+
+        $retry = $repository->reserve('worker-2', 10);
+        self::assertCount(1, $retry);
+        $repository->markPublished($id);
+        $entityManager->clear();
+        $published = $entityManager->find(AddressOutboxEntity::class, $id);
+        self::assertInstanceOf(AddressOutboxEntity::class, $published);
+        self::assertNotNull($published->getPublishedAt());
+        self::assertNull($published->getLockedAt());
+        self::assertNull($published->getLockedBy());
+        self::assertSame(2, $published->getPublishedAttempt());
+        self::assertNull($published->getLastError());
+        self::assertSame([], $repository->reserve('worker-3', 10));
+
+        $repository->markPublished(999999);
+        $repository->markDispatchFailure(999999, 'ignored');
+    }
+
     /**
      * @param array<string, mixed> $payload
      */
