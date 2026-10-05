@@ -17,6 +17,9 @@ use App\Addressing\Value\Record\AddressData;
 use App\Addressing\Value\Record\AddressEvidenceSnapshotData;
 use Doctrine\ORM\EntityManagerInterface;
 
+/**
+ * Provides shared Doctrine persistence mechanics for Addressing repositories, including tenant scoping, filtering, evidence, and outbox support.
+ */
 abstract readonly class AddressAbstractDoctrineRepository
 {
     public function __construct(
@@ -25,6 +28,7 @@ abstract readonly class AddressAbstractDoctrineRepository
     ) {
     }
 
+    /** Find one non-deleted Doctrine address constrained to the requested tenant scope. */
     protected function findDoctrineAddress(string $id, ?string $ownerId, ?string $vendorId): ?AddressEntity
     {
         $queryBuilder = $this->entityManager->createQueryBuilder();
@@ -41,6 +45,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         return $entity instanceof AddressEntity ? $entity : null;
     }
 
+    /** Apply mutually exclusive owner/vendor tenant constraints to a Doctrine query builder. */
     protected function applyTenantScope(\Doctrine\ORM\QueryBuilder $qb, string $alias, ?string $ownerId, ?string $vendorId): void
     {
         if (null !== $ownerId && null !== $vendorId) {
@@ -59,6 +64,8 @@ abstract readonly class AddressAbstractDoctrineRepository
     }
 
     /**
+     * Build SQL predicates for tenant, country, and free-text search while collecting bound parameters.
+     *
      * @param array<string, mixed> $params
      *
      * @return list<string>
@@ -82,6 +89,8 @@ abstract readonly class AddressAbstractDoctrineRepository
     }
 
     /**
+     * Build the SQL tenant predicate for owner, vendor, or unscoped records and bind its parameter.
+     *
      * @param array<string, mixed> $params
      */
     protected function buildTenantWhere(?string $ownerId, ?string $vendorId, array &$params): string
@@ -106,6 +115,8 @@ abstract readonly class AddressAbstractDoctrineRepository
     }
 
     /**
+     * Apply optional source, validation, governance, revalidation, and evidence filters to a portfolio query.
+     *
      * @param list<string>         $where
      * @param array<string, mixed> $params
      * @param array<string, mixed> $filters
@@ -161,6 +172,8 @@ abstract readonly class AddressAbstractDoctrineRepository
     }
 
     /**
+     * Extend portfolio predicates with operational paging filters and return the effective revalidation cutoff.
+     *
      * @param list<string>         $where
      * @param array<string, mixed> $params
      * @param array<string, mixed> $filters
@@ -179,6 +192,8 @@ abstract readonly class AddressAbstractDoctrineRepository
     }
 
     /**
+     * Apply one operational queue selector as SQL predicates and parameters for revalidation or review work.
+     *
      * @param list<string>         $where
      * @param array<string, mixed> $params
      * @param array<string, mixed> $filters
@@ -228,6 +243,8 @@ abstract readonly class AddressAbstractDoctrineRepository
     }
 
     /**
+     * Resolve the summary revalidation cutoff and bind the effective timestamp parameter used by aggregate queries.
+     *
      * @param array<string, mixed> $params
      * @param array<string, mixed> $filters
      */
@@ -239,6 +256,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         return $revalidationDueBefore;
     }
 
+    /** Build the SQL predicate that classifies persisted address records by evidence presence. */
     protected function evidencePresenceClause(bool $hasEvidence): string
     {
         $clause = '(raw_input_snapshot IS NOT NULL OR normalized_snapshot IS NOT NULL OR provider_digest IS NOT NULL OR validation_raw IS NOT NULL OR validation_verdict IS NOT NULL)';
@@ -254,7 +272,11 @@ abstract readonly class AddressAbstractDoctrineRepository
         return is_bool($value) ? $value : null;
     }
 
-    /** @param array<string, mixed> $filters */
+    /**
+     * Extract and trim one optional string filter value, returning null for absent or empty input.
+     *
+     * @param array<string, mixed> $filters
+     */
     protected function stringFilter(array $filters, string $key): ?string
     {
         $value = $filters[$key] ?? null;
@@ -267,7 +289,11 @@ abstract readonly class AddressAbstractDoctrineRepository
         return '' === $value ? null : $value;
     }
 
-    /** @param array<string, mixed> $patch
+    /**
+     * Normalize mutable operational fields into canonical persistence-column values for one address patch.
+     *
+     * @param array<string, mixed> $patch
+     *
      * @return array<string, mixed>
      */
     protected function normalizeOperationalPatch(string $id, string $currentGovernanceStatus, array $patch): array
@@ -300,7 +326,11 @@ abstract readonly class AddressAbstractDoctrineRepository
         return $normalized;
     }
 
-    /** @param array<string, mixed> $normalized */
+    /**
+     * Verify each normalized governance relationship target exists inside the same tenant scope.
+     *
+     * @param array<string, mixed> $normalized
+     */
     protected function assertGovernanceTargetsExist(array $normalized, ?string $ownerId, ?string $vendorId): void
     {
         $targets = [
@@ -321,7 +351,11 @@ abstract readonly class AddressAbstractDoctrineRepository
         }
     }
 
-    /** @param array<string, mixed> $normalized */
+    /**
+     * Apply normalized operational governance and validation fields to the managed Doctrine address entity.
+     *
+     * @param array<string, mixed> $normalized
+     */
     protected function applyOperationalPatchToEntity(AddressEntity $entity, array $normalized, \DateTimeImmutable $updatedAt): void
     {
         if (array_key_exists('governance_status', $normalized) && is_string($normalized['governance_status'])) {
@@ -358,6 +392,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         $entity->setUpdatedAt($updatedAt);
     }
 
+    /** Require exactly one owner or vendor tenant scope for operations that must never be global. */
     protected function ensureTenantScope(?string $ownerId, ?string $vendorId): void
     {
         if (null === $ownerId && null === $vendorId) {
@@ -369,7 +404,11 @@ abstract readonly class AddressAbstractDoctrineRepository
         }
     }
 
-    /** @param list<array<string, mixed>> $rows */
+    /**
+     * Derive the next SQL page cursor from the last row only when the requested page is full.
+     *
+     * @param list<array<string, mixed>> $rows
+     */
     protected function pageCursorFromRows(array $rows, int $limit): ?string
     {
         if (count($rows) !== $limit || [] === $rows) {
@@ -381,7 +420,11 @@ abstract readonly class AddressAbstractDoctrineRepository
         return isset($lastRow['id']) && is_string($lastRow['id']) ? $lastRow['id'] : null;
     }
 
-    /** @param array<string, mixed> $row */
+    /**
+     * Hydrate one database row into the canonical immutable Addressing record contract.
+     *
+     * @param array<string, mixed> $row
+     */
     protected function mapRowToRecord(array $row): AddressData
     {
         return new AddressData(
@@ -434,7 +477,11 @@ abstract readonly class AddressAbstractDoctrineRepository
         );
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * Normalize nullable JSON-like database values into associative arrays when decoding is valid.
+     *
+     * @return array<string, mixed>|null
+     */
     protected function nullableJsonArray(mixed $value): ?array
     {
         if (null === $value || '' === $value) {
@@ -454,6 +501,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         return null;
     }
 
+    /** Normalize scalar database values to trimmed nullable strings while rejecting unsupported types. */
     protected function nullableString(mixed $value): ?string
     {
         if (null === $value) {
@@ -471,6 +519,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         return '' === $value ? null : $value;
     }
 
+    /** Normalize date-like persistence values to nullable DATE_ATOM strings for immutable record transport. */
     protected function nullableDateString(mixed $value): ?string
     {
         if ($value instanceof \DateTimeInterface) {
@@ -480,6 +529,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         return $this->nullableString($value);
     }
 
+    /** Parse nullable scalar timestamp values into immutable date-time objects for Doctrine entity mutation. */
     protected function nullableDateTime(mixed $value): ?\DateTimeImmutable
     {
         $value = $this->nullableString($value);
@@ -487,6 +537,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         return null === $value ? null : new \DateTimeImmutable($value);
     }
 
+    /** Normalize nullable numeric persistence values to integers while rejecting non-numeric input. */
     protected function nullableInt(mixed $value): ?int
     {
         if (null === $value || '' === $value) {
@@ -508,6 +559,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         return null;
     }
 
+    /** Normalize nullable numeric persistence values to floats while rejecting non-numeric input. */
     protected function nullableFloat(mixed $value): ?float
     {
         if (null === $value || '' === $value) {
@@ -529,6 +581,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         return null;
     }
 
+    /** Normalize scalar persistence values to strings and collapse unsupported input to an empty value. */
     protected function stringValue(mixed $value): string
     {
         if (is_string($value)) {
@@ -542,6 +595,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         return '';
     }
 
+    /** Normalize nullable boolean persistence values from native, numeric, or common textual representations. */
     protected function nullableBool(mixed $value): ?bool
     {
         if (null === $value || '' === $value) {
@@ -569,7 +623,11 @@ abstract readonly class AddressAbstractDoctrineRepository
         return null;
     }
 
-    /** @param array<string, mixed> $row */
+    /**
+     * Read one aggregate row field as an integer while defaulting absent or non-numeric values to zero.
+     *
+     * @param array<string, mixed> $row
+     */
     protected function intRowValue(array $row, string $key): int
     {
         $value = $row[$key] ?? 0;
@@ -578,6 +636,8 @@ abstract readonly class AddressAbstractDoctrineRepository
     }
 
     /**
+     * Group scoped address entities into deterministic portfolio rows and accumulate governance and evidence counters.
+     *
      * @template T of array<string, mixed>
      *
      * @param list<AddressEntity>             $entities
@@ -669,6 +729,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         return $this->portfolioSortKey($left) <=> $this->portfolioSortKey($right);
     }
 
+    /** Convert any Addressing contract implementation into the canonical immutable AddressData record. */
     protected function asRecord(AddressInterface $address): AddressData
     {
         if ($address instanceof AddressData) {
@@ -725,6 +786,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         );
     }
 
+    /** Persist a new evidence snapshot when the address carries validation or normalization evidence. */
     protected function appendEvidenceSnapshotInternal(AddressInterface $address, AddressEntity $entity): ?AddressEvidenceSnapshotInterface
     {
         if (!$this->hasEvidence($address)) {
@@ -738,6 +800,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         return $addressEvidenceSnapshot;
     }
 
+    /** Build the immutable evidence snapshot contract from current validation, source, and normalization state. */
     protected function buildEvidenceSnapshot(AddressInterface $address): AddressEvidenceSnapshotInterface
     {
         $validatedBy = $address->validationProvider() ?? $address->lastValidationProvider() ?? $address->sourceSystem();
@@ -768,6 +831,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         );
     }
 
+    /** Return whether the Addressing contract carries any validation, provider, or normalization evidence. */
     protected function hasEvidence(AddressInterface $address): bool
     {
         return null !== $address->rawInputSnapshot()
@@ -777,6 +841,7 @@ abstract readonly class AddressAbstractDoctrineRepository
             || null !== $address->validationVerdict();
     }
 
+    /** Map a persisted evidence snapshot entity back into the immutable Addressing evidence contract. */
     protected function mapSnapshotEntity(AddressEvidenceSnapshotEntity $entity): AddressEvidenceSnapshotInterface
     {
         return new AddressEvidenceSnapshotData(
@@ -800,6 +865,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         );
     }
 
+    /** Copy compatible setter/getter-backed state between Doctrine address entities during persistence reconciliation. */
     protected function copyAddressEntityState(AddressEntity $target, AddressEntity $source): void
     {
         foreach (get_class_methods($target) as $method) {
@@ -817,7 +883,11 @@ abstract readonly class AddressAbstractDoctrineRepository
         }
     }
 
-    /** @param array<string, mixed> $payload */
+    /**
+     * Persist one decorated Addressing outbox event using the canonical event name, version, and JSON payload.
+     *
+     * @param array<string, mixed> $payload
+     */
     protected function appendOutbox(string $nameEntity, array $payload): void
     {
         $json = json_encode(
@@ -834,6 +904,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         $this->entityManager->persist($addressOutboxEntity);
     }
 
+    /** Resolve the active governance relationship identifier implied by the address governance status. */
     protected function governanceLinkId(AddressInterface $address): ?string
     {
         return match (AddressRecordPolicy::normalizeGovernanceStatus($address->governanceStatus())) {
@@ -845,13 +916,17 @@ abstract readonly class AddressAbstractDoctrineRepository
         };
     }
 
+    /** Return the current UTC-compatible timestamp using the canonical DATE_ATOM transport format. */
     protected function currentTimestampAtom(): string
     {
         return (new \DateTimeImmutable('now'))->format(DATE_ATOM);
     }
 
-    /** @return array{0:string,1:string} */
-    /** @return array{string, string} */
+    /**
+     * Decode and validate an evidence cursor into its canonical creation timestamp and snapshot identifier.
+     *
+     * @return array{string, string}
+     */
     protected function decodeEvidenceCursor(string $cursor): array
     {
         $decoded = base64_decode($cursor, true);
@@ -868,15 +943,15 @@ abstract readonly class AddressAbstractDoctrineRepository
         return [$createdAt, $id];
     }
 
+    /** Encode an evidence creation timestamp and snapshot identifier into the stable transport cursor format. */
     protected function encodeEvidenceCursor(string $createdAt, string $id): string
     {
         return base64_encode($createdAt."\n".$id);
     }
 
     /**
-     * @return list<AddressEntity>
-     */
-    /**
+     * Fetch non-deleted address entities constrained by tenant, search, and optional portfolio filter dimensions.
+     *
      * @param array<string, mixed> $filters
      *
      * @return list<AddressEntity>
@@ -905,6 +980,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         return $entities;
     }
 
+    /** Apply tenant, country, and free-text constraints to the Doctrine address query builder. */
     protected function applyAddressScope(\Doctrine\ORM\QueryBuilder $qb, string $alias, ?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $query): void
     {
         if (null !== $ownerId && null !== $vendorId) {
@@ -931,6 +1007,8 @@ abstract readonly class AddressAbstractDoctrineRepository
     }
 
     /**
+     * Apply source, validation, governance, evidence, and normalization filters to a Doctrine address query.
+     *
      * @param array<string, mixed> $filters
      */
     protected function applyAddressFilters(\Doctrine\ORM\QueryBuilder $qb, string $alias, array $filters, bool $includeSourceSystem = false, bool $includeValidation = false, bool $includeNormalization = false): void
@@ -987,6 +1065,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         }
     }
 
+    /** Build the Doctrine DQL predicate that classifies address entities by evidence presence. */
     protected function evidencePresenceClauseDql(string $alias, bool $hasEvidence): string
     {
         $clause = sprintf(
@@ -998,6 +1077,8 @@ abstract readonly class AddressAbstractDoctrineRepository
     }
 
     /**
+     * Derive the next Doctrine page cursor from the last entity only when the requested page is full.
+     *
      * @param list<AddressEntity> $entities
      */
     protected function pageCursorFromEntities(array $entities, int $limit): ?string
@@ -1012,6 +1093,8 @@ abstract readonly class AddressAbstractDoctrineRepository
     }
 
     /**
+     * Build a deterministic lexical sort key for heterogeneous portfolio summary rows.
+     *
      * @param array<string, mixed> $row
      */
     protected function portfolioSortKey(array $row): string
@@ -1025,6 +1108,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         return $primaryString.'|'.$secondaryString;
     }
 
+    /** Return whether the Doctrine address entity carries any persisted validation or normalization evidence. */
     protected function hasEvidenceEntity(AddressEntity $entity): bool
     {
         return null !== $entity->getRawInputSnapshot()
@@ -1035,6 +1119,8 @@ abstract readonly class AddressAbstractDoctrineRepository
     }
 
     /**
+     * Fetch all non-deleted address entities inside one owner or vendor tenant scope.
+     *
      * @return list<AddressEntity>
      */
     protected function fetchScopedAddresses(?string $ownerId, ?string $vendorId): array
