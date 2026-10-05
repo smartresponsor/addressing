@@ -14,6 +14,12 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Exposes scoped Addressing search and operational filters through the Symfony console.
+ *
+ * Console inputs are normalized at the transport boundary before delegation to the
+ * Addressing read service, and the resulting address records are projected to stable JSON.
+ */
 #[AsCommand(name: 'address:search', description: 'Search canonical addresses with operational filters.')]
 final class AddressSearchCommand extends Command
 {
@@ -22,6 +28,9 @@ final class AddressSearchCommand extends Command
         parent::__construct();
     }
 
+    /**
+     * Declares scope, pagination, query, and operational filters accepted by address search.
+     */
     #[\Override]
     protected function configure(): void
     {
@@ -41,7 +50,11 @@ final class AddressSearchCommand extends Command
             ->addOption('expected-normalization-version', null, InputOption::VALUE_OPTIONAL);
     }
 
-    /** @noinspection PhpMissingParentCallCommonInspection */
+    /**
+     * Executes the scoped search and emits the stable console JSON projection.
+     *
+     * @noinspection PhpMissingParentCallCommonInspection
+     */
     #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -65,7 +78,7 @@ final class AddressSearchCommand extends Command
             ],
         );
 
-        $items = array_map(static fn (\App\Addressing\EntityInterface\Record\AddressInterface $address): array => [
+        $items = array_map(static fn (\App\Addressing\Contract\AddressInterface $address): array => [
             'id' => $address->id(),
             'line1' => $address->line1(),
             'city' => $address->city(),

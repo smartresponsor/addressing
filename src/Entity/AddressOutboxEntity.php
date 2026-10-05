@@ -10,6 +10,9 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'address_outbox')]
 #[ORM\Index(name: 'address_outbox_stream_created_idx', columns: ['stream', 'created_at'])]
 #[ORM\Index(name: 'address_outbox_publish_idx', columns: ['published_at', 'locked_at', 'id'])]
+/**
+ * Persists an Addressing integration event until a publisher claims and delivers it.
+ */
 class AddressOutboxEntity
 {
     #[ORM\Id]
@@ -112,6 +115,9 @@ class AddressOutboxEntity
         return $this;
     }
 
+    /**
+     * Returns the canonical creation instant used to order unpublished outbox records.
+     */
     public function createdAt(): \DateTimeImmutable
     {
         return $this->getCreatedAt();
@@ -141,6 +147,9 @@ class AddressOutboxEntity
         return $this;
     }
 
+    /**
+     * Returns the instant at which the current publisher claim was acquired.
+     */
     public function lockedAt(): ?\DateTimeImmutable
     {
         return $this->getLockedAt();
@@ -158,6 +167,9 @@ class AddressOutboxEntity
         return $this;
     }
 
+    /**
+     * Returns the opaque publisher identity that currently owns the delivery claim.
+     */
     public function lockedBy(): ?string
     {
         return $this->getLockedBy();
@@ -187,6 +199,9 @@ class AddressOutboxEntity
         return $this;
     }
 
+    /**
+     * Claims this record for publication and records the claiming publisher identity.
+     */
     public function lock(?string $lockedBy = null, ?\DateTimeImmutable $lockedAt = null): self
     {
         $this->lockedBy = $lockedBy;
@@ -195,6 +210,9 @@ class AddressOutboxEntity
         return $this;
     }
 
+    /**
+     * Releases the publication claim so the outbox record may be retried safely.
+     */
     public function unlock(): self
     {
         $this->lockedBy = null;

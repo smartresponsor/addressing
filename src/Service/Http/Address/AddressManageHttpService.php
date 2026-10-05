@@ -8,7 +8,7 @@ namespace App\Addressing\Service\Http\Address;
 use App\Addressing\DTO\AddressManageDTO;
 use App\Addressing\Factory\AddressInputFactory;
 use App\Addressing\Factory\AddressViewArrayFactory;
-use App\Addressing\Http\Form\AddressManageType;
+use App\Addressing\Form\AddressManageType;
 use App\Addressing\Service\Application\AddressReadService;
 use App\Addressing\Service\Application\AddressWriteService;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -17,6 +17,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Uid\Ulid;
 use Twig\Environment;
 
+/**
+ * Handles the Addressing management page, form submission, and scoped preview rendering.
+ */
 final readonly class AddressManageHttpService
 {
     public function __construct(
@@ -40,16 +43,12 @@ final readonly class AddressManageHttpService
         $form = $this->formFactory->create(AddressManageType::class, new AddressManageDTO());
         $form->handleRequest($request);
 
+        $dto = $form->getData();
         if ($form->isSubmitted() && $form->isValid()) {
-            $dto = $form->getData();
-            if ($dto instanceof AddressManageDTO) {
-                $createdAddressId = $this->createFromManageDto($dto);
-            }
+            $createdAddressId = $this->createFromManageDto($dto);
         }
 
-        $previewRows = $form->getData() instanceof AddressManageDTO
-            ? $this->previewRows($form->getData())
-            : [];
+        $previewRows = $this->previewRows($dto);
 
         return new Response($this->twigEnvironment->render('address/manage.html.twig', [
             'manageForm' => $form->createView(),

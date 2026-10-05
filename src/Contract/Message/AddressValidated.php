@@ -7,6 +7,12 @@ namespace App\Addressing\Contract\Message;
 
 use App\Addressing\Policy\AddressRecordPolicy;
 
+/**
+ * Carries the normalized address and validation evidence produced by one validation operation.
+ *
+ * The message is provider-neutral at the Addressing boundary: it preserves normalized values,
+ * provenance, governance and revalidation metadata while keeping provider execution outside the component.
+ */
 final readonly class AddressValidated implements \JsonSerializable
 {
     public function __construct(
@@ -50,95 +56,42 @@ final readonly class AddressValidated implements \JsonSerializable
      */
     public static function fromArray(array $data): self
     {
-        $line1Norm = self::asNullableString($data['line1Norm'] ?? null);
-        $cityNorm = self::asNullableString($data['cityNorm'] ?? null);
-        $regionNorm = self::asNullableString($data['regionNorm'] ?? null);
-        $postalCodeNorm = self::asNullableString($data['postalCodeNorm'] ?? null);
-        $latitude = self::asNullableFloat($data['latitude'] ?? null);
-        $longitude = self::asNullableFloat($data['longitude'] ?? null);
-        $geohash = self::asNullableString($data['geohash'] ?? null);
-        $validationProvider = self::asNullableString($data['validationProvider'] ?? null);
-        $validatedAt = self::asNullableDate($data['validatedAt'] ?? null);
-        $dedupeKey = self::asNullableString($data['dedupeKey'] ?? null);
-
-        $raw = null;
-        if (array_key_exists('raw', $data) && is_array($data['raw'])) {
-            /** @var array<string, mixed> $raw */
-            $raw = $data['raw'];
-        }
-
-        $validationVerdictData = null;
-        if (array_key_exists('verdict', $data) && is_array($data['verdict'])) {
-            /** @var array<string, mixed> $validationVerdictData */
-            $validationVerdictData = $data['verdict'];
-        } elseif (array_key_exists('validationVerdict', $data) && is_array($data['validationVerdict'])) {
-            /** @var array<string, mixed> $validationVerdictData */
-            $validationVerdictData = $data['validationVerdict'];
-        }
-
-        $verdict = AddressValidationVerdict::fromArray($validationVerdictData);
-
-        $sourceSystem = self::asNullableString($data['sourceSystem'] ?? null);
-        $sourceType = AddressRecordPolicy::normalizeSourceType(self::asNullableString($data['sourceType'] ?? null));
-        $sourceReference = self::asNullableString($data['sourceReference'] ?? null);
-        $normalizationVersion = self::asNullableString($data['normalizationVersion'] ?? null);
-        $providerDigest = self::asNullableString($data['providerDigest'] ?? null);
-        $governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus(self::asNullableString($data['governanceStatus'] ?? null));
-        $duplicateOfId = self::asNullableString($data['duplicateOfId'] ?? null);
-        $supersededById = self::asNullableString($data['supersededById'] ?? null);
-        $aliasOfId = self::asNullableString($data['aliasOfId'] ?? null);
-        $conflictWithId = self::asNullableString($data['conflictWithId'] ?? null);
-        $revalidationDueAt = self::asNullableDate($data['revalidationDueAt'] ?? null);
-        $revalidationPolicy = AddressRecordPolicy::normalizeRevalidationPolicy(self::asNullableString($data['revalidationPolicy'] ?? null));
-        $lastValidationProvider = self::asNullableString($data['lastValidationProvider'] ?? null);
-        $lastValidationStatus = AddressRecordPolicy::normalizeLastValidationStatus(self::asNullableString($data['lastValidationStatus'] ?? null));
-        $lastValidationScore = self::asNullableInt($data['lastValidationScore'] ?? null);
-
-        $rawInput = null;
-        if (array_key_exists('rawInput', $data) && is_array($data['rawInput'])) {
-            /** @var array<string, mixed> $rawInput */
-            $rawInput = $data['rawInput'];
-        }
-
-        $normalizedSnapshot = null;
-        if (array_key_exists('normalizedSnapshot', $data) && is_array($data['normalizedSnapshot'])) {
-            /** @var array<string, mixed> $normalizedSnapshot */
-            $normalizedSnapshot = $data['normalizedSnapshot'];
-        }
-
         return new self(
-            $line1Norm,
-            $cityNorm,
-            $regionNorm,
-            $postalCodeNorm,
-            $latitude,
-            $longitude,
-            $geohash,
-            $validationProvider,
-            $validatedAt,
-            $dedupeKey,
-            $raw,
-            $verdict,
-            $sourceSystem,
-            $sourceType,
-            $sourceReference,
-            $normalizationVersion,
-            $rawInput,
-            $normalizedSnapshot,
-            $providerDigest,
-            $governanceStatus,
-            $duplicateOfId,
-            $supersededById,
-            $aliasOfId,
-            $conflictWithId,
-            $revalidationDueAt,
-            $revalidationPolicy,
-            $lastValidationProvider,
-            $lastValidationStatus,
-            $lastValidationScore,
+            line1Norm: self::asNullableString($data['line1Norm'] ?? null),
+            cityNorm: self::asNullableString($data['cityNorm'] ?? null),
+            regionNorm: self::asNullableString($data['regionNorm'] ?? null),
+            postalCodeNorm: self::asNullableString($data['postalCodeNorm'] ?? null),
+            latitude: self::asNullableFloat($data['latitude'] ?? null),
+            longitude: self::asNullableFloat($data['longitude'] ?? null),
+            geohash: self::asNullableString($data['geohash'] ?? null),
+            validationProvider: self::asNullableString($data['validationProvider'] ?? null),
+            validatedAt: self::asNullableDate($data['validatedAt'] ?? null),
+            dedupeKey: self::asNullableString($data['dedupeKey'] ?? null),
+            raw: self::asNullableArray($data['raw'] ?? null),
+            addressValidationVerdict: AddressValidationVerdict::fromArray(self::validationVerdictData($data)),
+            sourceSystem: self::asNullableString($data['sourceSystem'] ?? null),
+            sourceType: AddressRecordPolicy::normalizeSourceType(self::asNullableString($data['sourceType'] ?? null)),
+            sourceReference: self::asNullableString($data['sourceReference'] ?? null),
+            normalizationVersion: self::asNullableString($data['normalizationVersion'] ?? null),
+            rawInput: self::asNullableArray($data['rawInput'] ?? null),
+            normalizedSnapshot: self::asNullableArray($data['normalizedSnapshot'] ?? null),
+            providerDigest: self::asNullableString($data['providerDigest'] ?? null),
+            governanceStatus: AddressRecordPolicy::normalizeGovernanceStatus(self::asNullableString($data['governanceStatus'] ?? null)),
+            duplicateOfId: self::asNullableString($data['duplicateOfId'] ?? null),
+            supersededById: self::asNullableString($data['supersededById'] ?? null),
+            aliasOfId: self::asNullableString($data['aliasOfId'] ?? null),
+            conflictWithId: self::asNullableString($data['conflictWithId'] ?? null),
+            revalidationDueAt: self::asNullableDate($data['revalidationDueAt'] ?? null),
+            revalidationPolicy: AddressRecordPolicy::normalizeRevalidationPolicy(self::asNullableString($data['revalidationPolicy'] ?? null)),
+            lastValidationProvider: self::asNullableString($data['lastValidationProvider'] ?? null),
+            lastValidationStatus: AddressRecordPolicy::normalizeLastValidationStatus(self::asNullableString($data['lastValidationStatus'] ?? null)),
+            lastValidationScore: self::asNullableInt($data['lastValidationScore'] ?? null),
         );
     }
 
+    /**
+     * Computes a stable SHA-256 fingerprint of the complete serialized validation message.
+     */
     public function fingerprint(): string
     {
         $serialized = $this->jsonSerialize();
@@ -150,7 +103,11 @@ final readonly class AddressValidated implements \JsonSerializable
         return hash('sha256', $json);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Converts the message into the persistence-column payload consumed by Addressing storage.
+     *
+     * @return array<string, mixed>
+     */
     public function toDbArray(): array
     {
         $verdictData = $this->addressValidationVerdict?->jsonSerialize();
@@ -191,7 +148,11 @@ final readonly class AddressValidated implements \JsonSerializable
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Serializes the provider-neutral validation message using the public Addressing contract keys.
+     *
+     * @return array<string, mixed>
+     */
     #[\Override]
     public function jsonSerialize(): array
     {
@@ -241,6 +202,34 @@ final readonly class AddressValidated implements \JsonSerializable
             $data,
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
         );
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     *
+     * @return array<string, mixed>|null
+     */
+    private static function validationVerdictData(array $data): ?array
+    {
+        if (is_array($data['verdict'] ?? null)) {
+            /** @var array<string, mixed> $verdict */
+            $verdict = $data['verdict'];
+
+            return $verdict;
+        }
+
+        return self::asNullableArray($data['validationVerdict'] ?? null);
+    }
+
+    /** @return array<string, mixed>|null */
+    private static function asNullableArray(mixed $value): ?array
+    {
+        if (!is_array($value)) {
+            return null;
+        }
+
+        /** @var array<string, mixed> $value */
+        return $value;
     }
 
     private static function asNullableString(mixed $value): ?string

@@ -9,12 +9,16 @@ use App\Addressing\Projection\AddressIndex\AddressIndexRecord;
 use App\Addressing\RepositoryInterface\AddressIndex\AddressIndexRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
+/**
+ * Persists and queries the denormalized Addressing search index keyed by deterministic address digests.
+ */
 final readonly class AddressDoctrineIndexRepository implements AddressIndexRepositoryInterface
 {
     public function __construct(private EntityManagerInterface $entityManager)
     {
     }
 
+    /** Insert or update one normalized Addressing index projection identified by its deterministic digest. */
     #[\Override]
     public function upsert(AddressIndexRecord $indexRecord): void
     {
@@ -44,6 +48,7 @@ final readonly class AddressDoctrineIndexRepository implements AddressIndexRepos
         $this->entityManager->flush();
     }
 
+    /** Return one indexed address projection by its deterministic digest when present. */
     #[\Override]
     public function getByDigest(string $digest): ?AddressIndexRecord
     {
@@ -53,6 +58,8 @@ final readonly class AddressDoctrineIndexRepository implements AddressIndexRepos
     }
 
     /**
+     * Search indexed addresses by prefix with optional country filtering and bounded result count.
+     *
      * @return array<AddressIndexRecord>
      */
     #[\Override]

@@ -10,9 +10,14 @@ use App\Addressing\Value\AddressPostalCode;
 use App\Addressing\Value\AddressStreetLine;
 use App\Addressing\Value\Primitive\AddressRegion;
 
+/**
+ * Normalizes address-index input into validated Addressing value objects and a deterministic digest.
+ */
 final class AddressIndexNormalizer
 {
     /**
+     * Normalize one address payload and return canonical value objects plus the index correlation digest.
+     *
      * @param array{line1: string, line2: ?string, city: string, region: string, postal: string, country: string} $address
      *
      * @return array{line1: AddressStreetLine, line2: ?AddressStreetLine, city: string, region: AddressRegion, postal: AddressPostalCode, country: AddressCountryCode, digest: string}

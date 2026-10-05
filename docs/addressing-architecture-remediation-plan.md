@@ -1,9 +1,9 @@
 # Addressing architecture remediation plan
 
-> Historical remediation record. This document preserves the reasoning and planned waves that led to the current component shape; it is not the authoritative description of the active runtime. For current contracts use `README.md`, `docs/addressing-http-surface.md`, `docs/addressing-entity-boundary-contract.md`, and `openapi/address.yaml`.
+> Historical remediation record. This document preserves the reasoning and planned waves that led to the current component shape; it is not the authoritative description of the active runtime. For current contracts use `README.md`, `docs/addressing-http-surface.md`, `docs/addressing-entity-boundary-contract.md`, and `config/openapi/address_openapi.yaml`.
 
 ## Goal
-Bring `smartresponsor/addressing` from a mixed transitional state to a coherent Symfony-oriented `App\Addressing\\` component with trustworthy QA wiring, lower structural drift, and clearer separation between HTTP, application, persistence, and reporting concerns.
+Bring Addressing from a mixed transitional state to a coherent Symfony-oriented `App\Addressing\\` component with trustworthy QA wiring, lower structural drift, and clearer separation between HTTP, application, persistence, and reporting concerns.
 
 ## Current architectural findings
 

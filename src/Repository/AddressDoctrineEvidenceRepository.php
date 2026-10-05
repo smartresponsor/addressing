@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace App\Addressing\Repository;
 
+use App\Addressing\Contract\AddressEvidenceSnapshotInterface;
+use App\Addressing\Contract\AddressInterface;
 use App\Addressing\Entity\AddressEntity;
 use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
-use App\Addressing\EntityInterface\Record\AddressEvidenceSnapshotInterface;
-use App\Addressing\EntityInterface\Record\AddressInterface;
 use App\Addressing\RepositoryInterface\AddressEvidenceRepositoryInterface;
 
+/**
+ * Persists and reads Addressing validation evidence snapshots within tenant-scoped Doctrine queries.
+ */
 final readonly class AddressDoctrineEvidenceRepository extends AddressAbstractDoctrineRepository implements AddressEvidenceRepositoryInterface
 {
+    /** Persist the current address evidence snapshot when the scoped address exists and carries evidence. */
     #[\Override]
     public function appendEvidenceSnapshot(AddressInterface $address): ?AddressEvidenceSnapshotInterface
     {
@@ -28,6 +32,7 @@ final readonly class AddressDoctrineEvidenceRepository extends AddressAbstractDo
         });
     }
 
+    /** Return the most recent evidence snapshot for one non-deleted address inside the requested tenant scope. */
     #[\Override]
     public function getLatestEvidenceSnapshot(string $addressId, ?string $ownerId, ?string $vendorId): ?AddressEvidenceSnapshotInterface
     {
@@ -50,9 +55,11 @@ final readonly class AddressDoctrineEvidenceRepository extends AddressAbstractDo
         return $entity instanceof AddressEvidenceSnapshotEntity ? $this->mapSnapshotEntity($entity) : null;
     }
 
+    /** Return a cursor-paginated evidence history ordered newest-first within the requested tenant scope. */
     #[\Override]
     public function findEvidenceHistoryPage(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array
     {
+        $effectiveLimit = max(1, min(200, $limit));
         $queryBuilder = $this->entityManager->createQueryBuilder();
         $queryBuilder->select('s', 'a')
             ->from(AddressEvidenceSnapshotEntity::class, 's')
@@ -62,7 +69,7 @@ final readonly class AddressDoctrineEvidenceRepository extends AddressAbstractDo
             ->setParameter('addressId', $addressId)
             ->orderBy('s.createdAt', 'DESC')
             ->addOrderBy('s.id', 'DESC')
-            ->setMaxResults(max(1, min(200, $limit)) + 1);
+            ->setMaxResults($effectiveLimit + 1);
         $this->applyTenantScope($queryBuilder, 'a', $ownerId, $vendorId);
 
         if (null !== $cursor) {
@@ -78,12 +85,11 @@ final readonly class AddressDoctrineEvidenceRepository extends AddressAbstractDo
         $nextCursor = null;
 
         foreach ($entities as $index => $entity) {
-            if (!$entity instanceof AddressEvidenceSnapshotEntity) {
-                continue;
-            }
-
-            if ($index >= $limit) {
-                $nextCursor = $this->encodeEvidenceCursor($entity->getCreatedAt()->format(DATE_ATOM), $entity->getId());
+            if ($index >= $effectiveLimit) {
+                $lastIncluded = $entities[$index - 1] ?? null;
+                if ($lastIncluded instanceof AddressEvidenceSnapshotEntity) {
+                    $nextCursor = $this->encodeEvidenceCursor($lastIncluded->getCreatedAt()->format(DATE_ATOM), $lastIncluded->getId());
+                }
                 break;
             }
 

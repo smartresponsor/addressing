@@ -8,7 +8,7 @@ resources:
         modified: 1789401600000
         created: 1660000000000
         name: "Addressing API"
-        description: "Current standalone Addressing API examples; canonical contract: ../openapi/address.yaml"
+        description: "Current standalone Addressing API examples; canonical contract: ../config/openapi/address_openapi.yaml"
         scope: collection
         _type: workspace
     -   _id: req_create_address

@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 namespace Tests\Functional;
 
+use App\Addressing\DependencyInjection\AddressingExtension;
 use App\Addressing\Kernel;
 use App\Addressing\Service\Http\Address\AddressManageHttpService;
 use App\Addressing\Service\Http\Address\AddressReadHttpService;
@@ -19,6 +20,9 @@ use Tests\Support\TestRuntimeEnvironment;
 
 final class AddressHttpSurfaceFunctionalTest extends TestCase
 {
+    /** @var list<string> */
+    private static array $functionalCoverage = [];
+
     private ?string $sqlitePath = null;
 
     protected function tearDown(): void
@@ -28,6 +32,25 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
             unlink($this->sqlitePath);
         }
         $this->sqlitePath = null;
+    }
+
+    public function testFinalHttpMethodCoverageBranches(): void
+    {
+        self::assertSame('addressing', (new AddressingExtension())->getAlias());
+
+        $services = $this->bootServices(__FUNCTION__);
+
+        $invalidCreate = $services['write']->create(new Request([], [], [], [], [], [], '{invalid-json'));
+        self::assertSame(400, $invalidCreate->getStatusCode());
+
+        $missingRead = $services['read']->get(new Request(['ownerId' => 'owner-missing']), 'missing-address');
+        self::assertSame(404, $missingRead->getStatusCode());
+
+        $missingGovernance = $services['kernel']->handle(Request::create(
+            '/api/address/01HZZZZZZZZZZZZZZZZZZZZZZZ/governance-cluster?ownerId=owner-missing',
+            'GET',
+        ));
+        self::assertSame(404, $missingGovernance->getStatusCode());
     }
 
     public function testCreateAndGetAddressFlow(): void
@@ -81,8 +104,307 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
         self::assertStringContainsString('btn', (string) $response->getContent());
     }
 
+    public function testManageServiceHelperPathsNormalizeScopeAndEmptyPreview(): void
+    {
+        $services = $this->bootServices(__FUNCTION__);
+        $manage = $services['manage'];
+
+        $timestampMethod = new \ReflectionMethod(AddressManageHttpService::class, 'currentTimestampLiteral');
+        $timestamp = $timestampMethod->invoke($manage);
+        self::assertIsString($timestamp);
+        self::assertNotFalse(\DateTimeImmutable::createFromFormat('Y-m-d H:i:sP', $timestamp));
+
+        $nullableMethod = new \ReflectionMethod(AddressManageHttpService::class, 'nullableFormString');
+        self::assertNull($nullableMethod->invoke($manage, [], 'ownerId'));
+        self::assertNull($nullableMethod->invoke($manage, ['ownerId' => null], 'ownerId'));
+        self::assertNull($nullableMethod->invoke($manage, ['ownerId' => '   '], 'ownerId'));
+        self::assertSame('owner-1', $nullableMethod->invoke($manage, ['ownerId' => ' owner-1 '], 'ownerId'));
+
+        try {
+            $nullableMethod->invoke($manage, ['ownerId' => ['invalid']], 'ownerId');
+            self::fail('Expected non-scalar ownerId to throw.');
+        } catch (\RuntimeException $exception) {
+            self::assertSame('invalid_ownerId', $exception->getMessage());
+        }
+
+        $dto = new \App\Addressing\DTO\AddressManageDTO();
+        $dto->ownerId = null;
+        $dto->vendorId = null;
+        $previewMethod = new \ReflectionMethod(AddressManageHttpService::class, 'previewRows');
+        self::assertSame([], $previewMethod->invoke($manage, $dto));
+    }
+
+    public function testManageServiceCreatesAndPreviewsScopedAddress(): void
+    {
+        $services = $this->bootServices(__FUNCTION__);
+        $manage = $services['manage'];
+
+        $dto = new \App\Addressing\DTO\AddressManageDTO();
+        $dto->ownerId = 'owner-manage';
+        $dto->vendorId = null;
+        $dto->line1 = '900 Manage Ave';
+        $dto->line2 = ' Suite 5 ';
+        $dto->city = ' Houston ';
+        $dto->region = 'tx';
+        $dto->postalCode = '77002';
+        $dto->countryCode = 'us';
+
+        $createMethod = new \ReflectionMethod(AddressManageHttpService::class, 'createFromManageDto');
+        $createdId = $createMethod->invoke($manage, $dto);
+        self::assertIsString($createdId);
+        self::assertNotSame('', $createdId);
+
+        $read = $services['read']->get(new Request(['ownerId' => 'owner-manage']), $createdId);
+        self::assertSame(200, $read->getStatusCode());
+        $createdPayload = json_decode((string) $read->getContent(), true);
+        self::assertIsArray($createdPayload);
+        self::assertSame('900 Manage Ave', $createdPayload['line1'] ?? null);
+        self::assertSame('Suite 5', $createdPayload['line2'] ?? null);
+        self::assertSame('Houston', $createdPayload['city'] ?? null);
+        self::assertSame('TX', $createdPayload['region'] ?? null);
+        self::assertSame('US', $createdPayload['countryCode'] ?? null);
+        self::assertSame('symfony-manage', $createdPayload['sourceSystem'] ?? null);
+
+        $previewMethod = new \ReflectionMethod(AddressManageHttpService::class, 'previewRows');
+        $previewRows = $previewMethod->invoke($manage, $dto);
+        self::assertIsArray($previewRows);
+        self::assertCount(1, $previewRows);
+        self::assertSame($createdId, $previewRows[0]['id'] ?? null);
+        self::assertSame('900 Manage Ave', $previewRows[0]['line1'] ?? null);
+    }
+
+    public function testOperationalAndValidatedApiRoutesThroughKernel(): void
+    {
+        $services = $this->bootServices(__FUNCTION__);
+        $createContent = json_encode([
+            'ownerId' => 'owner-1',
+            'line1' => '500 Test Ave',
+            'city' => 'Houston',
+            'countryCode' => 'US',
+        ], JSON_THROW_ON_ERROR);
+
+        $createResponse = $services['kernel']->handle(Request::create(
+            '/api/address',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $createContent,
+        ));
+        self::assertSame(201, $createResponse->getStatusCode());
+        $created = json_decode((string) $createResponse->getContent(), true);
+        self::assertIsArray($created);
+        self::assertIsString($created['id'] ?? null);
+        $id = $created['id'];
+
+        $patchContent = json_encode([
+            'revalidationPolicy' => 'monthly',
+            'lastValidationStatus' => 'uncertain',
+            'lastValidationScore' => 72,
+        ], JSON_THROW_ON_ERROR);
+        $patchResponse = $services['kernel']->handle(Request::create(
+            '/api/address/'.$id.'?ownerId=owner-1',
+            'PATCH',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $patchContent,
+        ));
+        self::assertSame(200, $patchResponse->getStatusCode());
+        $patched = json_decode((string) $patchResponse->getContent(), true);
+        self::assertIsArray($patched);
+        self::assertSame('monthly', $patched['revalidationPolicy'] ?? null);
+        self::assertSame('uncertain', $patched['lastValidationStatus'] ?? null);
+        self::assertSame(72, $patched['lastValidationScore'] ?? null);
+
+        $batchContent = json_encode([
+            'ids' => [$id, 'missing-id'],
+            'revalidationPolicy' => 'quarterly',
+        ], JSON_THROW_ON_ERROR);
+        $batchResponse = $services['kernel']->handle(Request::create(
+            '/api/address/operational-batch?ownerId=owner-1',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $batchContent,
+        ));
+        self::assertSame(200, $batchResponse->getStatusCode());
+        $batch = json_decode((string) $batchResponse->getContent(), true);
+        self::assertIsArray($batch);
+        self::assertSame(2, $batch['requestedCount'] ?? null);
+        self::assertSame(1, $batch['patchedCount'] ?? null);
+        self::assertSame([$id], $batch['patchedIds'] ?? null);
+
+        $validatedContent = json_encode([
+            'line1Norm' => '500 test ave',
+            'cityNorm' => 'houston',
+            'validationProvider' => 'functional-test',
+            'sourceSystem' => 'functional-suite',
+            'sourceType' => 'validator',
+            'normalizationVersion' => 'v1',
+            'providerDigest' => 'functional-digest',
+            'lastValidationStatus' => 'validated',
+            'lastValidationScore' => 98,
+        ], JSON_THROW_ON_ERROR);
+        $validatedResponse = $services['kernel']->handle(Request::create(
+            '/api/address/'.$id.'/validated?ownerId=owner-1',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $validatedContent,
+        ));
+        self::assertSame(200, $validatedResponse->getStatusCode());
+        $validated = json_decode((string) $validatedResponse->getContent(), true);
+        self::assertIsArray($validated);
+        self::assertSame('validated', $validated['validationStatus'] ?? null);
+        self::assertSame('functional-test', $validated['validationProvider'] ?? null);
+        self::assertSame('functional-digest', $validated['providerDigest'] ?? null);
+
+        $this->recordFunctionalCoverage([
+            'PATCH /api/address/{id}',
+            'POST /api/address/operational-batch',
+            'POST /api/address/{id}/validated',
+        ]);
+    }
+
+    public function testOperationalApiErrorBranchesReturnCanonicalStatuses(): void
+    {
+        $services = $this->bootServices(__FUNCTION__);
+        $createContent = json_encode([
+            'ownerId' => 'owner-1',
+            'line1' => '700 Branch St',
+            'city' => 'Houston',
+            'countryCode' => 'US',
+        ], JSON_THROW_ON_ERROR);
+        $createResponse = $services['kernel']->handle(Request::create(
+            '/api/address',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $createContent,
+        ));
+        self::assertSame(201, $createResponse->getStatusCode());
+        $created = json_decode((string) $createResponse->getContent(), true);
+        self::assertIsArray($created);
+        self::assertIsString($created['id'] ?? null);
+        $id = $created['id'];
+
+        $invalidPatch = $services['kernel']->handle(Request::create(
+            '/api/address/'.$id.'?ownerId=owner-1',
+            'PATCH',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: '{invalid-json',
+        ));
+        self::assertSame(422, $invalidPatch->getStatusCode());
+        self::assertSame('invalid_operational_patch', json_decode((string) $invalidPatch->getContent(), true)['error'] ?? null);
+
+        $wrongScopePatch = $services['kernel']->handle(Request::create(
+            '/api/address/'.$id.'?ownerId=owner-2',
+            'PATCH',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['revalidationPolicy' => 'monthly'], JSON_THROW_ON_ERROR),
+        ));
+        self::assertSame(404, $wrongScopePatch->getStatusCode());
+
+        $invalidBatch = $services['kernel']->handle(Request::create(
+            '/api/address/operational-batch?ownerId=owner-1',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['ids' => []], JSON_THROW_ON_ERROR),
+        ));
+        self::assertSame(422, $invalidBatch->getStatusCode());
+        self::assertSame('invalid_batch_payload', json_decode((string) $invalidBatch->getContent(), true)['error'] ?? null);
+
+        $missingValidated = $services['kernel']->handle(Request::create(
+            '/api/address/01HZZZZZZZZZZZZZZZZZZZZZZZ/validated?ownerId=owner-1',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['line1Norm' => 'missing'], JSON_THROW_ON_ERROR),
+        ));
+        self::assertSame(422, $missingValidated->getStatusCode());
+        self::assertSame('invalid_validated_payload', json_decode((string) $missingValidated->getContent(), true)['error'] ?? null);
+    }
+
+    public function testApiReadSurfaceRoutesThroughKernel(): void
+    {
+        $services = $this->bootServices(__FUNCTION__);
+        $content = json_encode([
+            'ownerId' => 'owner-1',
+            'vendorId' => 'vendor-1',
+            'line1' => 'Main street 10',
+            'city' => 'Austin',
+            'countryCode' => 'us',
+        ], JSON_UNESCAPED_UNICODE);
+        self::assertIsString($content);
+
+        $createResponse = $services['kernel']->handle(Request::create(
+            '/api/address',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $content,
+        ));
+        self::assertSame(201, $createResponse->getStatusCode());
+
+        $createPayload = json_decode((string) $createResponse->getContent(), true);
+        self::assertIsArray($createPayload);
+        self::assertIsString($createPayload['id'] ?? null);
+        $id = $createPayload['id'];
+
+        $readUrls = [
+            '/api/address/'.$id.'?ownerId=owner-1',
+            '/api/address/page?ownerId=owner-1',
+            '/api/address/search?ownerId=owner-1&q=Main',
+            '/api/address/queue-summary?ownerId=owner-1',
+            '/api/address/country-portfolio?ownerId=owner-1',
+            '/api/address/source-portfolio?ownerId=owner-1',
+            '/api/address/validation-portfolio?ownerId=owner-1',
+            '/api/address/normalization-portfolio?ownerId=owner-1',
+            '/api/address/'.$id.'/governance-cluster?ownerId=owner-1',
+        ];
+
+        foreach ($readUrls as $url) {
+            $response = $services['kernel']->handle(Request::create($url, 'GET'));
+            self::assertSame(200, $response->getStatusCode(), $url);
+        }
+
+        $deleteResponse = $services['kernel']->handle(Request::create(
+            '/api/address/'.$id.'?ownerId=owner-1',
+            'DELETE',
+        ));
+        self::assertSame(204, $deleteResponse->getStatusCode());
+
+        $this->recordFunctionalCoverage([
+            'POST /api/address',
+            'GET /api/address/page',
+            'GET /api/address/search',
+            'GET /api/address/queue-summary',
+            'GET /api/address/country-portfolio',
+            'GET /api/address/source-portfolio',
+            'GET /api/address/validation-portfolio',
+            'GET /api/address/normalization-portfolio',
+            'GET /api/address/{id}',
+            'DELETE /api/address/{id}',
+            'GET /api/address/{id}/governance-cluster',
+        ]);
+    }
+
+    /** @param list<string> $covered */
+    private function recordFunctionalCoverage(array $covered): void
+    {
+        $coverageDir = dirname(__DIR__, 2).'/var/coverage';
+        if (!is_dir($coverageDir)) {
+            self::assertTrue(mkdir($coverageDir, 0777, true) || is_dir($coverageDir));
+        }
+
+        self::$functionalCoverage = array_values(array_unique([
+            ...self::$functionalCoverage,
+            ...$covered,
+        ]));
+
+        $encoded = json_encode([
+            'schema' => 'address-http-functional-v1',
+            'passedAt' => (new \DateTimeImmutable())->format(DATE_ATOM),
+            'covered' => self::$functionalCoverage,
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+
+        self::assertNotFalse(file_put_contents($coverageDir.'/address-http-functional.json', $encoded.PHP_EOL));
+    }
+
     /**
-     * @return array{write: AddressWriteHttpService, read: AddressReadHttpService, manage: AddressManageHttpService, requestStack: RequestStack}
+     * @return array{write: AddressWriteHttpService, read: AddressReadHttpService, manage: AddressManageHttpService, requestStack: RequestStack, kernel: Kernel}
      */
     private function bootServices(string $suffix): array
     {
@@ -110,6 +432,7 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
             'read' => $addressReadHttpService,
             'manage' => $addressManageHttpService,
             'requestStack' => $requestStack,
+            'kernel' => $kernel,
         ];
     }
 }

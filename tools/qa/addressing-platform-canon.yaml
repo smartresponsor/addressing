@@ -11,3 +11,10 @@ rule_set:
         - canon.027.database_engine_baseline
         - canon.028.dual_doctrine_connection
         - canon.029.mandatory_php_quality_tooling
+        - canon.031.phpdoc_coverage
+        - canon.040.php_test_coverage
+        - canon.042.behavioral_ui_coverage
+        - canon.052.gating_integration
+        - canon.056.external_api_openapi_parity
+        - canon.061.openapi_nelmio_producer_dependency
+        - canon.063.external_api_method_parity

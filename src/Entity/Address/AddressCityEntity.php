@@ -12,6 +12,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: \App\Addressing\Repository\AddressCityEntityRepository::class)]
 #[ORM\Table(name: 'address_city')]
 #[ORM\Index(name: 'address_city_country_name_idx', columns: ['country_code', 'name_entity'])]
+/**
+ * Persists the canonical city reference used to normalize Addressing-owned locality data.
+ *
+ * Objecting supplies reusable identity, audit, and state fields while Addressing owns the city semantics.
+ */
 class AddressCityEntity
 {
     use ObjectIdentityEmbeddableTrait;

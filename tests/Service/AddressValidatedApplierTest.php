@@ -10,6 +10,7 @@ use App\Addressing\Entity\AddressEntity;
 use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
 use App\Addressing\Entity\AddressOutboxEntity;
 use App\Addressing\Repository\AddressDoctrineValidatedPersistenceRepository;
+use App\Addressing\RepositoryInterface\AddressValidatedPersistenceRepositoryInterface;
 use App\Addressing\Service\Application\AddressValidatedApplierService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
@@ -44,6 +45,12 @@ final class AddressValidatedApplierTest extends TestCase
             'normalizationVersion' => 'canon-w08',
             'rawInput' => ['line1' => '123 Main St', 'city' => 'Houston'],
             'normalizedSnapshot' => ['line1Norm' => 'main st', 'cityNorm' => 'houston'],
+            'raw' => ['providerResult' => 'verified'],
+            'verdict' => [
+                'deliverable' => true,
+                'granularity' => 'premise',
+                'quality' => 96,
+            ],
             'providerDigest' => 'digest-1',
             'governanceStatus' => 'superseded',
             'supersededById' => 'addr-2',
@@ -70,6 +77,11 @@ final class AddressValidatedApplierTest extends TestCase
         self::assertSame('unit', $address->getLastValidationProvider());
         self::assertSame('validated', $address->getLastValidationStatus());
         self::assertSame(87, $address->getLastValidationScore());
+        self::assertSame(['providerResult' => 'verified'], $address->getValidationRaw());
+        self::assertSame(['deliverable' => true, 'granularity' => 'premise', 'quality' => 96, 'signal' => []], $address->getValidationVerdict());
+        self::assertTrue($address->getValidationDeliverable());
+        self::assertSame('premise', $address->getValidationGranularity());
+        self::assertSame(96, $address->getValidationQuality());
 
         /** @var list<AddressEvidenceSnapshotEntity> $snapshots */
         $snapshots = $this->entityManager->getRepository(AddressEvidenceSnapshotEntity::class)->findBy(
@@ -86,6 +98,7 @@ final class AddressValidatedApplierTest extends TestCase
         self::assertSame('validated', $snapshot->getValidationStatus());
         self::assertSame(87, $snapshot->getValidationScore());
         self::assertSame('digest-1', $snapshot->getProviderDigest());
+        self::assertSame(['deliverable' => true, 'granularity' => 'premise', 'quality' => 96, 'signal' => []], $snapshot->getValidationIssues());
 
         /** @var list<AddressOutboxEntity> $outboxRows */
         $outboxRows = $this->entityManager->getRepository(AddressOutboxEntity::class)->findBy([], ['id' => 'DESC'], 1);
@@ -98,6 +111,13 @@ final class AddressValidatedApplierTest extends TestCase
         self::assertSame('AddressValidatedApplied', $payload['eventName'] ?? null);
         self::assertSame('address-outbox.v1', $payload['schemaVersion'] ?? null);
         self::assertSame(1, $payload['eventVersion'] ?? null);
+        self::assertTrue($payload['deliverable'] ?? false);
+        self::assertSame('premise', $payload['granularity'] ?? null);
+        self::assertSame(96, $payload['quality'] ?? null);
+        self::assertSame('digest-1', $payload['providerDigest'] ?? null);
+        self::assertTrue($payload['hasEvidence'] ?? false);
+        self::assertSame('superseded', $payload['governanceStatus'] ?? null);
+        self::assertSame('addr-2', $payload['governanceLinkId'] ?? null);
     }
 
     public function testApplyRejectsWrongTenantScope(): void
@@ -123,6 +143,122 @@ final class AddressValidatedApplierTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('not_found');
         $this->applier->apply('addr-2', $validated, 'owner-B', 'vendor-B');
+    }
+
+    public function testApplyCommitsWithoutWritingWhenFingerprintAlreadyMatches(): void
+    {
+        $validated = AddressValidated::fromArray([
+            'line1Norm' => 'main st',
+            'validationProvider' => 'unit',
+        ]);
+        $entity = (new AddressEntity())
+            ->setId('addr-idempotent')
+            ->setValidationFingerprint($validated->fingerprint());
+
+        $repository = $this->createMock(AddressValidatedPersistenceRepositoryInterface::class);
+        $repository->expects(self::once())
+            ->method('findScopedAddress')
+            ->with('addr-idempotent', 'owner-1', 'vendor-1')
+            ->willReturn($entity);
+        $repository->expects(self::once())->method('beginTransaction');
+        $repository->expects(self::once())->method('commit');
+        $repository->expects(self::never())->method('persistEvidenceSnapshot');
+        $repository->expects(self::never())->method('persistOutbox');
+        $repository->expects(self::never())->method('flush');
+        $repository->expects(self::never())->method('rollbackIfActive');
+
+        (new AddressValidatedApplierService($repository))->apply('addr-idempotent', $validated, 'owner-1', 'vendor-1');
+    }
+
+    public function testApplyRollsBackAndWrapsUnexpectedRepositoryFailure(): void
+    {
+        $validated = AddressValidated::fromArray([
+            'line1Norm' => 'main st',
+            'validationProvider' => 'unit',
+        ]);
+        $entity = (new AddressEntity())
+            ->setId('addr-failure')
+            ->setValidationStatus('pending');
+        $failure = new \LogicException('storage_failed');
+
+        $repository = $this->createMock(AddressValidatedPersistenceRepositoryInterface::class);
+        $repository->expects(self::once())
+            ->method('findScopedAddress')
+            ->with('addr-failure', null, null)
+            ->willReturn($entity);
+        $repository->expects(self::once())->method('beginTransaction');
+        $repository->expects(self::once())
+            ->method('persistOutbox')
+            ->willThrowException($failure);
+        $repository->expects(self::once())->method('rollbackIfActive');
+        $repository->expects(self::never())->method('flush');
+        $repository->expects(self::never())->method('commit');
+
+        try {
+            (new AddressValidatedApplierService($repository))->apply('addr-failure', $validated);
+            self::fail('Expected apply_failed runtime exception.');
+        } catch (\RuntimeException $runtimeException) {
+            self::assertSame('apply_failed', $runtimeException->getMessage());
+            self::assertSame($failure, $runtimeException->getPrevious());
+        }
+    }
+
+    public function testApplierHelperContractsNormalizeGovernanceAndValidationPayloads(): void
+    {
+        $invoke = function (string $methodName, array $arguments = []): mixed {
+            $method = new \ReflectionMethod(AddressValidatedApplierService::class, $methodName);
+
+            return $method->invokeArgs($this->applier, $arguments);
+        };
+
+        self::assertSame('validated', $invoke('normalizeValidationStatus', ['validated']));
+        self::assertSame('rejected', $invoke('normalizeValidationStatus', ['rejected']));
+        self::assertSame('uncertain', $invoke('normalizeValidationStatus', ['uncertain']));
+        self::assertSame('validated', $invoke('normalizeValidationStatus', ['unexpected']));
+
+        self::assertSame('duplicate', $invoke('normalizeGovernanceStatus', ['duplicate']));
+        self::assertSame('superseded', $invoke('normalizeGovernanceStatus', ['superseded']));
+        self::assertSame('alias', $invoke('normalizeGovernanceStatus', ['alias']));
+        self::assertSame('conflict', $invoke('normalizeGovernanceStatus', ['conflict']));
+        self::assertSame('canonical', $invoke('normalizeGovernanceStatus', [null]));
+        self::assertSame('canonical', $invoke('normalizeGovernanceStatus', ['unexpected']));
+
+        self::assertNull($invoke('sanitizeGovernanceLink', [null, 'addr-1']));
+        self::assertNull($invoke('sanitizeGovernanceLink', ['   ', 'addr-1']));
+        self::assertNull($invoke('sanitizeGovernanceLink', ['addr-1', 'addr-1']));
+        self::assertSame('addr-2', $invoke('sanitizeGovernanceLink', [' addr-2 ', 'addr-1']));
+
+        self::assertSame('{"ok":true}', $invoke('encodePayload', [['ok' => true]]));
+
+        $recursive = [];
+        $recursive['self'] = &$recursive;
+        try {
+            $invoke('encodePayload', [$recursive]);
+            self::fail('Expected recursive payload encoding to fail.');
+        } catch (\RuntimeException $exception) {
+            self::assertSame('payload_encode_failed', $exception->getMessage());
+        }
+
+        $verdictMessage = AddressValidated::fromArray([
+            'verdict' => [
+                'deliverable' => true,
+                'granularity' => 'premise',
+                'quality' => 91,
+            ],
+        ]);
+        self::assertSame([
+            'deliverable' => true,
+            'granularity' => 'premise',
+            'quality' => 91,
+            'signal' => [],
+        ], $invoke('validationIssues', [$verdictMessage]));
+
+        $rawIssuesMessage = AddressValidated::fromArray([
+            'raw' => ['issues' => ['postal_mismatch']],
+        ]);
+        self::assertSame(['postal_mismatch'], $invoke('validationIssues', [$rawIssuesMessage]));
+
+        self::assertNull($invoke('validationIssues', [AddressValidated::fromArray([])]));
     }
 
     private function insertAddress(string $id, string $ownerId, string $vendorId): void

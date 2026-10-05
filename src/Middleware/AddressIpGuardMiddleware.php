@@ -5,6 +5,9 @@ declare(strict_types=1);
 
 namespace App\Addressing\Middleware;
 
+/**
+ * Evaluates standalone Addressing IP and path allow/deny policy from runtime environment configuration.
+ */
 final class AddressIpGuardMiddleware
 {
     /** @return list<string> */
@@ -19,6 +22,7 @@ final class AddressIpGuardMiddleware
         return array_values($parts);
     }
 
+    /** Return whether the client IP and request path satisfy the configured access policy. */
     public static function allowed(string $ip, string $path): bool
     {
         $deny = self::listFromEnv('DENY_IPS');

@@ -13,6 +13,9 @@ use App\Addressing\Service\Application\AddressQueueSummaryService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * Serves operational, portfolio, and governance summary endpoints for Addressing HTTP clients.
+ */
 final readonly class AddressSummaryHttpService
 {
     public function __construct(
@@ -25,6 +28,7 @@ final readonly class AddressSummaryHttpService
     ) {
     }
 
+    /** Returns scoped operational queue counts for revalidation and governance follow-up. */
     public function queueSummary(Request $request): JsonResponse
     {
         ['ownerId' => $ownerId, 'vendorId' => $vendorId, 'countryCode' => $countryCode, 'query' => $query] = $this->addressHttpScopeService->requestScope($request, true);
@@ -39,6 +43,7 @@ final readonly class AddressSummaryHttpService
         return new JsonResponse($summary);
     }
 
+    /** Returns scoped portfolio totals grouped by country. */
     public function countryPortfolioSummary(Request $request): JsonResponse
     {
         ['ownerId' => $ownerId, 'vendorId' => $vendorId, 'query' => $query] = $this->addressHttpScopeService->requestScope($request);
@@ -52,6 +57,7 @@ final readonly class AddressSummaryHttpService
         return $this->addressResponder->summaryItems($summary);
     }
 
+    /** Returns scoped portfolio totals grouped by source provenance. */
     public function sourcePortfolioSummary(Request $request): JsonResponse
     {
         ['ownerId' => $ownerId, 'vendorId' => $vendorId, 'countryCode' => $countryCode, 'query' => $query] = $this->addressHttpScopeService->requestScope($request, true);
@@ -66,6 +72,7 @@ final readonly class AddressSummaryHttpService
         return $this->addressResponder->summaryItems($summary);
     }
 
+    /** Returns scoped portfolio totals grouped by validation provider and status. */
     public function validationPortfolioSummary(Request $request): JsonResponse
     {
         ['ownerId' => $ownerId, 'vendorId' => $vendorId, 'countryCode' => $countryCode, 'query' => $query] = $this->addressHttpScopeService->requestScope($request, true);
@@ -80,6 +87,7 @@ final readonly class AddressSummaryHttpService
         return $this->addressResponder->summaryItems($summary);
     }
 
+    /** Returns scoped portfolio totals grouped by normalization version and validation status. */
     public function normalizationPortfolioSummary(Request $request): JsonResponse
     {
         ['ownerId' => $ownerId, 'vendorId' => $vendorId, 'countryCode' => $countryCode, 'query' => $query] = $this->addressHttpScopeService->requestScope($request, true);
@@ -94,6 +102,7 @@ final readonly class AddressSummaryHttpService
         return $this->addressResponder->summaryItems($summary);
     }
 
+    /** Returns the scoped governance cluster summary for one address or a not-found response. */
     public function governanceClusterSummary(Request $request, string $id): JsonResponse
     {
         [$ownerId, $vendorId] = $this->addressHttpScopeService->tenantScope($request);

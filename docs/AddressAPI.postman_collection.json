@@ -1,7 +1,7 @@
 {
     "info": {
         "name": "Addressing API",
-        "description": "Current standalone Addressing API examples; canonical contract: openapi/address.yaml",
+        "description": "Current standalone Addressing API examples; canonical contract: config/openapi/address_openapi.yaml",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [

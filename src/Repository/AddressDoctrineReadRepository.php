@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Addressing\Repository;
 
+use App\Addressing\Contract\AddressInterface;
 use App\Addressing\Entity\AddressEntity;
-use App\Addressing\EntityInterface\Record\AddressInterface;
 use App\Addressing\RepositoryInterface\AddressReadRepositoryInterface;
 use App\Addressing\Value\Persistence\AddressPageCriteria;
 
+/**
+ * Provides tenant-scoped Addressing reads, dedupe lookup, and cursor pagination over persisted addresses.
+ */
 final readonly class AddressDoctrineReadRepository extends AddressAbstractDoctrineRepository implements AddressReadRepositoryInterface
 {
+    /** Return one non-deleted address record constrained to the requested tenant scope. */
     #[\Override]
     public function get(string $id, ?string $ownerId, ?string $vendorId): ?AddressInterface
     {
@@ -19,6 +23,7 @@ final readonly class AddressDoctrineReadRepository extends AddressAbstractDoctri
         return $entity instanceof AddressEntity ? $this->mapper->fromDoctrine($entity) : null;
     }
 
+    /** Return the non-deleted address associated with one normalized dedupe key when present. */
     #[\Override]
     public function findByDedupeKey(string $dedupeKey): ?AddressInterface
     {
@@ -35,6 +40,7 @@ final readonly class AddressDoctrineReadRepository extends AddressAbstractDoctri
         return $entity instanceof AddressEntity ? $this->mapper->fromDoctrine($entity) : null;
     }
 
+    /** Return a tenant- and filter-scoped cursor page of non-deleted Addressing records. */
     #[\Override]
     public function findPage(AddressPageCriteria $criteria): array
     {

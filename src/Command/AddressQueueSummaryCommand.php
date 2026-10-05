@@ -13,6 +13,12 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Exposes Addressing operational-queue summaries through the Symfony console.
+ *
+ * Optional owner, vendor, country, and query filters are normalized at the CLI boundary
+ * before the application service aggregates the Addressing-owned queue state.
+ */
 #[AsCommand(name: 'address:summary:queues', description: 'Summarize operational queues for a tenant slice.')]
 final class AddressQueueSummaryCommand extends Command
 {

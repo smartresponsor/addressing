@@ -7,6 +7,12 @@ namespace App\Addressing\DTO;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
+/**
+ * Carries validated address-management form input across the standalone Addressing HTTP boundary.
+ *
+ * The DTO keeps user-entered address fields and optional ownership identifiers separate from persistence
+ * entities so validation can complete before application services mutate Addressing state.
+ */
 final class AddressManageDTO
 {
     #[Assert\NotBlank]

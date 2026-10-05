@@ -1,0 +1,85 @@
+<?php
+
+// Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
+declare(strict_types=1);
+
+namespace App\Addressing\Validator;
+
+/**
+ * Validates Addressing request payloads against the component-owned lightweight schema definitions.
+ *
+ * The validator reports deterministic missing-field and type errors without invoking provider-side
+ * address verification, persistence, or transport concerns.
+ */
+final class AddressSchemaValidator
+{
+    /**
+     * @var array<string, array{required: list<string>, types: array<string, 'string'|'int'|'float'|'bool'|'array'>}>
+     */
+    private array $schemas = [
+        'ValidateRequest' => [
+            'required' => ['line1', 'city', 'region', 'postal', 'country'],
+            'types' => [
+                'line1' => 'string',
+                'line2' => 'string',
+                'city' => 'string',
+                'region' => 'string',
+                'postal' => 'string',
+                'country' => 'string',
+            ],
+        ],
+        'ParseRequest' => [
+            'required' => ['text'],
+            'types' => ['text' => 'string', 'countryHint' => 'string'],
+        ],
+    ];
+
+    /**
+     * Validates one request payload against a named Addressing schema and returns the first deterministic contract error.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @return array{ok: true}|array{ok: false, error: non-empty-string}
+     */
+    public function validate(string $schema, array $data): array
+    {
+        $definition = $this->schemas[$schema] ?? null;
+        if (null === $definition) {
+            return ['ok' => false, 'error' => 'unknown_schema'];
+        }
+
+        foreach ($definition['required'] as $requiredKey) {
+            if (!array_key_exists($requiredKey, $data) || null === $data[$requiredKey]) {
+                return ['ok' => false, 'error' => 'missing_'.$requiredKey];
+            }
+        }
+
+        foreach ($data as $key => $value) {
+            $expectedType = $definition['types'][$key] ?? null;
+            if (null === $expectedType) {
+                continue;
+            }
+            if (null === $value) {
+                continue;
+            }
+
+            if (!$this->isExpectedType($value, $expectedType)) {
+                return ['ok' => false, 'error' => 'type_'.$key];
+            }
+        }
+
+        return ['ok' => true];
+    }
+
+    private function isExpectedType(mixed $value, string $expectedType): bool
+    {
+        return match ($expectedType) {
+            'string' => is_string($value),
+            'int' => is_int($value),
+            'float' => is_float($value),
+            'bool' => is_bool($value),
+            'array' => is_array($value),
+            default => false,
+        };
+    }
+}

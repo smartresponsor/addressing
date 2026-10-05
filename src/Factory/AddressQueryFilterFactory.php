@@ -7,9 +7,16 @@ namespace App\Addressing\Factory;
 use App\Addressing\Policy\AddressRecordPolicy;
 use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * Converts Addressing HTTP query parameters into canonical read and reporting filters.
+ */
 final readonly class AddressQueryFilterFactory
 {
-    /** @return array{0: ?string, 1: ?string} */
+    /**
+     * Extracts the optional owner and vendor scope identifiers from the query string.
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
     public function tenantFromQuery(Request $request): array
     {
         $ownerId = $this->queryStringOrNull($request, 'ownerId');
@@ -18,6 +25,9 @@ final readonly class AddressQueryFilterFactory
         return [$ownerId, $vendorId];
     }
 
+    /**
+     * Clamps the requested page size to the Addressing runtime range of 1 through 200.
+     */
     public function pageLimit(Request $request): int
     {
         $limit = (int) ($request->query->get('limit') ?? 25);
@@ -25,6 +35,9 @@ final readonly class AddressQueryFilterFactory
         return max(1, min($limit, 200));
     }
 
+    /**
+     * Returns the optional country-code query value normalized to uppercase.
+     */
     public function queryCountryCodeOrNull(Request $request): ?string
     {
         $countryCode = $this->queryStringOrNull($request, 'countryCode');
@@ -32,6 +45,9 @@ final readonly class AddressQueryFilterFactory
         return null !== $countryCode ? strtoupper($countryCode) : null;
     }
 
+    /**
+     * Returns a non-empty string query value or null when the key is absent or non-string.
+     */
     public function queryStringOrNull(Request $request, string $key): ?string
     {
         $value = $request->query->get($key);
@@ -39,7 +55,11 @@ final readonly class AddressQueryFilterFactory
         return is_string($value) && '' !== $value ? $value : null;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Builds canonical operational filters, optionally including queue and normalization-version criteria.
+     *
+     * @return array<string, mixed>
+     */
     public function operationalFilters(
         Request $request,
         bool $includeQueue = false,
@@ -64,7 +84,11 @@ final readonly class AddressQueryFilterFactory
         return $filters;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Builds portfolio-report filters on top of the shared operational filter contract.
+     *
+     * @return array<string, mixed>
+     */
     public function portfolioFilters(
         Request $request,
         bool $includeSourceSystem = false,

@@ -44,6 +44,9 @@ final readonly class AddressValidatedPayloadFactory
         return $snapshot;
     }
 
+    /**
+     * Returns the supplied provider digest or deterministically hashes the available validation evidence.
+     */
     public function providerDigest(AddressValidated $addressValidated): ?string
     {
         if (null !== $addressValidated->providerDigest) {
@@ -65,6 +68,9 @@ final readonly class AddressValidatedPayloadFactory
         return \hash('sha256', $this->encodePayload($payload));
     }
 
+    /**
+     * Normalizes a governance link identifier and rejects empty or self-referential links.
+     */
     public function sanitizeGovernanceLink(?string $linkId, string $currentId): ?string
     {
         $linkId = \is_string($linkId) ? \trim($linkId) : '';
@@ -75,7 +81,11 @@ final readonly class AddressValidatedPayloadFactory
         return $linkId;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Builds the stable Addressing outbox payload from validated-address evidence and governance context.
+     *
+     * @return array<string, mixed>
+     */
     public function outboxPayload(
         AddressValidatedOutboxContext $context,
         AddressValidated $addressValidated,

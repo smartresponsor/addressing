@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Addressing\Repository;
 
+use App\Addressing\Contract\AddressInterface;
 use App\Addressing\Entity\AddressEntity;
-use App\Addressing\EntityInterface\Record\AddressInterface;
 use App\Addressing\RepositoryInterface\AddressWriteRepositoryInterface;
 
+/**
+ * Persists Addressing create, update, and soft-delete mutations together with evidence snapshots and canonical outbox events.
+ */
 final readonly class AddressDoctrineWriteRepository extends AddressAbstractDoctrineRepository implements AddressWriteRepositoryInterface
 {
+    /** Persist one new address atomically with its evidence snapshot and AddressCreated outbox event. */
     #[\Override]
     public function create(AddressInterface $address): void
     {
@@ -38,6 +42,7 @@ final readonly class AddressDoctrineWriteRepository extends AddressAbstractDoctr
         });
     }
 
+    /** Update one scoped address atomically, append evidence when present, and emit AddressUpdated. */
     #[\Override]
     public function update(AddressInterface $address): void
     {
@@ -68,6 +73,7 @@ final readonly class AddressDoctrineWriteRepository extends AddressAbstractDoctr
         });
     }
 
+    /** Soft-delete one scoped address and emit AddressDeleted atomically when the record exists. */
     #[\Override]
     public function delete(string $id, ?string $ownerId, ?string $vendorId): void
     {

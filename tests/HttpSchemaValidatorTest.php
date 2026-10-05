@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use App\Addressing\Http\Schema\AddressSchemaValidator;
+use App\Addressing\Validator\AddressSchemaValidator;
 use PHPUnit\Framework\TestCase;
 
 final class HttpSchemaValidatorTest extends TestCase
@@ -44,5 +44,37 @@ final class HttpSchemaValidatorTest extends TestCase
         ]);
 
         self::assertSame(['ok' => true], $result);
+    }
+
+    public function testValidateHandlesUnknownSchemaAndIgnoredOptionalData(): void
+    {
+        $validator = new AddressSchemaValidator();
+
+        self::assertSame(
+            ['ok' => false, 'error' => 'unknown_schema'],
+            $validator->validate('UnknownRequest', []),
+        );
+
+        self::assertSame(
+            ['ok' => true],
+            $validator->validate('ParseRequest', [
+                'text' => '221B Baker Street',
+                'countryHint' => null,
+                'ignored' => ['anything' => true],
+            ]),
+        );
+    }
+
+    public function testExpectedTypeHelperCoversAllSupportedPrimitiveKinds(): void
+    {
+        $validator = new AddressSchemaValidator();
+        $method = new \ReflectionMethod(AddressSchemaValidator::class, 'isExpectedType');
+
+        self::assertTrue($method->invoke($validator, 'value', 'string'));
+        self::assertTrue($method->invoke($validator, 42, 'int'));
+        self::assertTrue($method->invoke($validator, 4.2, 'float'));
+        self::assertTrue($method->invoke($validator, true, 'bool'));
+        self::assertTrue($method->invoke($validator, ['x'], 'array'));
+        self::assertFalse($method->invoke($validator, 'value', 'unsupported'));
     }
 }

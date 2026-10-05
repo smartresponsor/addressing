@@ -13,6 +13,12 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Provides the bounded CLI entrypoint for rebuilding Addressing demo fixtures.
+ *
+ * The command delegates fixture generation to the Addressing-owned fixture service and
+ * keeps schema-reset semantics out of transport-facing callers.
+ */
 #[AsCommand(name: 'address:demo:load', description: 'Reset schema and load Symfony/Faker demo fixtures.')]
 final class AddressDemoLoadCommand extends Command
 {
@@ -23,6 +29,9 @@ final class AddressDemoLoadCommand extends Command
         parent::__construct();
     }
 
+    /**
+     * Declares the optional fixture-count input while preserving the deterministic default.
+     */
     #[\Override]
     protected function configure(): void
     {
@@ -30,7 +39,11 @@ final class AddressDemoLoadCommand extends Command
         $this->addOption('count', null, InputOption::VALUE_OPTIONAL, default: (string) self::DEFAULT_COUNT);
     }
 
-    /** @noinspection PhpMissingParentCallCommonInspection */
+    /**
+     * Resets and repopulates demo fixtures, reporting the number of persisted addresses.
+     *
+     * @noinspection PhpMissingParentCallCommonInspection
+     */
     #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {

@@ -7,6 +7,9 @@ namespace App\Addressing\Service\Application;
 
 use App\Addressing\RepositoryInterface\AddressGovernanceRepositoryInterface;
 
+/**
+ * Provides application-level governance-cluster summaries for scoped address records.
+ */
 final readonly class AddressGovernanceSummaryService
 {
     public function __construct(private AddressGovernanceRepositoryInterface $addressGovernanceRepository)
@@ -14,6 +17,8 @@ final readonly class AddressGovernanceSummaryService
     }
 
     /**
+     * Returns linkage, canonical-governance, and related-address counts for one scoped address.
+     *
      * @return array{
      *   'addressId':string,
      *   'governanceStatus':?string,

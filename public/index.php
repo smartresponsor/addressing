@@ -2,21 +2,16 @@
 # Copyright (c) 2025 Oleksandr Tishchenko / Marketing America Corp
 declare(strict_types=1);
 
-use App\Addressing\Http\AddressErrorMap;
+use App\Addressing\Responder\AddressErrorMap;
 use App\Addressing\Middleware\AddressCorsMiddleware;
 use App\Addressing\Middleware\AddressIpGuardMiddleware;
 use App\Addressing\Service\Http\Address\AddressRateLimiterService;
 use App\Addressing\Middleware\AddressRequestIdMiddleware;
 use App\Addressing\Middleware\AddressSecurityHeadersMiddleware;
 use App\Addressing\Kernel;
-use App\Addressing\Service\Http\Address\AddressManageHttpService;
-use App\Addressing\Service\Http\Address\AddressOperationalHttpService;
-use App\Addressing\Service\Http\Address\AddressReadHttpService;
-use App\Addressing\Service\Http\Address\AddressSummaryHttpService;
-use App\Addressing\Service\Http\Address\AddressWriteHttpService;
 use Symfony\Component\Dotenv\Dotenv;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 require_once dirname(__DIR__).'/vendor/autoload.php';
 
@@ -57,86 +52,10 @@ if (!filter_var($_SERVER['RATE_LIMIT_DISABLED'] ?? getenv('RATE_LIMIT_DISABLED')
     exit(0);
 }
 
-$addressManageHttpService = $kernel->getContainer()->get(AddressManageHttpService::class);
-$addressWriteHttpService = $kernel->getContainer()->get(AddressWriteHttpService::class);
-$addressReadHttpService = $kernel->getContainer()->get(AddressReadHttpService::class);
-$addressSummaryHttpService = $kernel->getContainer()->get(AddressSummaryHttpService::class);
-$addressOperationalHttpService = $kernel->getContainer()->get(AddressOperationalHttpService::class);
-
 try {
-    if ('/address/manage' === $pathInfo && ('GET' === $method || 'POST' === $method)) {
-        $addressManageHttpService->manage($request)->send();
-        exit(0);
-    }
-
-    if ('POST' === $method && '/api/address' === $pathInfo) {
-        $addressWriteHttpService->create($request)->send();
-        exit(0);
-    }
-
-    if ('GET' === $method && ('/api/address/page' === $pathInfo || '/api/address/search' === $pathInfo)) {
-        $addressReadHttpService->page($request)->send();
-        exit(0);
-    }
-
-    if ('GET' === $method && '/api/address/queue-summary' === $pathInfo) {
-        $addressSummaryHttpService->queueSummary($request)->send();
-        exit(0);
-    }
-
-    if ('GET' === $method && '/api/address/country-portfolio' === $pathInfo) {
-        $addressSummaryHttpService->countryPortfolioSummary($request)->send();
-        exit(0);
-    }
-
-    if ('GET' === $method && '/api/address/source-portfolio' === $pathInfo) {
-        $addressSummaryHttpService->sourcePortfolioSummary($request)->send();
-        exit(0);
-    }
-
-    if ('GET' === $method && '/api/address/validation-portfolio' === $pathInfo) {
-        $addressSummaryHttpService->validationPortfolioSummary($request)->send();
-        exit(0);
-    }
-
-    if ('GET' === $method && '/api/address/normalization-portfolio' === $pathInfo) {
-        $addressSummaryHttpService->normalizationPortfolioSummary($request)->send();
-        exit(0);
-    }
-
-    if ('POST' === $method && '/api/address/operational-batch' === $pathInfo) {
-        $addressOperationalHttpService->patchOperationalBatch($request)->send();
-        exit(0);
-    }
-
-    if (1 === preg_match('#^/api/address/([0-9A-HJKMNP-TV-Z]{26}|demo-[0-9]{4})$#', $pathInfo, $matches)) {
-        if ('GET' === $method) {
-            $addressReadHttpService->get($request, $matches[1])->send();
-            exit(0);
-        }
-
-        if ('DELETE' === $method) {
-            $addressWriteHttpService->markDeleted($request, $matches[1])->send();
-            exit(0);
-        }
-
-        if ('PATCH' === $method) {
-            $addressOperationalHttpService->patchOperational($request, $matches[1])->send();
-            exit(0);
-        }
-    }
-
-    if (1 === preg_match('#^/api/address/([0-9A-HJKMNP-TV-Z]{26}|demo-[0-9]{4})/validated$#', $pathInfo, $matches) && 'POST' === $method) {
-        $addressOperationalHttpService->applyValidated($request, $matches[1])->send();
-        exit(0);
-    }
-
-    if (1 === preg_match('#^/api/address/([0-9A-HJKMNP-TV-Z]{26}|demo-[0-9]{4})/governance-cluster$#', $pathInfo, $matches) && 'GET' === $method) {
-        $addressSummaryHttpService->governanceClusterSummary($request, $matches[1])->send();
-        exit(0);
-    }
-
-    new JsonResponse(['error' => 'not_found'], 404)->send();
+    $response = $kernel->handle($request, HttpKernelInterface::MAIN_REQUEST, false);
+    $response->send();
+    $kernel->terminate($request, $response);
 } catch (RuntimeException $exception) {
     $code = $exception->getMessage();
 

@@ -7,8 +7,12 @@ namespace App\Addressing\Repository;
 use App\Addressing\Entity\AddressEntity;
 use App\Addressing\RepositoryInterface\AddressPortfolioRepositoryInterface;
 
+/**
+ * Builds tenant-scoped Addressing portfolio summaries across country, source, validation, and normalization dimensions.
+ */
 final readonly class AddressDoctrinePortfolioRepository extends AddressAbstractDoctrineRepository implements AddressPortfolioRepositoryInterface
 {
+    /** Summarize scoped addresses by country with governance, evidence, revalidation, and validation counters. */
     #[\Override]
     public function summarizeCountryPortfolio(?string $ownerId, ?string $vendorId, ?string $q, array $filters = []): array
     {
@@ -23,6 +27,7 @@ final readonly class AddressDoctrinePortfolioRepository extends AddressAbstractD
         );
     }
 
+    /** Summarize scoped addresses by source system and source type with shared portfolio counters. */
     #[\Override]
     public function summarizeSourcePortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
@@ -40,6 +45,7 @@ final readonly class AddressDoctrinePortfolioRepository extends AddressAbstractD
         );
     }
 
+    /** Summarize scoped addresses by effective validation provider and status with shared portfolio counters. */
     #[\Override]
     public function summarizeValidationPortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {
@@ -57,6 +63,7 @@ final readonly class AddressDoctrinePortfolioRepository extends AddressAbstractD
         );
     }
 
+    /** Summarize scoped addresses by normalization version and validation status, including stale-version counts. */
     #[\Override]
     public function summarizeNormalizationPortfolio(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $q, array $filters = []): array
     {

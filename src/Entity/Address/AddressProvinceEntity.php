@@ -12,6 +12,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: \App\Addressing\Repository\AddressProvinceEntityRepository::class)]
 #[ORM\Table(name: 'address_province')]
 #[ORM\Index(name: 'address_province_country_code_idx', columns: ['country_code', 'code'])]
+/**
+ * Persists canonical province or region reference data used by Addressing locality normalization.
+ *
+ * Addressing owns the country-specific administrative-area semantics while Objecting provides reusable identity, audit, and state fields.
+ */
 class AddressProvinceEntity
 {
     use ObjectIdentityEmbeddableTrait;

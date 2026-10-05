@@ -5,12 +5,15 @@ declare(strict_types=1);
 
 namespace App\Addressing\Projection\AddressIndex;
 
-use App\Addressing\Integration\Geocode\AddressGeocodeResult;
 use App\Addressing\Value\AddressCountryCode;
 use App\Addressing\Value\AddressPostalCode;
 use App\Addressing\Value\AddressStreetLine;
+use App\Addressing\Value\Geocode\AddressGeocodeResult;
 use App\Addressing\Value\Primitive\AddressRegion;
 
+/**
+ * Immutable projection payload persisted by the address index repository after normalization and optional geocoding.
+ */
 final readonly class AddressIndexRecord
 {
     public function __construct(
@@ -32,6 +35,9 @@ final readonly class AddressIndexRecord
     ) {
     }
 
+    /**
+     * Builds the stable coordinate key used by the index for nullable latitude and longitude pairs.
+     */
     public static function geokey(?float $lat, ?float $lon): string
     {
         if (null === $lat || null === $lon) {
@@ -42,6 +48,8 @@ final readonly class AddressIndexRecord
     }
 
     /**
+     * Creates an index record from canonical normalized address values and optional provider geocode evidence.
+     *
      * @param array{line1: AddressStreetLine, line2: ?AddressStreetLine, city: string, region: AddressRegion, postal: AddressPostalCode, country: AddressCountryCode, digest: string} $norm
      */
     public static function fromNormalized(array $norm, ?AddressGeocodeResult $geocodeResult = null): self
@@ -71,6 +79,8 @@ final readonly class AddressIndexRecord
     }
 
     /**
+     * Exposes the projection as the scalar persistence payload expected by the address index repository.
+     *
      * @return array<string, mixed>
      */
     public function toArray(): array

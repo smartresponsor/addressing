@@ -7,6 +7,9 @@ namespace App\Addressing\Service\Application;
 
 use App\Addressing\RepositoryInterface\AddressQueueRepositoryInterface;
 
+/**
+ * Provides application-level operational queue summaries for scoped address portfolios.
+ */
 final readonly class AddressQueueSummaryService
 {
     public function __construct(private AddressQueueRepositoryInterface $addressQueueRepository)
@@ -14,6 +17,8 @@ final readonly class AddressQueueSummaryService
     }
 
     /**
+     * Returns revalidation, evidence, conflict, duplicate, and normalization queue counts.
+     *
      * @param array<string, mixed> $filters
      *
      * @return array{

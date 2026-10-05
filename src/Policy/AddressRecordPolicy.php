@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace App\Addressing\Policy;
 
+/**
+ * Normalizes persisted and inbound address governance tokens to the canonical Addressing vocabularies.
+ */
 final class AddressRecordPolicy
 {
     /** @var list<string> */
@@ -28,6 +31,9 @@ final class AddressRecordPolicy
     /** @var list<string> */
     public const array LAST_VALIDATION_STATUSES = ['normalized', 'validated', 'rejected', 'uncertain', 'overridden'];
 
+    /**
+     * Returns a canonical validation status while preserving the caller-selected fallback for unknown input.
+     */
     public static function normalizeValidationStatus(?string $status, string $default = 'unknown'): string
     {
         $normalized = self::normalizeToken($status);
@@ -35,6 +41,9 @@ final class AddressRecordPolicy
         return self::inAllowed($normalized, self::VALIDATION_STATUSES) ? $normalized : $default;
     }
 
+    /**
+     * Returns a canonical source type or null when the supplied provenance token is unsupported.
+     */
     public static function normalizeSourceType(?string $sourceType): ?string
     {
         $normalized = self::normalizeToken($sourceType);
@@ -42,6 +51,9 @@ final class AddressRecordPolicy
         return self::inAllowed($normalized, self::SOURCE_TYPES) ? $normalized : null;
     }
 
+    /**
+     * Returns a canonical governance status while preserving the caller-selected fallback for unknown input.
+     */
     public static function normalizeGovernanceStatus(?string $status, string $default = 'canonical'): string
     {
         $normalized = self::normalizeToken($status);
@@ -49,6 +61,9 @@ final class AddressRecordPolicy
         return self::inAllowed($normalized, self::GOVERNANCE_STATUSES) ? $normalized : $default;
     }
 
+    /**
+     * Returns a canonical revalidation policy or null when the scheduling token is unsupported.
+     */
     public static function normalizeRevalidationPolicy(?string $policy): ?string
     {
         $normalized = self::normalizeToken($policy);
@@ -56,6 +71,9 @@ final class AddressRecordPolicy
         return self::inAllowed($normalized, self::REVALIDATION_POLICIES) ? $normalized : null;
     }
 
+    /**
+     * Returns a canonical terminal validation status or null when no supported status can be derived.
+     */
     public static function normalizeLastValidationStatus(?string $status): ?string
     {
         $normalized = self::normalizeToken($status);

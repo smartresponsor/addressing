@@ -15,6 +15,9 @@ use App\Addressing\Message\AddressOutboxEventMessage;
 use App\Addressing\RepositoryInterface\AddressValidatedPersistenceRepositoryInterface;
 use App\Addressing\ServiceInterface\Application\AddressValidatedApplierServiceInterface;
 
+/**
+ * Applies validated-address messages transactionally while persisting evidence and outbox state.
+ */
 final readonly class AddressValidatedApplierService implements AddressValidatedApplierServiceInterface
 {
     private AddressValidatedPayloadFactory $addressValidatedPayloadFactory;
@@ -26,6 +29,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         $this->addressValidatedPayloadFactory = $payloadFactory ?? new AddressValidatedPayloadFactory();
     }
 
+    /** Applies one validated-address message atomically to address state, evidence, and outbox records. */
     #[\Override]
     public function apply(string $id, AddressValidated $addressValidated, ?string $ownerId = null, ?string $vendorId = null): void
     {
@@ -53,42 +57,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 $rawSha256 = hash('sha256', $this->encodePayload($addressValidated->raw));
             }
 
-            $entity
-                ->setLine1Norm($addressValidated->line1Norm)
-                ->setCityNorm($addressValidated->cityNorm)
-                ->setRegionNorm($addressValidated->regionNorm)
-                ->setPostalCodeNorm($addressValidated->postalCodeNorm)
-                ->setLatitude($addressValidated->latitude)
-                ->setLongitude($addressValidated->longitude)
-                ->setGeohash($addressValidated->geohash)
-                ->setValidationProvider($addressValidated->validationProvider)
-                ->setValidationStatus('validated')
-                ->setValidatedAt($validatedAt)
-                ->setDedupeKey($addressValidated->dedupeKey)
-                ->setValidationFingerprint($fingerprint)
-                ->setUpdatedAt($now)
-                ->setSourceSystem($addressValidated->sourceSystem)
-                ->setSourceType($addressValidated->sourceType)
-                ->setSourceReference($addressValidated->sourceReference)
-                ->setNormalizationVersion($addressValidated->normalizationVersion)
-                ->setRawInputSnapshot($addressValidated->rawInput)
-                ->setNormalizedSnapshot($normalizedSnapshot)
-                ->setProviderDigest($providerDigest)
-                ->setGovernanceStatus($this->normalizeGovernanceStatus($addressValidated->governanceStatus))
-                ->setDuplicateOfId($this->sanitizeGovernanceLink($addressValidated->duplicateOfId, $id))
-                ->setSupersededById($this->sanitizeGovernanceLink($addressValidated->supersededById, $id))
-                ->setAliasOfId($this->sanitizeGovernanceLink($addressValidated->aliasOfId, $id))
-                ->setConflictWithId($this->sanitizeGovernanceLink($addressValidated->conflictWithId, $id))
-                ->setRevalidationDueAt($addressValidated->revalidationDueAt)
-                ->setRevalidationPolicy($addressValidated->revalidationPolicy)
-                ->setLastValidationProvider($addressValidated->lastValidationProvider ?? $addressValidated->validationProvider)
-                ->setLastValidationStatus($this->normalizeValidationStatus($addressValidated->lastValidationStatus ?? 'validated'))
-                ->setLastValidationScore($addressValidated->lastValidationScore)
-                ->setValidationRaw($addressValidated->raw)
-                ->setValidationVerdict($validationIssues)
-                ->setValidationDeliverable($addressValidated->addressValidationVerdict?->deliverable)
-                ->setValidationGranularity($addressValidated->addressValidationVerdict?->granularity)
-                ->setValidationQuality($addressValidated->addressValidationVerdict?->quality);
+            $this->applyValidationState($entity, $addressValidated, $id, $fingerprint, $now, $validatedAt, $normalizedSnapshot, $providerDigest, $validationIssues);
 
             $snapshot = $this->createEvidenceSnapshot(
                 $entity,
@@ -102,32 +71,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 $this->addressValidatedPersistenceRepository->persistEvidenceSnapshot($snapshot);
             }
 
-            $outbox = (new AddressOutboxEntity())
-                ->setEventName('AddressValidatedApplied')
-                ->setEventVersion(1)
-                ->setPayload($this->encodePayload(AddressOutboxEventMessage::decoratePayload('AddressValidatedApplied', $this->addressValidatedPayloadFactory->outboxPayload(
-                    new AddressValidatedOutboxContext(
-                        id: $id,
-                        ownerId: $ownerId,
-                        vendorId: $vendorId,
-                        fingerprint: $fingerprint,
-                        validatedAt: $validatedAt,
-                        rawSha256: $rawSha256,
-                        governanceStatus: $this->normalizeGovernanceStatus($addressValidated->governanceStatus),
-                        duplicateOfId: $this->sanitizeGovernanceLink($addressValidated->duplicateOfId, $id),
-                        supersededById: $this->sanitizeGovernanceLink($addressValidated->supersededById, $id),
-                        aliasOfId: $this->sanitizeGovernanceLink($addressValidated->aliasOfId, $id),
-                        conflictWithId: $this->sanitizeGovernanceLink($addressValidated->conflictWithId, $id),
-                        revalidationDueAt: $addressValidated->revalidationDueAt?->format(DATE_ATOM),
-                        revalidationPolicy: $addressValidated->revalidationPolicy,
-                        lastValidationStatus: $this->normalizeValidationStatus($addressValidated->lastValidationStatus ?? 'validated'),
-                        lastValidationScore: $addressValidated->lastValidationScore,
-                        evidenceSnapshotId: $snapshot instanceof AddressEvidenceSnapshotEntity ? $snapshot->getId() : null,
-                        providerDigest: $providerDigest,
-                    ),
-                    $addressValidated,
-                ))))
-                ->setCreatedAt($now);
+            $outbox = $this->createOutbox($id, $ownerId, $vendorId, $fingerprint, $validatedAt, $rawSha256, $addressValidated, $snapshot, $providerDigest, $now);
             $this->addressValidatedPersistenceRepository->persistOutbox($outbox);
 
             $this->addressValidatedPersistenceRepository->flush();
@@ -141,6 +85,98 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
 
             throw new \RuntimeException('apply_failed', $throwable->getCode(), previous: $throwable);
         }
+    }
+
+    /**
+     * @param array<string, mixed>|null $normalizedSnapshot
+     * @param array<string, mixed>|null $validationIssues
+     */
+    private function applyValidationState(
+        AddressEntity $entity,
+        AddressValidated $addressValidated,
+        string $id,
+        string $fingerprint,
+        \DateTimeImmutable $now,
+        \DateTimeImmutable $validatedAt,
+        ?array $normalizedSnapshot,
+        ?string $providerDigest,
+        ?array $validationIssues,
+    ): void {
+        $entity
+            ->setLine1Norm($addressValidated->line1Norm)
+            ->setCityNorm($addressValidated->cityNorm)
+            ->setRegionNorm($addressValidated->regionNorm)
+            ->setPostalCodeNorm($addressValidated->postalCodeNorm)
+            ->setLatitude($addressValidated->latitude)
+            ->setLongitude($addressValidated->longitude)
+            ->setGeohash($addressValidated->geohash)
+            ->setValidationProvider($addressValidated->validationProvider)
+            ->setValidationStatus('validated')
+            ->setValidatedAt($validatedAt)
+            ->setDedupeKey($addressValidated->dedupeKey)
+            ->setValidationFingerprint($fingerprint)
+            ->setUpdatedAt($now)
+            ->setSourceSystem($addressValidated->sourceSystem)
+            ->setSourceType($addressValidated->sourceType)
+            ->setSourceReference($addressValidated->sourceReference)
+            ->setNormalizationVersion($addressValidated->normalizationVersion)
+            ->setRawInputSnapshot($addressValidated->rawInput)
+            ->setNormalizedSnapshot($normalizedSnapshot)
+            ->setProviderDigest($providerDigest)
+            ->setGovernanceStatus($this->normalizeGovernanceStatus($addressValidated->governanceStatus))
+            ->setDuplicateOfId($this->sanitizeGovernanceLink($addressValidated->duplicateOfId, $id))
+            ->setSupersededById($this->sanitizeGovernanceLink($addressValidated->supersededById, $id))
+            ->setAliasOfId($this->sanitizeGovernanceLink($addressValidated->aliasOfId, $id))
+            ->setConflictWithId($this->sanitizeGovernanceLink($addressValidated->conflictWithId, $id))
+            ->setRevalidationDueAt($addressValidated->revalidationDueAt)
+            ->setRevalidationPolicy($addressValidated->revalidationPolicy)
+            ->setLastValidationProvider($addressValidated->lastValidationProvider ?? $addressValidated->validationProvider)
+            ->setLastValidationStatus($this->normalizeValidationStatus($addressValidated->lastValidationStatus ?? 'validated'))
+            ->setLastValidationScore($addressValidated->lastValidationScore)
+            ->setValidationRaw($addressValidated->raw)
+            ->setValidationVerdict($validationIssues)
+            ->setValidationDeliverable($addressValidated->addressValidationVerdict?->deliverable)
+            ->setValidationGranularity($addressValidated->addressValidationVerdict?->granularity)
+            ->setValidationQuality($addressValidated->addressValidationVerdict?->quality);
+    }
+
+    private function createOutbox(
+        string $id,
+        ?string $ownerId,
+        ?string $vendorId,
+        string $fingerprint,
+        \DateTimeImmutable $validatedAt,
+        ?string $rawSha256,
+        AddressValidated $addressValidated,
+        ?AddressEvidenceSnapshotEntity $snapshot,
+        ?string $providerDigest,
+        \DateTimeImmutable $now,
+    ): AddressOutboxEntity {
+        $context = new AddressValidatedOutboxContext(
+            id: $id,
+            ownerId: $ownerId,
+            vendorId: $vendorId,
+            fingerprint: $fingerprint,
+            validatedAt: $validatedAt,
+            rawSha256: $rawSha256,
+            governanceStatus: $this->normalizeGovernanceStatus($addressValidated->governanceStatus),
+            duplicateOfId: $this->sanitizeGovernanceLink($addressValidated->duplicateOfId, $id),
+            supersededById: $this->sanitizeGovernanceLink($addressValidated->supersededById, $id),
+            aliasOfId: $this->sanitizeGovernanceLink($addressValidated->aliasOfId, $id),
+            conflictWithId: $this->sanitizeGovernanceLink($addressValidated->conflictWithId, $id),
+            revalidationDueAt: $addressValidated->revalidationDueAt?->format(DATE_ATOM),
+            revalidationPolicy: $addressValidated->revalidationPolicy,
+            lastValidationStatus: $this->normalizeValidationStatus($addressValidated->lastValidationStatus ?? 'validated'),
+            lastValidationScore: $addressValidated->lastValidationScore,
+            evidenceSnapshotId: $snapshot?->getId(),
+            providerDigest: $providerDigest,
+        );
+
+        return (new AddressOutboxEntity())
+            ->setEventName('AddressValidatedApplied')
+            ->setEventVersion(1)
+            ->setPayload($this->encodePayload(AddressOutboxEventMessage::decoratePayload('AddressValidatedApplied', $this->addressValidatedPayloadFactory->outboxPayload($context, $addressValidated))))
+            ->setCreatedAt($now);
     }
 
     private function findAddressEntity(string $id, ?string $ownerId, ?string $vendorId): ?AddressEntity

@@ -9,6 +9,9 @@ declare(strict_types=1);
 
 namespace App\Addressing\Message;
 
+/**
+ * Carries canonical Addressing outbox event metadata and schema-version information across asynchronous boundaries.
+ */
 final class AddressOutboxEventMessage
 {
     public const string SCHEMA_VERSION = 'address-outbox.v1';
@@ -22,6 +25,9 @@ final class AddressOutboxEventMessage
         'AddressValidatedApplied' => 1,
     ];
 
+    /**
+     * Resolves the stable schema version assigned to one supported Addressing event name.
+     */
     public static function eventVersion(string $eventName): int
     {
         if (!isset(self::EVENT_VERSIONS[$eventName])) {
@@ -32,6 +38,8 @@ final class AddressOutboxEventMessage
     }
 
     /**
+     * Enriches an event payload with canonical Addressing schema, version, and occurrence metadata.
+     *
      * @param array<string, mixed> $payload
      *
      * @return array<string, mixed>
@@ -49,7 +57,11 @@ final class AddressOutboxEventMessage
         ] + $payload;
     }
 
-    /** @return array<string, int> */
+    /**
+     * Exposes the supported Addressing event-version registry for diagnostics and contract inspection.
+     *
+     * @return array<string, int>
+     */
     public static function eventVersions(): array
     {
         return self::EVENT_VERSIONS;

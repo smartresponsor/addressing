@@ -5,6 +5,9 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value;
 
+/**
+ * Represents a validated postal-code value with bounded length and value semantics.
+ */
 final readonly class AddressPostalCode implements \Stringable
 {
     private string $value;
@@ -21,11 +24,13 @@ final readonly class AddressPostalCode implements \Stringable
         $this->value = $value;
     }
 
+    /** Returns the validated postal-code string value. */
     public function value(): string
     {
         return $this->value;
     }
 
+    /** Compares this postal code with another postal-code value object. */
     public function equals(self $other): bool
     {
         return $this->value === $other->value;
