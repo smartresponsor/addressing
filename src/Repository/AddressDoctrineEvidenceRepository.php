@@ -59,6 +59,7 @@ final readonly class AddressDoctrineEvidenceRepository extends AddressAbstractDo
     #[\Override]
     public function findEvidenceHistoryPage(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array
     {
+        $effectiveLimit = max(1, min(200, $limit));
         $queryBuilder = $this->entityManager->createQueryBuilder();
         $queryBuilder->select('s', 'a')
             ->from(AddressEvidenceSnapshotEntity::class, 's')
@@ -68,7 +69,7 @@ final readonly class AddressDoctrineEvidenceRepository extends AddressAbstractDo
             ->setParameter('addressId', $addressId)
             ->orderBy('s.createdAt', 'DESC')
             ->addOrderBy('s.id', 'DESC')
-            ->setMaxResults(max(1, min(200, $limit)) + 1);
+            ->setMaxResults($effectiveLimit + 1);
         $this->applyTenantScope($queryBuilder, 'a', $ownerId, $vendorId);
 
         if (null !== $cursor) {
@@ -84,8 +85,11 @@ final readonly class AddressDoctrineEvidenceRepository extends AddressAbstractDo
         $nextCursor = null;
 
         foreach ($entities as $index => $entity) {
-            if ($index >= $limit) {
-                $nextCursor = $this->encodeEvidenceCursor($entity->getCreatedAt()->format(DATE_ATOM), $entity->getId());
+            if ($index >= $effectiveLimit) {
+                $lastIncluded = $entities[$index - 1] ?? null;
+                if ($lastIncluded instanceof AddressEvidenceSnapshotEntity) {
+                    $nextCursor = $this->encodeEvidenceCursor($lastIncluded->getCreatedAt()->format(DATE_ATOM), $lastIncluded->getId());
+                }
                 break;
             }
 

@@ -10,6 +10,7 @@ use App\Addressing\Entity\AddressEntity;
 use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
 use App\Addressing\Entity\AddressOutboxEntity;
 use App\Addressing\Repository\AddressDoctrineValidatedPersistenceRepository;
+use App\Addressing\RepositoryInterface\AddressValidatedPersistenceRepositoryInterface;
 use App\Addressing\Service\Application\AddressValidatedApplierService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
@@ -142,6 +143,64 @@ final class AddressValidatedApplierTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('not_found');
         $this->applier->apply('addr-2', $validated, 'owner-B', 'vendor-B');
+    }
+
+    public function testApplyCommitsWithoutWritingWhenFingerprintAlreadyMatches(): void
+    {
+        $validated = AddressValidated::fromArray([
+            'line1Norm' => 'main st',
+            'validationProvider' => 'unit',
+        ]);
+        $entity = (new AddressEntity())
+            ->setId('addr-idempotent')
+            ->setValidationFingerprint($validated->fingerprint());
+
+        $repository = $this->createMock(AddressValidatedPersistenceRepositoryInterface::class);
+        $repository->expects(self::once())
+            ->method('findScopedAddress')
+            ->with('addr-idempotent', 'owner-1', 'vendor-1')
+            ->willReturn($entity);
+        $repository->expects(self::once())->method('beginTransaction');
+        $repository->expects(self::once())->method('commit');
+        $repository->expects(self::never())->method('persistEvidenceSnapshot');
+        $repository->expects(self::never())->method('persistOutbox');
+        $repository->expects(self::never())->method('flush');
+        $repository->expects(self::never())->method('rollbackIfActive');
+
+        (new AddressValidatedApplierService($repository))->apply('addr-idempotent', $validated, 'owner-1', 'vendor-1');
+    }
+
+    public function testApplyRollsBackAndWrapsUnexpectedRepositoryFailure(): void
+    {
+        $validated = AddressValidated::fromArray([
+            'line1Norm' => 'main st',
+            'validationProvider' => 'unit',
+        ]);
+        $entity = (new AddressEntity())
+            ->setId('addr-failure')
+            ->setValidationStatus('pending');
+        $failure = new \LogicException('storage_failed');
+
+        $repository = $this->createMock(AddressValidatedPersistenceRepositoryInterface::class);
+        $repository->expects(self::once())
+            ->method('findScopedAddress')
+            ->with('addr-failure', null, null)
+            ->willReturn($entity);
+        $repository->expects(self::once())->method('beginTransaction');
+        $repository->expects(self::once())
+            ->method('persistOutbox')
+            ->willThrowException($failure);
+        $repository->expects(self::once())->method('rollbackIfActive');
+        $repository->expects(self::never())->method('flush');
+        $repository->expects(self::never())->method('commit');
+
+        try {
+            (new AddressValidatedApplierService($repository))->apply('addr-failure', $validated);
+            self::fail('Expected apply_failed runtime exception.');
+        } catch (\RuntimeException $runtimeException) {
+            self::assertSame('apply_failed', $runtimeException->getMessage());
+            self::assertSame($failure, $runtimeException->getPrevious());
+        }
     }
 
     private function insertAddress(string $id, string $ownerId, string $vendorId): void
