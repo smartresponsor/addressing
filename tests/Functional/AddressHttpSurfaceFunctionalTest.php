@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 namespace Tests\Functional;
 
+use App\Addressing\DependencyInjection\AddressingExtension;
 use App\Addressing\Kernel;
 use App\Addressing\Service\Http\Address\AddressManageHttpService;
 use App\Addressing\Service\Http\Address\AddressReadHttpService;
@@ -31,6 +32,25 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
             unlink($this->sqlitePath);
         }
         $this->sqlitePath = null;
+    }
+
+    public function testFinalHttpMethodCoverageBranches(): void
+    {
+        self::assertSame('addressing', (new AddressingExtension())->getAlias());
+
+        $services = $this->bootServices(__FUNCTION__);
+
+        $invalidCreate = $services['write']->create(new Request([], [], [], [], [], [], '{invalid-json'));
+        self::assertSame(400, $invalidCreate->getStatusCode());
+
+        $missingRead = $services['read']->get(new Request(['ownerId' => 'owner-missing']), 'missing-address');
+        self::assertSame(404, $missingRead->getStatusCode());
+
+        $missingGovernance = $services['kernel']->handle(Request::create(
+            '/api/address/01HZZZZZZZZZZZZZZZZZZZZZZZ/governance-cluster?ownerId=owner-missing',
+            'GET',
+        ));
+        self::assertSame(404, $missingGovernance->getStatusCode());
     }
 
     public function testCreateAndGetAddressFlow(): void
