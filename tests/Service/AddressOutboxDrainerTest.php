@@ -227,6 +227,7 @@ final class AddressOutboxDrainerTest extends TestCase
         self::assertSame(9, $invoke('rowInt', [['key' => 9], 'key']));
         self::assertSame(12, $invoke('rowInt', [['key' => '12'], 'key']));
         self::assertSame(0, $invoke('rowInt', [['key' => 'bad'], 'key']));
+        self::assertSame(0, $invoke('rowInt', [[], 'key']));
 
         self::assertSame([
             'name' => 'AddressCreated',
@@ -258,6 +259,8 @@ final class AddressOutboxDrainerTest extends TestCase
         self::assertTrue($invoke('shouldRetry', [2, $config]));
         self::assertFalse($invoke('shouldRetry', [3, $config]));
         self::assertSame(20_000, $invoke('retryDelayMicros', [2, $config]));
+        $negativeBackoffConfig = new AddressOutboxDispatchConfig('http://example.test', 1, 1, -5);
+        self::assertSame(0, $invoke('retryDelayMicros', [2, $negativeBackoffConfig]));
 
         $options = $invoke('curlOptions', [$config, '{}']);
         self::assertSame(true, $options[CURLOPT_RETURNTRANSFER]);
@@ -273,6 +276,17 @@ final class AddressOutboxDrainerTest extends TestCase
         self::assertNull($invoke('encodedDispatchPayload', [['invalid' => NAN], &$encodingError]));
         self::assertSame('json: encode failed', $encodingError);
         self::assertSame('http: 502 ', $invoke('dispatchFailureMessage', [502, '', false]));
+
+        $sendMethod = new \ReflectionMethod(AddressOutboxDrainerService::class, 'send');
+        $sendError = null;
+        self::assertFalse($sendMethod->invokeArgs($service, [$config, ['invalid' => NAN], &$sendError]));
+        self::assertSame('json: encode failed', $sendError);
+
+        $postMethod = new \ReflectionMethod(AddressOutboxDrainerService::class, 'post');
+        $retryConfig = new AddressOutboxDispatchConfig('http://127.0.0.1:1', 1, 1, 0);
+        $postError = null;
+        self::assertFalse($postMethod->invokeArgs($service, [$retryConfig, '{}', &$postError]));
+        self::assertStringStartsWith('curl: ', (string) $postError);
 
         $sender = static function (
             string $url,
