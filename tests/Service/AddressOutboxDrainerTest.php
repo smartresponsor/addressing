@@ -138,6 +138,70 @@ final class AddressOutboxDrainerTest extends TestCase
         $repository->markDispatchFailure(999999, 'ignored');
     }
 
+    public function testDrainerReleasesReservedRowWhenInjectedSenderFails(): void
+    {
+        $repository = $this->createMock(AddressOutboxDispatchRepositoryInterface::class);
+        $repository->expects(self::once())
+            ->method('reserve')
+            ->with(self::isType('string'), 1)
+            ->willReturn([[
+                'id' => 8,
+                'event_name' => 'AddressUpdated',
+                'event_version' => 2,
+                'payload' => '{"id":"addr-8"}',
+            ]]);
+        $repository->expects(self::never())->method('markPublished');
+        $repository->expects(self::once())
+            ->method('markDispatchFailure')
+            ->with(8, 'delivery failed');
+
+        $service = new AddressOutboxDrainerService(
+            $repository,
+            static function (
+                string $url,
+                array $data,
+                int $retryLimit,
+                int $timeoutSec,
+                int $backoffMs,
+                ?string &$error,
+            ): bool {
+                self::assertSame('http://example.test', $url);
+                self::assertSame('AddressUpdated', $data['name']);
+                self::assertSame(2, $data['version']);
+                self::assertSame(['id' => 'addr-8'], $data['payload']);
+                self::assertSame(0, $retryLimit);
+                self::assertSame(1, $timeoutSec);
+                self::assertSame(0, $backoffMs);
+                $error = 'delivery failed';
+
+                return false;
+            },
+        );
+
+        self::assertSame(1, $service->drain('http://example.test', 1, 0, 1, 0));
+    }
+
+    public function testDrainerRecordsNativeCurlFailureWithoutRetry(): void
+    {
+        $repository = $this->createMock(AddressOutboxDispatchRepositoryInterface::class);
+        $repository->expects(self::once())
+            ->method('reserve')
+            ->willReturn([[
+                'id' => 9,
+                'event_name' => 'AddressCreated',
+                'event_version' => 1,
+                'payload' => '{"id":"addr-9"}',
+            ]]);
+        $repository->expects(self::never())->method('markPublished');
+        $repository->expects(self::once())
+            ->method('markDispatchFailure')
+            ->with(9, self::callback(static fn (?string $error): bool => is_string($error) && str_starts_with($error, 'curl: ')));
+
+        $service = new AddressOutboxDrainerService($repository);
+
+        self::assertSame(1, $service->drain('http://127.0.0.1:1', 1, 0, 1, 0));
+    }
+
     public function testDrainerHelperContractsCoverCoercionRetryAndFailureFormatting(): void
     {
         $repository = $this->createMock(AddressOutboxDispatchRepositoryInterface::class);
@@ -204,6 +268,11 @@ final class AddressOutboxDrainerTest extends TestCase
         $error = null;
         $encodedPayload = $invoke('encodedDispatchPayload', [['name' => 'AddressCreated'], &$error]);
         self::assertSame('{"name":"AddressCreated"}', $encodedPayload);
+
+        $encodingError = null;
+        self::assertNull($invoke('encodedDispatchPayload', [['invalid' => NAN], &$encodingError]));
+        self::assertSame('json: encode failed', $encodingError);
+        self::assertSame('http: 502 ', $invoke('dispatchFailureMessage', [502, '', false]));
 
         $sender = static function (
             string $url,

@@ -763,6 +763,8 @@
 
 ## 2026-10-04 — engine-20261004133102-addressing-955c6a
 
+- 2026-10-05 RC continuation: current branch advanced cleanly to `23c244c6352552b9b446c3fcaa2e6c35d170ffad`; Canon031 is green (classes 89.9%, contract methods 70.3%) and Canon040 is the sole remaining Gating warning at lines 74.7%, methods 64.7%, branches 72.9%. Added negative-path coverage for `AddressOutboxDrainerService`: injected sender failure releases the reserved row through `markDispatchFailure`, native cURL failure is recorded without retry, JSON encoding failure is surfaced as `json: encode failed`, and non-string HTTP failure formatting is covered. Verification: `php -l` green, integration suite 62/62 tests with 552 assertions, PHPStan green, php-cs-fixer check green. Standalone Inspecting invocation exceeded the synchronous transport window and produced no authoritative completion verdict in this pass.
+
 ### Baseline
 - Resolved `D:\\PhpstormProjects\\www\\Addressing` only through Console MCP on `rc/addressing-rc-final-v3` at `489884b661cf17077c58c4bbd0bb49b5efa0d300`; upstream was synchronized 0 ahead / 0 behind before this task-owned mutation.
 - Preserved pre-existing/concurrent dirty `.gating/README.md`, `AGENTS.md`, shared `CMCP_CHANGELOG.md`, `src/Command/AddressQueueSummaryCommand.php`, `src/Config/Application/AddressOutboxDispatchConfig.php`, and `src/Contract/AddressEvidenceSnapshotInterface.php` without reset, stash, cleanup, deletion, or re-attribution.
