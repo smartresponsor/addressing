@@ -9,7 +9,11 @@ use App\Addressing\RepositoryInterface\AddressStreetTypeEntityRepositoryInterfac
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-/** @extends ServiceEntityRepository<AddressStreetTypeEntity> */
+/**
+ * Provides Doctrine persistence access for country-specific Addressing street-type reference entities.
+ *
+ * @extends ServiceEntityRepository<AddressStreetTypeEntity>
+ */
 final class AddressStreetTypeEntityRepository extends ServiceEntityRepository implements AddressStreetTypeEntityRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)

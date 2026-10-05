@@ -11,6 +11,9 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'address_evidence_snapshot_owner_idx', columns: ['owner_id'])]
 #[ORM\Index(name: 'address_evidence_snapshot_vendor_idx', columns: ['vendor_id'])]
 #[ORM\Index(name: 'address_evidence_snapshot_address_idx', columns: ['address_id', 'created_at', 'id'])]
+/**
+ * Persists immutable address-validation evidence snapshots for provenance, diagnostics, and audit review.
+ */
 class AddressEvidenceSnapshotEntity
 {
     #[ORM\Id]
