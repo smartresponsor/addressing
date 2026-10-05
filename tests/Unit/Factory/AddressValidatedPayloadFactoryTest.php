@@ -31,6 +31,89 @@ final class AddressValidatedPayloadFactoryTest extends TestCase
         yield 'verdict' => [['verdict' => ['deliverable' => true]]];
     }
 
+    public function testAddressValidatedCoercesPublicPayloadShapes(): void
+    {
+        $stringable = new class () implements \Stringable {
+            public function __toString(): string
+            {
+                return ' stringable-value ';
+            }
+        };
+
+        $validated = AddressValidated::fromArray([
+            'line1Norm' => 123,
+            'cityNorm' => $stringable,
+            'regionNorm' => false,
+            'postalCodeNorm' => ['invalid'],
+            'latitude' => '29.7604',
+            'longitude' => 95,
+            'validatedAt' => 0,
+            'sourceType' => 'validator',
+            'governanceStatus' => 'canonical',
+            'revalidationDueAt' => '2026-12-01T00:00:00+00:00',
+            'revalidationPolicy' => 'monthly',
+            'lastValidationStatus' => 'validated',
+            'lastValidationScore' => ' 87 ',
+            'raw' => 'invalid',
+            'rawInput' => ['line1' => '123 Main St'],
+            'validationVerdict' => ['deliverable' => true],
+        ]);
+
+        self::assertSame('123', $validated->line1Norm);
+        self::assertSame('stringable-value', $validated->cityNorm);
+        self::assertNull($validated->regionNorm);
+        self::assertNull($validated->postalCodeNorm);
+        self::assertSame(29.7604, $validated->latitude);
+        self::assertSame(95.0, $validated->longitude);
+        self::assertSame('1970-01-01T00:00:00+00:00', $validated->validatedAt?->format(DATE_ATOM));
+        self::assertSame('validator', $validated->sourceType);
+        self::assertSame('canonical', $validated->governanceStatus);
+        self::assertSame('monthly', $validated->revalidationPolicy);
+        self::assertSame('validated', $validated->lastValidationStatus);
+        self::assertSame(87, $validated->lastValidationScore);
+        self::assertNull($validated->raw);
+        self::assertSame(['line1' => '123 Main St'], $validated->rawInput);
+        self::assertTrue($validated->addressValidationVerdict?->deliverable);
+    }
+
+    public function testAddressValidatedSerializesPersistenceAndFingerprintDeterministically(): void
+    {
+        $validated = AddressValidated::fromArray([
+            'line1Norm' => '123 MAIN ST',
+            'cityNorm' => 'HOUSTON',
+            'latitude' => 29.76,
+            'longitude' => -95.36,
+            'validationProvider' => 'provider-a',
+            'validatedAt' => '2026-10-05T01:00:00+00:00',
+            'dedupeKey' => 'dedupe-1',
+            'raw' => ['status' => 'verified'],
+            'verdict' => ['deliverable' => true, 'granularity' => 'premise', 'quality' => 96],
+            'rawInput' => ['line1' => '123 Main St'],
+            'normalizedSnapshot' => ['line1Norm' => '123 MAIN ST'],
+            'providerDigest' => 'digest-1',
+            'lastValidationScore' => 96.8,
+        ]);
+
+        $json = $validated->jsonSerialize();
+        self::assertSame('provider-a', $json['validationProvider']);
+        self::assertSame(['deliverable' => true, 'granularity' => 'premise', 'quality' => 96, 'signal' => []], $json['verdict']);
+        self::assertSame('2026-10-05T01:00:00+00:00', $json['validatedAt']);
+
+        $db = $validated->toDbArray();
+        self::assertSame('{"status":"verified"}', $db['validation_raw']);
+        self::assertSame('{"deliverable":true,"granularity":"premise","quality":96,"signal":[]}', $db['validation_verdict']);
+        self::assertSame('{"line1":"123 Main St"}', $db['raw_input_snapshot']);
+        self::assertSame('{"line1Norm":"123 MAIN ST"}', $db['normalized_snapshot']);
+        self::assertSame(96, $db['last_validation_score']);
+
+        self::assertSame($validated->fingerprint(), $validated->fingerprint());
+        self::assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $validated->fingerprint());
+
+        $empty = AddressValidated::fromArray([]);
+        self::assertNull($empty->toDbArray()['validation_raw']);
+        self::assertNull($empty->toDbArray()['validation_verdict']);
+    }
+
     public function testHasEvidenceReturnsFalseWithoutEvidence(): void
     {
         self::assertFalse((new AddressValidatedPayloadFactory())->hasEvidence(AddressValidated::fromArray([])));
