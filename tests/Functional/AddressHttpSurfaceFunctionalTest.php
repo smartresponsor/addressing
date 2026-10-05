@@ -114,6 +114,45 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
         self::assertSame([], $previewMethod->invoke($manage, $dto));
     }
 
+    public function testManageServiceCreatesAndPreviewsScopedAddress(): void
+    {
+        $services = $this->bootServices(__FUNCTION__);
+        $manage = $services['manage'];
+
+        $dto = new \App\Addressing\DTO\AddressManageDTO();
+        $dto->ownerId = 'owner-manage';
+        $dto->vendorId = null;
+        $dto->line1 = '900 Manage Ave';
+        $dto->line2 = ' Suite 5 ';
+        $dto->city = ' Houston ';
+        $dto->region = 'tx';
+        $dto->postalCode = '77002';
+        $dto->countryCode = 'us';
+
+        $createMethod = new \ReflectionMethod(AddressManageHttpService::class, 'createFromManageDto');
+        $createdId = $createMethod->invoke($manage, $dto);
+        self::assertIsString($createdId);
+        self::assertNotSame('', $createdId);
+
+        $read = $services['read']->get(new Request(['ownerId' => 'owner-manage']), $createdId);
+        self::assertSame(200, $read->getStatusCode());
+        $createdPayload = json_decode((string) $read->getContent(), true);
+        self::assertIsArray($createdPayload);
+        self::assertSame('900 Manage Ave', $createdPayload['line1'] ?? null);
+        self::assertSame('Suite 5', $createdPayload['line2'] ?? null);
+        self::assertSame('Houston', $createdPayload['city'] ?? null);
+        self::assertSame('TX', $createdPayload['region'] ?? null);
+        self::assertSame('US', $createdPayload['countryCode'] ?? null);
+        self::assertSame('symfony-manage', $createdPayload['sourceSystem'] ?? null);
+
+        $previewMethod = new \ReflectionMethod(AddressManageHttpService::class, 'previewRows');
+        $previewRows = $previewMethod->invoke($manage, $dto);
+        self::assertIsArray($previewRows);
+        self::assertCount(1, $previewRows);
+        self::assertSame($createdId, $previewRows[0]['id'] ?? null);
+        self::assertSame('900 Manage Ave', $previewRows[0]['line1'] ?? null);
+    }
+
     public function testOperationalAndValidatedApiRoutesThroughKernel(): void
     {
         $services = $this->bootServices(__FUNCTION__);
