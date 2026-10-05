@@ -5,9 +5,14 @@ declare(strict_types=1);
 
 namespace App\Addressing\RepositoryInterface;
 
+/**
+ * Provides governance-cluster summaries for scoped address records and their canonical relationships.
+ */
 interface AddressGovernanceRepositoryInterface
 {
     /**
+     * Summarizes governance relationships, linkage state, and cluster membership for one address.
+     *
      * @return array{
      *   'addressId':string,
      *   'governanceStatus':?string,

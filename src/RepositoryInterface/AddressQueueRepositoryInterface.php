@@ -5,9 +5,14 @@ declare(strict_types=1);
 
 namespace App\Addressing\RepositoryInterface;
 
+/**
+ * Produces operational queue counts for scoped address records requiring follow-up processing.
+ */
 interface AddressQueueRepositoryInterface
 {
     /**
+     * Summarizes revalidation, evidence, conflict, duplicate, and normalization work queues.
+     *
      * @param array<string, mixed> $filters
      *
      * @return array{

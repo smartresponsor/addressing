@@ -5,9 +5,14 @@ declare(strict_types=1);
 
 namespace App\Addressing\RepositoryInterface;
 
+/**
+ * Produces aggregate portfolio views over scoped addresses for operational governance reporting.
+ */
 interface AddressPortfolioRepositoryInterface
 {
     /**
+     * Groups the scoped address portfolio by country and reports governance and evidence totals.
+     *
      * @param array<string, mixed> $filters
      *
      * @return list<array{
