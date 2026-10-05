@@ -7,6 +7,7 @@ namespace Tests;
 
 use App\Addressing\Entity\AddressIndexEntity;
 use App\Addressing\Event\AddressCreatedEvent;
+use App\Addressing\Event\AddressUpdatedEvent;
 use App\Addressing\Normalizer\AddressIndexNormalizer;
 use App\Addressing\Projection\AddressIndex\AddressIndexProjector;
 use App\Addressing\Projection\AddressIndex\AddressIndexRecord;
@@ -80,5 +81,22 @@ final class AddressIndexProjectorTest extends TestCase
         $list = $repo->search('Hou', 'US', 10);
         self::assertGreaterThanOrEqual(1, count($list));
         self::assertSame('US', $list[0]->country);
+    }
+
+    public function testUpdatedEventProjectsThroughTheSameIndexPipeline(): void
+    {
+        $entityManager = TestDatabase::createInMemoryEntityManager([AddressIndexEntity::class]);
+        $repo = new AddressDoctrineIndexRepository($entityManager);
+        $projector = new AddressIndexProjector($repo, new AddressIndexNormalizer(), new AddressIndexProjectorService());
+
+        $event = new AddressUpdatedEvent('500 Test Ave', 'Suite 200', 'Dallas', 'TX', '75201', 'US');
+        self::assertSame('address.updated', $event->nameEntity());
+        self::assertInstanceOf(\DateTimeImmutable::class, $event->occurredAt());
+        $projector->onAddressUpdated($event);
+
+        $list = $repo->search('Dal', 'US', 10);
+        self::assertCount(1, $list);
+        self::assertSame('Dallas', $list[0]->city);
+        self::assertSame('Suite 200', $list[0]->line2);
     }
 }

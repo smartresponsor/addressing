@@ -79,6 +79,95 @@ final class AddressOperationalHttpSurfaceFunctionalTest extends TestCase
         self::assertSame('Austin', $validatedPayload['cityNorm'] ?? null);
     }
 
+    public function testOperationalMutationSurfaceCoversInvalidMissingAndBatchFailurePaths(): void
+    {
+        $kernel = $this->bootKernel(__FUNCTION__);
+        $id = $this->createAddress($kernel);
+        $missingId = (string) new \Symfony\Component\Uid\Ulid();
+
+        $invalidPatch = $kernel->handle(Request::create(
+            '/api/address/'.$id.'?ownerId=owner-1',
+            'PATCH',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: 'not-json',
+        ));
+        self::assertSame(422, $invalidPatch->getStatusCode());
+
+        $missingPatch = $kernel->handle(Request::create(
+            '/api/address/'.$missingId.'?ownerId=owner-1',
+            'PATCH',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $this->json(['lastValidationStatus' => 'validated']),
+        ));
+        self::assertSame(404, $missingPatch->getStatusCode());
+
+        $invalidBatch = $kernel->handle(Request::create(
+            '/api/address/operational-batch?ownerId=owner-1',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $this->json(['lastValidationStatus' => 'validated']),
+        ));
+        self::assertSame(422, $invalidBatch->getStatusCode());
+
+        $partialBatch = $kernel->handle(Request::create(
+            '/api/address/operational-batch?ownerId=owner-1',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $this->json([
+                'ids' => [$id, 'missing'],
+                'lastValidationStatus' => 'validated',
+            ]),
+        ));
+        self::assertSame(200, $partialBatch->getStatusCode());
+        $partialPayload = json_decode((string) $partialBatch->getContent(), true);
+        self::assertIsArray($partialPayload);
+        self::assertSame(2, $partialPayload['requestedCount'] ?? null);
+        self::assertSame(1, $partialPayload['patchedCount'] ?? null);
+
+        $failedBatch = $kernel->handle(Request::create(
+            '/api/address/operational-batch?ownerId=owner-1',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $this->json([
+                'ids' => [$id],
+                'governanceStatus' => 'duplicate',
+            ]),
+        ));
+        self::assertSame(200, $failedBatch->getStatusCode());
+        $failedPayload = json_decode((string) $failedBatch->getContent(), true);
+        self::assertIsArray($failedPayload);
+        self::assertCount(1, $failedPayload['failed'] ?? []);
+
+        $invalidValidated = $kernel->handle(Request::create(
+            '/api/address/'.$id.'/validated?ownerId=owner-1',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: 'not-json',
+        ));
+        self::assertSame(422, $invalidValidated->getStatusCode());
+
+        $missingValidated = $kernel->handle(Request::create(
+            '/api/address/'.$missingId.'/validated?ownerId=owner-1',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $this->json(['provider' => 'functional-test']),
+        ));
+        self::assertSame(422, $missingValidated->getStatusCode());
+
+        $emptyPage = $kernel->handle(Request::create('/api/address/page?ownerId=owner-empty', 'GET'));
+        self::assertSame(200, $emptyPage->getStatusCode());
+        $emptyPagePayload = json_decode((string) $emptyPage->getContent(), true);
+        self::assertIsArray($emptyPagePayload);
+        self::assertSame([], $emptyPagePayload['items'] ?? null);
+        self::assertNull($emptyPagePayload['nextCursor'] ?? null);
+
+        $missingGovernance = $kernel->handle(Request::create(
+            '/api/address/'.$missingId.'/governance-cluster?ownerId=owner-1',
+            'GET',
+        ));
+        self::assertSame(404, $missingGovernance->getStatusCode());
+    }
+
     private function bootKernel(string $suffix): Kernel
     {
         $this->sqlitePath = TestDatabase::freshSqlitePath($suffix);

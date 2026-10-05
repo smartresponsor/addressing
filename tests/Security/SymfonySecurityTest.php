@@ -92,4 +92,18 @@ final class SymfonySecurityTest extends TestCase
         self::assertTrue($limiter->check('client-2', 'address_lookup'));
         self::assertFalse($limiter->check('client-1', 'address_lookup'));
     }
+
+    public function testRateLimitEntityRoundTripsAllPersistenceFields(): void
+    {
+        $entity = (new AddressRateLimitEntity())
+            ->setClient('client-direct')
+            ->setRkey('address_direct')
+            ->setTs(123456)
+            ->setCnt(7);
+
+        self::assertSame('client-direct', $entity->getClient());
+        self::assertSame('address_direct', $entity->getRkey());
+        self::assertSame(123456, $entity->getTs());
+        self::assertSame(7, $entity->getCnt());
+    }
 }

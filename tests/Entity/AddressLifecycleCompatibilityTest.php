@@ -36,6 +36,10 @@ final class AddressLifecycleCompatibilityTest extends TestCase
     public function testAddressOutboxLifecycleAliases(): void
     {
         $entity = new AddressOutboxEntity();
+        self::assertNull($entity->getId());
+        self::assertSame('address', $entity->getStream());
+        $entity->setStream('address-audit');
+        self::assertSame('address-audit', $entity->getStream());
         $entity->setCreatedAt(new \DateTimeImmutable('2026-05-23 15:00:00'));
         $entity->lock('locker-1', new \DateTimeImmutable('2026-05-23 15:05:00'));
 
