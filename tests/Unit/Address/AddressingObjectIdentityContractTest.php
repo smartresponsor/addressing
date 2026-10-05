@@ -32,6 +32,35 @@ final class AddressingObjectIdentityContractTest extends TestCase
         self::assertSame('united-states', $country->getObjectSlug());
     }
 
+    public function testAddressCountryReferenceFieldsRoundTrip(): void
+    {
+        $country = new AddressCountryEntity();
+
+        self::assertSame('US', $country->getIso2());
+        self::assertNull($country->getIso3());
+        self::assertNull($country->getNumericCode());
+        self::assertSame('', $country->getName());
+        self::assertNull($country->getNativeName());
+        self::assertNull($country->getPhoneCode());
+        self::assertTrue($country->isEnabled());
+
+        self::assertSame($country, $country->setIso2('CA'));
+        self::assertSame($country, $country->setIso3('CAN'));
+        self::assertSame($country, $country->setNumericCode('124'));
+        self::assertSame($country, $country->setName('Canada'));
+        self::assertSame($country, $country->setNativeName('Canada'));
+        self::assertSame($country, $country->setPhoneCode('+1'));
+        self::assertSame($country, $country->setEnabled(false));
+
+        self::assertSame('CA', $country->getIso2());
+        self::assertSame('CAN', $country->getIso3());
+        self::assertSame('124', $country->getNumericCode());
+        self::assertSame('Canada', $country->getName());
+        self::assertSame('Canada', $country->getNativeName());
+        self::assertSame('+1', $country->getPhoneCode());
+        self::assertFalse($country->isEnabled());
+    }
+
     public function testAddressCountryMappingUsesBinaryUuidAndMandatorySlug(): void
     {
         $configuration = ORMSetup::createAttributeMetadataConfiguration([], true);
