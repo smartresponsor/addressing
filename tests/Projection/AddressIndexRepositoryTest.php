@@ -48,4 +48,49 @@ final class AddressIndexRepositoryTest extends TestCase
         $list = $this->repo->search('Hou', 'US', 10);
         self::assertGreaterThanOrEqual(1, count($list));
     }
+
+    public function testRecordFactoryCoversGeocodedAndNullableProjectionPaths(): void
+    {
+        $record = AddressIndexRecord::fromNormalized([
+            'line1' => new \App\Addressing\Value\AddressStreetLine('500 Test Ave'),
+            'line2' => new \App\Addressing\Value\AddressStreetLine('Suite 200'),
+            'city' => 'Dallas',
+            'region' => new \App\Addressing\Value\Primitive\AddressRegion('tx'),
+            'postal' => new \App\Addressing\Value\AddressPostalCode('75201'),
+            'country' => new \App\Addressing\Value\AddressCountryCode('us'),
+            'digest' => str_repeat('b', 64),
+        ], new \App\Addressing\Value\Geocode\AddressGeocodeResult(
+            32.7767,
+            -96.797,
+            '500 Test Ave, Dallas, TX 75201, USA',
+            'test-provider',
+            0.95,
+        ));
+
+        self::assertSame('+32.77670:-96.79700', $record->geoKey);
+        self::assertSame('Suite 200', $record->line2);
+        self::assertSame('test-provider', $record->provider);
+        self::assertSame('+32.77670:-96.79700', $record->toArray()['geo_key']);
+
+        $withoutGeocode = AddressIndexRecord::fromNormalized([
+            'line1' => new \App\Addressing\Value\AddressStreetLine('123 Main St'),
+            'line2' => null,
+            'city' => 'Houston',
+            'region' => new \App\Addressing\Value\Primitive\AddressRegion('tx'),
+            'postal' => new \App\Addressing\Value\AddressPostalCode('77002'),
+            'country' => new \App\Addressing\Value\AddressCountryCode('us'),
+            'digest' => str_repeat('c', 64),
+        ]);
+
+        self::assertNull($withoutGeocode->lat);
+        self::assertNull($withoutGeocode->lon);
+        self::assertSame('', $withoutGeocode->geoKey);
+    }
+
+    public function testGeokeyRequiresBothCoordinates(): void
+    {
+        self::assertSame('', AddressIndexRecord::geokey(null, -95.0));
+        self::assertSame('', AddressIndexRecord::geokey(29.0, null));
+        self::assertSame('+29.76040:-95.36980', AddressIndexRecord::geokey(29.7604, -95.3698));
+    }
 }
