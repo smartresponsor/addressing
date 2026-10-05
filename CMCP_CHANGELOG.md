@@ -1,5 +1,28 @@
 # CMCP Orchestration Journal
 
+## 2026-10-05 — engine-20261004212131-addressing-a37d09
+
+### Baseline and selected RC work
+
+- Scope: `Addressing` only; Console MCP resolved `D:\PhpstormProjects\www\Addressing` under workspace root `D:\PhpstormProjects\www`.
+- Read current `README.md`, `AGENTS.md`, `composer.json`, PHPStan configuration, repository/test helpers, and the upstream CanonScanning RED `Addressing.static-analysis.log`.
+- Verified declared local dependency contour and symlink path repositories for Objecting, Cruding, Viewing, Interfacing, and Gating; read their available `AGENTS.md`, `README.md`, and `composer.json` contracts.
+- Consulted normative Canonization rules `Canon000ComponentPrefixRule`, `Canon001TechnicalRoleFirstRule`, `Canon002InterfaceTreeMirrorsImplementationRule`, and `Canon021CrudingOwnsGenericCrudRule`. Mapping: Addressing keeps the `Address*` subject prefix, role-first repository/interface trees, mirrored repository contracts, and no component-local generic CRUD implementation.
+- Market/maturity baseline: mature address platforms separate parsing/normalization from authoritative validation and geocoding, expose corrected/standardized output plus confidence/deliverability metadata, and support country-specific precision. Addressing remains the lifecycle/evidence/governance owner; provider execution, maps/geocoding UI, generic CRUD, and final rendering remain outside this boundary.
+- RC-critical work selected: clear the reproducible static-quality failure without weakening analyzer policy. Growth work remains separate: richer provider-neutral evidence diagnostics, normalization/version observability, and operational portfolio DX after RC.
+- Existing worktree was already dirty before this pass across Addressing repository/entity interfaces, implementation docblocks, functional tests, `AGENTS.md`, and `.gating/README.md`; preserve and classify that work rather than resetting or overwriting it.
+
+### Remediation and verification
+
+- Supplied historical RED was obsolete for the current tree: removed PHPStan configuration options are no longer present. Current PHPStan reached source analysis and exposed 8 iterable generic-type errors only in `tests/Repository/AddressAbstractDoctrineRepositoryTest.php` probe wrappers.
+- Added test-probe PHPDoc types that exactly mirror the already-typed protected production helper contracts; no runtime behavior or public API changed.
+- `composer phpstan`: GREEN, 0 errors across 188 files.
+- `composer test`: GREEN exit code; 147 tests, 974 assertions, 7 PHPUnit notices, 1 skipped.
+- `composer gating`: GREEN for failures (16 rules, 0 failed); one non-blocking Canon040 coverage warning remains (lines 73.6%, methods 64.1%, branches 72.6%). Canon042 behavioral/UI coverage is green.
+- `composer validate --strict --check-lock`: GREEN.
+- Post-mutation Inspecting completed at `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261005-181119.json`: PHPStan 0 errors, Rector 0 changed files / 0 errors; 27 medium, non-autofixable structural observations remain (oversized interfaces, entity/property cohesion, large classes/public APIs). Under the task contract these observational findings are growth/architecture evidence, not automatic RC blockers absent a promoting canon/gate.
+
+
 ## 2026-10-04 — engine-20261004203845-addressing-1acc37
 
 ### Baseline and bounded remediation
