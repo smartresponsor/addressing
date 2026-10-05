@@ -8,12 +8,16 @@ use App\Addressing\Entity\AddressRateLimitEntity;
 use App\Addressing\RepositoryInterface\AddressRateLimitRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
+/**
+ * Persists and enforces one-minute Addressing rate-limit counters per client and limiter key.
+ */
 final readonly class AddressDoctrineRateLimitRepository implements AddressRateLimitRepositoryInterface
 {
     public function __construct(private EntityManagerInterface $entityManager)
     {
     }
 
+    /** Check the active minute window, increment its counter atomically, and return whether the request is allowed. */
     public function checkAndIncrement(string $client, string $key, int $effectiveLimit): bool
     {
         $now = time();
