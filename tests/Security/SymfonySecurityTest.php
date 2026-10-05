@@ -29,6 +29,29 @@ final class SymfonySecurityTest extends TestCase
         self::assertTrue(AddressIpGuardMiddleware::allowed('10.0.0.2', '/api/address'));
     }
 
+    public function testIpGuardHonorsAllowListsAndPathPrefixes(): void
+    {
+        self::assertTrue(AddressIpGuardMiddleware::allowed('192.0.2.10', '/anything'));
+
+        putenv('ALLOW_IPS=192.0.2.10, 192.0.2.11');
+        self::assertTrue(AddressIpGuardMiddleware::allowed('192.0.2.10', '/api/address'));
+        self::assertFalse(AddressIpGuardMiddleware::allowed('192.0.2.12', '/api/address'));
+
+        putenv('ALLOW_PATHS=/api/address,/health');
+        self::assertTrue(AddressIpGuardMiddleware::allowed('192.0.2.10', '/api/address/123'));
+        self::assertTrue(AddressIpGuardMiddleware::allowed('192.0.2.10', '/health/ready'));
+        self::assertFalse(AddressIpGuardMiddleware::allowed('192.0.2.10', '/admin'));
+    }
+
+    public function testIpGuardIgnoresBlankEnvironmentEntries(): void
+    {
+        putenv('DENY_IPS= , ');
+        putenv('ALLOW_IPS= , ');
+        putenv('ALLOW_PATHS= , ');
+
+        self::assertTrue(AddressIpGuardMiddleware::allowed('203.0.113.5', '/unrestricted'));
+    }
+
     public function testRateLimiterBlocksAfterBurstLimit(): void
     {
         $entityManager = TestDatabase::createInMemoryEntityManager([AddressRateLimitEntity::class]);
