@@ -203,6 +203,64 @@ final class AddressValidatedApplierTest extends TestCase
         }
     }
 
+    public function testApplierHelperContractsNormalizeGovernanceAndValidationPayloads(): void
+    {
+        $invoke = function (string $methodName, array $arguments = []): mixed {
+            $method = new \ReflectionMethod(AddressValidatedApplierService::class, $methodName);
+
+            return $method->invokeArgs($this->applier, $arguments);
+        };
+
+        self::assertSame('validated', $invoke('normalizeValidationStatus', ['validated']));
+        self::assertSame('rejected', $invoke('normalizeValidationStatus', ['rejected']));
+        self::assertSame('uncertain', $invoke('normalizeValidationStatus', ['uncertain']));
+        self::assertSame('validated', $invoke('normalizeValidationStatus', ['unexpected']));
+
+        self::assertSame('duplicate', $invoke('normalizeGovernanceStatus', ['duplicate']));
+        self::assertSame('superseded', $invoke('normalizeGovernanceStatus', ['superseded']));
+        self::assertSame('alias', $invoke('normalizeGovernanceStatus', ['alias']));
+        self::assertSame('conflict', $invoke('normalizeGovernanceStatus', ['conflict']));
+        self::assertSame('canonical', $invoke('normalizeGovernanceStatus', [null]));
+        self::assertSame('canonical', $invoke('normalizeGovernanceStatus', ['unexpected']));
+
+        self::assertNull($invoke('sanitizeGovernanceLink', [null, 'addr-1']));
+        self::assertNull($invoke('sanitizeGovernanceLink', ['   ', 'addr-1']));
+        self::assertNull($invoke('sanitizeGovernanceLink', ['addr-1', 'addr-1']));
+        self::assertSame('addr-2', $invoke('sanitizeGovernanceLink', [' addr-2 ', 'addr-1']));
+
+        self::assertSame('{"ok":true}', $invoke('encodePayload', [['ok' => true]]));
+
+        $recursive = [];
+        $recursive['self'] = &$recursive;
+        try {
+            $invoke('encodePayload', [$recursive]);
+            self::fail('Expected recursive payload encoding to fail.');
+        } catch (\RuntimeException $exception) {
+            self::assertSame('payload_encode_failed', $exception->getMessage());
+        }
+
+        $verdictMessage = AddressValidated::fromArray([
+            'verdict' => [
+                'deliverable' => true,
+                'granularity' => 'premise',
+                'quality' => 91,
+            ],
+        ]);
+        self::assertSame([
+            'deliverable' => true,
+            'granularity' => 'premise',
+            'quality' => 91,
+            'signal' => [],
+        ], $invoke('validationIssues', [$verdictMessage]));
+
+        $rawIssuesMessage = AddressValidated::fromArray([
+            'raw' => ['issues' => ['postal_mismatch']],
+        ]);
+        self::assertSame(['postal_mismatch'], $invoke('validationIssues', [$rawIssuesMessage]));
+
+        self::assertNull($invoke('validationIssues', [AddressValidated::fromArray([])]));
+    }
+
     private function insertAddress(string $id, string $ownerId, string $vendorId): void
     {
         $address = (new AddressEntity())
