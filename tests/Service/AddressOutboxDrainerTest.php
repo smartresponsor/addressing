@@ -5,9 +5,11 @@ declare(strict_types=1);
 
 namespace Tests\Service;
 
+use App\Addressing\Config\Application\AddressOutboxDispatchConfig;
 use App\Addressing\Entity\AddressOutboxEntity;
 use App\Addressing\Message\AddressOutboxEventMessage;
 use App\Addressing\Repository\AddressDoctrineOutboxDispatchRepository;
+use App\Addressing\RepositoryInterface\AddressOutboxDispatchRepositoryInterface;
 use App\Addressing\Service\Application\AddressOutboxDrainerService;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
@@ -134,6 +136,93 @@ final class AddressOutboxDrainerTest extends TestCase
 
         $repository->markPublished(999999);
         $repository->markDispatchFailure(999999, 'ignored');
+    }
+
+    public function testDrainerHelperContractsCoverCoercionRetryAndFailureFormatting(): void
+    {
+        $repository = $this->createMock(AddressOutboxDispatchRepositoryInterface::class);
+        $repository->expects(self::once())
+            ->method('reserve')
+            ->with('lock-1', 5)
+            ->willReturn([['id' => 7]]);
+        $repository->expects(self::once())->method('markPublished')->with(7);
+        $repository->expects(self::once())->method('markDispatchFailure')->with(8, 'failed');
+
+        $service = new AddressOutboxDrainerService($repository);
+        $config = new AddressOutboxDispatchConfig('http://example.test', 2, 3, 10);
+
+        $invoke = static function (string $methodName, array $arguments = []) use ($service): mixed {
+            $method = new \ReflectionMethod(AddressOutboxDrainerService::class, $methodName);
+
+            return $method->invokeArgs($service, $arguments);
+        };
+
+        self::assertSame([['id' => 7]], $invoke('reserveRows', ['lock-1', 5]));
+        self::assertSame('value', $invoke('rowString', [['key' => 'value'], 'key']));
+        self::assertNull($invoke('rowString', [['key' => 10], 'key']));
+        self::assertSame(9, $invoke('rowInt', [['key' => 9], 'key']));
+        self::assertSame(12, $invoke('rowInt', [['key' => '12'], 'key']));
+        self::assertSame(0, $invoke('rowInt', [['key' => 'bad'], 'key']));
+
+        self::assertSame([
+            'name' => 'AddressCreated',
+            'version' => 2,
+            'payload' => ['id' => 'addr-1'],
+        ], $invoke('eventPayload', [[
+            'event_name' => 'AddressCreated',
+            'event_version' => '2',
+            'payload' => '{"id":"addr-1"}',
+        ]]));
+        self::assertSame([
+            'name' => '',
+            'version' => 0,
+            'payload' => null,
+        ], $invoke('eventPayload', [['payload' => 'not-json']]));
+
+        $lockId = $invoke('lockId', ['http://example.test']);
+        self::assertIsString($lockId);
+        self::assertNotSame('', $lockId);
+
+        $invoke('markPublished', [7]);
+        $invoke('markDispatchFailure', [8, 'failed']);
+
+        self::assertTrue($invoke('isSuccessfulHttpCode', [204, '']));
+        self::assertFalse($invoke('isSuccessfulHttpCode', [500, '']));
+        self::assertFalse($invoke('isSuccessfulHttpCode', [204, 'socket error']));
+        self::assertSame('curl: socket error', $invoke('dispatchFailureMessage', [0, 'socket error', false]));
+        self::assertSame('http: 503 unavailable', $invoke('dispatchFailureMessage', [503, '', ' unavailable ']));
+        self::assertTrue($invoke('shouldRetry', [2, $config]));
+        self::assertFalse($invoke('shouldRetry', [3, $config]));
+        self::assertSame(20_000, $invoke('retryDelayMicros', [2, $config]));
+
+        $options = $invoke('curlOptions', [$config, '{}']);
+        self::assertSame(true, $options[CURLOPT_RETURNTRANSFER]);
+        self::assertSame(true, $options[CURLOPT_POST]);
+        self::assertSame('{}', $options[CURLOPT_POSTFIELDS]);
+        self::assertSame(3, $options[CURLOPT_TIMEOUT]);
+
+        $error = null;
+        $encodedPayload = $invoke('encodedDispatchPayload', [['name' => 'AddressCreated'], &$error]);
+        self::assertSame('{"name":"AddressCreated"}', $encodedPayload);
+
+        $sender = static function (
+            string $url,
+            array $data,
+            int $retryLimit,
+            int $timeoutSec,
+            int $backoffMs,
+            ?string &$senderError,
+        ): bool {
+            $senderError = null;
+
+            return 'http://example.test' === $url
+                && 'AddressCreated' === ($data['name'] ?? null)
+                && 2 === $retryLimit
+                && 3 === $timeoutSec
+                && 10 === $backoffMs;
+        };
+        $senderError = 'old';
+        self::assertTrue($invoke('dispatchViaSender', [$sender, $config, ['name' => 'AddressCreated'], &$senderError]));
     }
 
     /**
