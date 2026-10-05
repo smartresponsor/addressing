@@ -6,7 +6,9 @@ namespace App\Addressing\Tests\Unit\Factory;
 
 use App\Addressing\Contract\AddressInterface;
 use App\Addressing\Factory\AddressViewArrayFactory;
+use App\Addressing\Responder\AddressResponder;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Response;
 
 final class AddressViewArrayFactoryTest extends TestCase
 {
@@ -51,6 +53,39 @@ final class AddressViewArrayFactoryTest extends TestCase
         self::assertFalse($payload['isRevalidationDue']);
         self::assertFalse($payload['isNormalizationStale']);
         self::assertFalse($payload['hasGovernanceLink']);
+    }
+
+    public function testResponderBuildsCanonicalJsonEnvelopes(): void
+    {
+        $address = $this->createStub(AddressInterface::class);
+        $address->method('id')->willReturn('addr-1');
+        $address->method('line1')->willReturn('123 Main St');
+        $address->method('city')->willReturn('Houston');
+        $address->method('countryCode')->willReturn('US');
+        $address->method('validationStatus')->willReturn('valid');
+        $address->method('governanceStatus')->willReturn('canonical');
+
+        $responder = new AddressResponder(new AddressViewArrayFactory());
+
+        $addressResponse = $responder->address($address);
+        self::assertSame(Response::HTTP_OK, $addressResponse->getStatusCode());
+        $addressPayload = json_decode((string) $addressResponse->getContent(), true);
+        self::assertIsArray($addressPayload);
+        self::assertSame('addr-1', $addressPayload['id'] ?? null);
+
+        $summaryResponse = $responder->summaryItems([['countryCode' => 'US', 'total' => 2]]);
+        self::assertSame(['items' => [['countryCode' => 'US', 'total' => 2]]], json_decode((string) $summaryResponse->getContent(), true));
+
+        $notFound = $responder->notFound();
+        self::assertSame(Response::HTTP_NOT_FOUND, $notFound->getStatusCode());
+        self::assertSame(['error' => 'not_found'], json_decode((string) $notFound->getContent(), true));
+
+        $invalid = $responder->invalidRequest(new \RuntimeException('bad input'), 'validation_failed', 422);
+        self::assertSame(422, $invalid->getStatusCode());
+        self::assertSame([
+            'error' => 'validation_failed',
+            'message' => 'bad input',
+        ], json_decode((string) $invalid->getContent(), true));
     }
 
     public function testDueRevalidationPrecedesStaleNormalization(): void
