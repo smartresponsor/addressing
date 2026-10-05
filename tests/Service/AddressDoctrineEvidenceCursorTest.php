@@ -47,6 +47,84 @@ final class AddressDoctrineEvidenceCursorTest extends TestCase
         );
     }
 
+    public function testEvidenceRepositoryPersistsLatestAndPaginatedHistory(): void
+    {
+        $entityManager = TestDatabase::createInMemoryEntityManager([
+            AddressEntity::class,
+            AddressEvidenceSnapshotEntity::class,
+        ]);
+        $mapper = new AddressEntityMapper();
+        $repository = new AddressDoctrineEvidenceRepository($entityManager, $mapper);
+
+        $address = (new AddressEntity())
+            ->setId('address-evidence-1')
+            ->setOwnerId('owner-1')
+            ->setLine1('123 Main St')
+            ->setCity('Houston')
+            ->setCountryCode('US')
+            ->setValidationStatus('validated')
+            ->setValidationProvider('provider-a')
+            ->setValidatedAt(new \DateTimeImmutable('2026-10-04T10:00:00+00:00'))
+            ->setSourceSystem('validator-suite')
+            ->setSourceType('validator')
+            ->setSourceReference('run-1')
+            ->setNormalizationVersion('v1')
+            ->setRawInputSnapshot(['line1' => '123 Main St'])
+            ->setNormalizedSnapshot(['line1Norm' => '123 MAIN ST'])
+            ->setValidationVerdict(['deliverable' => true])
+            ->setProviderDigest('digest-1')
+            ->setCreatedAt(new \DateTimeImmutable('2026-10-04T09:00:00+00:00'));
+        $entityManager->persist($address);
+
+        $withoutEvidence = (new AddressEntity())
+            ->setId('address-no-evidence')
+            ->setOwnerId('owner-1')
+            ->setLine1('456 Main St')
+            ->setCity('Houston')
+            ->setCountryCode('US')
+            ->setValidationStatus('pending')
+            ->setCreatedAt(new \DateTimeImmutable('2026-10-04T09:00:00+00:00'));
+        $entityManager->persist($withoutEvidence);
+        $entityManager->flush();
+
+        self::assertNull($repository->appendEvidenceSnapshot($mapper->fromDoctrine($withoutEvidence)));
+
+        $first = $repository->appendEvidenceSnapshot($mapper->fromDoctrine($address));
+        self::assertNotNull($first);
+        self::assertSame('address-evidence-1', $first->addressId());
+        self::assertSame('provider-a', $first->validatedBy());
+        self::assertSame('digest-1', $first->providerDigest());
+
+        $address
+            ->setValidatedAt(new \DateTimeImmutable('2026-10-04T11:00:00+00:00'))
+            ->setProviderDigest('digest-2')
+            ->setSourceReference('run-2');
+        $entityManager->flush();
+
+        $second = $repository->appendEvidenceSnapshot($mapper->fromDoctrine($address));
+        self::assertNotNull($second);
+        self::assertSame('digest-2', $second->providerDigest());
+
+        $latest = $repository->getLatestEvidenceSnapshot('address-evidence-1', 'owner-1', null);
+        self::assertNotNull($latest);
+        self::assertSame('digest-2', $latest->providerDigest());
+        self::assertNull($repository->getLatestEvidenceSnapshot('address-evidence-1', 'owner-2', null));
+
+        $firstPage = $repository->findEvidenceHistoryPage('address-evidence-1', 'owner-1', null, 1, null);
+        self::assertCount(1, $firstPage['items']);
+        self::assertNotNull($firstPage['nextCursor']);
+
+        $secondPage = $repository->findEvidenceHistoryPage(
+            'address-evidence-1',
+            'owner-1',
+            null,
+            10,
+            $firstPage['nextCursor'],
+        );
+        self::assertCount(1, $secondPage['items']);
+        self::assertNull($secondPage['nextCursor']);
+    }
+
     private function repository(): AddressDoctrineEvidenceRepository
     {
         $entityManager = TestDatabase::createInMemoryEntityManager([
