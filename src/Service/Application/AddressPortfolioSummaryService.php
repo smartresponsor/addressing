@@ -7,6 +7,9 @@ namespace App\Addressing\Service\Application;
 
 use App\Addressing\RepositoryInterface\AddressPortfolioRepositoryInterface;
 
+/**
+ * Provides application-level portfolio summaries grouped by country, source, validation, and normalization.
+ */
 final readonly class AddressPortfolioSummaryService
 {
     public function __construct(private AddressPortfolioRepositoryInterface $addressPortfolioRepository)
@@ -14,6 +17,8 @@ final readonly class AddressPortfolioSummaryService
     }
 
     /**
+     * Returns portfolio governance and evidence totals grouped by country.
+     *
      * @param array<string, mixed> $filters
      *
      * @return list<array{
@@ -36,6 +41,8 @@ final readonly class AddressPortfolioSummaryService
     }
 
     /**
+     * Returns portfolio governance and evidence totals grouped by source provenance.
+     *
      * @param array<string, mixed> $filters
      *
      * @return list<array{
@@ -59,6 +66,8 @@ final readonly class AddressPortfolioSummaryService
     }
 
     /**
+     * Returns portfolio totals grouped by validation provider and validation status.
+     *
      * @param array<string, mixed> $filters
      *
      * @return list<array{
@@ -82,6 +91,8 @@ final readonly class AddressPortfolioSummaryService
     }
 
     /**
+     * Returns portfolio totals grouped by normalization version and validation status.
+     *
      * @param array<string, mixed> $filters
      *
      * @return list<array{

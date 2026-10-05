@@ -9,6 +9,9 @@ use App\Addressing\Contract\AddressInterface;
 use App\Addressing\RepositoryInterface\AddressReadRepositoryInterface;
 use App\Addressing\Value\Persistence\AddressPageCriteria;
 
+/**
+ * Provides scoped application reads, deduplication lookup, and paginated address search.
+ */
 final readonly class AddressReadService
 {
     public function __construct(private AddressReadRepositoryInterface $addressReadRepository)
@@ -16,6 +19,8 @@ final readonly class AddressReadService
     }
 
     /**
+     * Searches scoped addresses using normalized filters and cursor pagination criteria.
+     *
      * @noinspection PhpTooManyParametersInspection
      *
      * @param array<string, mixed> $filters
@@ -38,6 +43,7 @@ final readonly class AddressReadService
         return $this->addressReadRepository->findPage($addressPageCriteria);
     }
 
+    /** Resolves the address associated with an exact deduplication key when one is supplied. */
     public function dedupe(?string $dedupeKey): ?AddressInterface
     {
         if (null === $dedupeKey) {
@@ -47,6 +53,7 @@ final readonly class AddressReadService
         return $this->addressReadRepository->findByDedupeKey($dedupeKey);
     }
 
+    /** Loads one address by identifier when it is visible within the supplied ownership scope. */
     public function get(string $id, ?string $ownerId, ?string $vendorId): ?AddressInterface
     {
         return $this->addressReadRepository->get($id, $ownerId, $vendorId);

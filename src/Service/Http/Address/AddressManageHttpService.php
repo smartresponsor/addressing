@@ -17,6 +17,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Uid\Ulid;
 use Twig\Environment;
 
+/**
+ * Handles the Addressing management page, form submission, and scoped preview rendering.
+ */
 final readonly class AddressManageHttpService
 {
     public function __construct(

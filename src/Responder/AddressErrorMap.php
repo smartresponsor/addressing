@@ -5,9 +5,14 @@ declare(strict_types=1);
 
 namespace App\Addressing\Responder;
 
+/**
+ * Emits the legacy JSON error envelope used by non-HttpFoundation Addressing entry points.
+ */
 final class AddressErrorMap
 {
     /**
+     * Writes an HTTP status and structured JSON error payload with optional metadata.
+     *
      * @param array<string, mixed> $meta
      */
     public static function emit(int $status, string $code, string $message, array $meta = []): void

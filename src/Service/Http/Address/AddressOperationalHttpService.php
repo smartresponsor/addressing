@@ -15,6 +15,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Handles operational patching and validated-address application for Addressing HTTP endpoints.
+ */
 final readonly class AddressOperationalHttpService
 {
     public function __construct(
@@ -27,6 +30,7 @@ final readonly class AddressOperationalHttpService
     ) {
     }
 
+    /** Applies one scoped operational patch and returns the refreshed address representation. */
     public function patchOperational(Request $request, string $id): JsonResponse
     {
         [$ownerId, $vendorId] = $this->addressHttpScopeService->tenantScope($request);
@@ -53,6 +57,7 @@ final readonly class AddressOperationalHttpService
             : $this->addressResponder->notFound();
     }
 
+    /** Applies one operational patch to a requested batch and reports patched and failed identifiers. */
     public function patchOperationalBatch(Request $request): JsonResponse
     {
         [$ownerId, $vendorId] = $this->addressHttpScopeService->tenantScope($request);
@@ -85,6 +90,7 @@ final readonly class AddressOperationalHttpService
         ]);
     }
 
+    /** Applies a validated-address payload and returns the refreshed scoped address representation. */
     public function applyValidated(Request $request, string $id): JsonResponse
     {
         [$ownerId, $vendorId] = $this->addressHttpScopeService->tenantScope($request);

@@ -7,13 +7,20 @@ namespace App\Addressing\Service\Application;
 
 use App\Addressing\RepositoryInterface\AddressOperationalRepositoryInterface;
 
+/**
+ * Applies operational metadata updates through the scoped Addressing repository boundary.
+ */
 final readonly class AddressOperationalService
 {
     public function __construct(private AddressOperationalRepositoryInterface $addressOperationalRepository)
     {
     }
 
-    /** @param array<string, mixed> $patch */
+    /**
+     * Applies a scoped operational-field patch to one address record.
+     *
+     * @param array<string, mixed> $patch
+     */
     public function patchOperational(string $id, ?string $ownerId, ?string $vendorId, array $patch): bool
     {
         return $this->addressOperationalRepository->patchOperational($id, $ownerId, $vendorId, $patch);

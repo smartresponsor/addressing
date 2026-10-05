@@ -5,6 +5,9 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value;
 
+/**
+ * Represents a validated latitude and longitude pair with stable value semantics.
+ */
 final readonly class AddressGeoPoint implements \Stringable
 {
     private float $lat;
@@ -22,21 +25,25 @@ final readonly class AddressGeoPoint implements \Stringable
         $this->lon = $lon;
     }
 
+    /** Returns the validated latitude coordinate in decimal degrees. */
     public function lat(): float
     {
         return $this->lat;
     }
 
+    /** Returns the validated longitude coordinate in decimal degrees. */
     public function lon(): float
     {
         return $this->lon;
     }
 
+    /** Compares both coordinates with another geographic point value object. */
     public function equals(self $other): bool
     {
         return $this->lat === $other->lat && $this->lon === $other->lon;
     }
 
+    /** Returns a stable fixed-precision coordinate key for indexing and comparison. */
     public function toKey(): string
     {
         return sprintf('%+.6f,%+.6f', $this->lat, $this->lon);

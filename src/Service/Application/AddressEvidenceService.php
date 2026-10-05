@@ -9,23 +9,30 @@ use App\Addressing\Contract\AddressEvidenceSnapshotInterface;
 use App\Addressing\Contract\AddressInterface;
 use App\Addressing\RepositoryInterface\AddressEvidenceRepositoryInterface;
 
+/**
+ * Provides application-level access to address validation evidence history and summary data.
+ */
 final readonly class AddressEvidenceService
 {
     public function __construct(private AddressEvidenceRepositoryInterface $addressEvidenceRepository)
     {
     }
 
+    /** Appends a validation-evidence snapshot representing the address's current verification state. */
     public function appendSnapshot(AddressInterface $address): ?AddressEvidenceSnapshotInterface
     {
         return $this->addressEvidenceRepository->appendEvidenceSnapshot($address);
     }
 
+    /** Returns the newest evidence snapshot visible within the supplied ownership scope. */
     public function latestSnapshot(string $addressId, ?string $ownerId, ?string $vendorId): ?AddressEvidenceSnapshotInterface
     {
         return $this->addressEvidenceRepository->getLatestEvidenceSnapshot($addressId, $ownerId, $vendorId);
     }
 
     /**
+     * Returns one cursor page of evidence snapshots for the scoped address history.
+     *
      * @return array{'items': list<AddressEvidenceSnapshotInterface>, 'nextCursor': ?string}
      */
     public function history(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array
@@ -43,6 +50,8 @@ final readonly class AddressEvidenceService
      *   'latestValidatedAt':?string,
      *   'latestCreatedAt':?string
      * }
+     *
+     * Aggregates validation-state counts, provider diversity, and latest evidence timestamps.
      */
     public function historySummary(string $addressId, ?string $ownerId, ?string $vendorId): array
     {
