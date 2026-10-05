@@ -250,6 +250,41 @@ final class AddressValidatedTest extends TestCase
         self::assertSame('addr-2', $invoke('sanitizeLink', [' addr-2 ', 'addr-1']));
     }
 
+    public function testValidationVerdictPrivateHelpersCoverAllCoercionBranches(): void
+    {
+        self::assertNull(AddressValidationVerdict::fromArray(null));
+
+        $invoke = static function (string $methodName, mixed $value): mixed {
+            $method = new \ReflectionMethod(AddressValidationVerdict::class, $methodName);
+
+            return $method->invoke(null, $value);
+        };
+
+        foreach ([true, 1, 1.0, '1', 'true', 'yes'] as $truthy) {
+            self::assertTrue($invoke('asNullableBool', $truthy));
+        }
+        foreach ([false, 0, 0.0, '0', 'false', 'no'] as $falsey) {
+            self::assertFalse($invoke('asNullableBool', $falsey));
+        }
+        self::assertNull($invoke('asNullableBool', []));
+        self::assertNull($invoke('asNullableBool', 'unknown'));
+
+        self::assertNull($invoke('asNullableString', null));
+        self::assertNull($invoke('asNullableString', '   '));
+        self::assertSame('rooftop', $invoke('asNullableString', ' rooftop '));
+
+        self::assertSame(50, $invoke('asQualityScore', 50));
+        self::assertSame(51, $invoke('asQualityScore', 50.6));
+        self::assertSame(51, $invoke('asQualityScore', '50.6'));
+        self::assertSame(100, $invoke('asQualityScore', 101));
+        self::assertSame(0, $invoke('asQualityScore', -1));
+        self::assertNull($invoke('asQualityScore', 'bad'));
+        self::assertNull($invoke('asQualityScore', []));
+
+        self::assertSame([], $invoke('asSignal', 'invalid'));
+        self::assertSame(['provider' => 'unit'], $invoke('asSignal', ['provider' => 'unit']));
+    }
+
     public function testValidationVerdictLegacyAliasRemainsSupported(): void
     {
         $validated = AddressValidated::fromArray([
