@@ -19,6 +19,9 @@ use Tests\Support\TestRuntimeEnvironment;
 
 final class AddressHttpSurfaceFunctionalTest extends TestCase
 {
+    /** @var list<string> */
+    private static array $functionalCoverage = [];
+
     private ?string $sqlitePath = null;
 
     protected function tearDown(): void
@@ -111,6 +114,94 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
         self::assertSame([], $previewMethod->invoke($manage, $dto));
     }
 
+    public function testOperationalAndValidatedApiRoutesThroughKernel(): void
+    {
+        $services = $this->bootServices(__FUNCTION__);
+        $createContent = json_encode([
+            'ownerId' => 'owner-1',
+            'line1' => '500 Test Ave',
+            'city' => 'Houston',
+            'countryCode' => 'US',
+        ], JSON_THROW_ON_ERROR);
+
+        $createResponse = $services['kernel']->handle(Request::create(
+            '/api/address',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $createContent,
+        ));
+        self::assertSame(201, $createResponse->getStatusCode());
+        $created = json_decode((string) $createResponse->getContent(), true);
+        self::assertIsArray($created);
+        self::assertIsString($created['id'] ?? null);
+        $id = $created['id'];
+
+        $patchContent = json_encode([
+            'revalidationPolicy' => 'monthly',
+            'lastValidationStatus' => 'uncertain',
+            'lastValidationScore' => 72,
+        ], JSON_THROW_ON_ERROR);
+        $patchResponse = $services['kernel']->handle(Request::create(
+            '/api/address/'.$id.'?ownerId=owner-1',
+            'PATCH',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $patchContent,
+        ));
+        self::assertSame(200, $patchResponse->getStatusCode());
+        $patched = json_decode((string) $patchResponse->getContent(), true);
+        self::assertIsArray($patched);
+        self::assertSame('monthly', $patched['revalidationPolicy'] ?? null);
+        self::assertSame('uncertain', $patched['lastValidationStatus'] ?? null);
+        self::assertSame(72, $patched['lastValidationScore'] ?? null);
+
+        $batchContent = json_encode([
+            'ids' => [$id, 'missing-id'],
+            'revalidationPolicy' => 'quarterly',
+        ], JSON_THROW_ON_ERROR);
+        $batchResponse = $services['kernel']->handle(Request::create(
+            '/api/address/operational-batch?ownerId=owner-1',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $batchContent,
+        ));
+        self::assertSame(200, $batchResponse->getStatusCode());
+        $batch = json_decode((string) $batchResponse->getContent(), true);
+        self::assertIsArray($batch);
+        self::assertSame(2, $batch['requestedCount'] ?? null);
+        self::assertSame(1, $batch['patchedCount'] ?? null);
+        self::assertSame([$id], $batch['patchedIds'] ?? null);
+
+        $validatedContent = json_encode([
+            'line1Norm' => '500 test ave',
+            'cityNorm' => 'houston',
+            'validationProvider' => 'functional-test',
+            'sourceSystem' => 'functional-suite',
+            'sourceType' => 'validator',
+            'normalizationVersion' => 'v1',
+            'providerDigest' => 'functional-digest',
+            'lastValidationStatus' => 'validated',
+            'lastValidationScore' => 98,
+        ], JSON_THROW_ON_ERROR);
+        $validatedResponse = $services['kernel']->handle(Request::create(
+            '/api/address/'.$id.'/validated?ownerId=owner-1',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $validatedContent,
+        ));
+        self::assertSame(200, $validatedResponse->getStatusCode());
+        $validated = json_decode((string) $validatedResponse->getContent(), true);
+        self::assertIsArray($validated);
+        self::assertSame('validated', $validated['validationStatus'] ?? null);
+        self::assertSame('functional-test', $validated['validationProvider'] ?? null);
+        self::assertSame('functional-digest', $validated['providerDigest'] ?? null);
+
+        $this->recordFunctionalCoverage([
+            'PATCH /api/address/{id}',
+            'POST /api/address/operational-batch',
+            'POST /api/address/{id}/validated',
+        ]);
+    }
+
     public function testApiReadSurfaceRoutesThroughKernel(): void
     {
         $services = $this->bootServices(__FUNCTION__);
@@ -182,10 +273,15 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
             self::assertTrue(mkdir($coverageDir, 0777, true) || is_dir($coverageDir));
         }
 
+        self::$functionalCoverage = array_values(array_unique([
+            ...self::$functionalCoverage,
+            ...$covered,
+        ]));
+
         $encoded = json_encode([
             'schema' => 'address-http-functional-v1',
             'passedAt' => (new \DateTimeImmutable())->format(DATE_ATOM),
-            'covered' => $covered,
+            'covered' => self::$functionalCoverage,
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
 
         self::assertNotFalse(file_put_contents($coverageDir.'/address-http-functional.json', $encoded.PHP_EOL));
