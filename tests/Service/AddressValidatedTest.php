@@ -231,6 +231,25 @@ final class AddressValidatedTest extends TestCase
         self::assertNull($invoke('validationVerdictData', [[]]));
     }
 
+    public function testGovernancePolicyPrivateHelpersCoverAllScalarAndLinkPaths(): void
+    {
+        $invoke = static function (string $methodName, array $arguments): mixed {
+            $method = new \ReflectionMethod(AddressGovernancePolicy::class, $methodName);
+
+            return $method->invokeArgs(null, $arguments);
+        };
+
+        self::assertNull($invoke('asNullableString', [[]]));
+        self::assertNull($invoke('asNullableString', ['   ']));
+        self::assertSame('42', $invoke('asNullableString', [42]));
+        self::assertSame('target', $invoke('asNullableString', [' target ']));
+
+        self::assertNull($invoke('sanitizeLink', [null, 'addr-1']));
+        self::assertNull($invoke('sanitizeLink', ['addr-2', '   ']));
+        self::assertNull($invoke('sanitizeLink', [' addr-1 ', 'addr-1']));
+        self::assertSame('addr-2', $invoke('sanitizeLink', [' addr-2 ', 'addr-1']));
+    }
+
     public function testValidationVerdictLegacyAliasRemainsSupported(): void
     {
         $validated = AddressValidated::fromArray([

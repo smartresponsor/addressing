@@ -49,6 +49,51 @@ final class AddressIndexRepositoryTest extends TestCase
         self::assertGreaterThanOrEqual(1, count($list));
     }
 
+    public function testRepositoryCoversExistingUpsertMissingDigestAndUnfilteredSearch(): void
+    {
+        $record = new AddressIndexRecord(
+            digest: str_repeat('d', 64),
+            line1: '10 Oak Rd',
+            line2: null,
+            city: 'Austin',
+            region: 'TX',
+            postal: '78701',
+            country: 'US',
+            lat: null,
+            lon: null,
+            display: null,
+            provider: null,
+            confidence: null,
+            geoKey: '',
+            createdAt: '2026-01-01 00:00:00',
+            updatedAt: '2026-01-01 00:00:00',
+        );
+
+        $this->repo->upsert($record);
+        $this->repo->upsert(new AddressIndexRecord(
+            digest: $record->digest,
+            line1: '11 Oak Rd',
+            line2: null,
+            city: 'Austin',
+            region: 'TX',
+            postal: '78701',
+            country: 'US',
+            lat: null,
+            lon: null,
+            display: null,
+            provider: null,
+            confidence: null,
+            geoKey: '',
+            createdAt: $record->createdAt,
+            updatedAt: '2026-01-02 00:00:00',
+        ));
+
+        self::assertSame('11 Oak Rd', $this->repo->getByDigest($record->digest)?->line1);
+        self::assertNull($this->repo->getByDigest(str_repeat('f', 64)));
+        self::assertNotEmpty($this->repo->search('11', null, 0));
+        self::assertNotEmpty($this->repo->search('11', '   ', 1));
+    }
+
     public function testRecordFactoryCoversGeocodedAndNullableProjectionPaths(): void
     {
         $record = AddressIndexRecord::fromNormalized([

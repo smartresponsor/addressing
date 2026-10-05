@@ -214,6 +214,54 @@ final class DoctrineAddressPersistencePresenceTest extends TestCase
         ));
     }
 
+    public function testGovernanceRepositoryCoversMissingAndFullyLinkedClusters(): void
+    {
+        $entityManager = TestDatabase::createInMemoryEntityManager([AddressEntity::class]);
+        $repository = new AddressDoctrineGovernanceRepository($entityManager, new AddressEntityMapper());
+
+        self::assertSame(0, $repository->summarizeGovernanceCluster('missing', 'owner-1', null)['clusterSize']);
+
+        foreach ([
+            ['root-1', 'duplicate', 'canonical-1', null, null, null],
+            ['child-dup', 'duplicate', 'root-1', null, null, null],
+            ['child-sup', 'superseded', null, 'root-1', null, null],
+            ['child-alias', 'alias', null, null, 'root-1', null],
+            ['child-conflict', 'conflict', null, null, null, 'root-1'],
+            ['canonical-1', 'canonical', null, null, null, null],
+        ] as [$id, $status, $duplicateOfId, $supersededById, $aliasOfId, $conflictWithId]) {
+            $entityManager->persist((new AddressEntity())
+                ->setId($id)
+                ->setOwnerId('owner-1')
+                ->setLine1('123 Main St')
+                ->setCity('Houston')
+                ->setCountryCode('US')
+                ->setValidationStatus('pending')
+                ->setGovernanceStatus($status)
+                ->setDuplicateOfId($duplicateOfId)
+                ->setSupersededById($supersededById)
+                ->setAliasOfId($aliasOfId)
+                ->setConflictWithId($conflictWithId)
+                ->setCreatedAt(new \DateTimeImmutable('2026-01-01T00:00:00+00:00')));
+        }
+        $entityManager->flush();
+
+        $summary = $repository->summarizeGovernanceCluster('root-1', 'owner-1', null);
+        self::assertSame('duplicate', $summary['governanceStatus']);
+        self::assertSame('canonical-1', $summary['primaryLinkId']);
+        self::assertTrue($summary['linkedToAnother']);
+        self::assertSame(1, $summary['duplicateChildren']);
+        self::assertSame(1, $summary['supersededChildren']);
+        self::assertSame(1, $summary['aliasChildren']);
+        self::assertSame(1, $summary['conflictPeers']);
+        self::assertSame(4, $summary['inboundLinkedTotal']);
+        self::assertSame(6, $summary['clusterSize']);
+        self::assertContains('canonical-1', $summary['relatedAddressIds']);
+        self::assertContains('child-dup', $summary['relatedAddressIds']);
+        self::assertContains('child-sup', $summary['relatedAddressIds']);
+        self::assertContains('child-alias', $summary['relatedAddressIds']);
+        self::assertContains('child-conflict', $summary['relatedAddressIds']);
+    }
+
     public function testReadRepositoryCoversScopedLookupDedupeAndCursorPagination(): void
     {
         $entityManager = TestDatabase::createInMemoryEntityManager([AddressEntity::class]);
@@ -240,6 +288,7 @@ final class DoctrineAddressPersistencePresenceTest extends TestCase
         self::assertNull($repository->get('a-1', 'owner-2', null));
         self::assertNull($repository->findByDedupeKey('   '));
         self::assertSame('a-1', $repository->findByDedupeKey(' dedupe-1 ')?->id());
+        self::assertNull($repository->findByDedupeKey('missing-dedupe'));
 
         $firstPage = $repository->findPage(
             AddressPageCriteria::forScope('owner-1', null, 'US', 'Main')->withPagination(1, null),

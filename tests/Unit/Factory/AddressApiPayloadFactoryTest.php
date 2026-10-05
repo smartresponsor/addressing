@@ -87,11 +87,13 @@ final class AddressApiPayloadFactoryTest extends TestCase
         };
 
         self::assertSame('value', $invoke('reqStr', [['key' => ' value '], 'key']));
-        try {
-            $invoke('reqStr', [[], 'key']);
-            self::fail('Expected missing required string to throw.');
-        } catch (\RuntimeException $exception) {
-            self::assertSame('missing_key', $exception->getMessage());
+        foreach ([[], ['key' => 10], ['key' => '   ']] as $invalidRequired) {
+            try {
+                $invoke('reqStr', [$invalidRequired, 'key']);
+                self::fail('Expected missing required string to throw.');
+            } catch (\RuntimeException $exception) {
+                self::assertSame('missing_key', $exception->getMessage());
+            }
         }
 
         self::assertNull($invoke('optStr', [[], 'key']));
@@ -120,6 +122,14 @@ final class AddressApiPayloadFactoryTest extends TestCase
         self::assertNull($invoke('lastValidationScore', [['lastValidationScore' => '']]));
         self::assertSame(88, $invoke('lastValidationScore', [['lastValidationScore' => 88]]));
         self::assertSame(89, $invoke('lastValidationScore', [['lastValidationScore' => '89.9']]));
+        foreach ([['lastValidationScore' => 'bad'], ['lastValidationScore' => []]] as $invalidScore) {
+            try {
+                $invoke('lastValidationScore', [$invalidScore]);
+                self::fail('Expected invalid validation score to throw.');
+            } catch (\RuntimeException $exception) {
+                self::assertSame('invalid_lastValidationScore', $exception->getMessage());
+            }
+        }
 
         self::assertNull($invoke('optFloat', [[], 'latitude']));
         self::assertNull($invoke('optFloat', [['latitude' => null], 'latitude']));
@@ -127,11 +137,13 @@ final class AddressApiPayloadFactoryTest extends TestCase
         self::assertSame(10.0, $invoke('optFloat', [['latitude' => 10], 'latitude']));
         self::assertSame(10.5, $invoke('optFloat', [['latitude' => 10.5], 'latitude']));
         self::assertSame(11.25, $invoke('optFloat', [['latitude' => '11.25'], 'latitude']));
-        try {
-            $invoke('optFloat', [['latitude' => []], 'latitude']);
-            self::fail('Expected invalid optional float to throw.');
-        } catch (\RuntimeException $exception) {
-            self::assertSame('invalid_latitude', $exception->getMessage());
+        foreach ([['latitude' => 'bad'], ['latitude' => []]] as $invalidFloat) {
+            try {
+                $invoke('optFloat', [$invalidFloat, 'latitude']);
+                self::fail('Expected invalid optional float to throw.');
+            } catch (\RuntimeException $exception) {
+                self::assertSame('invalid_latitude', $exception->getMessage());
+            }
         }
 
         self::assertSame('primary', $invoke('validationProviderInput', [[
