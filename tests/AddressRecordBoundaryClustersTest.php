@@ -6,12 +6,85 @@ namespace Tests;
 
 use App\Addressing\Value\Record\AddressData;
 use App\Addressing\Value\Record\AddressGovernanceState;
+use App\Addressing\Value\Record\AddressRecord;
 use App\Addressing\Value\Record\AddressRevalidationState;
 use App\Addressing\Value\Record\AddressValidationState;
 use PHPUnit\Framework\TestCase;
 
 final class AddressRecordBoundaryClustersTest extends TestCase
 {
+    public function testAddressRecordExposesConstructedBoundaryClusters(): void
+    {
+        $address = new AddressRecord(
+            'record-1',
+            'owner-1',
+            null,
+            '123 Main St',
+            'Suite 5',
+            'Houston',
+            'TX',
+            '77002',
+            'US',
+            '123 MAIN ST',
+            'HOUSTON',
+            'TX',
+            '77002',
+            29.7604,
+            -95.3698,
+            '9vk1m',
+            'validated',
+            'validator-a',
+            '2026-10-05T12:00:00+00:00',
+            'dedupe-record-1',
+            '2026-10-05T11:00:00+00:00',
+            '2026-10-05T12:30:00+00:00',
+            null,
+            'fingerprint-record-1',
+            ['provider' => 'validator-a'],
+            ['deliverable' => true],
+            true,
+            'premise',
+            97,
+            'erp',
+            'api',
+            'source-1',
+            'v3',
+            ['line1' => '123 Main St'],
+            ['line1Norm' => '123 MAIN ST'],
+            'digest-record-1',
+            'alias',
+            null,
+            null,
+            'canonical-1',
+            null,
+            '2026-11-01T00:00:00+00:00',
+            'monthly',
+            'validator-a',
+            'validated',
+            97,
+        );
+
+        $validationState = $address->validationState();
+        self::assertSame('validated', $validationState->validationStatus());
+        self::assertSame('validator-a', $validationState->validationProvider());
+        self::assertSame('digest-record-1', $validationState->providerDigest());
+
+        $governanceState = $address->governanceState();
+        self::assertSame('alias', $governanceState->governanceStatus());
+        self::assertSame('canonical-1', $governanceState->aliasOfId());
+
+        $revalidationState = $address->revalidationState();
+        self::assertSame('monthly', $revalidationState->revalidationPolicy());
+        self::assertSame(97, $revalidationState->lastValidationScore());
+
+        self::assertSame('record-1', $address->id());
+        self::assertSame('owner-1', $address->ownerId());
+        self::assertNull($address->vendorId());
+        self::assertSame('2026-10-05T11:00:00+00:00', $address->createdAt());
+        self::assertSame('2026-10-05T12:30:00+00:00', $address->updatedAt());
+        self::assertNull($address->deletedAt());
+    }
+
     public function testAddressDataExposesValidationGovernanceAndRevalidationClusters(): void
     {
         $address = new AddressData(
