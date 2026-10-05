@@ -1,5 +1,28 @@
 # CMCP Orchestration Journal
 
+## 2026-10-04 — engine-20261004203845-addressing-1acc37
+
+### Baseline and bounded remediation
+- Resolved Addressing only through the Windows Console MCP scope on `rc/addressing-rc-final-v3`; preserved all pre-existing and concurrent dirty paths without reset, stash, cleanup, overwrite, or re-attribution.
+- Consumed the supplied 2026-09-29 static-analysis RED. It failed before source analysis because obsolete PHPStan keys `checkMissingIterableValueType` and `checkGenericClassInNonGenericObjectType` were present at scan time; current `phpstan.neon` delegates to `phpstan.neon.dist`, where both keys are absent.
+- Read Addressing contracts plus Objecting, Cruding, Viewing, Interfacing, Gating, and authoritative Canonization Canon021/Canon031 + Guard Matrix material. Generic CRUD, reusable system fields, final rendering, and shell ownership remain outside Addressing.
+- Market/maturity contour: mature address systems separate normalized lifecycle/governance/evidence state from provider-side verification/geocoding and capture UX. The latter remains growth work; RC-critical work here is deterministic contract quality.
+- Remediated clean Addressing-owned `src/Policy/AddressRecordPolicy.php` with meaningful Canon031 descriptions for the class and five public normalization contracts. No executable behavior, signatures, persistence, routes, forms, or UI changed.
+
+### Verification and integration state
+- PHP syntax GREEN for the changed policy file.
+- Composer strict/check-lock validation GREEN.
+- PHPStan GREEN: 185/185 files, 0 errors; this freshly closes the supplied static-analysis RED on the current tree.
+- PHPUnit GREEN: 81 tests / 484 assertions; one existing notice and one intentional skip.
+- PHP-CS-Fixer dry-run GREEN: 0/187 fixable files.
+- Gating GREEN on hard rules: 16 rules / 0 failed / 3 warnings. Canon031 remains warning debt at classes 98/148 (66.2%) and contract methods 287/498 (57.6%); Canon040 and Canon042 freshness warnings are currently influenced by concurrent production-source edits in the shared dirty worktree. Behavioral inventory itself remains functional 13/16, behavioral 2/2, UI 2/2, critical 1/1.
+- Fresh Inspecting report `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261005-015842.json`: PHPStan 0 errors, Rector 0 changes/errors, 27 medium observations, 0 high/critical/autofixable findings.
+- During verification, concurrent Addressing work advanced HEAD to `fad3f94` and added multiple repository/entity/interface dirty paths. Those paths are explicitly outside this task-owned patch and remain untouched.
+- No browser/mobile UI, navigation, forms, routes, interactions, or user-flow behavior changed by the policy documentation patch, so new visual capture is not applicable.
+
+Что имеем? The supplied static-analysis RED is freshly GREEN, the bounded Canon031 policy remediation is verified, and no high/critical Inspecting findings were introduced.
+Что осталось? Commit only the task-owned policy file and this journal entry, then publish the current coherent branch if synchronization remains safe; preserve all concurrent dirty paths.
+
 ## 2026-10-04 — engine-20261004232502-addressing-34c1ac
 
 ### Baseline and selected work
