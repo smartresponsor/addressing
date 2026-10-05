@@ -202,6 +202,63 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
         ]);
     }
 
+    public function testOperationalApiErrorBranchesReturnCanonicalStatuses(): void
+    {
+        $services = $this->bootServices(__FUNCTION__);
+        $createContent = json_encode([
+            'ownerId' => 'owner-1',
+            'line1' => '700 Branch St',
+            'city' => 'Houston',
+            'countryCode' => 'US',
+        ], JSON_THROW_ON_ERROR);
+        $createResponse = $services['kernel']->handle(Request::create(
+            '/api/address',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: $createContent,
+        ));
+        self::assertSame(201, $createResponse->getStatusCode());
+        $created = json_decode((string) $createResponse->getContent(), true);
+        self::assertIsArray($created);
+        self::assertIsString($created['id'] ?? null);
+        $id = $created['id'];
+
+        $invalidPatch = $services['kernel']->handle(Request::create(
+            '/api/address/'.$id.'?ownerId=owner-1',
+            'PATCH',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: '{invalid-json',
+        ));
+        self::assertSame(422, $invalidPatch->getStatusCode());
+        self::assertSame('invalid_operational_patch', json_decode((string) $invalidPatch->getContent(), true)['error'] ?? null);
+
+        $wrongScopePatch = $services['kernel']->handle(Request::create(
+            '/api/address/'.$id.'?ownerId=owner-2',
+            'PATCH',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['revalidationPolicy' => 'monthly'], JSON_THROW_ON_ERROR),
+        ));
+        self::assertSame(404, $wrongScopePatch->getStatusCode());
+
+        $invalidBatch = $services['kernel']->handle(Request::create(
+            '/api/address/operational-batch?ownerId=owner-1',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['ids' => []], JSON_THROW_ON_ERROR),
+        ));
+        self::assertSame(422, $invalidBatch->getStatusCode());
+        self::assertSame('invalid_batch_payload', json_decode((string) $invalidBatch->getContent(), true)['error'] ?? null);
+
+        $missingValidated = $services['kernel']->handle(Request::create(
+            '/api/address/01HZZZZZZZZZZZZZZZZZZZZZZZ/validated?ownerId=owner-1',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode(['line1Norm' => 'missing'], JSON_THROW_ON_ERROR),
+        ));
+        self::assertSame(422, $missingValidated->getStatusCode());
+        self::assertSame('invalid_validated_payload', json_decode((string) $missingValidated->getContent(), true)['error'] ?? null);
+    }
+
     public function testApiReadSurfaceRoutesThroughKernel(): void
     {
         $services = $this->bootServices(__FUNCTION__);
