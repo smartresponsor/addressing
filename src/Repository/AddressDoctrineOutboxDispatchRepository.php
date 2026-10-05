@@ -8,12 +8,16 @@ use App\Addressing\Entity\AddressOutboxEntity;
 use App\Addressing\RepositoryInterface\AddressOutboxDispatchRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
+/**
+ * Reserves Addressing outbox rows for dispatch and records publish success or failure state.
+ */
 final readonly class AddressDoctrineOutboxDispatchRepository implements AddressOutboxDispatchRepositoryInterface
 {
     public function __construct(private EntityManagerInterface $entityManager)
     {
     }
 
+    /** Reserve unpublished outbox rows for one dispatcher lock and return their transport payloads. */
     public function reserve(string $lockId, int $limit): array
     {
         $this->entityManager->beginTransaction();
@@ -58,6 +62,7 @@ final readonly class AddressDoctrineOutboxDispatchRepository implements AddressO
         }
     }
 
+    /** Mark one outbox row published, clear its lock, and reset its last dispatch error. */
     public function markPublished(int $id): void
     {
         $entity = $this->entityManager->find(AddressOutboxEntity::class, $id);
@@ -75,6 +80,7 @@ final readonly class AddressDoctrineOutboxDispatchRepository implements AddressO
         $this->entityManager->flush();
     }
 
+    /** Release one failed outbox row, increment its attempt counter, and retain the dispatch error. */
     public function markDispatchFailure(int $id, ?string $error): void
     {
         $entity = $this->entityManager->find(AddressOutboxEntity::class, $id);
