@@ -66,17 +66,36 @@ final class AddressRecordBoundaryClustersTest extends TestCase
         $validationState = $address->validationState();
         self::assertInstanceOf(AddressValidationState::class, $validationState);
         self::assertSame('validated', $validationState->validationStatus());
-        self::assertSame('erp', $validationState->sourceSystem());
+        self::assertSame('demo-validator', $validationState->validationProvider());
+        self::assertSame('2026-04-22T10:00:00+00:00', $validationState->validatedAt());
+        self::assertSame('fingerprint-1', $validationState->validationFingerprint());
+        self::assertSame(['provider' => 'demo-validator'], $validationState->validationRaw());
         self::assertSame(['confidence' => 98], $validationState->validationVerdict());
+        self::assertTrue($validationState->validationDeliverable());
+        self::assertSame('premise', $validationState->validationGranularity());
+        self::assertSame(98, $validationState->validationQuality());
+        self::assertSame('erp', $validationState->sourceSystem());
+        self::assertSame('api', $validationState->sourceType());
+        self::assertSame('ext-123', $validationState->sourceReference());
+        self::assertSame('v2', $validationState->normalizationVersion());
+        self::assertSame(['line1' => '123 Main St'], $validationState->rawInputSnapshot());
+        self::assertSame(['city' => 'HOUSTON'], $validationState->normalizedSnapshot());
+        self::assertSame('digest-1', $validationState->providerDigest());
 
         $governanceState = $address->governanceState();
         self::assertInstanceOf(AddressGovernanceState::class, $governanceState);
         self::assertSame('duplicate', $governanceState->governanceStatus());
         self::assertSame('addr-0', $governanceState->duplicateOfId());
+        self::assertNull($governanceState->supersededById());
+        self::assertNull($governanceState->aliasOfId());
+        self::assertNull($governanceState->conflictWithId());
 
         $revalidationState = $address->revalidationState();
         self::assertInstanceOf(AddressRevalidationState::class, $revalidationState);
+        self::assertSame('2026-05-01T10:00:00+00:00', $revalidationState->revalidationDueAt());
         self::assertSame('rolling-30d', $revalidationState->revalidationPolicy());
+        self::assertSame('demo-validator', $revalidationState->lastValidationProvider());
+        self::assertSame('validated', $revalidationState->lastValidationStatus());
         self::assertSame(98, $revalidationState->lastValidationScore());
     }
 }
