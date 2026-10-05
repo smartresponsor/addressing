@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Repository;
 
+use App\Addressing\Contract\AddressInterface;
 use App\Addressing\Entity\AddressEntity;
 use App\Addressing\Factory\AddressEntityMapper;
 use App\Addressing\Repository\AddressAbstractDoctrineRepository;
@@ -170,6 +171,92 @@ final class AddressAbstractDoctrineRepositoryTest extends TestCase
         self::assertSame('2026-10-05T12:00:00+00:00', $this->repository->nullableDateTimeValue('2026-10-05T12:00:00+00:00')?->format(DATE_ATOM));
     }
 
+    public function testRemainingScopeCursorScalarAndEvidenceHelperBranches(): void
+    {
+        $this->repository->ensureScope('owner-1', null);
+        $this->repository->ensureScope(null, 'vendor-1');
+
+        try {
+            $this->repository->ensureScope(null, null);
+            self::fail('Expected missing tenant scope to throw.');
+        } catch (\RuntimeException $exception) {
+            self::assertSame('tenant_scope_required', $exception->getMessage());
+        }
+
+        try {
+            $this->repository->ensureScope('owner-1', 'vendor-1');
+            self::fail('Expected ambiguous tenant scope to throw.');
+        } catch (\InvalidArgumentException $exception) {
+            self::assertSame('address_owner_vendor_scope_ambiguous', $exception->getMessage());
+        }
+
+        $params = [];
+        self::assertSame(
+            '2026-12-31T23:59:59+00:00',
+            $this->repository->summaryDueBeforeValue($params, ['revalidationDueBefore' => ' 2026-12-31T23:59:59+00:00 ']),
+        );
+        self::assertSame('2026-12-31T23:59:59+00:00', $params['summary_due_before']);
+
+        $defaultParams = [];
+        self::assertNull($this->repository->summaryDueBeforeValue($defaultParams, []));
+        self::assertIsString($defaultParams['summary_due_before'] ?? null);
+        self::assertNotFalse(\DateTimeImmutable::createFromFormat(DATE_ATOM, (string) $defaultParams['summary_due_before']));
+
+        self::assertNull($this->repository->stringFilterValue(['x' => []], 'x'));
+        self::assertSame('plain', $this->repository->stringValueValue('plain'));
+        self::assertSame('1.5', $this->repository->stringValueValue(1.5));
+        self::assertSame('1', $this->repository->stringValueValue(true));
+        self::assertSame('plain-date', $this->repository->nullableDateStringValue('plain-date'));
+        self::assertNull($this->repository->nullableDateTimeValue(null));
+
+        self::assertNull($this->repository->pageCursor([], 0));
+        $entity = (new AddressEntity())
+            ->setId('cursor-1')
+            ->setCreatedAt(new \DateTimeImmutable('2026-01-01T00:00:00+00:00'));
+        self::assertNull($this->repository->entityCursor([], 0));
+        self::assertNull($this->repository->entityCursor([$entity], 2));
+
+        self::assertSame('erp|manual', $this->repository->sortKey(['sourceSystem' => 'erp', 'sourceType' => 'manual']));
+        self::assertSame('provider-a|validated', $this->repository->sortKey(['validationProvider' => 'provider-a', 'validationStatus' => 'validated']));
+        self::assertSame('v3|', $this->repository->sortKey(['normalizationVersion' => 'v3']));
+
+        $evidenceEntities = [
+            (new AddressEntity())->setRawInputSnapshot(['x' => 1]),
+            (new AddressEntity())->setNormalizedSnapshot(['x' => 1]),
+            (new AddressEntity())->setProviderDigest('digest'),
+            (new AddressEntity())->setValidationRaw(['x' => 1]),
+            (new AddressEntity())->setValidationVerdict(['x' => 1]),
+        ];
+        foreach ($evidenceEntities as $evidenceEntity) {
+            self::assertTrue($this->repository->hasEvidenceEntityValue($evidenceEntity));
+        }
+
+        $timestamp = $this->repository->currentTimestampValue();
+        self::assertNotFalse(\DateTimeImmutable::createFromFormat(DATE_ATOM, $timestamp));
+    }
+
+    public function testGovernanceLinkHelperCoversEveryGovernanceStatus(): void
+    {
+        $links = [
+            'duplicate' => 'duplicate-1',
+            'superseded' => 'superseded-1',
+            'alias' => 'alias-1',
+            'conflict' => 'conflict-1',
+            'canonical' => null,
+        ];
+
+        foreach ($links as $status => $expected) {
+            $address = $this->createMock(AddressInterface::class);
+            $address->method('governanceStatus')->willReturn($status);
+            $address->method('duplicateOfId')->willReturn('duplicate-1');
+            $address->method('supersededById')->willReturn('superseded-1');
+            $address->method('aliasOfId')->willReturn('alias-1');
+            $address->method('conflictWithId')->willReturn('conflict-1');
+
+            self::assertSame($expected, $this->repository->governanceLinkValue($address));
+        }
+    }
+
     public function testGroupedPortfolioAccumulatesGovernanceEvidenceAndOperationalCounters(): void
     {
         $due = (new AddressEntity())
@@ -329,6 +416,30 @@ final readonly class AddressAbstractDoctrineRepositoryProbe extends AddressAbstr
     public function nullableDateTimeValue(mixed $value): ?\DateTimeImmutable
     {
         return $this->nullableDateTime($value);
+    }
+
+    public function ensureScope(?string $ownerId, ?string $vendorId): void
+    {
+        $this->ensureTenantScope($ownerId, $vendorId);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @param array<string, mixed> $filters
+     */
+    public function summaryDueBeforeValue(array &$params, array $filters): ?string
+    {
+        return $this->summaryDueBefore($params, $filters);
+    }
+
+    public function governanceLinkValue(AddressInterface $address): ?string
+    {
+        return $this->governanceLinkId($address);
+    }
+
+    public function currentTimestampValue(): string
+    {
+        return $this->currentTimestampAtom();
     }
 
     /**
