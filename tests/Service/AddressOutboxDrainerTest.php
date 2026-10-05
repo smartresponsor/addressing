@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace Tests\Service;
 
 use App\Addressing\Entity\AddressOutboxEntity;
+use App\Addressing\Message\AddressOutboxEventMessage;
 use App\Addressing\Repository\AddressDoctrineOutboxDispatchRepository;
 use App\Addressing\Service\Application\AddressOutboxDrainerService;
 use PHPUnit\Framework\TestCase;
@@ -70,6 +71,24 @@ final class AddressOutboxDrainerTest extends TestCase
         static::assertCount(2, $rows);
         static::assertNotNull($rows[0]->getPublishedAt());
         static::assertNotNull($rows[1]->getPublishedAt());
+    }
+
+    public function testOutboxEventMessageDecoratesSupportedEventsAndRejectsUnknownNames(): void
+    {
+        $versions = AddressOutboxEventMessage::eventVersions();
+        self::assertSame(1, $versions['AddressCreated']);
+        self::assertSame(1, AddressOutboxEventMessage::eventVersion('AddressValidatedApplied'));
+
+        $decorated = AddressOutboxEventMessage::decoratePayload('AddressCreated', ['id' => 'addr-1']);
+        self::assertSame('AddressCreated', $decorated['eventName']);
+        self::assertSame(AddressOutboxEventMessage::SCHEMA_VERSION, $decorated['schemaVersion']);
+        self::assertSame(1, $decorated['eventVersion']);
+        self::assertSame('addr-1', $decorated['id']);
+        self::assertIsString($decorated['occurredAt']);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('unknown_address_event_name');
+        AddressOutboxEventMessage::eventVersion('UnknownAddressEvent');
     }
 
     public function testDispatchRepositoryReleasesFailuresAndPublishesRetries(): void
