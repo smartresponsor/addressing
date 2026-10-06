@@ -1,5 +1,19 @@
 # CMCP Orchestration Journal
 
+## 2026-10-06 — engine-20261004074259-addressing-fc2018 — RC evidence closure
+
+- Recovered the authoritative current RC state non-destructively through Windows Console MCP. The historical local `rc/addressing-rc-final-v3` had diverged after consolidation/rebase, so it was preserved unchanged and a fresh local `rc/addressing-rc-final-v3-current` branch was created from exact `origin/rc/addressing-rc-final-v3` at `4fc1ede53235651065a73c5b14f9dbd28c9a8294`; no reset, stash, clean, force-push, or checkpoint artifact deletion was used.
+- Historical CanonScanning static-analysis RED remains closed: current PHPStan is GREEN. The validated-apply maintainability remediation and subsequent regression/coverage waves are already integrated into the consolidated RC history; no new application/runtime/UI behavior was changed in this closure pass.
+- Refreshed behavioral/UI evidence on the exact remote tree: functional 16/16, behavioral 2/2, UI 2/2, critical 1/1.
+- Fresh Xdebug coverage initially exposed an infrastructure-only `SQLITE_FULL` failure because Windows `TEMP` resolved to a completely full C: volume. Verification was rerun with process-local `TEMP`/`TMP` redirected to repository `var` storage on D:; the full coverage suite then completed GREEN at 214 tests / 1553 assertions (1 deprecation, 13 notices, 1 intentional skip). Fresh coverage: lines 82.47% (3129/3794), methods 80.02% (729/911), branches 78.17% (1941/2483), satisfying all Canon040 thresholds.
+- Final Gating on refreshed evidence: 16 rules / 0 failed / 0 warnings. Canon031 is GREEN at classes 133/148 (89.9%) and contract methods 351/499 (70.3%); Canon040 and Canon042 are GREEN; Canon052/056/061/063 remain GREEN.
+- Final deterministic acceptance: PHPStan GREEN on 196 files; PHP-CS-Fixer dry-run GREEN on 198 files; Composer validate `--strict --check-lock` GREEN; Composer audit GREEN with no advisories.
+- Fresh Inspecting report `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261006-120604.json`: PHPStan 0 errors, Rector 0 changed files / 0 errors, 27 medium structural observations, 0 high/critical/autofixable findings, max complexity 13. These remaining medium design/maintainability observations are growth/architecture debt, not promoted RC blockers.
+- The temporary `bin/cmcp-coverage.ps1` verification helper was self-removed after successful evidence refresh and was never committed. No user-observable UI/navigation/form/interaction change occurred, so new visual capture is not applicable.
+
+Что имеем? Addressing RC is deterministic-gate GREEN with fresh coverage, behavioral, static-analysis, security, and Inspecting evidence on the authoritative remote tree.
+Что осталось? No RC-critical implementation or evidence gap remains for this task; only publication of this provenance journal entry remains.
+
 ## 2026-10-05 — engine-20261004115229-addressing-996f2d — continuation
 
 - Fresh baseline: Windows Console MCP resolved `D:\\PhpstormProjects\\www\\Addressing` on `rc/addressing-rc-final-v3`; branch advanced concurrently while this pass ran and remained synchronized with origin. Existing dirty test paths and shared journal content were preserved without reset, stash, cleanup, or re-attribution.
