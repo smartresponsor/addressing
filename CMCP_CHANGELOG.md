@@ -212,6 +212,11 @@
 - Git sync planning still reports master ahead 4/behind 155 with dirty worktree and manual divergence resolution required. No destructive Git operation, commit or push performed. Additional package-version changes require reconciliation before release.
 - Subsequent acceptance: `composer qa:full` GREEN (165 PHPStan analysis paths, Deptrac 0 violations, 22 PHPUnit tests/108 assertions/1 skip), Gating GREEN 8/8, Symfony smoke GREEN. Fixed conflicting Composer `cs:check`/`cs:fix` commands to reuse canonical `.php-cs-fixer.dist.php` policy; no PHPDoc suppression was introduced.
 - Git integration plan: preserve pre-existing `.deptrac.cache`, `.console-mcp/`, `.inspecting/`, and baseline generator; commit only explicit source, tests, Composer manifests/lock, config and this journal. Upstream divergence requires separate guarded reconciliation before publishing.
+- 2026-10-11 Git value triage: generated .deptrac.cache removed from Git index with working file preserved; .console-mcp/, .inspecting/ and unverified cross-repo SQL migration generator retained physically and ignored. Signed commit ef697ec records housekeeping. Local master was clean (HEAD ef697ec), ahead 7/behind 155 after confirmed fetch.
+- Guarded rebase onto origin/master attempted only from clean worktree; conflict at first historical commit c951d89 in CMCP_CHANGELOG.md, composer.json, composer.lock, composer.prod.json and config/bundles.php. Remote HEAD already has newer Failing, Doctrine migrations, Nelmio and Composer package/license contracts. Rebase aborted successfully to preserve local history; clean worktree recovered.
+- Remote branch triage: 14 addr-wave10-through-18 sample branches are strict ancestors of origin/master, as is rc/addressing-master-green; no need to merge those histories. rc/addressing-rc-closure, rc/addressing-rc-final-v3, rc/addressing-red-remediation-clean-20260928 and security/gitleaks-semgrep contain unique divergent commits requiring semantic review, not automatic merges. Remote branch inventory is approximately 70 branches.
+- RC integration pending: derive a safe cherry-pick/port plan from semantic differences between origin/master and seven local commits rather than overwriting newer remote contracts; no push or branch deletion performed.
+
 
 
 
