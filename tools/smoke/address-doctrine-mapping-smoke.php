@@ -8,6 +8,8 @@ use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping as ORM;
 
+require_once dirname(__DIR__, 2).'/vendor/autoload.php';
+
 $ormAvailable = interface_exists(EntityManagerInterface::class);
 $addressEntityAvailable = class_exists(AddressEntity::class);
 $snapshotEntityAvailable = class_exists(AddressEvidenceSnapshotEntity::class);

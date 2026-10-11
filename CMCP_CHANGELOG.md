@@ -1,5 +1,21 @@
 # CMCP Orchestration Journal
 
+## 2026-10-11 — engine-20261004101317-addressing-b00df5
+
+- Window baseline: Windows Console MCP `master` e9b97dbb0f372d4b3db60731914921895efc96d6, initially clean, 11 ahead / 155 behind origin/master. No destructive Git reconciliation.
+- Historical 2026-09-29 PHPStan RED used two obsolete keys, absent in present phpstan.neon; fresh `composer phpstan` PASS (137 files; zero errors).
+- Read Addressing AGENTS/README/composer/PHPStan and supplied Inspecting plus historical static log, Canonization README/AGENTS, Gating README, mandatory helper contracts. Canon001/021/022 normative file paths and mapping are documented in this journal by prior runs; direct revalidation pending.
+- RC-critical workstream: verify current gates, qualify Doctrine/runtime residual and Git divergence. Growth-only: better address search diagnostics/API UX. No UI change introduced.
+- Что имеем? Verified PHPStan GREEN and preserved upstream/local commits. Что осталось? Complete RC gates, reconcile divergence safely and publish only if permitted.
+- Current gates in this execution window: `composer validate` PASS; `composer lint` PASS (201); `composer test` exits 0 (22 tests, 112 assertions) with one notice and one skipped test; `composer gating` PASS (8/8); `composer qa:deptrac` PASS (136 files, zero violations); `composer cs:check` PASS (167 files); `composer smoke:doctrine` status WARN (ORM unavailable, entities not autoloaded).
+- Read normative Canonization Canon001, Canon021 and Canon022 directly. Existing App\\Addressing role-first layout, shared Cruding ownership and explicit full dependency baseline were assessed with current Gating evidence.
+- No functional source edits justified by stale PHPStan RED; Doctrine smoke is not proof of passing mapping, and PHPUnit is qualified rather than unconditionally clean. No browser/UI changes, therefore no new screenshots.
+- Что имеем? Static, lint, architectural and package gates GREEN. Что осталось? Identify Doctrine smoke bootstrap gap, qualify PHPUnit notice/skip, resolve Git divergence without sacrificing protected commits.
+- Remediation: `tools/smoke/address-doctrine-mapping-smoke.php` now requires local Composer autoload before ORM/entity reflection; this corrects a deterministic false WARN without changing production entity code. Rerun `smoke:doctrine` PASS with `doctrineOrmAvailable`, both Entity presence flags, and both mapping flags true. Re-ran `phpstan` PASS and `test` PASS with unchanged notice/skip.
+- Final task-specific scope: diagnostic script and this journal only. No UI change; no screenshot required. Remaining non-green release questions are test notice/skip and diverged upstream history.
+
+
+
 ## 2026-10-11 — engine-20261004101315-addressing-5fde0e
 
 - Baseline inspected via Windows Console MCP: clean master b5f5c3c7 (ahead 10, behind 155 relative to origin/master). Historical September 29 PHPStan RED used obsolete parameters already removed from current phpstan.neon.
