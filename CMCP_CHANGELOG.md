@@ -1,5 +1,17 @@
 # CMCP Orchestration Journal
 
+## 2026-10-11 — engine-20261004081848-addressing-c03ca8
+
+- Execution specification: current 108-line task brief, historical CanonScanning PHPStan RED report and existing orchestration history reviewed through Windows Console MCP. No container workspace substitution.
+- Current baseline: clean master at df9085f7f9bb40f6c5fee11f4d609cac78cb4e8e; ahead 9 / behind 155 relative to origin/master. Git sync planner reports manual divergent-history reconciliation required; no destructive Git action taken.
+- Historical RED cause: obsolete PHPStan configuration flags `checkMissingIterableValueType` and `checkGenericClassInNonGenericObjectType`. Current phpstan.neon no longer contains these flags; remediation was already integrated in the local baseline, so reapplying it would be redundant.
+- Dependencies: composer.json directly includes Objecting, Cruding, Viewing, Interfacing, Failing and their local symlink repositories. Read the responsibility summaries from the four application dependency READMEs, Gating README, and normative Canonization Canon001, Canon021 and Canon022 rule files. Target mapping: App\\Addressing role-first PHP trees (Canon001), no component-local generic CRUD (Canon021), and mandatory standalone dependency closure (Canon022). No cross-repository mutation.
+- Current deterministic acceptance: composer phpstan PASS (137 paths; zero errors); lint PASS (201 files); PHPUnit PASS with notices (22 tests, 112 assertions, one notice and one skipped test); Gating PASS (Canon022-029: 8/8, zero failures or warnings). No UI changes; no new visual evidence required.
+- RC-critical workstream: retain passing static baseline and resolve PHPUnit notice/skip applicability and safe Git divergence integration before final RC publication. No speculative code changes were justified by the existing stale RED report.
+- Growth track, not RC blocking: stronger address normalization diagnostics and API developer experience; geocoding and presentation-shell work remain outside Addressing.
+- Что имеем? Historical static failure no longer reproduces, clean pre-run worktree and current PHPStan/lint/Gating tests pass.
+- Что осталось? Resolve test notice/skip and independently reconcile nine local commits against 155 upstream commits with protected work preserved before publication.
+
 ## 2026-10-11 — engine-20261004100954-addressing-57eb3a
 
 - Baseline: clean `master` when checked; existing orchestration journal preserved. Reviewed current Addressing README, Composer manifest, PHPStan configs, 2026-09-29 RED/static and Inspecting reports, plus Objecting, Cruding, Viewing, Interfacing, Gating and Canonization responsibility summaries. Canonization normative rules must be checked against the mapped target before structural changes.
