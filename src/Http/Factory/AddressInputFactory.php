@@ -36,16 +36,14 @@ final class AddressInputFactory
         $validationDeliverable = isset($overrides['validationDeliverable']) && is_bool($overrides['validationDeliverable'])
             ? $overrides['validationDeliverable']
             : null;
-        $rawInputSnapshot = isset($overrides['rawInputSnapshot']) && is_array($overrides['rawInputSnapshot'])
-            ? $overrides['rawInputSnapshot']
-            : [
-                'line1' => $line1,
-                'line2' => $line2,
-                'city' => $city,
-                'region' => $region,
-                'postalCode' => $postalCode,
-                'countryCode' => $countryCode,
-            ];
+        $rawInputSnapshot = $this->objectOverride($overrides, 'rawInputSnapshot') ?? [
+            'line1' => $line1,
+            'line2' => $line2,
+            'city' => $city,
+            'region' => $region,
+            'postalCode' => $postalCode,
+            'countryCode' => $countryCode,
+        ];
 
         return new AddressRecord(
             $this->stringOverride($overrides, 'id') ?? (string) new Ulid(),
@@ -72,8 +70,8 @@ final class AddressInputFactory
             $this->stringOverride($overrides, 'updatedAt'),
             $this->stringOverride($overrides, 'deletedAt'),
             $this->stringOverride($overrides, 'validationFingerprint'),
-            isset($overrides['validationRaw']) && is_array($overrides['validationRaw']) ? $overrides['validationRaw'] : null,
-            isset($overrides['validationVerdict']) && is_array($overrides['validationVerdict']) ? $overrides['validationVerdict'] : null,
+            $this->objectOverride($overrides, 'validationRaw'),
+            $this->objectOverride($overrides, 'validationVerdict'),
             $validationDeliverable,
             $this->stringOverride($overrides, 'validationGranularity'),
             $this->intOverride($overrides, 'validationQuality'),
@@ -82,9 +80,7 @@ final class AddressInputFactory
             $this->stringOverride($overrides, 'sourceReference'),
             $this->stringOverride($overrides, 'normalizationVersion') ?? 'demo-v1',
             $rawInputSnapshot,
-            isset($overrides['normalizedSnapshot']) && is_array($overrides['normalizedSnapshot'])
-                ? $overrides['normalizedSnapshot']
-                : $normalized,
+            $this->objectOverride($overrides, 'normalizedSnapshot') ?? $normalized,
             $this->stringOverride($overrides, 'providerDigest') ?? 'sha256:'.hash('sha256', $line1.'|'.$city.'|'.$countryCode),
             AddressRecordPolicy::normalizeGovernanceStatus($this->stringOverride($overrides, 'governanceStatus') ?? 'canonical'),
             $this->stringOverride($overrides, 'duplicateOfId'),
@@ -97,6 +93,29 @@ final class AddressInputFactory
             AddressRecordPolicy::normalizeLastValidationStatus($this->stringOverride($overrides, 'lastValidationStatus')),
             $this->intOverride($overrides, 'lastValidationScore'),
         );
+    }
+
+    /**
+     * Accept only JSON-object-shaped overrides; reject numeric/list keys.
+     *
+     * @param array<string, mixed> $overrides
+     *
+     * @return array<string, mixed>|null
+     */
+    private function objectOverride(array $overrides, string $key): ?array
+    {
+        $value = $overrides[$key] ?? null;
+        if (!is_array($value)) {
+            return null;
+        }
+        foreach (array_keys($value) as $field) {
+            if (!is_string($field)) {
+                return null;
+            }
+        }
+
+        /* @var array<string, mixed> $value */
+        return $value;
     }
 
     /**

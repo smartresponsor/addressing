@@ -78,10 +78,6 @@ final readonly class DoctrineAddressEvidenceRepository extends AbstractDoctrineA
         $nextCursor = null;
 
         foreach ($entities as $index => $entity) {
-            if (!$entity instanceof AddressEvidenceSnapshotEntity) {
-                continue;
-            }
-
             if ($index >= $limit) {
                 $nextCursor = $this->encodeEvidenceCursor($entity->getCreatedAt()->format(DATE_ATOM), $entity->getId());
                 break;

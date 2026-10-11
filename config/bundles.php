@@ -10,6 +10,7 @@ return [
     App\Addressing\AddressingBundle::class => ['all' => true],
     App\Collectioning\CollectioningBundle::class => ['all' => true],
     App\Cruding\CrudingBundle::class => ['all' => true],
+    App\Failing\FailingBundle::class => ['all' => true],
     App\Tabling\TablingBundle::class => ['all' => true],
     App\Viewing\ViewingBundle::class => ['all' => true],
     App\Interfacing\InterfacingBundle::class => ['all' => true],

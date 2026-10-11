@@ -35,7 +35,5 @@ parameters:
         - vendor/autoload.php
         - vendor/symfony/dependency-injection/Loader/Configurator/ContainerConfigurator.php
 
-    checkMissingIterableValueType: true
-    checkGenericClassInNonGenericObjectType: true
     inferPrivatePropertyTypeFromConstructor: true
     reportUnmatchedIgnoredErrors: true

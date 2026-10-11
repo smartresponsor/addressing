@@ -14,7 +14,8 @@ final readonly class DoctrineAddressQueueRepository extends AbstractDoctrineAddr
         $entities = $this->fetchFilteredAddresses($ownerId, $vendorId, $countryCode, $q, $filters, true, true, true);
         $queueParams = [];
         $this->summaryDueBefore($queueParams, $filters);
-        $queueDueBefore = (string) ($queueParams['summary_due_before'] ?? $this->currentTimestampAtom());
+        $dueBefore = $queueParams['summary_due_before'] ?? null;
+        $queueDueBefore = is_string($dueBefore) ? $dueBefore : $this->currentTimestampAtom();
         $expectedNormalizationVersion = $this->stringFilter($filters, 'expectedNormalizationVersion');
 
         $row = [

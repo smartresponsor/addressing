@@ -204,8 +204,8 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
 
         $validatedBy = $addressValidated->validationProvider ?? $addressValidated->lastValidationProvider ?? $addressValidated->sourceSystem;
         $validationScore = $addressValidated->lastValidationScore ?? $addressValidated->addressValidationVerdict?->quality;
-        if (null === $validationIssues && null !== $addressValidated->raw && isset($addressValidated->raw['issues']) && is_array($addressValidated->raw['issues'])) {
-            $validationIssues = $addressValidated->raw['issues'];
+        if (null === $validationIssues) {
+            $validationIssues = $this->validationIssues($addressValidated);
         }
 
         return (new AddressEvidenceSnapshotEntity())
@@ -251,7 +251,15 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         }
 
         if (null !== $addressValidated->raw && isset($addressValidated->raw['issues']) && is_array($addressValidated->raw['issues'])) {
-            return $addressValidated->raw['issues'];
+            $issues = $addressValidated->raw['issues'];
+            foreach (array_keys($issues) as $key) {
+                if (!is_string($key)) {
+                    return ['items' => $issues];
+                }
+            }
+
+            /* @var array<string, mixed> $issues */
+            return $issues;
         }
 
         return null;

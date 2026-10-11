@@ -120,10 +120,11 @@ final class AddressOutboxDrainerService
     private function eventPayload(array $row): array
     {
         $payload = json_decode($this->rowString($row, 'payload') ?? '', true);
-        if (!is_array($payload)) {
+        if (!is_array($payload) || ([] !== $payload && array_is_list($payload))) {
             $payload = null;
         }
 
+        /* @var array<string, mixed>|null $payload */
         return [
             'name' => $this->rowString($row, 'event_name') ?? '',
             'version' => $this->rowInt($row, 'event_version'),

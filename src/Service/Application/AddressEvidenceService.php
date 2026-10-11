@@ -96,8 +96,8 @@ final readonly class AddressEvidenceService
     }
 
     /**
-     * @param array<string, mixed> $summary
-     * @param array<string, true>  $providers
+     * @param array{totalSnapshots:int,statusPending:int,statusValidated:int,statusRejected:int,distinctProviders:int,latestValidatedAt:?string,latestCreatedAt:?string} $summary
+     * @param array<string, true>                                                                                                                                        $providers
      */
     private function accumulateEvidenceHistorySummary(array &$summary, array &$providers, AddressEvidenceSnapshotInterface $item): void
     {
@@ -109,11 +109,11 @@ final readonly class AddressEvidenceService
             $providers[$provider] = true;
         }
 
-        $this->keepLatestTimestamp($summary, 'latestValidatedAt', $item->validatedAt());
-        $this->keepLatestTimestamp($summary, 'latestCreatedAt', $item->createdAt());
+        $summary['latestValidatedAt'] = $this->keepLatestTimestamp($summary['latestValidatedAt'], $item->validatedAt());
+        $summary['latestCreatedAt'] = $this->keepLatestTimestamp($summary['latestCreatedAt'], $item->createdAt());
     }
 
-    /** @param array<string, mixed> $summary */
+    /** @param array{totalSnapshots:int,statusPending:int,statusValidated:int,statusRejected:int,distinctProviders:int,latestValidatedAt:?string,latestCreatedAt:?string} $summary */
     private function incrementEvidenceValidationStatus(array &$summary, string $status): void
     {
         if ('pending' === $status) {
@@ -131,16 +131,12 @@ final readonly class AddressEvidenceService
         }
     }
 
-    /** @param array<string, mixed> $summary */
-    private function keepLatestTimestamp(array &$summary, string $key, ?string $candidate): void
+    private function keepLatestTimestamp(?string $current, ?string $candidate): ?string
     {
         if (null === $candidate) {
-            return;
+            return $current;
         }
 
-        $current = $summary[$key];
-        if (null === $current || $candidate > $current) {
-            $summary[$key] = $candidate;
-        }
+        return null === $current || $candidate > $current ? $candidate : $current;
     }
 }

@@ -378,7 +378,7 @@ abstract readonly class AbstractDoctrineAddressRepository
 
         $lastRow = end($rows);
 
-        return is_array($lastRow) && isset($lastRow['id']) && is_string($lastRow['id']) ? $lastRow['id'] : null;
+        return isset($lastRow['id']) && is_string($lastRow['id']) ? $lastRow['id'] : null;
     }
 
     /** @param array<string, mixed> $row */
@@ -442,13 +442,18 @@ abstract readonly class AbstractDoctrineAddressRepository
         }
 
         if (is_array($value)) {
+            foreach (array_keys($value) as $field) {
+                if (!is_string($field)) {
+                    return null;
+                }
+            }
+
+            /* @var array<string, mixed> $value */
             return $value;
         }
 
         if (is_string($value)) {
-            $decoded = json_decode($value, true);
-
-            return is_array($decoded) ? $decoded : null;
+            return $this->nullableJsonArray(json_decode($value, true));
         }
 
         return null;
@@ -607,33 +612,33 @@ abstract readonly class AbstractDoctrineAddressRepository
                 'staleNormalization' => 0,
             ];
 
-            ++$groups[$key]['total'];
+            $groups[$key]['total'] = $this->incrementPortfolioCount($groups[$key]['total']);
             match ($entity->getGovernanceStatus()) {
-                'canonical' => ++$groups[$key]['canonical'],
-                'duplicate' => ++$groups[$key]['duplicate'],
-                'superseded' => ++$groups[$key]['superseded'],
-                'alias' => ++$groups[$key]['alias'],
-                'conflict' => ++$groups[$key]['conflict'],
+                'canonical' => $groups[$key]['canonical'] = $this->incrementPortfolioCount($groups[$key]['canonical']),
+                'duplicate' => $groups[$key]['duplicate'] = $this->incrementPortfolioCount($groups[$key]['duplicate']),
+                'superseded' => $groups[$key]['superseded'] = $this->incrementPortfolioCount($groups[$key]['superseded']),
+                'alias' => $groups[$key]['alias'] = $this->incrementPortfolioCount($groups[$key]['alias']),
+                'conflict' => $groups[$key]['conflict'] = $this->incrementPortfolioCount($groups[$key]['conflict']),
                 default => null,
             };
 
             if ($this->hasEvidenceEntity($entity)) {
-                ++$groups[$key]['evidenceBacked'];
+                $groups[$key]['evidenceBacked'] = $this->incrementPortfolioCount($groups[$key]['evidenceBacked']);
             } else {
-                ++$groups[$key]['evidenceMissing'];
+                $groups[$key]['evidenceMissing'] = $this->incrementPortfolioCount($groups[$key]['evidenceMissing']);
             }
 
             if (null !== $entity->getRevalidationDueAt() && $entity->getRevalidationDueAt() <= new \DateTimeImmutable('now')) {
-                ++$groups[$key]['dueForRevalidation'];
+                $groups[$key]['dueForRevalidation'] = $this->incrementPortfolioCount($groups[$key]['dueForRevalidation']);
             }
 
             if ('uncertain' === $entity->getValidationStatus() || 'uncertain' === $entity->getLastValidationStatus()) {
-                ++$groups[$key]['uncertainValidation'];
+                $groups[$key]['uncertainValidation'] = $this->incrementPortfolioCount($groups[$key]['uncertainValidation']);
             }
 
             $meta = $groupMeta($entity);
             if (isset($meta['staleNormalization']) && is_int($meta['staleNormalization'])) {
-                $groups[$key]['staleNormalization'] += $meta['staleNormalization'];
+                $groups[$key]['staleNormalization'] = $this->incrementPortfolioCount($groups[$key]['staleNormalization'], $meta['staleNormalization']);
             }
         }
 
@@ -652,6 +657,11 @@ abstract readonly class AbstractDoctrineAddressRepository
         });
 
         return $rows;
+    }
+
+    private function incrementPortfolioCount(mixed $current, int $increment = 1): int
+    {
+        return (is_int($current) ? $current : 0) + $increment;
     }
 
     protected function asRecord(AddressInterface $address): AddressData
@@ -730,6 +740,9 @@ abstract readonly class AbstractDoctrineAddressRepository
         $validationIssues = $address->validationVerdict();
         if (null === $validationIssues && null !== $address->validationRaw() && isset($address->validationRaw()['issues']) && is_array($address->validationRaw()['issues'])) {
             $validationIssues = $address->validationRaw()['issues'];
+        }
+        if (is_array($validationIssues)) {
+            $validationIssues = $this->nullableJsonArray($validationIssues) ?? ['items' => $validationIssues];
         }
 
         return new AddressEvidenceSnapshotData(
@@ -988,10 +1001,6 @@ abstract readonly class AbstractDoctrineAddressRepository
         }
 
         $addressEntity = end($entities);
-
-        if (!$addressEntity instanceof AddressEntity) {
-            return null;
-        }
 
         return $addressEntity->getId();
     }

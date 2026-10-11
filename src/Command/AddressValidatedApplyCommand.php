@@ -40,10 +40,11 @@ final class AddressValidatedApplyCommand extends Command
     {
         $symfonyStyle = new SymfonyStyle($input, $output);
         $payload = json_decode($this->requiredArgument($input, 'payload-json'), true);
-        if (!is_array($payload)) {
+        if (!is_array($payload) || (array_is_list($payload) && [] !== $payload)) {
             throw new \RuntimeException('invalid_json');
         }
 
+        /** @var array<string, mixed> $payload */
         $addressValidated = AddressValidated::fromArray($payload);
         $this->addressValidatedApplierService->apply(
             $this->requiredArgument($input, 'address-id'),

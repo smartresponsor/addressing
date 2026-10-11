@@ -17,9 +17,11 @@ final readonly class AddressApiPayloadFactory
     {
         $raw = $request->getContent();
         $data = json_decode($raw, true);
-        if (!is_array($data)) {
+        if (!is_array($data) || array_is_list($data) && [] !== $data) {
             throw new \RuntimeException('invalid_json');
         }
+
+        /* @var array<string, mixed> $data */
 
         return $data;
     }
@@ -183,7 +185,16 @@ final readonly class AddressApiPayloadFactory
             throw new \RuntimeException('invalid_'.$key);
         }
 
-        return $in[$key];
+        foreach (array_keys($in[$key]) as $field) {
+            if (!is_string($field)) {
+                throw new \RuntimeException('invalid_'.$key);
+            }
+        }
+
+        /** @var array<string, mixed> $value */
+        $value = $in[$key];
+
+        return $value;
     }
 
     /** @param array<string, mixed> $in */

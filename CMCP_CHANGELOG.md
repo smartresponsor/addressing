@@ -1,5 +1,56 @@
 # CMCP Orchestration Journal
 
+## 2026-10-11 — engine-20261004100536-addressing-510879
+
+- Current task read: authoritative execution specification (108 lines), original CanonScanning PHPStan RED log and Inspecting advisory report, Addressing AGENTS/README/Composer/PHPStan and existing orchestration journal; Canonization textual Canon022 read and mapped to development/production Composer requirements and FailingBundle registration. Prior journal supplies Canon001/021, Objecting/Cruding/Viewing/Interfacing and Gating contract baseline.
+- Repository baseline: master 85fd7aee7b5a, ahead 4/behind 155, concurrent dirty worktree preserved. The already-edited phpstan.neon removes obsolete settings. Composer/F​​ailing dependency and Gating command were being modified concurrently; do not claim sole authorship.
+- RC gates executed in this task window: composer phpstan PASS (137 files), lint PASS (201 files), PHPUnit PASS with 22 tests/112 assertions (one notice/one skipped), Gating initially Canon022 RED then rechecked GREEN (8/8) once concurrent Failing manifest/bundle edits appeared, PHP-CS-Fixer PASS (167 files), container smoke PASS and Composer audit PASS.
+- Deptrac initially FAILED (exit 255) during concurrent Composer dependency changes because the autoloader referenced absent Symfony VarDumper; retry PASS (136 analyzed, zero violations/errors) after composer.lock/vendor changed concurrently. Further post-install runtime/integration checks remain relevant. Existing uncommitted changes and diverged Git require provenance-aware reconciliation before publication. No UI changes and no visual evidence generated.
+- Post-dependency-change rerun: Gating 8/8 PASS, PHPStan 137/137 zero errors, runtime smoke READY, PHPUnit 10.5.63 PASS (22 tests, 108 assertions, one skip, no notice); Doctrine smoke exit 0 but status WARN (`doctrineOrmAvailable=false`, entity mapping not established), so not Doctrine GREEN. RC workstream: verify actual Doctrine mapping in installed runtime, skipped test applicability and Git integration; growth stream separately: richer provenance and input diagnostics without geocoding or UI-shell boundary expansion.
+- Что имеем? PHPStan/static baseline and Canon022 Gating passing. Что осталось? Deptrac dependency integrity and final RC/integration acceptance.
+
+## 2026-10-11 — engine-20261004100427-addressing-3048b6
+
+- Source of truth: attached 108-line execution specification; target repository reached through Windows Console MCP only. Initial scan RED `Addressing.static-analysis.log` failed on obsolete PHPStan settings `checkMissingIterableValueType` and `checkGenericClassInNonGenericObjectType`; the existing uncommitted `phpstan.neon` diff has already removed both. Preserve all concurrent changes.
+- Consulted Canonization `AGENTS.md`, normative Canon001/Canon021/Canon022 paths, Gating agent contract and existing Addressing orchestration journal; prior journal tracks Objecting, Cruding, Viewing and Interfacing dependency contract review. Canon001: role-first App\\Addressing namespace; Canon021: generic CRUD owned by Cruding; Canon022: standalone application dependency baseline including Failing is an outstanding integration concern.
+- This task's freshly executed deterministic gates: PHPStan PASS (137 files, zero errors); lint PASS (201 files); PHPUnit exit PASS (22 tests, 112 assertions, 1 notice, 1 skipped); Gating BLOCKED because `.gating/bin/gating` is missing. `deptrac` is not an allowed-check registry name; previous journal records passing composer Deptrac.
+- RC workstream: repair consumer Gating installation/wiring without cloning binaries, qualify PHPUnit notice/skip, satisfy Canon022 dependency closure, and reconcile Git divergence. Growth track: more address provenance and diagnostics; exclude from RC until correctness requires it.
+- Git baseline: master HEAD 85fd7aee7b5a, ahead 4/behind 155, dirty 19 paths including concurrent changes. No overwrite, deletion, staging, commit, push or runtime restart. No UI modifications; visual evidence NOT_VERIFIED / not applicable to this verification-only pass.
+- Что имеем? Proven corrected PHPStan baseline plus passing lint/test, preserved competing work. Что осталось? Restore Gating execution, complete remaining integration and RC gates before acceptance.
+
+
+
+## 2026-10-11 — engine-20261004095911-addressing-430e26
+
+- Reconnaissance: read attached execution specification, upstream 2026-09-29 static-analysis RED and Inspecting report, current Git status/diff, Addressing README/AGENTS/Composer/PHPStan, mandatory Objecting/Cruding/Viewing/Interfacing/Gating/Canonization primary contracts, and Canon001 normative technical-role-first rule.
+- Baseline: existing dirty worktree preserved; PHPStan configuration had already removed the two obsolete configuration keys. Composer explicitly requires Objecting, Cruding, Viewing, and Interfacing; local path repository wiring exists. Canon001 maps Addressing source to role-first technical directories and App\\Addressing namespace. Generic CRUD responsibility remains in Cruding.
+- RC critical evidence: composer phpstan PASS (137 source files, zero errors); lint PASS (201 files); PHPUnit PASS with issues (22 tests, 112 assertions, one skipped, one notice); Deptrac PASS (zero violations).
+- Remaining blocker: composer gating FAIL because .gating/bin/gating is absent. Gating is a separate owner repository; current composer script references an unavailable consumer-local executable. Must reconcile the supported installation/execution contract before modifying the entrypoint; do not fabricate a copied binary.
+- Inspecting baseline: upstream findings include advisory interface/entity complexity and cohesion; current source fingerprint differs from the upstream report due to existing changes, so acceptance requires updated evidence if applicable.
+- RC priorities: restore portable Gating invocation, address residual notices/skips if actionable, run further package/runtime gates, and reconcile existing in-progress work before Git integration.
+- Growth, separate from RC: richer address provenance, provider-independent diagnostics, input normalization observability, and usability enhancements; no geocoding or presentation-shell ownership transfer.
+- Additional checks: container smoke PASS; trust-surface PASS; Doctrine smoke command exits 0 but reports WARN (ORM unavailable and entities not mapped); cs:check FAIL (style diffs in currently edited files). These are not GREEN acceptance evidence for Doctrine or style.
+- No UI changes or visual artifact produced in this pass.
+
+
+## 2026-10-11 — engine-20261004081425-addressing-429ca0
+
+- Scope: Addressing only; existing dirty worktree preserved without reset, stash, or broad staging.
+- Reconnaissance: current Git state, Composer scripts and direct first-party dependency declarations, Addressing PHPStan configurations, upstream 2026-09-29 static-analysis and Inspecting evidence, helper AGENTS/README/Composer surfaces (Objecting, Cruding, Viewing, Interfacing), Canonization/Gating guidance. Earlier journal records Canon001/002/021/022/043/044/045 target mapping; current change adheres to App\\Addressing namespace, existing typed role trees, and Cruding-owned generic CRUD boundary.
+- Market baseline: mature address validation APIs distinguish JSON objects from arrays; event/outbox pipelines must reject list payloads rather than blindly masquerading as object maps. Geocoding/provider adapters and UI shell ownership remain outside this scope.
+- RC critical: current PHPStan config no longer reproduces the old deprecated-option failure; current gate finds payload typing, mixed counters, and repository data-shape failures. Added runtime object-shape validation for HTTP snapshot input and outbox event payload. Preserve existing local edits to phpstan.neon, command, middleware, tests, and other untracked files.
+- Growth (post-RC): provider evidence observability, address provenance interoperability, richer normalization audit and developer diagnostics; not RC gates.
+- Verification: PHP lint passed for 201 files at baseline; PHPStan RED at current HEAD/worktree. Re-run after changes; no UI/navigation changes in this pass.
+- Acceptance after remediation (2026-10-11): PHPStan GREEN (137 files, 0 errors); PHP lint GREEN (201 files); PHPUnit GREEN (22 tests, 112 assertions, 1 notice, 1 skip); object identity GREEN (2 tests, 24 assertions); Deptrac GREEN (0 violations); PHP-CS-Fixer GREEN (167 files); Rector dry-run GREEN; trust-surface GREEN; runtime and container smoke GREEN; Composer security audit GREEN (0 advisories).
+- Runtime-integrity work: grouped counters normalized to int and timestamp reduction preserved as typed nullable-string operation; JSON validation issues lists retained in named `items` envelope when string-keyed object expected.
+- Gating BLOCKED: Composer `gating` script resolves missing `.gating/bin/gating`, no source rule execution occurred; preserve external tool wiring and investigate ownership before restoring. Visual/UI behavioral evidence is not triggered by this change set; no interface/navigation edits.
+- Git integration deferred: initial worktree had pre-existing modifications in phpstan.neon, API payload factory, command, middleware, identity test and journal. Untracked `.console-mcp`, `.inspecting` and baseline helper are preserved. A blind commit would mix provenance; no stage/commit/push performed.
+- Fresh Inspecting post-refactor: `D:\\PhpstormProjects\\www\\Inspecting\\.inspecting\\reports\\D--PhpstormProjects-www-Addressing-20261011-213241.json`; 0 PHPStan errors, 0 Rector differences, 36 observational medium design/maintainability findings, 0 high findings. A prior HIGH cyclomatic-complexity finding on grouped portfolio was removed by extracting integer counter increment (max complexity 27 -> 20).
+- Authoritative Canonization textual documents read: `.canonization/Governance/Architecture/Rule/Canon001TechnicalRoleFirstRule.md` (typed role-first trees in `src/`), `Canon021CrudingOwnsGenericCrudRule.md` (Cruding owns generic application CRUD), `Canon022StandaloneApplicationDependencyBaselineRule.md` (standalone direct package baseline). Mapping: Addressing uses `App\\Addressing` and typed Repository/Service/Http roles, and retains no newly added generic CRUD routes. Canon022 now also requires Failing `failing/failure` in development and production plus `App\\Failing\\FailingBundle` registration; current Addressing manifest/boot files lack it. Failing sibling repository resolves, but its runtime Composer integration is not yet installed/verified here: do not inject uninstalled Bundle into healthy runtime without dependency closure and lock resolution.
+- Git sync plan: guarded BLOCKED; local master ahead 4 and behind 155 relative to origin/master, dirty 19 paths. No safe automated integration candidate identified. Preserve current local changes and existing user work; no commit/push in this window.
+- RC residual: restore Gating and apply canonical package baseline including Failing as a coherent installed/locked integration; then verify Symfony boot/Gating, and separately reconcile diverged Git history without overwriting uncommitted user work. Remaining Inspecting medium findings are observational until canon/gate promotes them.
+
+
 ## Task
 
 - Task ID: `engine-20260712060343-addressing-84a5a3`
@@ -137,3 +188,32 @@
 - Final `composer validate --strict --check-lock`: PASS.
 - Signed integration commit `c951d89` contains only the first dependency-baseline change set; pre-existing `.gating/**` and `config/reference.php` changes were excluded.
 - Push attempt was blocked by Console MCP policy because `master` is protected and the worktree still contains 182 pre-existing unrelated changes. Current branch evidence at the block: `master` ahead 1, behind 0; no remote mutation occurred.
+
+## 2026-10-11 — CanonScanning static-analysis remediation
+
+- Current baseline: master, with pre-existing untracked .console-mcp/, .inspecting/, and bin/cmcp-generate-current-baseline.ps1 left intact.
+- Consumed supplied 2026-09-29 CanonScanning static-analysis RED log and Inspecting JSON before re-running any verifier.
+- Read current repository AGENTS.md, README.md, composer.json and phpstan.neon; read mandatory helper guidance and normative Canonization Canon018ComposerIdentityMappingRule.md and Canon021CrudingOwnsGenericCrudRule.md.
+- Target mapping: addressing/address -> App\\Addressing\\ namespace and Address-prefixed types (Canon018); generic CRUD belongs to Cruding, with EasyAdmin admin exception (Canon021). These rules were unaffected by the config repair.
+- Existing Composer dependencies and local path repositories cover Objecting, Cruding, Viewing, Interfacing, Collectioning and Tabling.
+- Remediated RED config root cause by removing PHPStan 1-era options checkMissingIterableValueType and checkGenericClassInNonGenericObjectType from phpstan.neon.
+- Verification: composer phpstan now parses configuration and analyses 137 source files; it reports additional source-level type errors. This is a verified improvement but not a GREEN gate.
+- RC-critical next steps: address source typing defects and rerun phpstan, lint, tests, Gating and applicable smoke gates. No UI changes were made; no runtime restart performed.
+- Growth (not RC-blocking): improve address search DX and provider diagnostics. Risk: preserve JSON normalization behavior and avoid unrelated user files.
+- Additional repairs: hardened request-ID scalar handling, constrained API/CLI decoded JSON payloads to objects, and updated Objecting identity metadata assertions to real persisted uuid/slug fields.
+- Verification: lint GREEN (201 PHP files); unit suite GREEN (12 tests, 53 assertions, one PHPUnit notice); PHPStan still RED with actual typing diagnostics; Gating invocation BLOCKED because .gating/bin/gating is absent in the current checkout. No visual changes; visual evidence NOT_VERIFIED and not required for these backend-only edits.
+- Git: six tracked files modified, three pre-existing untracked paths preserved; no stage, commit or push while remaining RC typing defects and gate blocker are unresolved.
+- Backend acceptance extras: smoke:container GREEN; smoke:runtime GREEN; qa:deptrac GREEN (0 violations, 0 warnings, 0 errors). No server restart was used.
+- 2026-10-11 continuation: current PHPStan is GREEN (137 files, zero errors); full PHPUnit GREEN (22 tests, 112 assertions, 1 notice, 1 skipped), Deptrac GREEN (0 violations), PHP-CS-Fixer GREEN (0/167), Rector GREEN, runtime and container smoke GREEN. The tree gained additional concurrent repository/service changes; retained without overwriting.
+- Gating composer script remains BLOCKED by missing consumer `.gating/bin/gating`; Gating README declares canonical executable in sibling Gating/bin/gating, but current consumer script still targets removed generated artifact location.
+- Branch evidence: master HEAD 85fd7aee, upstream origin/master ahead 4, behind 155, dirty working tree; do not force-push or auto-rebase over concurrent uncommitted work.
+- 2026-10-11 Canon022 closure: moved the Composer gating script from missing consumer .gating executable to sibling Gating/bin/gating and canonical Gating policy/profile files. Current Canon022 additionally mandates failing/failure as a runtime dependency; added it to composer.json and composer.prod.json, local ../Failing symlink/version pin, and App\\Failing\\FailingBundle to config/bundles.php.
+- Composer update failing/failure succeeded; composer.lock now includes Failing, but solver also changed additional dependency versions including PHPUnit 12 to 10. Acceptance after resolution: Gating 8/8 GREEN, PHPStan 137 files/0 errors, PHPUnit 22 tests/108 assertions/1 skip GREEN, container smoke GREEN, Composer audit no advisories.
+- Git sync planning still reports master ahead 4/behind 155 with dirty worktree and manual divergence resolution required. No destructive Git operation, commit or push performed. Additional package-version changes require reconciliation before release.
+- Subsequent acceptance: `composer qa:full` GREEN (165 PHPStan analysis paths, Deptrac 0 violations, 22 PHPUnit tests/108 assertions/1 skip), Gating GREEN 8/8, Symfony smoke GREEN. Fixed conflicting Composer `cs:check`/`cs:fix` commands to reuse canonical `.php-cs-fixer.dist.php` policy; no PHPDoc suppression was introduced.
+- Git integration plan: preserve pre-existing `.deptrac.cache`, `.console-mcp/`, `.inspecting/`, and baseline generator; commit only explicit source, tests, Composer manifests/lock, config and this journal. Upstream divergence requires separate guarded reconciliation before publishing.
+
+
+
+
+
