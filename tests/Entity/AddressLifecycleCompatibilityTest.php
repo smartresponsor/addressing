@@ -12,7 +12,7 @@ final class AddressLifecycleCompatibilityTest extends TestCase
 {
     public function testAddressEntityLifecycleAliases(): void
     {
-        $entity = new class extends AddressEntity {
+        $entity = new class () extends AddressEntity {
             public function __construct()
             {
                 $this->setCreatedAt(new \DateTimeImmutable('2026-05-23 14:00:00'));
