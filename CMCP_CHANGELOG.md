@@ -1,5 +1,14 @@
 # CMCP Orchestration Journal
 
+## 2026-10-11 — engine-20261004101315-addressing-5fde0e
+
+- Baseline inspected via Windows Console MCP: clean master b5f5c3c7 (ahead 10, behind 155 relative to origin/master). Historical September 29 PHPStan RED used obsolete parameters already removed from current phpstan.neon.
+- Read task specification, RED static log, Inspecting evidence, Addressing AGENTS/README/Composer/PHPStan configs, related Objecting/Cruding/Viewing/Interfacing and Gating contracts.
+- Canonization normative rules read: .canonization/Governance/Architecture/Rule/Canon001TechnicalRoleFirstRule.md (role-first typed trees); Canon021CrudingOwnsGenericCrudRule.md (Cruding-only generic CRUD with EasyAdmin exception); Canon022StandaloneApplicationDependencyBaselineRule.md (direct package baseline and FailingBundle). Existing Addressing remains compatible; no code changes justified by stale RED.
+- Verified current deterministic gates: PHPStan PASS 137 files; PHP lint PASS 201; PHPUnit PASS 22 tests/112 assertions, 1 notice/1 skipped; Gating PASS 8/8; Deptrac PASS 136 files, zero violations.
+- RC-critical: investigate skipped test/notice and safe Git integration without disturbing diverged history. Growth (not RC-blocking): improve address validation diagnostics and API DX, keeping geocoding and presentation shell with owning components.
+- Что имеем? Existing static fix verified. Что осталось? Qualified PHPUnit evidence and safe Git reconciliation.
+
 ## 2026-10-11 — engine-20261004081848-addressing-c03ca8
 
 - Execution specification: current 108-line task brief, historical CanonScanning PHPStan RED report and existing orchestration history reviewed through Windows Console MCP. No container workspace substitution.
