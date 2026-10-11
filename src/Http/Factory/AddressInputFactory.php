@@ -114,8 +114,15 @@ final class AddressInputFactory
             }
         }
 
-        /* @var array<string, mixed> $value */
-        return $value;
+        $object = [];
+        foreach ($value as $field => $entry) {
+            if (!is_string($field)) {
+                return null;
+            }
+            $object[$field] = $entry;
+        }
+
+        return $object;
     }
 
     /**

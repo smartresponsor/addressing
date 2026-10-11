@@ -258,8 +258,15 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 }
             }
 
-            /* @var array<string, mixed> $issues */
-            return $issues;
+            $object = [];
+            foreach ($issues as $key => $value) {
+                if (!is_string($key)) {
+                    return ['items' => $issues];
+                }
+                $object[$key] = $value;
+            }
+
+            return $object;
         }
 
         return null;

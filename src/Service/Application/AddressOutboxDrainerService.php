@@ -124,7 +124,18 @@ final class AddressOutboxDrainerService
             $payload = null;
         }
 
-        /* @var array<string, mixed>|null $payload */
+        if (is_array($payload)) {
+            $object = [];
+            foreach ($payload as $key => $value) {
+                if (!is_string($key)) {
+                    $object = null;
+                    break;
+                }
+                $object[$key] = $value;
+            }
+            $payload = $object;
+        }
+
         return [
             'name' => $this->rowString($row, 'event_name') ?? '',
             'version' => $this->rowInt($row, 'event_version'),

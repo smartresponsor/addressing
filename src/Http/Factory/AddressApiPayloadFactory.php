@@ -21,9 +21,15 @@ final readonly class AddressApiPayloadFactory
             throw new \RuntimeException('invalid_json');
         }
 
-        /* @var array<string, mixed> $data */
+        $object = [];
+        foreach ($data as $key => $value) {
+            if (!is_string($key)) {
+                throw new \RuntimeException('invalid_json');
+            }
+            $object[$key] = $value;
+        }
 
-        return $data;
+        return $object;
     }
 
     /** @param array<string, mixed> $in */

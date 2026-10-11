@@ -1,5 +1,19 @@
 # CMCP Orchestration Journal
 
+## 2026-10-11 — engine-20261004100954-addressing-57eb3a
+
+- Baseline: clean `master` when checked; existing orchestration journal preserved. Reviewed current Addressing README, Composer manifest, PHPStan configs, 2026-09-29 RED/static and Inspecting reports, plus Objecting, Cruding, Viewing, Interfacing, Gating and Canonization responsibility summaries. Canonization normative rules must be checked against the mapped target before structural changes.
+- Historical RED: removed PHPStan configuration parameters no longer appear in current config. Fresh PHPStan on 137 files reported five associative-array return typing errors in AddressApiPayloadFactory, AddressInputFactory, AbstractDoctrineAddressRepository, AddressOutboxDrainerService and AddressValidatedApplierService.
+- RC work: replaced PHPDoc-only assumptions with explicitly reconstructed associative arrays after existing key validation; invalid JSON object key types are rejected. PHPStan and PHP lint restarted after changes; unit tests and remaining gating/contract evidence pending.
+- Growth workstream (not RC-blocking): better address data validation diagnostics and API developer experience, avoiding mapping/geocoding ownership expansion.
+- Что имеем? Five concrete static typing sites changed within Addressing boundary.
+- Verified after repair: PHPStan PASS (137 files, zero errors); lint PASS; unit suite PASS (12 tests, 49 assertions); Deptrac PASS (136 files, zero violations); PHP-CS-Fixer check PASS (167 files, zero fixes). Gating verification pending at this checkpoint.
+- Normative Canonization text consulted directly: Canon001TechnicalRoleFirstRule.md (typed technical role first), Canon021CrudingOwnsGenericCrudRule.md (generic CRUD belongs to Cruding), Canon022StandaloneApplicationDependencyBaselineRule.md (direct standalone dependencies and FailingBundle). Current changes stay within existing role-first PHP trees, avoid CRUD duplication and do not alter dependency declarations.
+- Gating PASS: Canon022–029 all 8/8, zero failures/warnings. Source diff reviewed: only five JSON object typing/guard changes plus this orchestration journal; no UI changes, so no new visual screenshot is applicable.
+- Git integration baseline: local master at 0abb2878, ahead 8 / behind 155 relative to origin/master; worktree contains only the six task-owned edits. A normal push is not fast-forward until divergence is safely reconciled.
+- Что осталось? Commit verified changes and reconcile divergent history without resetting, deleting or force-pushing other work.
+
+
 ## 2026-10-11 — engine-20261004100536-addressing-510879
 
 - Current task read: authoritative execution specification (108 lines), original CanonScanning PHPStan RED log and Inspecting advisory report, Addressing AGENTS/README/Composer/PHPStan and existing orchestration journal; Canonization textual Canon022 read and mapped to development/production Composer requirements and FailingBundle registration. Prior journal supplies Canon001/021, Objecting/Cruding/Viewing/Interfacing and Gating contract baseline.
