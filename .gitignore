@@ -3,6 +3,12 @@
 /report/
 
 # Logs and caches
+/.deptrac.cache
+/.console-mcp/
+/.inspecting/
+
+# Local, unverified cross-repository migration generator (retained on disk)
+/bin/cmcp-generate-current-baseline.ps1
 /var/logs/
 /var/cache/
 /var/sessions/
