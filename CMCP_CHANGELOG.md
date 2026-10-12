@@ -1,5 +1,14 @@
 # CMCP Orchestration Journal
 
+## 2026-10-12 — engine-20261004102422-addressing-ed1e23
+
+- Baseline: Windows Console MCP master 9610cfe3561ce52e15646372dcc75a082c058218; clean; ahead 12/behind 155 versus origin/master. No destructive Git reconciliation.
+- Evidence consulted: Addressing AGENTS.md, README.md, composer.json, PHPStan configs; CanonScanning historical PHPStan RED and Inspecting report; previous journal; Canonization normative Canon001, Canon021, Canon022. Mapping: role-first App\Addressing\ classes; generic CRUD belongs to Cruding, EasyAdmin excepted; Canon022 dependency baseline declared and Gating enforces it.
+- Current gates: PHPStan PASS 137 files; Gating PASS 8/8; lint PASS 201; Deptrac PASS 136 zero violations; Doctrine mapping smoke PASS; PHPUnit PASS 22 tests/112 assertions, with 1 notice and 1 skipped. Historical static RED references PHPStan options already absent in current config.
+- RC critical: qualify PHPUnit notice/skip; reconcile diverged Git history safely. Growth-only: address validation/search API diagnostics, not geocoding or generic CRUD. No UI code change/screenshot in this window.
+- Что имеем? Historical static RED no longer reproduces; current deterministic checks pass. Что осталось? Test qualification and protected-commit Git integration.
+
+
 ## 2026-10-11 — engine-20261004101317-addressing-b00df5
 
 - Window baseline: Windows Console MCP `master` e9b97dbb0f372d4b3db60731914921895efc96d6, initially clean, 11 ahead / 155 behind origin/master. No destructive Git reconciliation.
