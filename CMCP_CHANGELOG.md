@@ -277,6 +277,16 @@
 - Remote branch triage: 14 addr-wave10-through-18 sample branches are strict ancestors of origin/master, as is rc/addressing-master-green; no need to merge those histories. rc/addressing-rc-closure, rc/addressing-rc-final-v3, rc/addressing-red-remediation-clean-20260928 and security/gitleaks-semgrep contain unique divergent commits requiring semantic review, not automatic merges. Remote branch inventory is approximately 70 branches.
 - RC integration pending: derive a safe cherry-pick/port plan from semantic differences between origin/master and seven local commits rather than overwriting newer remote contracts; no push or branch deletion performed.
 
+## 2026-10-12 — Task engine-20261004103651-addressing-bb0e54 verification checkpoint
+
+- Windows Console MCP resolved Addressing to D:\\PhpstormProjects\\www\\Addressing. Opening Git baseline: clean master at 897da194a637020a9b5acd20598eeed25024855e, ahead 13/behind 155 origin/master.
+- Consumed upstream CanonScanning 2026-09-29 static-analysis RED log and Inspecting JSON. The RED was PHPStan configuration options incompatible with the current PHPStan version; no redundant pre-remediation Inspecting run was performed.
+- Read local README, AGENTS, Composer manifest, existing CMCP journal and helper README/AGENTS/Composer contracts for Objecting, Cruding, Viewing, Interfacing, Gating and Canonization. Normative Canonization files actually consulted: Canon001TechnicalRoleFirstRule.md (technical role-first tree), Canon021CrudingOwnsGenericCrudRule.md (Cruding owns generic application CRUD), Canon022StandaloneApplicationDependencyBaselineRule.md (standalone direct package dependencies and Failing bundle activation). Addressing current Composer manifest declares all required baseline dependencies; Gating validates Canon022.
+- Market maturity reference: normalization/validation, provider evidence, deduplication and geocoding are distinct capabilities. RC priority: deterministic static analysis, platform-boundary enforcement and stable runtime; growth backlog: address search UX/API, provider evidence diagnostics and dedicated geocoding integrations, none promoted to RC requirements.
+- Actual gates on current HEAD: composer phpstan GREEN (137/137, 0 errors); composer validate --strict --check-lock GREEN; composer qa:full exit 0 (PHPStan 165 paths, PHPUnit 22 tests/112 assertions/1 notice/1 skip, Deptrac, style and Rector); composer gating GREEN (Canon022-029, 8/8); smoke:container GREEN; smoke:runtime GREEN. No UI changes or runtime restart.
+- Material remaining integration risk: guarded Git sync plan BLOCKED on diverged master (ahead 13, behind 155), no tree-equivalent preservation branch. Earlier rebase conflicts and newer remote dependency contracts make blind rebase/force push unsafe. Preserve both histories and conduct semantic commit-by-commit reconciliation before publication; do not declare RC complete on green local gates alone.
+
+
 
 
 
