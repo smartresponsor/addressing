@@ -1,5 +1,15 @@
 # CMCP Orchestration Journal
 
+## 2026-10-12 — engine-20261004111223-addressing-fdf3b4
+
+- Baseline via Windows Console MCP: clean master HEAD 2c6e8ec77bde221626850ece49bd4063edb95ab6; origin/master ahead 15 / behind 155. Git sync plan blocks automatic integration: divergent history with no verified tree-equivalent preservation branch. No reset/force-push performed.
+- Authoritative 108-line task specification and 2026-09-29 static-analysis RED read. RED cited obsolete PHPStan parameters; both are absent from current phpstan.neon. Current composer phpstan PASS (137 files, no errors), lint PASS (201), Gating PASS (8/8), PHPUnit exit 0 (22 tests, 112 assertions; one notice, one skipped).
+- Read Addressing AGENTS.md, README.md, composer.json, phpstan.neon and prior CMCP journal; related Objecting/Cruding/Viewing/Interfacing and Gating READMEs. Read normative Canonization Canon001, Canon021, Canon022. Target mapping: App\\Addressing\\ role-first technical tree (Canon001); generic CRUD belongs to Cruding except EasyAdmin admin views (Canon021); direct platform Composer baseline present in composer.json and checked by Gating (Canon022). No application dependency on Inspecting.
+- RC-critical: qualify PHPUnit notice/skip and reconcile protected divergent master history before publication. Growth-only: improve address normalization/search diagnostics without adding routing, mapping, generic CRUD, or an independent shell.
+- No runtime/UI source mutation in this pass; screenshots NOT_VERIFIED / not applicable. Historical Inspecting report remains observational, not substituted for post-mutation acceptance.
+- Additional gate evidence: qa:phpstan PASS 165 files; qa:deptrac PASS 136 files, zero violations; smoke:doctrine PASS with mapped AddressEntity/AddressEvidenceSnapshotEntity; cs:check PASS 167 files. E2E Panther test explicitly skips when chromedriver is unavailable, but actual cause of this run's skip has not been separately reported. PHPUnit notice origin unresolved.
+- Что имеем? Current static/lint/Gating acceptance GREEN; PHPUnit conditional PASS. Что осталось? Test qualification, history reconciliation, final RC confirmation.
+
 ## 2026-10-12 — engine-20261004111218-addressing-dae6f7
 
 - Scope: Addressing only. Windows Console MCP `master` HEAD `3c8475d020a5ef91d0e4cf4d725c709f9258bbc2`, clean at baseline; upstream `origin/master` divergence 14 ahead / 155 behind. Preserve all existing commits; no reset/force push.
