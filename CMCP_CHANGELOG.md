@@ -1,5 +1,14 @@
 # CMCP Orchestration Journal
 
+## 2026-10-12 — engine-20261004111218-addressing-dae6f7
+
+- Scope: Addressing only. Windows Console MCP `master` HEAD `3c8475d020a5ef91d0e4cf4d725c709f9258bbc2`, clean at baseline; upstream `origin/master` divergence 14 ahead / 155 behind. Preserve all existing commits; no reset/force push.
+- Read: authoritative engine specification, 2026-09-29 static-analysis RED, repository AGENTS.md / README.md / composer.json / phpstan.neon / phpstan.neon.dist / prior journal, Canonization README and textual Canon022–Canon029, Gating README and manifests. Canon mapping: shared dependencies and local symlinks (022/023), production package contract (024), bundle/standalone (025), PHP/Symfony floor (026), PostgreSQL/SQLite connections (027/028), PHP quality tooling (029); current Gating 8/8 PASS. Shared Cruding owns generic application CRUD; existing address business APIs remain scoped to Addressing.
+- Existing RED was stale: its removed `checkMissingIterableValueType` and `checkGenericClassInNonGenericObjectType` PHPStan keys are absent. Current composer phpstan PASS (137 files), qa:phpstan PASS (165), composer validate PASS, Gating 8/8 PASS, Deptrac 136/136 zero violations. PHPUnit full suite 22 tests / 112 assertions, exit 0, one notice and one skipped. No source change is justified solely by stale static RED.
+- RC-critical: qualify PHPUnit notice/skip; inspect and safely reconcile divergent master/upstream history; verify retained runtime/Doctrine and Inspecting evidence where necessary. Growth-only: improve address validation/search diagnostics and APIs without adding geocoding/routing, generic CRUD or architectural layers.
+- No UI mutation; visual evidence NOT_VERIFIED/not required for this static verification window.
+- Что имеем? Historical static-quality issue is no longer reproducible. Что осталось? Qualify remaining test/runtime exceptions, safe Git history integration and final RC evidence.
+
 ## 2026-10-12 — engine-20261004102422-addressing-ed1e23
 
 - Baseline: Windows Console MCP master 9610cfe3561ce52e15646372dcc75a082c058218; clean; ahead 12/behind 155 versus origin/master. No destructive Git reconciliation.
