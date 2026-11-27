@@ -178,9 +178,9 @@ final class AddressValidatedPayloadFactoryTest extends TestCase
             id: 'address-1',
             ownerId: 'owner-1',
             vendorId: 'vendor-1',
-            fingerprint: 'fingerprint-1',
+            fingerprint: str_repeat('a', 64),
             validatedAt: new \DateTimeImmutable('2026-10-05T01:00:00+00:00'),
-            rawSha256: 'raw-sha',
+            rawSha256: str_repeat('b', 64),
             governanceStatus: $status,
             duplicateOfId: 'duplicate-1',
             supersededById: 'superseded-1',
@@ -197,6 +197,8 @@ final class AddressValidatedPayloadFactoryTest extends TestCase
         $payload = $factory->outboxPayload($context, $validated);
 
         self::assertSame('address-1', $payload['id']);
+        self::assertSame(str_repeat('a', 64), $payload['fingerprint']);
+        self::assertSame(str_repeat('b', 64), $payload['rawSha256']);
         self::assertSame('unit', $payload['provider']);
         self::assertTrue($payload['deliverable']);
         self::assertSame('premise', $payload['granularity']);
@@ -205,6 +207,56 @@ final class AddressValidatedPayloadFactoryTest extends TestCase
         self::assertSame($status, $payload['governanceStatus']);
         self::assertSame($expectedLink, $payload['governanceLinkId']);
         self::assertSame('snapshot-1', $payload['evidenceSnapshotId']);
+    }
+
+    #[DataProvider('invalidOutboxIdentityProvider')]
+    public function testOutboxPayloadRejectsInvalidIdentityOrDigest(string $id, string $fingerprint, ?string $rawSha256): void
+    {
+        $context = new AddressValidatedOutboxContext(
+            id: $id,
+            ownerId: null,
+            vendorId: null,
+            fingerprint: $fingerprint,
+            validatedAt: new \DateTimeImmutable('2026-10-05T01:00:00+00:00'),
+            rawSha256: $rawSha256,
+            governanceStatus: 'canonical',
+            duplicateOfId: null,
+            supersededById: null,
+            aliasOfId: null,
+            conflictWithId: null,
+            revalidationDueAt: null,
+            revalidationPolicy: null,
+            lastValidationStatus: 'validated',
+            lastValidationScore: null,
+            evidenceSnapshotId: null,
+            providerDigest: null,
+        );
+
+        $this->expectException(\InvalidArgumentException::class);
+        (new AddressValidatedPayloadFactory())->outboxPayload($context, AddressValidated::fromArray([]));
+    }
+
+    /** @return iterable<string, array{string, string, ?string}> */
+    public static function invalidOutboxIdentityProvider(): iterable
+    {
+        yield 'blank id' => [' ', str_repeat('a', 64), null];
+        yield 'invalid fingerprint' => ['address-1', 'not-a-sha', null];
+        yield 'invalid raw SHA-256' => ['address-1', str_repeat('a', 64), 'not-a-sha'];
+        yield 'empty raw SHA-256' => ['address-1', str_repeat('a', 64), ''];
+    }
+
+    #[DataProvider('invalidDirectQualityProvider')]
+    public function testDirectVerdictRejectsOutOfRangeQuality(int $quality): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new \App\Addressing\Contract\Message\AddressValidationVerdict(true, 'premise', $quality);
+    }
+
+    /** @return iterable<string, array{int}> */
+    public static function invalidDirectQualityProvider(): iterable
+    {
+        yield 'negative' => [-1];
+        yield 'over maximum' => [101];
     }
 
     /** @return iterable<string, array{0: string, 1: string|null}> */

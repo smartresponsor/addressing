@@ -23,6 +23,9 @@ final readonly class AddressValidationVerdict implements \JsonSerializable
         /** @var array<string, mixed> */
         public array $signal = [],
     ) {
+        if (null !== $quality && ($quality < 0 || $quality > 100)) {
+            throw new \InvalidArgumentException('validation_quality_out_of_range');
+        }
     }
 
     /**

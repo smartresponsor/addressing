@@ -91,16 +91,16 @@ final readonly class AddressValidatedPayloadFactory
         AddressValidated $addressValidated,
     ): array {
         return [
-            'id' => $context->id,
+            'id' => $this->requireOutboxId($context->id),
             'ownerId' => $context->ownerId,
             'vendorId' => $context->vendorId,
-            'fingerprint' => $context->fingerprint,
+            'fingerprint' => $this->requireSha256($context->fingerprint),
             'provider' => $addressValidated->validationProvider,
             'validatedAt' => $context->validatedAt->format(DATE_ATOM),
             'deliverable' => $addressValidated->addressValidationVerdict?->deliverable,
             'granularity' => $addressValidated->addressValidationVerdict?->granularity,
             'quality' => $addressValidated->addressValidationVerdict?->quality,
-            'rawSha256' => $context->rawSha256,
+            'rawSha256' => null === $context->rawSha256 ? null : $this->requireSha256($context->rawSha256),
             'sourceType' => $addressValidated->sourceType,
             'providerDigest' => $context->providerDigest,
             'hasEvidence' => $this->hasEvidence($addressValidated),
@@ -112,6 +112,25 @@ final readonly class AddressValidatedPayloadFactory
             'lastValidationScore' => $context->lastValidationScore,
             'evidenceSnapshotId' => $context->evidenceSnapshotId,
         ];
+    }
+
+    private function requireOutboxId(string $id): string
+    {
+        if ('' === trim($id)) {
+            throw new \InvalidArgumentException('outbox_id_required');
+        }
+
+        return trim($id);
+    }
+
+    private function requireSha256(string $value): string
+    {
+        $value = strtolower(trim($value));
+        if (1 !== preg_match('/^[a-f0-9]{64}$/D', $value)) {
+            throw new \InvalidArgumentException('outbox_sha256_invalid');
+        }
+
+        return $value;
     }
 
     private function governanceLinkId(AddressValidatedOutboxContext $context): ?string
