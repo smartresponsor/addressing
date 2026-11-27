@@ -28,6 +28,9 @@ final class AddressCoverageGateTest extends TestCase
         }
 
         $gitlabRun = implode("\n", $gitlab['phpunit']['script']);
+        self::assertStringContainsString('--log-junit build/logs/junit.xml', $githubRun);
+        self::assertStringContainsString('--log-junit build/logs/junit.xml', $gitlabRun);
+        self::assertSame('build/logs/junit.xml', $gitlab['phpunit']['artifacts']['reports']['junit']);
         $githubGuard = $this->extractCoverageGuard($githubRun);
         self::assertSame($githubGuard, $this->extractCoverageGuard($gitlabRun));
 

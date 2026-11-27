@@ -114,14 +114,15 @@ jobs:
           export XDEBUG_MODE=coverage
           export APP_VAR_DIR="$RUNNER_TEMP/symfony-var"
           mkdir -p "$APP_VAR_DIR" build/logs var/coverage
-          rm -f build/logs/clover.xml var/coverage/summary.txt
+          rm -f build/logs/clover.xml build/logs/junit.xml var/coverage/summary.txt
           php -S 127.0.0.1:8000 -t public public/router.php > build/logs/php-server.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID' EXIT
           sleep 2
 
-          vendor/bin/phpunit --path-coverage --coverage-clover build/logs/clover.xml --coverage-text=var/coverage/summary.txt | tee build/logs/coverage.txt
+          vendor/bin/phpunit --path-coverage --coverage-clover build/logs/clover.xml --log-junit build/logs/junit.xml --coverage-text=var/coverage/summary.txt | tee build/logs/coverage.txt
           test -s var/coverage/summary.txt
+          test -s build/logs/junit.xml
           cat var/coverage/summary.txt
 
           test -s build/logs/clover.xml
@@ -143,5 +144,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: addressing-report
-          path: report/
-          if-no-files-found: ignore
+          path: |
+            report/
+            build/logs/
+            var/coverage/summary.txt
+            var/coverage/behavioral-ui.json
+          if-no-files-found: error

@@ -41,13 +41,21 @@ phpunit:
       set -eu
       export XDEBUG_MODE=coverage
       mkdir -p build/logs var/coverage
-      rm -f build/logs/clover.xml var/coverage/summary.txt
-      vendor/bin/phpunit --path-coverage --coverage-clover build/logs/clover.xml --coverage-text=var/coverage/summary.txt > build/logs/coverage.txt || { cat build/logs/coverage.txt; exit 1; }
+      rm -f build/logs/clover.xml build/logs/junit.xml var/coverage/summary.txt
+      vendor/bin/phpunit --path-coverage --coverage-clover build/logs/clover.xml --log-junit build/logs/junit.xml --coverage-text=var/coverage/summary.txt > build/logs/coverage.txt || { cat build/logs/coverage.txt; exit 1; }
       cat build/logs/coverage.txt
       test -s var/coverage/summary.txt
+      test -s build/logs/junit.xml
       cat var/coverage/summary.txt
       test -s build/logs/clover.xml
       php -r '$x = simplexml_load_file("build/logs/clover.xml"); $m = $x === false ? null : $x->project->metrics; $ns = (string) ($m["statements"] ?? ""); $cs = (string) ($m["coveredstatements"] ?? ""); $n = (int) $ns; $c = (int) $cs; $min = getenv("MIN_COVERAGE"); if (!ctype_digit($ns) || !ctype_digit($cs) || $n <= 0 || $c > $n || $min === false || !is_numeric($min) || (float) $min < 0 || (float) $min > 100) { fwrite(STDERR, "Invalid or missing coverage evidence\n"); exit(1); } $pct = 100 * $c / $n; printf("Coverage: %.2f%%\n", $pct); exit($pct < (float) $min ? 1 : 0);'
+  artifacts:
+    when: always
+    reports:
+      junit: build/logs/junit.xml
+    paths:
+      - build/logs/
+      - var/coverage/summary.txt
   coverage: '/Lines.*: (\d+\.\d+%)/'
 
 

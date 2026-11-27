@@ -512,3 +512,31 @@ A follow-up wave should enrich this inventory with:
 - Legacy automation tip `7ab4197d1e3ccac2d6b4c17941f79a493a474a17`: Start-Process command parsing and log redaction changes in AI apply, scan and canon check scripts; preserve the implementation in history, leave command execution ownership to the shared orchestration tooling. No claim that the current shared tooling reproduces every historical behavior.
 - Legacy automation tip `769229104971433363fa5d5032005d716a2949e1`: deterministic report JSON sorting and validation; retain historical implementation, do not reactivate obsolete Domain overlay. Current workflow/template references to removed Domain tools require separate CI modernization.
 - Admission of those three tooling tips is history preservation only, not a claim that obsolete automation is operational. The component runtime uses the current Symfony/Gating contracts; no source alias or duplicated Domain layer is introduced.
+
+## Batch 5 — historical CI and operational disposition
+
+The original commits below are retained as immutable historical evidence. Admission is an ancestry-preservation decision, not a certification of every historical capability. No external publishing, recovery operation, database mutation or hosted workflow execution is authorized by this record.
+
+| Source commit | Disposition |
+| --- | --- |
+| `6179f286f935ae39ae8e29a07949d5b8388a5a52` | Historical PostgreSQL/MySQL migration and projection smoke intent: current Doctrine mapping/parity checks and in-memory AddressIndex projection repository/projector tests replace the supported development checks. Full projection rebuild/recovery remains an open operational capability. |
+| `7f139c8683d347c31707fd35166316c4061c6755` | Mandatory Domain gate intent retained by current Composer trust-surface and Gating execution; missing legacy scripts cannot silently pass these replacement steps. Coverage warnings remain explicitly outstanding. |
+| `dfd43cd1fb480c077f7594b925799853b468d28a` | PHPStan, Psalm, Rector, PHPUnit and evidence artifacts reconciled to current PHP 8.4 workflows. Historical max-level PHPStan target remains an improvement requirement; current verified configuration is level 8, not max. |
+| `9d362173a516b22ce887f8405d72767deef1f3cc` | CI quality/evidence intent retained; historical dispatch/reusable agent PR workflows are preserved in history only. Do not reactivate unsigned commit, broad write-token, shell-interpolated input or Domain-overlay automation. |
+| `c2ccde96a369864ccba9df204a23dcf703dd738a` | Fail-closed 80% line coverage threshold retained; restore Sonar quality-gate wait setting and JUnit/Clover evidence publication. Historical Sonar total/new-code coverage >=80% and zero blocker/critical requirements remain pending external configuration verification. |
+| `ed443de3d633f606a86daebe1190dd38d4061bd4` | Current CI checks replace obsolete commands; preserve migration/recovery/rollback intent in the operational requirements below. |
+| `79e12d173e845ad1d874c21f87a2a752cfb26286` | Historical GA hardening roadmap preserved; current supported runtime remains Doctrine entity-first. Do not equate the presence of old CLI files with operational readiness. |
+
+### Evidence and deferred integrations
+
+- GitHub and GitLab PHPUnit jobs now produce fresh JUnit, Clover and canonical coverage summary files; publish evidence on success or failure. Clover is not a Cobertura report. Sonar wait is configured, but the project still has a placeholder organization and no validated external scanner admission. No Sonar/Codecov credentials or external upload is configured by this change.
+- Historical Behat/Allure, Codecov and Sonar integrations are preserved as optional external tooling requirements, not silently declared implemented. Do not restore remote shell downloads or unpinned scanner images as an admission shortcut.
+- Hosted CI sibling Composer path provisioning, real PostgreSQL parity, full coverage and browser execution remain separate acceptance gates. No prior Collectioning CI waiver applies to Addressing.
+
+### Operational preservation requirements (not an executable production runbook)
+
+The old migration, recovery and rollback documents require coordinated writer/outbox quiescence, verified backups, restoration in dependency order, projection rebuild and validation of row counts, samples, timestamps and backlog before resuming consumers. Keep these invariants in the current PostgreSQL data / SQLite infrastructure topology. Restore and rehearse only on isolated databases; destructive production restoration requires explicit operational authorization and a verified recovery point.
+
+Historical GA and RC requirements also include audit retention TTL, soft-delete cleanup, dedupe backfill, metrics export, durable incremental projection watermark, index-policy control and on-premises installation. Their presence in a historical README or surviving script does not prove a working current capability. In particular, current `bin/address-projection-common.php` references absent `App\Addressing\Service\Application\AddressProjectionService` and a retired MySQL connection. Do not execute its runner or daemon until reconciled to the Doctrine projector and validated with durable cursor/replay/rollback evidence. Audit and cleanup commands must not be run as part of admission.
+
+The historical source objects remain available through the admitted commits; these deferred capabilities must be tracked explicitly and must not be used as release-readiness evidence.
