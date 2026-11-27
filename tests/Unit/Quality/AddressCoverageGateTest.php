@@ -71,6 +71,9 @@ final class AddressCoverageGateTest extends TestCase
     private function extractCoverageGuard(string $script): string
     {
         self::assertSame(1, preg_match("/^\\s*php -r '(.*)'$/m", $script, $matches));
+        if (!isset($matches[1])) {
+            self::fail('Coverage guard capture is missing.');
+        }
 
         return $matches[1];
     }

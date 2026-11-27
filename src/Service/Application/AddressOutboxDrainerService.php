@@ -83,9 +83,10 @@ final class AddressOutboxDrainerService
      */
     private function eventPayload(array $row): array
     {
-        $payload = json_decode($this->rowString($row, 'payload') ?? '', true);
+        $body = $this->rowString($row, 'payload') ?? '';
+        $payload = json_decode($body, true);
         $object = null;
-        if (is_array($payload)) {
+        if (is_array($payload) && str_starts_with(ltrim($body), '{')) {
             $object = [];
             foreach ($payload as $key => $value) {
                 if (!is_string($key)) {
@@ -108,7 +109,14 @@ final class AddressOutboxDrainerService
     {
         $error = null;
         $rowId = $this->rowInt($row, 'id');
-        $ok = $this->send($dispatchConfig, $this->eventPayload($row), $error);
+        $event = $this->eventPayload($row);
+        if (null === $event['payload']) {
+            $this->markDispatchFailure($rowId, 'invalid_outbox_payload');
+
+            return;
+        }
+
+        $ok = $this->send($dispatchConfig, $event, $error);
 
         if ($ok) {
             $this->markPublished($rowId);

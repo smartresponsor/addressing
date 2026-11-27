@@ -9,7 +9,6 @@ use App\Addressing\Entity\AddressOutboxEntity;
 use App\Addressing\Repository\AddressDoctrineOutboxDispatchRepository;
 use App\Addressing\Repository\AddressDoctrineValidatedPersistenceRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
 
@@ -33,18 +32,14 @@ final class ValidatedPersistenceRollbackCoverageTest extends TestCase
     public function testOutboxReserveRollsBackAndRethrowsRepositoryFailure(): void
     {
         $failure = new \RuntimeException('reserve_failed');
-        $objectRepository = $this->createMock(EntityRepository::class);
-        $objectRepository->method('findBy')->willThrowException($failure);
-
         $connection = TestDatabase::createInMemoryEntityManager([AddressOutboxEntity::class])->getConnection();
         $connection->beginTransaction();
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects(self::once())->method('beginTransaction');
         $entityManager->expects(self::once())
-            ->method('getRepository')
-            ->with(AddressOutboxEntity::class)
-            ->willReturn($objectRepository);
+            ->method('createQueryBuilder')
+            ->willThrowException($failure);
         $entityManager->method('getConnection')->willReturn($connection);
         $entityManager->expects(self::once())->method('rollback');
 
