@@ -48,21 +48,10 @@ jobs:
         php-version: [ "8.4" ]
 
     services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: smartresponsor
-          MYSQL_USER: smartresponsor
-          MYSQL_PASSWORD: smartresponsor
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -proot"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
       postgres:
         image: postgres:15
+        ports:
+          - 5432:5432
         env:
           POSTGRES_DB: smartresponsor
           POSTGRES_USER: smartresponsor
@@ -80,13 +69,6 @@ jobs:
       APP_ENV: "test"
       ADDRESS_PARITY_DATABASE_URL: "postgresql://smartresponsor:smartresponsor@127.0.0.1:5432/smartresponsor?serverVersion=15&charset=utf8"
 
-      PG_DSN: pgsql:host=127.0.0.1;port=5432;dbname=smartresponsor
-      PG_USER: smartresponsor
-      PG_PASS: smartresponsor
-
-      MY_DSN: mysql:host=127.0.0.1;port=3306;dbname=smartresponsor
-      MY_USER: smartresponsor
-      MY_PASS: smartresponsor
 
     steps:
       - name: Checkout
@@ -97,11 +79,8 @@ jobs:
         with:
           php-version: ${{ matrix.php-version }}
           tools: composer
-          coverage: none
-          extensions: pdo_mysql, pdo_pgsql, intl, mbstring, zip
-
-      - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y bc
+          coverage: xdebug
+          extensions: pdo_sqlite, pdo_pgsql, intl, mbstring, zip
 
       - name: Cache Composer
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -119,17 +98,8 @@ jobs:
       - name: Doctrine schema parity
         run: composer schema:parity
 
-      - name: Domain gate (strict)
-        shell: bash
-        env:
-          SR_CANON_REQUIRED: "1"
-          SR_GATE_STRICT: "1"
-        run: |
-          if [ -f "Domain/Tool/github-gate.ps1" ]; then
-            pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "${SR_DOMAIN}"
-          else
-            echo "Skipping domain gate: Domain/Tool/github-gate.ps1 is not present in this repository."
-          fi
+      - name: Addressing trust gate
+        run: composer qa:trust-surface
 
       - name: Quality checks
         run: |
@@ -137,32 +107,36 @@ jobs:
           composer psalm
           composer rector:dry
 
-      - name: Unit tests with coverage threshold
+      - name: PHPUnit with coverage threshold
+        shell: bash
         run: |
+          set -euo pipefail
+          export XDEBUG_MODE=coverage
           export APP_VAR_DIR="$RUNNER_TEMP/symfony-var"
-          mkdir -p "$APP_VAR_DIR" build/logs
-          php -S 127.0.0.1:8000 -t public > build/logs/php-server.log 2>&1 &
+          mkdir -p "$APP_VAR_DIR" build/logs var/coverage
+          rm -f build/logs/clover.xml var/coverage/summary.txt
+          php -S 127.0.0.1:8000 -t public public/router.php > build/logs/php-server.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID' EXIT
           sleep 2
 
-          vendor/bin/phpunit --coverage-clover build/logs/clover.xml --coverage-text | tee build/logs/coverage.txt
+          vendor/bin/phpunit --path-coverage --coverage-clover build/logs/clover.xml --coverage-text=var/coverage/summary.txt | tee build/logs/coverage.txt
+          test -s var/coverage/summary.txt
+          cat var/coverage/summary.txt
 
-          COVERAGE=$(grep -Eo 'Lines:\s+[0-9]+(\.[0-9]+)?%' build/logs/coverage.txt | awk '{print $2}' | tr -d '%')
-          echo "Coverage: ${COVERAGE}%"
-
-          if [ -n "$COVERAGE" ] && [ "$(echo "$COVERAGE < $MIN_COVERAGE" | bc -l)" -eq 1 ]; then
-            echo "Coverage below ${MIN_COVERAGE}%"
-            exit 1
-          fi
+          test -s build/logs/clover.xml
+          php -r '$x = simplexml_load_file("build/logs/clover.xml"); $m = $x === false ? null : $x->project->metrics; $ns = (string) ($m["statements"] ?? ""); $cs = (string) ($m["coveredstatements"] ?? ""); $n = (int) $ns; $c = (int) $cs; $min = getenv("MIN_COVERAGE"); if (!ctype_digit($ns) || !ctype_digit($cs) || $n <= 0 || $c > $n || $min === false || !is_numeric($min) || (float) $min < 0 || (float) $min > 100) { fwrite(STDERR, "Invalid or missing coverage evidence\n"); exit(1); } $pct = 100 * $c / $n; printf("Coverage: %.2f%%\n", $pct); exit($pct < (float) $min ? 1 : 0);'
 
           kill $SERVER_PID
           trap - EXIT
 
-      - name: Migration smoke check
+      - name: Doctrine mapping smoke check
+        run: composer smoke:doctrine
+
+      - name: Canon evaluation with coverage evidence
         run: |
-          php bin/address-migrate
-          php bin/address-projection-migrate
+          composer report:behavioral-ui-coverage
+          composer gating
 
       - name: Upload report artifact
         if: always()

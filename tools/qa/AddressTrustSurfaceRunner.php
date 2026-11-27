@@ -54,3 +54,5 @@ fwrite(STDOUT, json_encode([
     'route_inventory' => $routeInventory,
     'reports' => $results,
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
+
+exit($reportsReady && $routeInventoryReady && $documentationRuntimeReady ? 0 : 1);
