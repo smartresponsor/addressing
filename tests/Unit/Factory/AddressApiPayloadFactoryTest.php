@@ -35,6 +35,17 @@ final class AddressApiPayloadFactoryTest extends TestCase
         }
     }
 
+    public function testOptionalSnapshotRejectsNonStringKeys(): void
+    {
+        $factory = new AddressApiPayloadFactory();
+        $method = new \ReflectionMethod(AddressApiPayloadFactory::class, 'optArray');
+
+        self::assertSame(['key' => ['nested']], $method->invoke($factory, ['rawInput' => ['key' => ['nested']]], 'rawInput'));
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('invalid_rawInput');
+        $method->invoke($factory, ['rawInput' => ['list']], 'rawInput');
+    }
+
     public function testCreateAddressEntityNormalizesInputAndDefaults(): void
     {
         $address = (new AddressApiPayloadFactory())->createAddressEntity([

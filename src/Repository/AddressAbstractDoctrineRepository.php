@@ -660,7 +660,7 @@ abstract readonly class AddressAbstractDoctrineRepository
         foreach ($entities as $entity) {
             $key = $groupKey($entity);
             $meta = $groupMeta($entity);
-            $groups[$key] ??= $meta + $this->emptyPortfolioCounters();
+            $groups[$key] ??= $this->emptyPortfolioCounters() + $meta;
             $this->accumulatePortfolioMetrics($groups[$key], $entity, $meta, $now);
         }
 
@@ -697,26 +697,36 @@ abstract readonly class AddressAbstractDoctrineRepository
      */
     private function accumulatePortfolioMetrics(array &$group, AddressEntity $entity, array $meta, \DateTimeImmutable $now): void
     {
-        ++$group['total'];
+        $this->addPortfolioCounter($group, 'total');
         $governanceStatus = $entity->getGovernanceStatus();
-        if (isset($group[$governanceStatus]) && is_int($group[$governanceStatus])) {
-            ++$group[$governanceStatus];
+        if (in_array($governanceStatus, ['canonical', 'duplicate', 'superseded', 'alias', 'conflict'], true)) {
+            $this->addPortfolioCounter($group, $governanceStatus);
         }
 
-        ++$group[$this->hasEvidenceEntity($entity) ? 'evidenceBacked' : 'evidenceMissing'];
+        $this->addPortfolioCounter($group, $this->hasEvidenceEntity($entity) ? 'evidenceBacked' : 'evidenceMissing');
 
         $revalidationDueAt = $entity->getRevalidationDueAt();
         if (null !== $revalidationDueAt && $revalidationDueAt <= $now) {
-            ++$group['dueForRevalidation'];
+            $this->addPortfolioCounter($group, 'dueForRevalidation');
         }
 
         if ('uncertain' === $entity->getValidationStatus() || 'uncertain' === $entity->getLastValidationStatus()) {
-            ++$group['uncertainValidation'];
+            $this->addPortfolioCounter($group, 'uncertainValidation');
         }
 
         if (isset($meta['staleNormalization']) && is_int($meta['staleNormalization'])) {
-            $group['staleNormalization'] += $meta['staleNormalization'];
+            $this->addPortfolioCounter($group, 'staleNormalization', $meta['staleNormalization']);
         }
+    }
+
+    /** @param array<string, mixed> $group */
+    private function addPortfolioCounter(array &$group, string $counter, int $amount = 1): void
+    {
+        $value = $group[$counter] ?? null;
+        if (!is_int($value)) {
+            throw new \LogicException('invalid_portfolio_counter');
+        }
+        $group[$counter] = $value + $amount;
     }
 
     /**

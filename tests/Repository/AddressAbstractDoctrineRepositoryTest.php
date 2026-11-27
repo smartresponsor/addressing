@@ -266,6 +266,16 @@ final class AddressAbstractDoctrineRepositoryTest extends TestCase
         }
     }
 
+    public function testPortfolioCountsFirstStaleNormalizationOnlyOnce(): void
+    {
+        $entity = (new AddressEntity())->setId('stale')->setCountryCode('US')->setGovernanceStatus('canonical');
+        $rows = $this->repository->groupPortfolio([$entity], true);
+
+        self::assertCount(1, $rows);
+        self::assertSame(1, $rows[0]['total']);
+        self::assertSame(1, $rows[0]['staleNormalization']);
+    }
+
     public function testGroupedPortfolioAccumulatesGovernanceEvidenceAndOperationalCounters(): void
     {
         $due = (new AddressEntity())
@@ -456,12 +466,12 @@ final readonly class AddressAbstractDoctrineRepositoryProbe extends AddressAbstr
      *
      * @return list<array<string, mixed>>
      */
-    public function groupPortfolio(array $entities): array
+    public function groupPortfolio(array $entities, bool $stale = false): array
     {
         return $this->buildGroupedPortfolio(
             $entities,
             static fn (AddressEntity $entity): string => $entity->getCountryCode(),
-            static fn (AddressEntity $entity): array => ['countryCode' => $entity->getCountryCode()],
+            static fn (AddressEntity $entity): array => ['countryCode' => $entity->getCountryCode(), 'staleNormalization' => $stale ? 1 : 0],
         );
     }
 }
