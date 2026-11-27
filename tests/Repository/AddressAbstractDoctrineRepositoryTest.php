@@ -23,6 +23,15 @@ final class AddressAbstractDoctrineRepositoryTest extends TestCase
         );
     }
 
+    public function testNullableJsonValueRejectsNonStringKeys(): void
+    {
+        self::assertSame(['key' => ['nested']], $this->repository->nullableJsonValue('{"key":["nested"]}'));
+        self::assertSame(['key' => ['nested']], $this->repository->nullableJsonValue(['key' => ['nested']]));
+        self::assertNull($this->repository->nullableJsonValue(['list']));
+        self::assertNull($this->repository->nullableJsonValue('["list"]'));
+        self::assertNull($this->repository->nullableJsonValue('{"0":"numeric","key":"value"}'));
+    }
+
     public function testTenantWhereBuildsOwnerVendorAndUnscopedPredicates(): void
     {
         $params = [];

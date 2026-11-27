@@ -488,17 +488,22 @@ abstract readonly class AddressAbstractDoctrineRepository
             return null;
         }
 
-        if (is_array($value)) {
-            return $value;
-        }
-
         if (is_string($value)) {
-            $decoded = json_decode($value, true);
-
-            return is_array($decoded) ? $decoded : null;
+            $value = json_decode($value, true);
+        }
+        if (!is_array($value)) {
+            return null;
         }
 
-        return null;
+        $object = [];
+        foreach ($value as $key => $entry) {
+            if (!is_string($key)) {
+                return null;
+            }
+            $object[$key] = $entry;
+        }
+
+        return $object;
     }
 
     /** Normalize scalar database values to trimmed nullable strings while rejecting unsupported types. */
