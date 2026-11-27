@@ -11,7 +11,7 @@ final readonly class AddressEvidenceSnapshotData implements AddressEvidenceSnaps
     /**
      * @param array<string, mixed>|null $rawInputSnapshot
      * @param array<string, mixed>|null $normalizedSnapshot
-     * @param array<string, mixed>|null $validationIssues
+     * @param array<array-key, mixed>|null $validationIssues
      */
     public function __construct(
         private string $id,
@@ -120,7 +120,7 @@ final readonly class AddressEvidenceSnapshotData implements AddressEvidenceSnaps
         return $this->validationScore;
     }
 
-    /** @return array<string, mixed>|null */
+    /** @return array<array-key, mixed>|null */
     #[\Override]
     public function validationIssues(): ?array
     {

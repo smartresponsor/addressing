@@ -144,7 +144,7 @@ interface AddressInterface
     /**
      * Returns the normalized provider verdict retained for downstream decisions.
      *
-     * @return array<string, mixed>|null
+     * @return array<array-key, mixed>|null
      */
     public function validationVerdict(): ?array;
 

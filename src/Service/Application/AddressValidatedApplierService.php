@@ -89,7 +89,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
 
     /**
      * @param array<string, mixed>|null $normalizedSnapshot
-     * @param array<string, mixed>|null $validationIssues
+     * @param array<array-key, mixed>|null $validationIssues
      */
     private function applyValidationState(
         AddressEntity $entity,
@@ -212,7 +212,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
 
     /**
      * @param array<string, mixed>|null $normalizedSnapshot
-     * @param array<string, mixed>|null $validationIssues
+     * @param array<array-key, mixed>|null $validationIssues
      */
     private function createEvidenceSnapshot(
         AddressEntity $entity,
@@ -266,7 +266,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return array<array-key, mixed>|null
      */
     private function validationIssues(AddressValidated $addressValidated): ?array
     {

@@ -62,7 +62,7 @@ class AddressEvidenceSnapshotEntity
     #[ORM\Column(name: 'validation_score', type: 'integer', nullable: true)]
     private ?int $validationScore = null;
 
-    /** @var array<string, mixed>|null */
+    /** @var array<array-key, mixed>|null */
     #[ORM\Column(name: 'validation_issues', type: 'json', nullable: true)]
     private ?array $validationIssues = null;
 
@@ -244,13 +244,13 @@ class AddressEvidenceSnapshotEntity
         return $this;
     }
 
-    /** @return array<string, mixed>|null */
+    /** @return array<array-key, mixed>|null */
     public function getValidationIssues(): ?array
     {
         return $this->validationIssues;
     }
 
-    /** @param array<string, mixed>|null $validationIssues */
+    /** @param array<array-key, mixed>|null $validationIssues */
     public function setValidationIssues(?array $validationIssues): self
     {
         $this->validationIssues = $validationIssues;

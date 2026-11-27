@@ -16,7 +16,7 @@ final class AddressEvidenceSnapshotRecord implements AddressEvidenceSnapshotInte
     /**
      * @param array<string, mixed>|null $rawInputSnapshot
      * @param array<string, mixed>|null $normalizedSnapshot
-     * @param array<string, mixed>|null $validationIssues
+     * @param array<array-key, mixed>|null $validationIssues
      */
     public function __construct(
         public string $id,
@@ -123,6 +123,7 @@ final class AddressEvidenceSnapshotRecord implements AddressEvidenceSnapshotInte
         return $this->validationScore;
     }
 
+    /** @return array<array-key, mixed>|null */
     #[\Override]
     public function validationIssues(): ?array
     {

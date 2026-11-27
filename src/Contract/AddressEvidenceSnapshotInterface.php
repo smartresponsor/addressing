@@ -64,7 +64,7 @@ interface AddressEvidenceSnapshotInterface
     /**
      * Return structured validation issues reported while producing this evidence snapshot.
      *
-     * @return array<string, mixed>|null
+     * @return array<array-key, mixed>|null
      */
     public function validationIssues(): ?array;
 

@@ -35,7 +35,7 @@ interface AddressValidationStateInterface
     /**
      * Return the normalized validation verdict retained by the Addressing component.
      *
-     * @return array<string, mixed>|null
+     * @return array<array-key, mixed>|null
      */
     public function validationVerdict(): ?array;
 

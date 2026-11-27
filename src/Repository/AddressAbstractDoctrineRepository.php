@@ -453,7 +453,7 @@ abstract readonly class AddressAbstractDoctrineRepository
             deletedAt: $this->nullableDateString($row['deleted_at'] ?? null),
             validationFingerprint: $this->nullableString($row['validation_fingerprint'] ?? null),
             validationRaw: $this->nullableJsonArray($row['validation_raw'] ?? null),
-            validationVerdict: $this->nullableJsonArray($row['validation_verdict'] ?? null),
+            validationVerdict: $this->nullableEvidenceJsonArray($row['validation_verdict'] ?? null),
             validationDeliverable: $this->nullableBool($row['validation_deliverable'] ?? null),
             validationGranularity: $this->nullableString($row['validation_granularity'] ?? null),
             validationQuality: $this->nullableInt($row['validation_quality'] ?? null),
@@ -504,6 +504,20 @@ abstract readonly class AddressAbstractDoctrineRepository
         }
 
         return $object;
+    }
+
+    /**
+     * Preserve structured verdicts and legacy issue lists without changing persisted evidence.
+     *
+     * @return array<array-key, mixed>|null
+     */
+    private function nullableEvidenceJsonArray(mixed $value): ?array
+    {
+        if (is_string($value)) {
+            $value = json_decode($value, true);
+        }
+
+        return is_array($value) ? $value : null;
     }
 
     /** Normalize scalar database values to trimmed nullable strings while rejecting unsupported types. */

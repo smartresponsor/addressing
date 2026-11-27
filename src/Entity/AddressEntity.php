@@ -100,7 +100,7 @@ class AddressEntity
     #[ORM\Column(name: 'validation_raw', type: 'json', nullable: true)]
     private ?array $validationRaw = null;
 
-    /** @var array<string, mixed>|null */
+    /** @var array<array-key, mixed>|null */
     #[ORM\Column(name: 'validation_verdict', type: 'json', nullable: true)]
     private ?array $validationVerdict = null;
 
@@ -488,13 +488,13 @@ class AddressEntity
         return $this;
     }
 
-    /** @return array<string, mixed>|null */
+    /** @return array<array-key, mixed>|null */
     public function getValidationVerdict(): ?array
     {
         return $this->validationVerdict;
     }
 
-    /** @param array<string, mixed>|null $validationVerdict */
+    /** @param array<array-key, mixed>|null $validationVerdict */
     public function setValidationVerdict(?array $validationVerdict): self
     {
         $this->validationVerdict = $validationVerdict;
