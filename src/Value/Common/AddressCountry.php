@@ -9,6 +9,7 @@ final readonly class AddressCountry implements \Stringable
 {
     private string $code;
 
+    /** @psalm-mutation-free */
     public function __construct(string $alpha2)
     {
         $filtered = preg_replace('/[^A-Za-z]/', '', $alpha2);

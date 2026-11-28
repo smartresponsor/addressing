@@ -14,6 +14,11 @@ final readonly class AddressLine implements \Stringable
         $this->value = self::norm($input);
     }
 
+    /**
+     * PCRE updates process-local last-error state.
+     *
+     * @psalm-impure
+     */
     public static function norm(string $s): string
     {
         $normalized = preg_replace('/\s+/', ' ', $s);

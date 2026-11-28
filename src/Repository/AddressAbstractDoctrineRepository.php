@@ -453,7 +453,7 @@ abstract readonly class AddressAbstractDoctrineRepository
             deletedAt: $this->nullableDateString($row['deleted_at'] ?? null),
             validationFingerprint: $this->nullableString($row['validation_fingerprint'] ?? null),
             validationRaw: $this->nullableJsonArray($row['validation_raw'] ?? null),
-            validationVerdict: $this->nullableJsonArray($row['validation_verdict'] ?? null),
+            validationVerdict: $this->nullableEvidenceJsonArray($row['validation_verdict'] ?? null),
             validationDeliverable: $this->nullableBool($row['validation_deliverable'] ?? null),
             validationGranularity: $this->nullableString($row['validation_granularity'] ?? null),
             validationQuality: $this->nullableInt($row['validation_quality'] ?? null),
@@ -488,17 +488,36 @@ abstract readonly class AddressAbstractDoctrineRepository
             return null;
         }
 
-        if (is_array($value)) {
-            return $value;
-        }
-
         if (is_string($value)) {
-            $decoded = json_decode($value, true);
-
-            return is_array($decoded) ? $decoded : null;
+            $value = json_decode($value, true);
+        }
+        if (!is_array($value)) {
+            return null;
         }
 
-        return null;
+        $object = [];
+        foreach ($value as $key => $entry) {
+            if (!is_string($key)) {
+                return null;
+            }
+            $object[$key] = $entry;
+        }
+
+        return $object;
+    }
+
+    /**
+     * Preserve structured verdicts and legacy issue lists without changing persisted evidence.
+     *
+     * @return array<array-key, mixed>|null
+     */
+    private function nullableEvidenceJsonArray(mixed $value): ?array
+    {
+        if (is_string($value)) {
+            $value = json_decode($value, true);
+        }
+
+        return is_array($value) ? $value : null;
     }
 
     /** Normalize scalar database values to trimmed nullable strings while rejecting unsupported types. */
@@ -644,24 +663,26 @@ abstract readonly class AddressAbstractDoctrineRepository
      * @param callable(AddressEntity): string $groupKey
      * @param callable(AddressEntity): T      $groupMeta
      *
-     * @return list<T&array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int}>
+     * @return list<array{meta:T,counters:array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int}}>
      */
     protected function buildGroupedPortfolio(array $entities, callable $groupKey, callable $groupMeta): array
     {
-        /** @var array<string, T&array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int}> $groups */
+        /** @var array<string, array{meta:T,counters:array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int}}> $groups */
         $groups = [];
         $now = new \DateTimeImmutable('now');
 
         foreach ($entities as $entity) {
             $key = $groupKey($entity);
             $meta = $groupMeta($entity);
-            $groups[$key] ??= $meta + $this->emptyPortfolioCounters();
-            $this->accumulatePortfolioMetrics($groups[$key], $entity, $meta, $now);
+            $groups[$key] ??= ['meta' => $meta, 'counters' => $this->emptyPortfolioCounters()];
+            $this->accumulatePortfolioMetrics($groups[$key]['counters'], $entity, $meta, $now);
         }
 
-        /** @var list<T&array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int}> $rows */
         $rows = array_values($groups);
-        usort($rows, $this->comparePortfolioRows(...));
+        usort($rows, fn (array $left, array $right): int => $this->comparePortfolioRows(
+            $left['counters'] + $left['meta'],
+            $right['counters'] + $right['meta'],
+        ));
 
         return $rows;
     }
@@ -687,31 +708,42 @@ abstract readonly class AddressAbstractDoctrineRepository
     }
 
     /**
-     * @param array<string, mixed> $group
+     * @param array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int} $group
      * @param array<string, mixed> $meta
+     * @param-out array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int} $group
      */
     private function accumulatePortfolioMetrics(array &$group, AddressEntity $entity, array $meta, \DateTimeImmutable $now): void
     {
-        ++$group['total'];
+        $this->addPortfolioCounter($group, 'total');
         $governanceStatus = $entity->getGovernanceStatus();
-        if (isset($group[$governanceStatus]) && is_int($group[$governanceStatus])) {
-            ++$group[$governanceStatus];
+        if (in_array($governanceStatus, ['canonical', 'duplicate', 'superseded', 'alias', 'conflict'], true)) {
+            $this->addPortfolioCounter($group, $governanceStatus);
         }
 
-        ++$group[$this->hasEvidenceEntity($entity) ? 'evidenceBacked' : 'evidenceMissing'];
+        $this->addPortfolioCounter($group, $this->hasEvidenceEntity($entity) ? 'evidenceBacked' : 'evidenceMissing');
 
         $revalidationDueAt = $entity->getRevalidationDueAt();
         if (null !== $revalidationDueAt && $revalidationDueAt <= $now) {
-            ++$group['dueForRevalidation'];
+            $this->addPortfolioCounter($group, 'dueForRevalidation');
         }
 
         if ('uncertain' === $entity->getValidationStatus() || 'uncertain' === $entity->getLastValidationStatus()) {
-            ++$group['uncertainValidation'];
+            $this->addPortfolioCounter($group, 'uncertainValidation');
         }
 
         if (isset($meta['staleNormalization']) && is_int($meta['staleNormalization'])) {
-            $group['staleNormalization'] += $meta['staleNormalization'];
+            $this->addPortfolioCounter($group, 'staleNormalization', $meta['staleNormalization']);
         }
+    }
+
+    /**
+     * @param array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int} $group
+     * @param-out array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int} $group
+     * @param 'total'|'canonical'|'duplicate'|'superseded'|'alias'|'conflict'|'evidenceBacked'|'evidenceMissing'|'dueForRevalidation'|'uncertainValidation'|'staleNormalization' $counter
+     */
+    private function addPortfolioCounter(array &$group, string $counter, int $amount = 1): void
+    {
+        $group[$counter] += $amount;
     }
 
     /**
@@ -806,8 +838,9 @@ abstract readonly class AddressAbstractDoctrineRepository
         $validatedBy = $address->validationProvider() ?? $address->lastValidationProvider() ?? $address->sourceSystem();
         $validationScore = $address->lastValidationScore() ?? $address->validationQuality();
         $validationIssues = $address->validationVerdict();
-        if (null === $validationIssues && null !== $address->validationRaw() && isset($address->validationRaw()['issues']) && is_array($address->validationRaw()['issues'])) {
-            $validationIssues = $address->validationRaw()['issues'];
+        $raw = $address->validationRaw();
+        if (null === $validationIssues && null !== $raw && is_array($raw['issues'] ?? null)) {
+            $validationIssues = $raw['issues'];
         }
 
         return new AddressEvidenceSnapshotData(
@@ -891,7 +924,7 @@ abstract readonly class AddressAbstractDoctrineRepository
     protected function appendOutbox(string $nameEntity, array $payload): void
     {
         $json = json_encode(
-            AddressOutboxEventMessage::decoratePayload($nameEntity, $payload),
+            AddressOutboxEventMessage::decoratePersistedPayload($nameEntity, $payload),
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
         );
 
@@ -930,11 +963,15 @@ abstract readonly class AddressAbstractDoctrineRepository
     protected function decodeEvidenceCursor(string $cursor): array
     {
         $decoded = base64_decode($cursor, true);
-        if (false === $decoded || !str_contains($decoded, "\n")) {
+        if (false === $decoded) {
             throw new \RuntimeException('invalid_evidence_cursor');
         }
 
-        [$createdAt, $id] = explode("\n", $decoded, 2);
+        $parts = explode("\n", $decoded, 2);
+        if (!isset($parts[1])) {
+            throw new \RuntimeException('invalid_evidence_cursor');
+        }
+        [$createdAt, $id] = $parts;
         $parsedCreatedAt = \DateTimeImmutable::createFromFormat(DATE_ATOM, $createdAt);
         if ('' === $createdAt || '' === trim($id) || str_contains($id, "\n") || false === $parsedCreatedAt || $parsedCreatedAt->format(DATE_ATOM) !== $createdAt) {
             throw new \RuntimeException('invalid_evidence_cursor');

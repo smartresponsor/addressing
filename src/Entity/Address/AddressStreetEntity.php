@@ -58,6 +58,7 @@ class AddressStreetEntity
         return $this->countryCode;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCountryCode(string $countryCode): self
     {
         $this->countryCode = $countryCode;
@@ -70,6 +71,7 @@ class AddressStreetEntity
         return $this->provinceCode;
     }
 
+    /** @psalm-external-mutation-free */
     public function setProvinceCode(?string $provinceCode): self
     {
         $this->provinceCode = $provinceCode;
@@ -82,6 +84,7 @@ class AddressStreetEntity
         return $this->cityName;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCityName(?string $cityName): self
     {
         $this->cityName = $cityName;
@@ -94,6 +97,7 @@ class AddressStreetEntity
         return $this->streetName;
     }
 
+    /** @psalm-external-mutation-free */
     public function setStreetName(string $streetName): self
     {
         $this->streetName = $streetName;
@@ -106,6 +110,7 @@ class AddressStreetEntity
         return $this->streetType;
     }
 
+    /** @psalm-external-mutation-free */
     public function setStreetType(?string $streetType): self
     {
         $this->streetType = $streetType;
@@ -118,6 +123,7 @@ class AddressStreetEntity
         return $this->normalizedName;
     }
 
+    /** @psalm-external-mutation-free */
     public function setNormalizedName(?string $normalizedName): self
     {
         $this->normalizedName = $normalizedName;

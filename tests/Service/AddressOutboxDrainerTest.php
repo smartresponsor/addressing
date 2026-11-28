@@ -202,6 +202,17 @@ final class AddressOutboxDrainerTest extends TestCase
         self::assertSame(1, $service->drain('http://127.0.0.1:1', 1, 0, 1, 0));
     }
 
+    public function testEventPayloadRejectsNonStringKeysWithoutDispatch(): void
+    {
+        $service = new AddressOutboxDrainerService($this->createMock(AddressOutboxDispatchRepositoryInterface::class));
+        $method = new \ReflectionMethod(AddressOutboxDrainerService::class, 'eventPayload');
+
+        foreach (['["list"]', '{"0":"numeric","key":"value"}'] as $body) {
+            self::assertSame(['name' => '', 'version' => 0, 'payload' => null], $method->invoke($service, ['payload' => $body]));
+        }
+        self::assertSame(['name' => '', 'version' => 0, 'payload' => ['key' => ['nested']]], $method->invoke($service, ['payload' => '{"key":["nested"]}']));
+    }
+
     public function testDrainerHelperContractsCoverCoercionRetryAndFailureFormatting(): void
     {
         $repository = $this->createMock(AddressOutboxDispatchRepositoryInterface::class);

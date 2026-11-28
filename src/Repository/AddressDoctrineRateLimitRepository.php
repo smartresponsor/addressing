@@ -18,6 +18,7 @@ final readonly class AddressDoctrineRateLimitRepository implements AddressRateLi
     }
 
     /** Check the active minute window, increment its counter atomically, and return whether the request is allowed. */
+    #[\Override]
     public function checkAndIncrement(string $client, string $key, int $effectiveLimit): bool
     {
         $now = time();

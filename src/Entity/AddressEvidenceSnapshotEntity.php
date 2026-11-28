@@ -62,7 +62,7 @@ class AddressEvidenceSnapshotEntity
     #[ORM\Column(name: 'validation_score', type: 'integer', nullable: true)]
     private ?int $validationScore = null;
 
-    /** @var array<string, mixed>|null */
+    /** @var array<array-key, mixed>|null */
     #[ORM\Column(name: 'validation_issues', type: 'json', nullable: true)]
     private ?array $validationIssues = null;
 
@@ -77,6 +77,7 @@ class AddressEvidenceSnapshotEntity
         return $this->id;
     }
 
+    /** @psalm-external-mutation-free */
     public function setId(string $id): self
     {
         $this->id = $id;
@@ -89,6 +90,7 @@ class AddressEvidenceSnapshotEntity
         return $this->address;
     }
 
+    /** @psalm-external-mutation-free */
     public function setAddress(AddressEntity $address): self
     {
         $this->address = $address;
@@ -101,6 +103,7 @@ class AddressEvidenceSnapshotEntity
         return $this->ownerId;
     }
 
+    /** @psalm-external-mutation-free */
     public function setOwnerId(?string $ownerId): self
     {
         $this->ownerId = $ownerId;
@@ -113,6 +116,7 @@ class AddressEvidenceSnapshotEntity
         return $this->vendorId;
     }
 
+    /** @psalm-external-mutation-free */
     public function setVendorId(?string $vendorId): self
     {
         $this->vendorId = $vendorId;
@@ -125,6 +129,7 @@ class AddressEvidenceSnapshotEntity
         return $this->sourceSystem;
     }
 
+    /** @psalm-external-mutation-free */
     public function setSourceSystem(?string $sourceSystem): self
     {
         $this->sourceSystem = $sourceSystem;
@@ -137,6 +142,7 @@ class AddressEvidenceSnapshotEntity
         return $this->sourceType;
     }
 
+    /** @psalm-external-mutation-free */
     public function setSourceType(?string $sourceType): self
     {
         $this->sourceType = $sourceType;
@@ -149,6 +155,7 @@ class AddressEvidenceSnapshotEntity
         return $this->sourceReference;
     }
 
+    /** @psalm-external-mutation-free */
     public function setSourceReference(?string $sourceReference): self
     {
         $this->sourceReference = $sourceReference;
@@ -161,6 +168,7 @@ class AddressEvidenceSnapshotEntity
         return $this->validatedBy;
     }
 
+    /** @psalm-external-mutation-free */
     public function setValidatedBy(?string $validatedBy): self
     {
         $this->validatedBy = $validatedBy;
@@ -173,6 +181,7 @@ class AddressEvidenceSnapshotEntity
         return $this->validatedAt;
     }
 
+    /** @psalm-external-mutation-free */
     public function setValidatedAt(?\DateTimeImmutable $validatedAt): self
     {
         $this->validatedAt = $validatedAt;
@@ -185,6 +194,7 @@ class AddressEvidenceSnapshotEntity
         return $this->normalizationVersion;
     }
 
+    /** @psalm-external-mutation-free */
     public function setNormalizationVersion(?string $normalizationVersion): self
     {
         $this->normalizationVersion = $normalizationVersion;
@@ -198,7 +208,11 @@ class AddressEvidenceSnapshotEntity
         return $this->rawInputSnapshot;
     }
 
-    /** @param array<string, mixed>|null $rawInputSnapshot */
+    /**
+     * @param array<string, mixed>|null $rawInputSnapshot
+     *
+     * @psalm-external-mutation-free
+     */
     public function setRawInputSnapshot(?array $rawInputSnapshot): self
     {
         $this->rawInputSnapshot = $rawInputSnapshot;
@@ -212,7 +226,11 @@ class AddressEvidenceSnapshotEntity
         return $this->normalizedSnapshot;
     }
 
-    /** @param array<string, mixed>|null $normalizedSnapshot */
+    /**
+     * @param array<string, mixed>|null $normalizedSnapshot
+     *
+     * @psalm-external-mutation-free
+     */
     public function setNormalizedSnapshot(?array $normalizedSnapshot): self
     {
         $this->normalizedSnapshot = $normalizedSnapshot;
@@ -225,6 +243,7 @@ class AddressEvidenceSnapshotEntity
         return $this->validationStatus;
     }
 
+    /** @psalm-external-mutation-free */
     public function setValidationStatus(string $validationStatus): self
     {
         $this->validationStatus = $validationStatus;
@@ -237,6 +256,7 @@ class AddressEvidenceSnapshotEntity
         return $this->validationScore;
     }
 
+    /** @psalm-external-mutation-free */
     public function setValidationScore(?int $validationScore): self
     {
         $this->validationScore = $validationScore;
@@ -244,13 +264,17 @@ class AddressEvidenceSnapshotEntity
         return $this;
     }
 
-    /** @return array<string, mixed>|null */
+    /** @return array<array-key, mixed>|null */
     public function getValidationIssues(): ?array
     {
         return $this->validationIssues;
     }
 
-    /** @param array<string, mixed>|null $validationIssues */
+    /**
+     * @param array<array-key, mixed>|null $validationIssues
+     *
+     * @psalm-external-mutation-free
+     */
     public function setValidationIssues(?array $validationIssues): self
     {
         $this->validationIssues = $validationIssues;
@@ -263,6 +287,7 @@ class AddressEvidenceSnapshotEntity
         return $this->providerDigest;
     }
 
+    /** @psalm-external-mutation-free */
     public function setProviderDigest(?string $providerDigest): self
     {
         $this->providerDigest = $providerDigest;
@@ -275,6 +300,7 @@ class AddressEvidenceSnapshotEntity
         return $this->createdAt;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCreatedAt(\DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;

@@ -21,7 +21,7 @@ final class AddressUlid implements AddressUlidInterface
     #[\Override]
     public static function generate(): string
     {
-        $milliseconds = (int) round(microtime(true) * 1000);
+        $milliseconds = (int) round(microtime(true) * 1000.0);
 
         try {
             $randomBytes = random_bytes(10);
@@ -57,7 +57,7 @@ final class AddressUlid implements AddressUlidInterface
         $encoded = '';
         for ($index = 0; $index < 16; ++$index) {
             $chunk = substr($bits, $index * 5, 5);
-            $encoded .= $alphabet[bindec(str_pad($chunk, 5, '0', STR_PAD_RIGHT)) % 32];
+            $encoded .= $alphabet[(int) bindec(str_pad($chunk, 5, '0', STR_PAD_RIGHT)) % 32];
         }
 
         return $encoded;

@@ -8,6 +8,7 @@ use App\Addressing\Contract\AddressGovernanceStateInterface;
 
 final readonly class AddressGovernanceState implements AddressGovernanceStateInterface
 {
+    /** @psalm-mutation-free */
     public function __construct(
         private string $governanceStatus,
         private ?string $duplicateOfId,

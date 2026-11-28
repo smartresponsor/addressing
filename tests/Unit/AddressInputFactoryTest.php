@@ -11,6 +11,40 @@ use PHPUnit\Framework\TestCase;
 
 final class AddressInputFactoryTest extends TestCase
 {
+    public function testFromManageDtoRejectsNonStringOverrideKeysWithoutLosingNestedLists(): void
+    {
+        $dto = new AddressManageDTO();
+        $dto->line1 = '10 Oak Rd';
+        $dto->city = 'Austin';
+        $factory = new AddressInputFactory();
+
+        foreach ([['list'], ['valid' => true, 2 => 'numeric']] as $invalid) {
+            $record = $factory->fromManageDto($dto, [
+                'rawInputSnapshot' => $invalid,
+                'normalizedSnapshot' => $invalid,
+                'validationRaw' => $invalid,
+                'validationVerdict' => $invalid,
+            ]);
+
+            self::assertSame('10 Oak Rd', $record->rawInputSnapshot()['line1'] ?? null);
+            self::assertSame('austin', $record->normalizedSnapshot()['cityNorm'] ?? null);
+            self::assertNull($record->validationRaw());
+            self::assertNull($record->validationVerdict());
+        }
+
+        $nested = ['items' => ['one', 'two']];
+        $record = $factory->fromManageDto($dto, [
+            'rawInputSnapshot' => $nested,
+            'normalizedSnapshot' => $nested,
+            'validationRaw' => $nested,
+            'validationVerdict' => $nested,
+        ]);
+        self::assertSame($nested, $record->rawInputSnapshot());
+        self::assertSame($nested, $record->normalizedSnapshot());
+        self::assertSame($nested, $record->validationRaw());
+        self::assertSame($nested, $record->validationVerdict());
+    }
+
     public function testFromManageDtoHandlesMinimalNullableInputAndInvalidOverrides(): void
     {
         $dto = new AddressManageDTO();

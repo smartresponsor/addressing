@@ -12,6 +12,7 @@ use App\Addressing\Contract\AddressValidationStateInterface;
 
 final class AddressRecord implements AddressInterface
 {
+    /** @psalm-mutation-free */
     public function __construct(
         public string $id,
         public ?string $ownerId,
@@ -39,7 +40,7 @@ final class AddressRecord implements AddressInterface
         public ?string $validationFingerprint = null,
         /** @var array<string, mixed>|null */
         public ?array $validationRaw = null,
-        /** @var array<string, mixed>|null */
+        /** @var array<array-key, mixed>|null */
         public ?array $validationVerdict = null,
         public ?bool $validationDeliverable = null,
         public ?string $validationGranularity = null,
@@ -249,7 +250,7 @@ final class AddressRecord implements AddressInterface
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return array<array-key, mixed>|null
      */
     #[\Override]
     public function validationVerdict(): ?array

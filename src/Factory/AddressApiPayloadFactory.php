@@ -28,7 +28,15 @@ final readonly class AddressApiPayloadFactory
             throw new \RuntimeException('invalid_json');
         }
 
-        return $data;
+        $object = [];
+        foreach ($data as $key => $value) {
+            if (!is_string($key)) {
+                throw new \RuntimeException('invalid_json');
+            }
+            $object[$key] = $value;
+        }
+
+        return $object;
     }
 
     /**
@@ -200,7 +208,15 @@ final readonly class AddressApiPayloadFactory
             throw new \RuntimeException('invalid_'.$key);
         }
 
-        return $in[$key];
+        $object = [];
+        foreach ($in[$key] as $field => $value) {
+            if (!is_string($field)) {
+                throw new \RuntimeException('invalid_'.$key);
+            }
+            $object[$field] = $value;
+        }
+
+        return $object;
     }
 
     /** @param array<string, mixed> $in */

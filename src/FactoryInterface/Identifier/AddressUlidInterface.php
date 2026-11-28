@@ -7,11 +7,15 @@ namespace App\Addressing\FactoryInterface\Identifier;
 
 /**
  * Defines the Addressing contract for generating canonical string identifiers.
+ *
+ * @psalm-mutable
  */
 interface AddressUlidInterface
 {
     /**
      * Creates a new canonical Addressing identifier suitable for persistence and transport boundaries.
+     *
+     * @psalm-impure
      */
     public static function generate(): string;
 }

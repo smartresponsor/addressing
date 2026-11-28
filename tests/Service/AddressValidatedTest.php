@@ -121,6 +121,7 @@ final class AddressValidatedTest extends TestCase
     {
         $date = new \DateTimeImmutable('2026-01-02T03:04:05+00:00');
         $stringable = new class () implements \Stringable {
+            #[\Override]
             public function __toString(): string
             {
                 return ' stringable-value ';

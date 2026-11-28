@@ -83,13 +83,14 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 throw $throwable;
             }
 
-            throw new \RuntimeException('apply_failed', $throwable->getCode(), previous: $throwable);
+            $code = $throwable->getCode();
+            throw new \RuntimeException('apply_failed', is_int($code) ? $code : 0, previous: $throwable);
         }
     }
 
     /**
      * @param array<string, mixed>|null $normalizedSnapshot
-     * @param array<string, mixed>|null $validationIssues
+     * @param array<array-key, mixed>|null $validationIssues
      */
     private function applyValidationState(
         AddressEntity $entity,
@@ -175,7 +176,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         return (new AddressOutboxEntity())
             ->setEventName('AddressValidatedApplied')
             ->setEventVersion(1)
-            ->setPayload($this->encodePayload(AddressOutboxEventMessage::decoratePayload('AddressValidatedApplied', $this->addressValidatedPayloadFactory->outboxPayload($context, $addressValidated))))
+            ->setPayload($this->encodePayload(AddressOutboxEventMessage::decoratePersistedPayload('AddressValidatedApplied', $this->addressValidatedPayloadFactory->outboxPayload($context, $addressValidated))))
             ->setCreatedAt($now);
     }
 
@@ -212,7 +213,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
 
     /**
      * @param array<string, mixed>|null $normalizedSnapshot
-     * @param array<string, mixed>|null $validationIssues
+     * @param array<array-key, mixed>|null $validationIssues
      */
     private function createEvidenceSnapshot(
         AddressEntity $entity,
@@ -266,7 +267,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return array<array-key, mixed>|null
      */
     private function validationIssues(AddressValidated $addressValidated): ?array
     {

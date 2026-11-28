@@ -1,5 +1,72 @@
 # CMCP Orchestration Journal
 
+## 2026-10-06 — engine-20261004074259-addressing-fc2018 — RC evidence closure
+
+> Historical evidence recovered from `319d4d1c2acbdf83cc6f2dcd5d9381796703bbc0`; reported results apply to that historical execution, not the current candidate.
+
+- Recovered the authoritative current RC state non-destructively through Windows Console MCP. The historical local `rc/addressing-rc-final-v3` had diverged after consolidation/rebase, so it was preserved unchanged and a fresh local `rc/addressing-rc-final-v3-current` branch was created from exact `origin/rc/addressing-rc-final-v3` at `4fc1ede53235651065a73c5b14f9dbd28c9a8294`; no reset, stash, clean, force-push, or checkpoint artifact deletion was used.
+- Historical CanonScanning static-analysis RED remains closed: current PHPStan is GREEN. The validated-apply maintainability remediation and subsequent regression/coverage waves are already integrated into the consolidated RC history; no new application/runtime/UI behavior was changed in this closure pass.
+- Refreshed behavioral/UI evidence on the exact remote tree: functional 16/16, behavioral 2/2, UI 2/2, critical 1/1.
+- Fresh Xdebug coverage initially exposed an infrastructure-only `SQLITE_FULL` failure because Windows `TEMP` resolved to a completely full C: volume. Verification was rerun with process-local `TEMP`/`TMP` redirected to repository `var` storage on D:; the full coverage suite then completed GREEN at 214 tests / 1553 assertions (1 deprecation, 13 notices, 1 intentional skip). Fresh coverage: lines 82.47% (3129/3794), methods 80.02% (729/911), branches 78.17% (1941/2483), satisfying all Canon040 thresholds.
+- Final Gating on refreshed evidence: 16 rules / 0 failed / 0 warnings. Canon031 is GREEN at classes 133/148 (89.9%) and contract methods 351/499 (70.3%); Canon040 and Canon042 are GREEN; Canon052/056/061/063 remain GREEN.
+- Final deterministic acceptance: PHPStan GREEN on 196 files; PHP-CS-Fixer dry-run GREEN on 198 files; Composer validate `--strict --check-lock` GREEN; Composer audit GREEN with no advisories.
+- Fresh Inspecting report `D:\PhpstormProjects\www\Inspecting\.inspecting\reports\D--PhpstormProjects-www-Addressing-20261006-120604.json`: PHPStan 0 errors, Rector 0 changed files / 0 errors, 27 medium structural observations, 0 high/critical/autofixable findings, max complexity 13. These remaining medium design/maintainability observations are growth/architecture debt, not promoted RC blockers.
+- The temporary `bin/cmcp-coverage.ps1` verification helper was self-removed after successful evidence refresh and was never committed. No user-observable UI/navigation/form/interaction change occurred, so new visual capture is not applicable.
+
+Что имеем? Addressing RC is deterministic-gate GREEN with fresh coverage, behavioral, static-analysis, security, and Inspecting evidence on the authoritative remote tree.
+Что осталось? No RC-critical implementation or evidence gap remains for this task; only publication of this provenance journal entry remains.
+
+## 2026-09-16 — Persistence-contract documentation hardening
+
+> Historical evidence recovered from `eabd82a31be8634524d38478e1ea030eafe407bb`; reported results apply to that historical execution, not the current candidate.
+
+### Reconnaissance baseline
+
+- Re-read Addressing `AGENTS.md`, README, Composer manifest, HTTP/entity/remediation/OpenAPI documentation, Deptrac policy, trust-surface gate, current Doctrine schema/mapper/entity implementation, and Git state.
+- Re-read the required Objecting, Cruding, Viewing, Interfacing, Gating, and Canonization root contracts. Addressing still declares the complete first-party dependency contour through pinned `dev-master` path repositories with symlinks.
+- Consulted Canonization rules `Canon017`, `Canon021`, `Canon022`, and `Canon044` for current-documentation parity, CRUD ownership, standalone dependency baseline, and Objecting system-field naming.
+- Current branch is `rc/addressing-rc-closure`, tracking `origin/rc/addressing-rc-closure`, initially ahead by one commit. The pre-existing untracked `bin/cmcp-generate-current-baseline.ps1` is preserved and excluded from this workstream.
+- Baseline verification: `composer gating` passes Canon022–029 8/8; PHPUnit passes 22 tests / 108 assertions with one intentional skip; lint, CS, PHPStan, Deptrac, trust-surface, and Rector stages are green. The aggregate `qa:full` Console invocation reached PHPUnit after all preceding stages passed but the wrapper returned without a final exit code, so PHPUnit was re-run independently and passed.
+
+### Target-to-canon mapping and selected RC work
+
+- `Canon017`: `docs/addressing-entity-boundary-contract.md` still described removed `AddressPdoFactory` / `AddressSchemaManager` / `sql/postgres` schema authority. Current runtime instead uses Doctrine attributes, `AddressDoctrineSchemaManager`, `AddressEntityMapper`, and the configured Doctrine entity manager.
+- `Canon021`: no generic CRUD engine is introduced; Addressing-specific lifecycle/operational HTTP remains inside Addressing while reusable CRUD stays in Cruding.
+- `Canon022`: no dependency change is required; the standalone baseline is already complete and executable Gating is green.
+- `Canon044`: active Objecting-backed taxonomy entities use canonical field packs. A broader lifecycle migration of the main persistence entities is deliberately not folded into this documentation repair because it changes schema semantics and requires an explicit data-parity wave.
+- RC-critical implementation: make the entity-boundary document describe the current Doctrine runtime, mark the old remediation plan as historical context, and extend `qa:trust-surface` with a deterministic documentation-runtime parity assertion so removed PDO topology cannot silently return to authoritative current documentation.
+
+### Growth workstream kept outside RC
+
+- Provider-neutral postal-validation/geocoding adapters, broader international normalization, richer confidence/precision UX, and external provider observability remain post-RC capability work. Mapping/routing UI, generic CRUD, generic collection infrastructure, and final rendering remain outside Addressing ownership.
+
+### Verification plan
+
+- Run targeted trust-surface and PHP lint first, then `qa:full`, `gating`, Composer validation/audit, Doctrine/container/runtime smokes, and final Git/PR integration checks.
+
+### Verification and repair results
+
+- `qa:trust-surface` is green and now reports `documentation_runtime_ready: true` in addition to route readiness.
+- The first aggregate `qa:full` retry exposed stale/transient PHPStan/Symfony cache state referencing the old Cruding normalizer namespace. Addressing contains no such reference; current Cruding owns `App\\Cruding\\Normalizer\\Resource\\CrudRouteValueNormalizer`. After the repository-provided `phpstan:clear`, `qa:phpstan` and the complete `qa:full` gate pass.
+- Composer strict validation passes and `composer audit` reports no security advisories.
+- Container and runtime smokes pass.
+- The pre-existing Doctrine smoke was factually broken because it did not load Composer autoload and therefore always reported ORM/entities missing while returning success. It now loads the installed runtime, checks all three schema-managed Doctrine entities (`AddressEntity`, `AddressEvidenceSnapshotEntity`, `AddressOutboxEntity`), and fails hard on incomplete evidence. The repaired smoke reports `status: ready` with ORM and all entity mappings present.
+
+## 2026-09-16 — Canon039/040/041 test-contract closure
+
+> Historical evidence recovered from `eabd82a31be8634524d38478e1ea030eafe407bb`; reported results apply to that historical execution, not the current candidate.
+
+- Consulted Canonization rules `Canon039PhpTestToolingRule`, `Canon040PhpTestCoverageRule`, `Canon041BehavioralUiTestToolingRule`, and `Canon042BehavioralUiCoverageRule` in addition to the existing Addressing canon mapping.
+- Added `symfony/test-pack` and aligned PHPUnit to `^12.5` because Composer proved `symfony/test-pack` 1.2 incompatible with the prior PHPUnit 10.5 line. The PHPUnit schema is now 12.5.
+- Materialized the Canon039 execution contract: `src/` is the explicit coverage population and `test:coverage` writes persistent php-code-coverage evidence to `var/coverage/summary.txt` with path/branch data.
+- Canon041 repository-local browser tooling was already present through Panther and Playwright; `symfony/test-pack` closes the missing standard Symfony application-test dependency.
+- Fresh Canon040 evidence is honest and below target: lines 32.17% (1219/3789), methods 34.50% (295/855), branches 36.97% (616/1666). Addressing therefore remains `HIGH_TEST_DEBT`; passing test counts are not treated as coverage.
+- Post-change `qa:full` passes under PHPUnit 12.5.35: 22 tests, 112 assertions, one intentional skip and one PHPUnit notice. Composer strict validation, Canon022-029 Gating, and Composer audit are green.
+- The pre-existing untracked `bin/cmcp-generate-current-baseline.ps1` remains outside this change set.
+
+Что имеем? Standard Symfony/PHPUnit testing and reproducible coverage tooling are now materialized and the existing QA contour is green.
+Что осталось? Canon040 coverage debt is the remaining RC test-quality debt; raise line/method/branch coverage with behaviorally meaningful tests rather than test-count heuristics.
+
 ## 2026-10-05 — engine-20261004115229-addressing-996f2d — continuation
 
 - Fresh baseline: Windows Console MCP resolved `D:\\PhpstormProjects\\www\\Addressing` on `rc/addressing-rc-final-v3`; branch advanced concurrently while this pass ran and remained synchronized with origin. Existing dirty test paths and shared journal content were preserved without reset, stash, cleanup, or re-attribution.

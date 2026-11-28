@@ -10,19 +10,31 @@ use App\Addressing\Contract\AddressInterface;
 
 /**
  * Defines persistence and paginated retrieval of immutable Addressing validation evidence snapshots.
+ *
+ * @psalm-mutable
  */
 interface AddressEvidenceRepositoryInterface
 {
-    /** Persist the current address evidence snapshot when the address carries evidence. */
+    /**
+     * Persist the current address evidence snapshot when the address carries evidence.
+     *
+     * @psalm-impure
+     */
     public function appendEvidenceSnapshot(AddressInterface $address): ?AddressEvidenceSnapshotInterface;
 
-    /** Return the most recent evidence snapshot for one address within the requested tenant scope. */
+    /**
+     * Return the most recent evidence snapshot for one address within the requested tenant scope.
+     *
+     * @psalm-impure
+     */
     public function getLatestEvidenceSnapshot(string $addressId, ?string $ownerId, ?string $vendorId): ?AddressEvidenceSnapshotInterface;
 
     /**
      * Return a cursor-paginated evidence history ordered newest-first within the requested tenant scope.
      *
      * @return array{'items': list<AddressEvidenceSnapshotInterface>, 'nextCursor': ?string}
+     *
+     * @psalm-impure
      */
     public function findEvidenceHistoryPage(string $addressId, ?string $ownerId, ?string $vendorId, int $limit, ?string $cursor): array;
 }

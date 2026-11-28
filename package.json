@@ -2,6 +2,7 @@
     "name": "addressing-e2e",
     "private": true,
     "scripts": {
+        "pretest:e2e": "node -e \"require('node:fs').rmSync('var/coverage/address-manage-playwright.json', {force:true})\"",
         "test:e2e": "playwright test",
         "test:e2e:headed": "playwright test --headed",
         "test:e2e:install": "playwright install chromium"

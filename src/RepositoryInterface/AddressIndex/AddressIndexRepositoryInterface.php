@@ -9,18 +9,27 @@ use App\Addressing\Projection\AddressIndex\AddressIndexRecord;
 
 /**
  * Persists and queries normalized address-index projection records used by lookup workflows.
+ *
+ * @psalm-mutable
  */
 interface AddressIndexRepositoryInterface
 {
-    /** Inserts or replaces the persisted projection represented by the supplied index record. */
+    /**
+     * Inserts or replaces the persisted projection represented by the supplied index record.
+     *
+     * @psalm-impure
+     */
     public function upsert(AddressIndexRecord $indexRecord): void;
 
+    /** @psalm-impure */
     public function getByDigest(string $digest): ?AddressIndexRecord;
 
     /**
      * Searches indexed address records by normalized prefix with an optional country restriction.
      *
      * @return AddressIndexRecord[]
+     *
+     * @psalm-impure
      */
     public function search(string $prefix, ?string $country = null, int $limit = 20): array;
 }

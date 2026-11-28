@@ -9,15 +9,29 @@ use App\Addressing\Contract\AddressInterface;
 
 /**
  * Defines the command-side persistence contract for creating, updating, and deleting addresses.
+ *
+ * @psalm-mutable
  */
 interface AddressWriteRepositoryInterface
 {
-    /** Persists a new canonical address record through the component write boundary. */
+    /**
+     * Persists a new canonical address record through the component write boundary.
+     *
+     * @psalm-impure
+     */
     public function create(AddressInterface $address): void;
 
-    /** Persists state changes for an existing canonical address record. */
+    /**
+     * Persists state changes for an existing canonical address record.
+     *
+     * @psalm-impure
+     */
     public function update(AddressInterface $address): void;
 
-    /** Deletes one address identified within the supplied ownership scope. */
+    /**
+     * Deletes one address identified within the supplied ownership scope.
+     *
+     * @psalm-impure
+     */
     public function delete(string $id, ?string $ownerId, ?string $vendorId): void;
 }

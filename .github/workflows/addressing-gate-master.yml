@@ -6,26 +6,38 @@ on:
     branches: [ "master" ]
     paths:
       - ".github/workflows/**"
-      - "Domain/**"
+      - "tools/**"
+      - "config/**"
+      - ".gitlab-ci.yml"
+      - "phpstan.neon.dist"
       - "src/**"
       - "tests/**"
       - "composer.json"
       - "composer.lock"
       - "phpstan.neon"
       - "phpunit.xml.dist"
+      - "package.json"
+      - "package-lock.json"
+      - "playwright.config.js"
       - "docs/**"
       - "page/**"
   pull_request:
     branches: [ "master" ]
     paths:
       - ".github/workflows/**"
-      - "Domain/**"
+      - "tools/**"
+      - "config/**"
+      - ".gitlab-ci.yml"
+      - "phpstan.neon.dist"
       - "src/**"
       - "tests/**"
       - "composer.json"
       - "composer.lock"
       - "phpstan.neon"
       - "phpunit.xml.dist"
+      - "package.json"
+      - "package-lock.json"
+      - "playwright.config.js"
       - "docs/**"
       - "page/**"
 
@@ -48,21 +60,10 @@ jobs:
         php-version: [ "8.4" ]
 
     services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: smartresponsor
-          MYSQL_USER: smartresponsor
-          MYSQL_PASSWORD: smartresponsor
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -proot"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
       postgres:
         image: postgres:15
+        ports:
+          - 5432:5432
         env:
           POSTGRES_DB: smartresponsor
           POSTGRES_USER: smartresponsor
@@ -80,13 +81,6 @@ jobs:
       APP_ENV: "test"
       ADDRESS_PARITY_DATABASE_URL: "postgresql://smartresponsor:smartresponsor@127.0.0.1:5432/smartresponsor?serverVersion=15&charset=utf8"
 
-      PG_DSN: pgsql:host=127.0.0.1;port=5432;dbname=smartresponsor
-      PG_USER: smartresponsor
-      PG_PASS: smartresponsor
-
-      MY_DSN: mysql:host=127.0.0.1;port=3306;dbname=smartresponsor
-      MY_USER: smartresponsor
-      MY_PASS: smartresponsor
 
     steps:
       - name: Checkout
@@ -97,21 +91,22 @@ jobs:
         with:
           php-version: ${{ matrix.php-version }}
           tools: composer
-          coverage: none
-          extensions: pdo_mysql, pdo_pgsql, intl, mbstring, zip
-
-      - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y bc
+          coverage: xdebug
+          extensions: pdo_sqlite, pdo_pgsql, intl, mbstring, zip
 
       - name: Cache Composer
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             ~/.composer/cache/files
-            vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-
+
+      - name: Provision locked sibling dependencies
+        env:
+          ADDRESSING_GATING_READ_TOKEN: ${{ secrets.ADDRESSING_GATING_READ_TOKEN }}
+        run: bash tools/ci/address-provision-locked-siblings.sh
 
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
@@ -119,17 +114,8 @@ jobs:
       - name: Doctrine schema parity
         run: composer schema:parity
 
-      - name: Domain gate (strict)
-        shell: bash
-        env:
-          SR_CANON_REQUIRED: "1"
-          SR_GATE_STRICT: "1"
-        run: |
-          if [ -f "Domain/Tool/github-gate.ps1" ]; then
-            pwsh -NoProfile -File Domain/Tool/github-gate.ps1 -Domain "${SR_DOMAIN}"
-          else
-            echo "Skipping domain gate: Domain/Tool/github-gate.ps1 is not present in this repository."
-          fi
+      - name: Addressing trust gate
+        run: composer qa:trust-surface
 
       - name: Quality checks
         run: |
@@ -137,37 +123,60 @@ jobs:
           composer psalm
           composer rector:dry
 
-      - name: Unit tests with coverage threshold
+      - name: PHPUnit with coverage threshold
+        shell: bash
         run: |
-          export APP_VAR_DIR="$RUNNER_TEMP/symfony-var"
-          mkdir -p "$APP_VAR_DIR" build/logs
-          php -S 127.0.0.1:8000 -t public > build/logs/php-server.log 2>&1 &
+          set -euo pipefail
+          export XDEBUG_MODE=coverage
+          export APP_VAR_DIR="$(mktemp -d "$RUNNER_TEMP/addressing-panther.XXXXXXXX")"
+          export ADDRESS_DB_PATH="$APP_VAR_DIR/addressing.sqlite"
+          export ADDRESS_DB_DSN="sqlite:$ADDRESS_DB_PATH"
+          export TEST_DB_DSN='' TEST_DB_USER='' TEST_DB_PASS=''
+          mkdir -p build/logs var/coverage
+          rm -f build/logs/clover.xml build/logs/junit.xml var/coverage/summary.txt var/coverage/address-http-functional.json var/coverage/behavioral-ui.json
+          php tools/e2e/ensure-schema.php
+          php -S 127.0.0.1:8000 -t public public/router.php > build/logs/php-server.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID' EXIT
-          sleep 2
+          php tools/e2e/wait-for-url.php http://127.0.0.1:8000/address/manage 30
 
-          vendor/bin/phpunit --coverage-clover build/logs/clover.xml --coverage-text | tee build/logs/coverage.txt
+          vendor/bin/phpunit --path-coverage --coverage-clover build/logs/clover.xml --log-junit build/logs/junit.xml --coverage-text=var/coverage/summary.txt | tee build/logs/coverage.txt
+          test -s var/coverage/summary.txt
+          test -s build/logs/junit.xml
+          cat var/coverage/summary.txt
 
-          COVERAGE=$(grep -Eo 'Lines:\s+[0-9]+(\.[0-9]+)?%' build/logs/coverage.txt | awk '{print $2}' | tr -d '%')
-          echo "Coverage: ${COVERAGE}%"
-
-          if [ -n "$COVERAGE" ] && [ "$(echo "$COVERAGE < $MIN_COVERAGE" | bc -l)" -eq 1 ]; then
-            echo "Coverage below ${MIN_COVERAGE}%"
-            exit 1
-          fi
+          test -s build/logs/clover.xml
+          php -r '$x = simplexml_load_file("build/logs/clover.xml"); $m = $x === false ? null : $x->project->metrics; $ns = (string) ($m["statements"] ?? ""); $cs = (string) ($m["coveredstatements"] ?? ""); $n = (int) $ns; $c = (int) $cs; $min = getenv("MIN_COVERAGE"); if (!ctype_digit($ns) || !ctype_digit($cs) || $n <= 0 || $c > $n || $min === false || !is_numeric($min) || (float) $min < 0 || (float) $min > 100) { fwrite(STDERR, "Invalid or missing coverage evidence\n"); exit(1); } $pct = 100 * $c / $n; printf("Coverage: %.2f%%\n", $pct); exit($pct < (float) $min ? 1 : 0);'
 
           kill $SERVER_PID
           trap - EXIT
 
-      - name: Migration smoke check
+      - name: Doctrine mapping smoke check
+        run: composer smoke:doctrine
+
+      - name: Playwright browser acceptance
         run: |
-          php bin/address-migrate
-          php bin/address-projection-migrate
+          npm ci --ignore-scripts
+          npx --no-install playwright install --with-deps chromium
+          composer test:e2e:playwright
+          test -s var/coverage/address-manage-playwright.json
+
+      - name: Canon evaluation with coverage evidence
+        run: |
+          composer report:behavioral-ui-coverage
+          composer gating
 
       - name: Upload report artifact
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: addressing-report
-          path: report/
-          if-no-files-found: ignore
+          path: |
+            report/
+            build/logs/
+            var/coverage/summary.txt
+            var/coverage/behavioral-ui.json
+            var/coverage/address-http-functional.json
+            var/coverage/address-manage-playwright.json
+            test-results/
+          if-no-files-found: error

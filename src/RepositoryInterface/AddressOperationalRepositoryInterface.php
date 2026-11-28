@@ -7,6 +7,8 @@ namespace App\Addressing\RepositoryInterface;
 
 /**
  * Applies scoped operational metadata changes to persisted address records without changing identity.
+ *
+ * @psalm-mutable
  */
 interface AddressOperationalRepositoryInterface
 {
@@ -14,6 +16,8 @@ interface AddressOperationalRepositoryInterface
      * Applies an operational-field patch when the addressed record exists within the supplied scope.
      *
      * @param array<string, mixed> $patch
+     *
+     * @psalm-impure
      */
     public function patchOperational(string $id, ?string $ownerId, ?string $vendorId, array $patch): bool;
 }

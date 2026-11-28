@@ -25,6 +25,7 @@ final class AddressHttpSurfaceFunctionalTest extends TestCase
 
     private ?string $sqlitePath = null;
 
+    #[\Override]
     protected function tearDown(): void
     {
         TestRuntimeEnvironment::clearSqliteAddressRuntime();

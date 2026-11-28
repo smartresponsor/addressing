@@ -18,7 +18,7 @@ final readonly class AddressDoctrineQueueRepository extends AddressAbstractDoctr
         $entities = $this->fetchFilteredAddresses($ownerId, $vendorId, $countryCode, $q, $filters, true, true, true);
         $queueParams = [];
         $this->summaryDueBefore($queueParams, $filters);
-        $queueDueBefore = (string) ($queueParams['summary_due_before'] ?? $this->currentTimestampAtom());
+        $queueDueBefore = new \DateTimeImmutable((string) ($queueParams['summary_due_before'] ?? $this->currentTimestampAtom()));
         $expectedNormalizationVersion = $this->stringFilter($filters, 'expectedNormalizationVersion');
 
         $row = [
@@ -33,7 +33,8 @@ final readonly class AddressDoctrineQueueRepository extends AddressAbstractDoctr
 
         foreach ($entities as $entity) {
             ++$row['total'];
-            if (null !== $entity->getRevalidationDueAt() && $entity->getRevalidationDueAt()->format(DATE_ATOM) <= $queueDueBefore) {
+            $dueAt = $entity->getRevalidationDueAt();
+            if (null !== $dueAt && $dueAt <= $queueDueBefore) {
                 ++$row['due_for_revalidation'];
             }
             if (!$this->hasEvidenceEntity($entity)) {

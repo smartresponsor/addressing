@@ -10,19 +10,31 @@ use App\Addressing\Value\Persistence\AddressPageCriteria;
 
 /**
  * Provides scoped read access to canonical address records and deduplicated page results.
+ *
+ * @psalm-mutable
  */
 interface AddressReadRepositoryInterface
 {
-    /** Loads one address by identifier when it is visible in the supplied ownership scope. */
+    /**
+     * Loads one address by identifier when it is visible in the supplied ownership scope.
+     *
+     * @psalm-impure
+     */
     public function get(string $id, ?string $ownerId, ?string $vendorId): ?AddressInterface;
 
-    /** Resolves the canonical address record associated with an exact persisted deduplication key. */
+    /**
+     * Resolves the canonical address record associated with an exact persisted deduplication key.
+     *
+     * @psalm-impure
+     */
     public function findByDedupeKey(string $dedupeKey): ?AddressInterface;
 
     /**
      * Returns one cursor page of addresses matching the supplied persistence criteria.
      *
      * @return array{'items': list<AddressInterface>, 'nextCursor': ?string}
+     *
+     * @psalm-impure
      */
     public function findPage(AddressPageCriteria $criteria): array;
 }

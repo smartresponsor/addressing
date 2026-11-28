@@ -10,8 +10,10 @@ $marker = is_file($markerPath)
     : null;
 
 $manageCovered = is_array($marker)
-    && 'address-manage-playwright-v1' === ($marker['schema'] ?? null)
-    && is_string($marker['passedAt'] ?? null);
+    && 'address-manage-playwright-v2' === ($marker['schema'] ?? null)
+    && is_string($marker['passedAt'] ?? null)
+    && ['GET /address/manage', 'POST /address/manage'] === ($marker['covered'] ?? null)
+    && ['manage.page.render', 'manage.address.create.owner-scope'] === ($marker['assertions'] ?? null);
 
 $functionalEligible = [
     'GET /address/manage',

@@ -55,6 +55,7 @@ class AddressStreetTypeEntity
         return $this->countryCode;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCountryCode(string $countryCode): self
     {
         $this->countryCode = $countryCode;
@@ -67,6 +68,7 @@ class AddressStreetTypeEntity
         return $this->code;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCode(string $code): self
     {
         $this->code = $code;
@@ -79,6 +81,7 @@ class AddressStreetTypeEntity
         return $this->label;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLabel(string $label): self
     {
         $this->label = $label;
@@ -91,6 +94,7 @@ class AddressStreetTypeEntity
         return $this->abbreviation;
     }
 
+    /** @psalm-external-mutation-free */
     public function setAbbreviation(?string $abbreviation): self
     {
         $this->abbreviation = $abbreviation;
@@ -103,6 +107,7 @@ class AddressStreetTypeEntity
         return $this->sortOrder;
     }
 
+    /** @psalm-external-mutation-free */
     public function setSortOrder(int $sortOrder): self
     {
         $this->sortOrder = $sortOrder;

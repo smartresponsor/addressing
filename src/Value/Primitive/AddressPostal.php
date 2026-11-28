@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value\Primitive;
 
+/** Normalizes postal text by uppercasing, filtering unsupported characters and collapsing whitespace. */
 final readonly class AddressPostal implements \Stringable
 {
     private string $value;
@@ -14,6 +15,11 @@ final readonly class AddressPostal implements \Stringable
         $this->value = self::norm($input);
     }
 
+    /**
+     * PCRE updates process-local last-error state.
+     *
+     * @psalm-impure
+     */
     public static function norm(string $input): string
     {
         $normalizedInput = strtoupper(trim($input));

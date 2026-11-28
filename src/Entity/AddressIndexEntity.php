@@ -68,6 +68,7 @@ class AddressIndexEntity
         return $this->digest;
     }
 
+    /** @psalm-external-mutation-free */
     public function setDigest(string $digest): self
     {
         $this->digest = $digest;
@@ -80,6 +81,7 @@ class AddressIndexEntity
         return $this->line1;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLine1(string $line1): self
     {
         $this->line1 = $line1;
@@ -92,6 +94,7 @@ class AddressIndexEntity
         return $this->line2;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLine2(?string $line2): self
     {
         $this->line2 = $line2;
@@ -104,6 +107,7 @@ class AddressIndexEntity
         return $this->city;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCity(string $city): self
     {
         $this->city = $city;
@@ -116,6 +120,7 @@ class AddressIndexEntity
         return $this->region;
     }
 
+    /** @psalm-external-mutation-free */
     public function setRegion(string $region): self
     {
         $this->region = $region;
@@ -128,6 +133,7 @@ class AddressIndexEntity
         return $this->postal;
     }
 
+    /** @psalm-external-mutation-free */
     public function setPostal(string $postal): self
     {
         $this->postal = $postal;
@@ -140,6 +146,7 @@ class AddressIndexEntity
         return $this->country;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCountry(string $country): self
     {
         $this->country = $country;
@@ -152,6 +159,7 @@ class AddressIndexEntity
         return $this->lat;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLat(?float $lat): self
     {
         $this->lat = $lat;
@@ -164,6 +172,7 @@ class AddressIndexEntity
         return $this->lon;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLon(?float $lon): self
     {
         $this->lon = $lon;
@@ -176,6 +185,7 @@ class AddressIndexEntity
         return $this->display;
     }
 
+    /** @psalm-external-mutation-free */
     public function setDisplay(?string $display): self
     {
         $this->display = $display;
@@ -188,6 +198,7 @@ class AddressIndexEntity
         return $this->provider;
     }
 
+    /** @psalm-external-mutation-free */
     public function setProvider(?string $provider): self
     {
         $this->provider = $provider;
@@ -200,6 +211,7 @@ class AddressIndexEntity
         return $this->confidence;
     }
 
+    /** @psalm-external-mutation-free */
     public function setConfidence(?float $confidence): self
     {
         $this->confidence = $confidence;
@@ -212,6 +224,7 @@ class AddressIndexEntity
         return $this->geoKey;
     }
 
+    /** @psalm-external-mutation-free */
     public function setGeoKey(string $geoKey): self
     {
         $this->geoKey = $geoKey;
@@ -224,6 +237,7 @@ class AddressIndexEntity
         return $this->createdAt;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCreatedAt(string $createdAt): self
     {
         $this->createdAt = $createdAt;
@@ -236,6 +250,7 @@ class AddressIndexEntity
         return $this->updatedAt;
     }
 
+    /** @psalm-external-mutation-free */
     public function setUpdatedAt(string $updatedAt): self
     {
         $this->updatedAt = $updatedAt;

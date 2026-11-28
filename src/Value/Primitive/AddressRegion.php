@@ -5,10 +5,12 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value\Primitive;
 
+/** Represents region text normalized by trimming and uppercasing. */
 final readonly class AddressRegion implements \Stringable
 {
     private string $value;
 
+    /** @psalm-mutation-free */
     public function __construct(string $input)
     {
         $this->value = strtoupper(trim($input));

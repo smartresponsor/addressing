@@ -12,6 +12,7 @@ final readonly class AddressCountryCode implements \Stringable
 {
     private string $value;
 
+    /** @psalm-mutation-free */
     public function __construct(string $value)
     {
         $value = strtoupper(trim($value));
@@ -27,7 +28,11 @@ final readonly class AddressCountryCode implements \Stringable
         return $this->value;
     }
 
-    /** Compares this normalized country code with another value object. */
+    /**
+     * Compares this normalized country code with another value object.
+     *
+     * @psalm-mutation-free
+     */
     public function equals(self $other): bool
     {
         return $this->value === $other->value;

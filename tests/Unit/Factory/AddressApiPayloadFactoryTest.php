@@ -23,6 +23,29 @@ final class AddressApiPayloadFactoryTest extends TestCase
         $factory->decodeJsonRequest(Request::create('/', content: 'not-json'));
     }
 
+    public function testDecodeJsonRequestRejectsNonStringKeys(): void
+    {
+        foreach (['["list"]', '{"0":"numeric","line1":"Main"}'] as $body) {
+            try {
+                (new AddressApiPayloadFactory())->decodeJsonRequest(Request::create('/', content: $body));
+                self::fail('Expected invalid JSON object keys to be rejected.');
+            } catch (\RuntimeException $exception) {
+                self::assertSame('invalid_json', $exception->getMessage());
+            }
+        }
+    }
+
+    public function testOptionalSnapshotRejectsNonStringKeys(): void
+    {
+        $factory = new AddressApiPayloadFactory();
+        $method = new \ReflectionMethod(AddressApiPayloadFactory::class, 'optArray');
+
+        self::assertSame(['key' => ['nested']], $method->invoke($factory, ['rawInput' => ['key' => ['nested']]], 'rawInput'));
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('invalid_rawInput');
+        $method->invoke($factory, ['rawInput' => ['list']], 'rawInput');
+    }
+
     public function testCreateAddressEntityNormalizesInputAndDefaults(): void
     {
         $address = (new AddressApiPayloadFactory())->createAddressEntity([

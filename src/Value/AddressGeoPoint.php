@@ -13,12 +13,13 @@ final readonly class AddressGeoPoint implements \Stringable
     private float $lat;
     private float $lon;
 
+    /** @psalm-mutation-free */
     public function __construct(float $lat, float $lon)
     {
-        if ($lat < -90.0 || $lat > 90.0) {
+        if (!is_finite($lat) || $lat < -90.0 || $lat > 90.0) {
             throw new \InvalidArgumentException('Latitude out of range');
         }
-        if ($lon < -180.0 || $lon > 180.0) {
+        if (!is_finite($lon) || $lon < -180.0 || $lon > 180.0) {
             throw new \InvalidArgumentException('Longitude out of range');
         }
         $this->lat = $lat;
@@ -37,13 +38,21 @@ final readonly class AddressGeoPoint implements \Stringable
         return $this->lon;
     }
 
-    /** Compares both coordinates with another geographic point value object. */
+    /**
+     * Compares both coordinates with another geographic point value object.
+     *
+     * @psalm-mutation-free
+     */
     public function equals(self $other): bool
     {
         return $this->lat === $other->lat && $this->lon === $other->lon;
     }
 
-    /** Returns a stable fixed-precision coordinate key for indexing and comparison. */
+    /**
+     * Returns a stable fixed-precision coordinate key for indexing and comparison.
+     *
+     * @psalm-mutation-free
+     */
     public function toKey(): string
     {
         return sprintf('%+.6f,%+.6f', $this->lat, $this->lon);

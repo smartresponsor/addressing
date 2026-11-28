@@ -13,9 +13,11 @@ final readonly class AddressData implements AddressInterface
 {
     /**
      * @param array<string, mixed>|null $validationRaw
-     * @param array<string, mixed>|null $validationVerdict
+     * @param array<array-key, mixed>|null $validationVerdict
      * @param array<string, mixed>|null $rawInputSnapshot
      * @param array<string, mixed>|null $normalizedSnapshot
+     *
+     * @psalm-mutation-free
      */
     public function __construct(
         private string $id,
@@ -247,7 +249,7 @@ final readonly class AddressData implements AddressInterface
         return $this->validationRaw;
     }
 
-    /** @return array<string, mixed>|null */
+    /** @return array<array-key, mixed>|null */
     #[\Override]
     public function validationVerdict(): ?array
     {

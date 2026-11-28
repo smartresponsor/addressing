@@ -7,6 +7,8 @@ namespace App\Addressing\RepositoryInterface;
 
 /**
  * Produces operational queue counts for scoped address records requiring follow-up processing.
+ *
+ * @psalm-mutable
  */
 interface AddressQueueRepositoryInterface
 {
@@ -24,6 +26,8 @@ interface AddressQueueRepositoryInterface
      *   'duplicateReview':int,
      *   'staleNormalizationVersion':int
      * }
+     *
+     * @psalm-impure
      */
     public function summarizeOperationalQueues(
         ?string $ownerId,

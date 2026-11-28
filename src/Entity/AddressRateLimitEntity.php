@@ -32,6 +32,7 @@ class AddressRateLimitEntity
         return $this->client;
     }
 
+    /** @psalm-external-mutation-free */
     public function setClient(string $client): self
     {
         $this->client = $client;
@@ -44,6 +45,7 @@ class AddressRateLimitEntity
         return $this->rkey;
     }
 
+    /** @psalm-external-mutation-free */
     public function setRkey(string $rkey): self
     {
         $this->rkey = $rkey;
@@ -56,6 +58,7 @@ class AddressRateLimitEntity
         return $this->ts;
     }
 
+    /** @psalm-external-mutation-free */
     public function setTs(int $ts): self
     {
         $this->ts = $ts;
@@ -68,6 +71,7 @@ class AddressRateLimitEntity
         return $this->cnt;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCnt(int $cnt): self
     {
         $this->cnt = $cnt;

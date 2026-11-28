@@ -10,21 +10,43 @@ namespace App\Addressing\Contract;
  *
  * The contract keeps lifecycle timing and prior validation evidence available to orchestration
  * code without coupling callers to a concrete Addressing entity or external provider client.
+ *
+ * @psalm-mutable
  */
 interface AddressRevalidationStateInterface
 {
-    /** Return the scheduled revalidation instant in the component's serialized timestamp form. */
+    /**
+     * Return the scheduled revalidation instant in the component's serialized timestamp form.
+     *
+     * @psalm-mutation-free
+     */
     public function revalidationDueAt(): ?string;
 
-    /** Return the policy identifier that determined the current revalidation schedule. */
+    /**
+     * Return the policy identifier that determined the current revalidation schedule.
+     *
+     * @psalm-mutation-free
+     */
     public function revalidationPolicy(): ?string;
 
-    /** Return the provider identifier used for the most recently recorded validation attempt. */
+    /**
+     * Return the provider identifier used for the most recently recorded validation attempt.
+     *
+     * @psalm-mutation-free
+     */
     public function lastValidationProvider(): ?string;
 
-    /** Return the status produced by the most recently recorded validation attempt. */
+    /**
+     * Return the status produced by the most recently recorded validation attempt.
+     *
+     * @psalm-mutation-free
+     */
     public function lastValidationStatus(): ?string;
 
-    /** Return the optional quality or confidence score from the latest validation attempt. */
+    /**
+     * Return the optional quality or confidence score from the latest validation attempt.
+     *
+     * @psalm-mutation-free
+     */
     public function lastValidationScore(): ?int;
 }

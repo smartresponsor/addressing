@@ -15,12 +15,44 @@ final class AddressAbstractDoctrineRepositoryTest extends TestCase
 {
     private AddressAbstractDoctrineRepositoryProbe $repository;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->repository = new AddressAbstractDoctrineRepositoryProbe(
             $this->createMock(EntityManagerInterface::class),
             new AddressEntityMapper(),
         );
+    }
+
+    public function testNullableJsonValueRejectsNonStringKeys(): void
+    {
+        self::assertSame(['key' => ['nested']], $this->repository->nullableJsonValue('{"key":["nested"]}'));
+        self::assertSame(['key' => ['nested']], $this->repository->nullableJsonValue(['key' => ['nested']]));
+        self::assertNull($this->repository->nullableJsonValue(['list']));
+        self::assertNull($this->repository->nullableJsonValue('["list"]'));
+        self::assertNull($this->repository->nullableJsonValue('{"0":"numeric","key":"value"}'));
+    }
+
+    public function testEvidenceRoundTripPreservesLegacyIssueListsAndStructuredVerdicts(): void
+    {
+        $map = new \ReflectionMethod(AddressAbstractDoctrineRepository::class, 'mapRowToRecord');
+        $snapshot = new \ReflectionMethod(AddressAbstractDoctrineRepository::class, 'buildEvidenceSnapshot');
+        $mapper = new AddressEntityMapper();
+
+        foreach ([['postal_mismatch'], ['deliverable' => true, 'signal' => []]] as $verdict) {
+            $record = $map->invoke($this->repository, [
+                'id' => 'evidence-address',
+                'created_at' => '2026-01-01T00:00:00+00:00',
+                'validation_verdict' => json_encode($verdict, JSON_THROW_ON_ERROR),
+            ]);
+            self::assertInstanceOf(\App\Addressing\Value\Record\AddressData::class, $record);
+            self::assertSame($verdict, $record->validationVerdict());
+            $entity = $mapper->toDoctrine($record);
+            self::assertSame($verdict, $mapper->fromDoctrine($entity)->validationVerdict());
+            $evidence = $snapshot->invoke($this->repository, $record);
+            self::assertInstanceOf(\App\Addressing\Contract\AddressEvidenceSnapshotInterface::class, $evidence);
+            self::assertSame($verdict, $mapper->toDoctrineSnapshot($evidence, $entity)->getValidationIssues());
+        }
     }
 
     public function testTenantWhereBuildsOwnerVendorAndUnscopedPredicates(): void
@@ -257,6 +289,16 @@ final class AddressAbstractDoctrineRepositoryTest extends TestCase
         }
     }
 
+    public function testPortfolioCountsFirstStaleNormalizationOnlyOnce(): void
+    {
+        $entity = (new AddressEntity())->setId('stale')->setCountryCode('US')->setGovernanceStatus('canonical');
+        $rows = $this->repository->groupPortfolio([$entity], true);
+
+        self::assertCount(1, $rows);
+        self::assertSame(1, $rows[0]['total']);
+        self::assertSame(1, $rows[0]['staleNormalization']);
+    }
+
     public function testGroupedPortfolioAccumulatesGovernanceEvidenceAndOperationalCounters(): void
     {
         $due = (new AddressEntity())
@@ -447,12 +489,15 @@ final readonly class AddressAbstractDoctrineRepositoryProbe extends AddressAbstr
      *
      * @return list<array<string, mixed>>
      */
-    public function groupPortfolio(array $entities): array
+    public function groupPortfolio(array $entities, bool $stale = false): array
     {
-        return $this->buildGroupedPortfolio(
-            $entities,
-            static fn (AddressEntity $entity): string => $entity->getCountryCode(),
-            static fn (AddressEntity $entity): array => ['countryCode' => $entity->getCountryCode()],
+        return array_map(
+            static fn (array $group): array => $group['counters'] + $group['meta'],
+            $this->buildGroupedPortfolio(
+                $entities,
+                static fn (AddressEntity $entity): string => $entity->getCountryCode(),
+                static fn (AddressEntity $entity): array => ['countryCode' => $entity->getCountryCode(), 'staleNormalization' => $stale ? 1 : 0],
+            ),
         );
     }
 }
