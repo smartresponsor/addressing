@@ -16,7 +16,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 /**
  * Defines the standalone Addressing management form used to capture canonical address input values.
  *
- * @extends AbstractType<AddressManageDTO>
+ * @phpstan-extends AbstractType<AddressManageDTO>
  */
 final class AddressManageType extends AbstractType
 {

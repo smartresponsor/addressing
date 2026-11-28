@@ -12,6 +12,7 @@ final readonly class AddressPostalCode implements \Stringable
 {
     private string $value;
 
+    /** @psalm-mutation-free */
     public function __construct(string $value)
     {
         $value = trim($value);
@@ -30,7 +31,11 @@ final readonly class AddressPostalCode implements \Stringable
         return $this->value;
     }
 
-    /** Compares this postal code with another postal-code value object. */
+    /**
+     * Compares this postal code with another postal-code value object.
+     *
+     * @psalm-mutation-free
+     */
     public function equals(self $other): bool
     {
         return $this->value === $other->value;

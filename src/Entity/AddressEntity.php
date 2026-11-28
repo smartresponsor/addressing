@@ -171,6 +171,7 @@ class AddressEntity
         return $this->id;
     }
 
+    /** @psalm-external-mutation-free */
     public function setId(string $id): self
     {
         $this->id = $id;
@@ -183,6 +184,7 @@ class AddressEntity
         return $this->ownerId;
     }
 
+    /** @psalm-external-mutation-free */
     public function setOwnerId(?string $ownerId): self
     {
         $this->ownerId = $ownerId;
@@ -195,6 +197,7 @@ class AddressEntity
         return $this->vendorId;
     }
 
+    /** @psalm-external-mutation-free */
     public function setVendorId(?string $vendorId): self
     {
         $this->vendorId = $vendorId;
@@ -207,6 +210,7 @@ class AddressEntity
         return $this->line1;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLine1(string $line1): self
     {
         $this->line1 = $line1;
@@ -219,6 +223,7 @@ class AddressEntity
         return $this->line2;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLine2(?string $line2): self
     {
         $this->line2 = $line2;
@@ -231,6 +236,7 @@ class AddressEntity
         return $this->city;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCity(string $city): self
     {
         $this->city = $city;
@@ -243,6 +249,7 @@ class AddressEntity
         return $this->region;
     }
 
+    /** @psalm-external-mutation-free */
     public function setRegion(?string $region): self
     {
         $this->region = $region;
@@ -255,6 +262,7 @@ class AddressEntity
         return $this->postalCode;
     }
 
+    /** @psalm-external-mutation-free */
     public function setPostalCode(?string $postalCode): self
     {
         $this->postalCode = $postalCode;
@@ -267,6 +275,7 @@ class AddressEntity
         return $this->countryCode;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCountryCode(string $countryCode): self
     {
         $this->countryCode = $countryCode;
@@ -279,6 +288,7 @@ class AddressEntity
         return $this->line1Norm;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLine1Norm(?string $line1Norm): self
     {
         $this->line1Norm = $line1Norm;
@@ -291,6 +301,7 @@ class AddressEntity
         return $this->cityNorm;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCityNorm(?string $cityNorm): self
     {
         $this->cityNorm = $cityNorm;
@@ -303,6 +314,7 @@ class AddressEntity
         return $this->regionNorm;
     }
 
+    /** @psalm-external-mutation-free */
     public function setRegionNorm(?string $regionNorm): self
     {
         $this->regionNorm = $regionNorm;
@@ -315,6 +327,7 @@ class AddressEntity
         return $this->postalCodeNorm;
     }
 
+    /** @psalm-external-mutation-free */
     public function setPostalCodeNorm(?string $postalCodeNorm): self
     {
         $this->postalCodeNorm = $postalCodeNorm;
@@ -327,6 +340,7 @@ class AddressEntity
         return $this->latitude;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLatitude(?float $latitude): self
     {
         $this->latitude = $latitude;
@@ -339,6 +353,7 @@ class AddressEntity
         return $this->longitude;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLongitude(?float $longitude): self
     {
         $this->longitude = $longitude;
@@ -351,6 +366,7 @@ class AddressEntity
         return $this->geohash;
     }
 
+    /** @psalm-external-mutation-free */
     public function setGeohash(?string $geohash): self
     {
         $this->geohash = $geohash;
@@ -363,6 +379,7 @@ class AddressEntity
         return $this->validationStatus;
     }
 
+    /** @psalm-external-mutation-free */
     public function setValidationStatus(string $validationStatus): self
     {
         $this->validationStatus = $validationStatus;
@@ -375,6 +392,7 @@ class AddressEntity
         return $this->validationProvider;
     }
 
+    /** @psalm-external-mutation-free */
     public function setValidationProvider(?string $validationProvider): self
     {
         $this->validationProvider = $validationProvider;
@@ -387,6 +405,7 @@ class AddressEntity
         return $this->validatedAt;
     }
 
+    /** @psalm-external-mutation-free */
     public function setValidatedAt(?\DateTimeImmutable $validatedAt): self
     {
         $this->validatedAt = $validatedAt;
@@ -399,6 +418,7 @@ class AddressEntity
         return $this->dedupeKey;
     }
 
+    /** @psalm-external-mutation-free */
     public function setDedupeKey(?string $dedupeKey): self
     {
         $this->dedupeKey = $dedupeKey;
@@ -411,6 +431,7 @@ class AddressEntity
         return $this->createdAt;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCreatedAt(\DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;
@@ -428,6 +449,7 @@ class AddressEntity
         return $this->updatedAt;
     }
 
+    /** @psalm-external-mutation-free */
     public function setUpdatedAt(?\DateTimeImmutable $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
@@ -450,6 +472,7 @@ class AddressEntity
         return $this->deletedAt;
     }
 
+    /** @psalm-external-mutation-free */
     public function setDeletedAt(?\DateTimeImmutable $deletedAt): self
     {
         $this->deletedAt = $deletedAt;
@@ -467,6 +490,7 @@ class AddressEntity
         return $this->validationFingerprint;
     }
 
+    /** @psalm-external-mutation-free */
     public function setValidationFingerprint(?string $validationFingerprint): self
     {
         $this->validationFingerprint = $validationFingerprint;
@@ -480,7 +504,11 @@ class AddressEntity
         return $this->validationRaw;
     }
 
-    /** @param array<string, mixed>|null $validationRaw */
+    /**
+     * @param array<string, mixed>|null $validationRaw
+     *
+     * @psalm-external-mutation-free
+     */
     public function setValidationRaw(?array $validationRaw): self
     {
         $this->validationRaw = $validationRaw;
@@ -494,7 +522,11 @@ class AddressEntity
         return $this->validationVerdict;
     }
 
-    /** @param array<array-key, mixed>|null $validationVerdict */
+    /**
+     * @param array<array-key, mixed>|null $validationVerdict
+     *
+     * @psalm-external-mutation-free
+     */
     public function setValidationVerdict(?array $validationVerdict): self
     {
         $this->validationVerdict = $validationVerdict;
@@ -507,6 +539,7 @@ class AddressEntity
         return $this->validationDeliverable;
     }
 
+    /** @psalm-external-mutation-free */
     public function setValidationDeliverable(?bool $validationDeliverable): self
     {
         $this->validationDeliverable = $validationDeliverable;
@@ -519,6 +552,7 @@ class AddressEntity
         return $this->validationGranularity;
     }
 
+    /** @psalm-external-mutation-free */
     public function setValidationGranularity(?string $validationGranularity): self
     {
         $this->validationGranularity = $validationGranularity;
@@ -531,6 +565,7 @@ class AddressEntity
         return $this->validationQuality;
     }
 
+    /** @psalm-external-mutation-free */
     public function setValidationQuality(?int $validationQuality): self
     {
         $this->validationQuality = $validationQuality;
@@ -543,6 +578,7 @@ class AddressEntity
         return $this->sourceSystem;
     }
 
+    /** @psalm-external-mutation-free */
     public function setSourceSystem(?string $sourceSystem): self
     {
         $this->sourceSystem = $sourceSystem;
@@ -555,6 +591,7 @@ class AddressEntity
         return $this->sourceType;
     }
 
+    /** @psalm-external-mutation-free */
     public function setSourceType(?string $sourceType): self
     {
         $this->sourceType = $sourceType;
@@ -567,6 +604,7 @@ class AddressEntity
         return $this->sourceReference;
     }
 
+    /** @psalm-external-mutation-free */
     public function setSourceReference(?string $sourceReference): self
     {
         $this->sourceReference = $sourceReference;
@@ -579,6 +617,7 @@ class AddressEntity
         return $this->normalizationVersion;
     }
 
+    /** @psalm-external-mutation-free */
     public function setNormalizationVersion(?string $normalizationVersion): self
     {
         $this->normalizationVersion = $normalizationVersion;
@@ -592,7 +631,11 @@ class AddressEntity
         return $this->rawInputSnapshot;
     }
 
-    /** @param array<string, mixed>|null $rawInputSnapshot */
+    /**
+     * @param array<string, mixed>|null $rawInputSnapshot
+     *
+     * @psalm-external-mutation-free
+     */
     public function setRawInputSnapshot(?array $rawInputSnapshot): self
     {
         $this->rawInputSnapshot = $rawInputSnapshot;
@@ -606,7 +649,11 @@ class AddressEntity
         return $this->normalizedSnapshot;
     }
 
-    /** @param array<string, mixed>|null $normalizedSnapshot */
+    /**
+     * @param array<string, mixed>|null $normalizedSnapshot
+     *
+     * @psalm-external-mutation-free
+     */
     public function setNormalizedSnapshot(?array $normalizedSnapshot): self
     {
         $this->normalizedSnapshot = $normalizedSnapshot;
@@ -619,6 +666,7 @@ class AddressEntity
         return $this->providerDigest;
     }
 
+    /** @psalm-external-mutation-free */
     public function setProviderDigest(?string $providerDigest): self
     {
         $this->providerDigest = $providerDigest;
@@ -631,6 +679,7 @@ class AddressEntity
         return $this->governanceStatus;
     }
 
+    /** @psalm-external-mutation-free */
     public function setGovernanceStatus(string $governanceStatus): self
     {
         $this->governanceStatus = $governanceStatus;
@@ -643,6 +692,7 @@ class AddressEntity
         return $this->duplicateOfId;
     }
 
+    /** @psalm-external-mutation-free */
     public function setDuplicateOfId(?string $duplicateOfId): self
     {
         $this->duplicateOfId = $duplicateOfId;
@@ -655,6 +705,7 @@ class AddressEntity
         return $this->supersededById;
     }
 
+    /** @psalm-external-mutation-free */
     public function setSupersededById(?string $supersededById): self
     {
         $this->supersededById = $supersededById;
@@ -667,6 +718,7 @@ class AddressEntity
         return $this->aliasOfId;
     }
 
+    /** @psalm-external-mutation-free */
     public function setAliasOfId(?string $aliasOfId): self
     {
         $this->aliasOfId = $aliasOfId;
@@ -679,6 +731,7 @@ class AddressEntity
         return $this->conflictWithId;
     }
 
+    /** @psalm-external-mutation-free */
     public function setConflictWithId(?string $conflictWithId): self
     {
         $this->conflictWithId = $conflictWithId;
@@ -691,6 +744,7 @@ class AddressEntity
         return $this->revalidationDueAt;
     }
 
+    /** @psalm-external-mutation-free */
     public function setRevalidationDueAt(?\DateTimeImmutable $revalidationDueAt): self
     {
         $this->revalidationDueAt = $revalidationDueAt;
@@ -703,6 +757,7 @@ class AddressEntity
         return $this->revalidationPolicy;
     }
 
+    /** @psalm-external-mutation-free */
     public function setRevalidationPolicy(?string $revalidationPolicy): self
     {
         $this->revalidationPolicy = $revalidationPolicy;
@@ -715,6 +770,7 @@ class AddressEntity
         return $this->lastValidationProvider;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLastValidationProvider(?string $lastValidationProvider): self
     {
         $this->lastValidationProvider = $lastValidationProvider;
@@ -727,6 +783,7 @@ class AddressEntity
         return $this->lastValidationStatus;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLastValidationStatus(?string $lastValidationStatus): self
     {
         $this->lastValidationStatus = $lastValidationStatus;
@@ -739,6 +796,7 @@ class AddressEntity
         return $this->lastValidationScore;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLastValidationScore(?int $lastValidationScore): self
     {
         $this->lastValidationScore = $lastValidationScore;

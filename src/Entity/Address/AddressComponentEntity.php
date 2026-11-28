@@ -58,6 +58,7 @@ class AddressComponentEntity
         return $this->addressId;
     }
 
+    /** @psalm-external-mutation-free */
     public function setAddressId(?string $addressId): self
     {
         $this->addressId = $addressId;
@@ -70,6 +71,7 @@ class AddressComponentEntity
         return $this->componentType;
     }
 
+    /** @psalm-external-mutation-free */
     public function setComponentType(string $componentType): self
     {
         $this->componentType = $componentType;
@@ -82,6 +84,7 @@ class AddressComponentEntity
         return $this->componentValue;
     }
 
+    /** @psalm-external-mutation-free */
     public function setComponentValue(string $componentValue): self
     {
         $this->componentValue = $componentValue;
@@ -94,6 +97,7 @@ class AddressComponentEntity
         return $this->normalizedValue;
     }
 
+    /** @psalm-external-mutation-free */
     public function setNormalizedValue(?string $normalizedValue): self
     {
         $this->normalizedValue = $normalizedValue;
@@ -106,6 +110,7 @@ class AddressComponentEntity
         return $this->source;
     }
 
+    /** @psalm-external-mutation-free */
     public function setSource(?string $source): self
     {
         $this->source = $source;
@@ -118,6 +123,7 @@ class AddressComponentEntity
         return $this->confidence;
     }
 
+    /** @psalm-external-mutation-free */
     public function setConfidence(?float $confidence): self
     {
         $this->confidence = $confidence;

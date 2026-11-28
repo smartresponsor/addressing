@@ -41,8 +41,19 @@ phpunit:
     - |
       set -eu
       export XDEBUG_MODE=coverage
+      export APP_VAR_DIR="$(mktemp -d)"
+      export ADDRESS_DB_PATH="$APP_VAR_DIR/addressing.sqlite"
+      export ADDRESS_DB_DSN="sqlite:$ADDRESS_DB_PATH"
+      export TEST_DB_DSN='' TEST_DB_USER='' TEST_DB_PASS=''
+      export APP_ENV=test APP_DEBUG=0
+      export PANTHER_EXTERNAL_BASE_URI=http://127.0.0.1:8000
       mkdir -p build/logs var/coverage
-      rm -f build/logs/clover.xml build/logs/junit.xml var/coverage/summary.txt
+      rm -f build/logs/clover.xml build/logs/junit.xml var/coverage/summary.txt var/coverage/address-http-functional.json var/coverage/behavioral-ui.json
+      php tools/e2e/ensure-schema.php
+      php -S 127.0.0.1:8000 -t public public/router.php > build/logs/php-server.log 2>&1 &
+      SERVER_PID=$!
+      trap 'kill "$SERVER_PID"' EXIT
+      php tools/e2e/wait-for-url.php http://127.0.0.1:8000/address/manage 30
       vendor/bin/phpunit --path-coverage --coverage-clover build/logs/clover.xml --log-junit build/logs/junit.xml --coverage-text=var/coverage/summary.txt > build/logs/coverage.txt || { cat build/logs/coverage.txt; exit 1; }
       cat build/logs/coverage.txt
       test -s var/coverage/summary.txt
@@ -50,6 +61,15 @@ phpunit:
       cat var/coverage/summary.txt
       test -s build/logs/clover.xml
       php -r '$x = simplexml_load_file("build/logs/clover.xml"); $m = $x === false ? null : $x->project->metrics; $ns = (string) ($m["statements"] ?? ""); $cs = (string) ($m["coveredstatements"] ?? ""); $n = (int) $ns; $c = (int) $cs; $min = getenv("MIN_COVERAGE"); if (!ctype_digit($ns) || !ctype_digit($cs) || $n <= 0 || $c > $n || $min === false || !is_numeric($min) || (float) $min < 0 || (float) $min > 100) { fwrite(STDERR, "Invalid or missing coverage evidence\n"); exit(1); } $pct = 100 * $c / $n; printf("Coverage: %.2f%%\n", $pct); exit($pct < (float) $min ? 1 : 0);'
+      kill "$SERVER_PID"
+      trap - EXIT
+      apt-get install -y nodejs npm
+      npm ci --ignore-scripts
+      npx --no-install playwright install --with-deps chromium
+      composer test:e2e:playwright
+      test -s var/coverage/address-manage-playwright.json
+      composer report:behavioral-ui-coverage
+      composer gating
   artifacts:
     when: always
     reports:
@@ -57,6 +77,10 @@ phpunit:
     paths:
       - build/logs/
       - var/coverage/summary.txt
+      - var/coverage/address-http-functional.json
+      - var/coverage/address-manage-playwright.json
+      - var/coverage/behavioral-ui.json
+      - test-results/
   coverage: '/Lines.*: (\d+\.\d+%)/'
 
 
@@ -76,4 +100,3 @@ doctrine_smoke:
     - composer qa:trust-surface
     - composer smoke:doctrine
     - composer schema:parity
-    - composer gating

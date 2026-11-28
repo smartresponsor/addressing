@@ -7,6 +7,8 @@ namespace App\Addressing\RepositoryInterface;
 
 /**
  * Provides governance-cluster summaries for scoped address records and their canonical relationships.
+ *
+ * @psalm-mutable
  */
 interface AddressGovernanceRepositoryInterface
 {
@@ -26,6 +28,8 @@ interface AddressGovernanceRepositoryInterface
      *   'clusterSize':int,
      *   'relatedAddressIds':list<string>
      * }
+     *
+     * @psalm-impure
      */
     public function summarizeGovernanceCluster(string $addressId, ?string $ownerId, ?string $vendorId): array;
 }

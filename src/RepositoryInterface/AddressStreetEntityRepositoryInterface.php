@@ -6,6 +6,8 @@ namespace App\Addressing\RepositoryInterface;
 
 /**
  * Marks the repository contract responsible for persisted street reference entities.
+ *
+ * @psalm-mutable
  */
 interface AddressStreetEntityRepositoryInterface
 {

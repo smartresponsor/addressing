@@ -32,7 +32,8 @@ final readonly class AddressPortfolioSummaryService
      *   evidenceBacked:int,
      *   'evidenceMissing':int,
      *   'dueForRevalidation':int,
-     *   'uncertainValidation':int
+     *   'uncertainValidation':int,
+     *   staleNormalization?:int
      * }>
      */
     public function country(?string $ownerId, ?string $vendorId, ?string $q = null, array $filters = []): array
@@ -57,7 +58,8 @@ final readonly class AddressPortfolioSummaryService
      *   evidenceBacked:int,
      *   'evidenceMissing':int,
      *   'dueForRevalidation':int,
-     *   'uncertainValidation':int
+     *   'uncertainValidation':int,
+     *   staleNormalization?:int
      * }>
      */
     public function source(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $query, array $filters = []): array
@@ -82,7 +84,8 @@ final readonly class AddressPortfolioSummaryService
      *   evidenceBacked:int,
      *   'evidenceMissing':int,
      *   'dueForRevalidation':int,
-     *   'uncertainValidation':int
+     *   'uncertainValidation':int,
+     *   staleNormalization?:int
      * }>
      */
     public function validation(?string $ownerId, ?string $vendorId, ?string $countryCode, ?string $query, array $filters = []): array

@@ -79,8 +79,8 @@ final class ValueObjectsTest extends TestCase
             try {
                 new AddressPostalCode($invalid);
                 self::fail('Expected invalid postal code exception.');
-            } catch (\InvalidArgumentException) {
-                self::addToAssertionCount(1);
+            } catch (\InvalidArgumentException $exception) {
+                self::assertContains($exception->getMessage(), ['PostalCode is too short', 'PostalCode is too long']);
             }
         }
     }
@@ -97,8 +97,8 @@ final class ValueObjectsTest extends TestCase
             try {
                 new AddressStreetLine($invalid);
                 self::fail('Expected invalid street line exception.');
-            } catch (\InvalidArgumentException) {
-                self::addToAssertionCount(1);
+            } catch (\InvalidArgumentException $exception) {
+                self::assertContains($exception->getMessage(), ['StreetLine is too short', 'StreetLine is too long']);
             }
         }
     }
@@ -130,12 +130,12 @@ final class ValueObjectsTest extends TestCase
         self::assertSame('+29.760400,-95.369800', $point->toKey());
         self::assertFalse($point->equals(new AddressGeoPoint(29.7605, -95.3698)));
 
-        foreach ([[-90.1, 0.0], [90.1, 0.0], [0.0, -180.1], [0.0, 180.1]] as [$lat, $lon]) {
+        foreach ([[-90.1, 0.0], [90.1, 0.0], [0.0, -180.1], [0.0, 180.1], [NAN, 0.0], [0.0, NAN], [INF, 0.0], [0.0, -INF]] as [$lat, $lon]) {
             try {
                 new AddressGeoPoint($lat, $lon);
                 self::fail('Expected invalid geo point exception.');
-            } catch (\InvalidArgumentException) {
-                self::addToAssertionCount(1);
+            } catch (\InvalidArgumentException $exception) {
+                self::assertContains($exception->getMessage(), ['Latitude out of range', 'Longitude out of range']);
             }
         }
     }

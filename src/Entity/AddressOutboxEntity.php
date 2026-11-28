@@ -60,6 +60,7 @@ class AddressOutboxEntity
         return $this->stream;
     }
 
+    /** @psalm-external-mutation-free */
     public function setStream(string $stream): self
     {
         $this->stream = $stream;
@@ -72,6 +73,7 @@ class AddressOutboxEntity
         return $this->eventName;
     }
 
+    /** @psalm-external-mutation-free */
     public function setEventName(string $eventName): self
     {
         $this->eventName = $eventName;
@@ -84,6 +86,7 @@ class AddressOutboxEntity
         return $this->eventVersion;
     }
 
+    /** @psalm-external-mutation-free */
     public function setEventVersion(int $eventVersion): self
     {
         $this->eventVersion = $eventVersion;
@@ -96,6 +99,7 @@ class AddressOutboxEntity
         return $this->payload;
     }
 
+    /** @psalm-external-mutation-free */
     public function setPayload(string $payload): self
     {
         $this->payload = $payload;
@@ -108,6 +112,7 @@ class AddressOutboxEntity
         return $this->createdAt;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCreatedAt(\DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;
@@ -128,6 +133,7 @@ class AddressOutboxEntity
         return $this->publishedAt;
     }
 
+    /** @psalm-external-mutation-free */
     public function setPublishedAt(?\DateTimeImmutable $publishedAt): self
     {
         $this->publishedAt = $publishedAt;
@@ -140,6 +146,7 @@ class AddressOutboxEntity
         return $this->lockedAt;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLockedAt(?\DateTimeImmutable $lockedAt): self
     {
         $this->lockedAt = $lockedAt;
@@ -160,6 +167,7 @@ class AddressOutboxEntity
         return $this->lockedBy;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLockedBy(?string $lockedBy): self
     {
         $this->lockedBy = $lockedBy;
@@ -180,6 +188,7 @@ class AddressOutboxEntity
         return $this->publishedAttempt;
     }
 
+    /** @psalm-external-mutation-free */
     public function setPublishedAttempt(int $publishedAttempt): self
     {
         $this->publishedAttempt = $publishedAttempt;
@@ -192,6 +201,7 @@ class AddressOutboxEntity
         return $this->lastError;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLastError(?string $lastError): self
     {
         $this->lastError = $lastError;

@@ -20,6 +20,7 @@ final readonly class AddressDoctrineValidatedPersistenceRepository implements Ad
     }
 
     /** Return one non-deleted address entity constrained by the supplied owner or vendor scope. */
+    #[\Override]
     public function findScopedAddress(string $id, ?string $ownerId, ?string $vendorId): ?AddressEntity
     {
         $criteria = ['id' => $id, 'deletedAt' => null];
@@ -36,18 +37,21 @@ final readonly class AddressDoctrineValidatedPersistenceRepository implements Ad
     }
 
     /** Begin the Doctrine transaction that groups one validated Addressing persistence workflow. */
+    #[\Override]
     public function beginTransaction(): void
     {
         $this->entityManager->beginTransaction();
     }
 
     /** Commit the active validated Addressing persistence transaction. */
+    #[\Override]
     public function commit(): void
     {
         $this->entityManager->commit();
     }
 
     /** Roll back the validated persistence transaction only when Doctrine still reports it active. */
+    #[\Override]
     public function rollbackIfActive(): void
     {
         if ($this->entityManager->getConnection()->isTransactionActive()) {
@@ -56,18 +60,21 @@ final readonly class AddressDoctrineValidatedPersistenceRepository implements Ad
     }
 
     /** Stage one validated evidence snapshot entity in the current Doctrine unit of work. */
+    #[\Override]
     public function persistEvidenceSnapshot(AddressEvidenceSnapshotEntity $snapshot): void
     {
         $this->entityManager->persist($snapshot);
     }
 
     /** Stage one validated Addressing outbox entity in the current Doctrine unit of work. */
+    #[\Override]
     public function persistOutbox(AddressOutboxEntity $outbox): void
     {
         $this->entityManager->persist($outbox);
     }
 
     /** Flush all staged validated Addressing persistence changes through the active Doctrine unit of work. */
+    #[\Override]
     public function flush(): void
     {
         $this->entityManager->flush();

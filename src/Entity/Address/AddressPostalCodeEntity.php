@@ -58,6 +58,7 @@ class AddressPostalCodeEntity
         return $this->countryCode;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCountryCode(string $countryCode): self
     {
         $this->countryCode = $countryCode;
@@ -70,6 +71,7 @@ class AddressPostalCodeEntity
         return $this->postalCode;
     }
 
+    /** @psalm-external-mutation-free */
     public function setPostalCode(string $postalCode): self
     {
         $this->postalCode = $postalCode;
@@ -82,6 +84,7 @@ class AddressPostalCodeEntity
         return $this->provinceCode;
     }
 
+    /** @psalm-external-mutation-free */
     public function setProvinceCode(?string $provinceCode): self
     {
         $this->provinceCode = $provinceCode;
@@ -94,6 +97,7 @@ class AddressPostalCodeEntity
         return $this->cityName;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCityName(?string $cityName): self
     {
         $this->cityName = $cityName;
@@ -106,6 +110,7 @@ class AddressPostalCodeEntity
         return $this->latitude;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLatitude(?float $latitude): self
     {
         $this->latitude = $latitude;
@@ -118,6 +123,7 @@ class AddressPostalCodeEntity
         return $this->longitude;
     }
 
+    /** @psalm-external-mutation-free */
     public function setLongitude(?float $longitude): self
     {
         $this->longitude = $longitude;

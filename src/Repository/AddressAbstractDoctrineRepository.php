@@ -663,24 +663,26 @@ abstract readonly class AddressAbstractDoctrineRepository
      * @param callable(AddressEntity): string $groupKey
      * @param callable(AddressEntity): T      $groupMeta
      *
-     * @return list<T&array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int}>
+     * @return list<array{meta:T,counters:array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int}}>
      */
     protected function buildGroupedPortfolio(array $entities, callable $groupKey, callable $groupMeta): array
     {
-        /** @var array<string, T&array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int}> $groups */
+        /** @var array<string, array{meta:T,counters:array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int}}> $groups */
         $groups = [];
         $now = new \DateTimeImmutable('now');
 
         foreach ($entities as $entity) {
             $key = $groupKey($entity);
             $meta = $groupMeta($entity);
-            $groups[$key] ??= $this->emptyPortfolioCounters() + $meta;
-            $this->accumulatePortfolioMetrics($groups[$key], $entity, $meta, $now);
+            $groups[$key] ??= ['meta' => $meta, 'counters' => $this->emptyPortfolioCounters()];
+            $this->accumulatePortfolioMetrics($groups[$key]['counters'], $entity, $meta, $now);
         }
 
-        /** @var list<T&array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int}> $rows */
         $rows = array_values($groups);
-        usort($rows, $this->comparePortfolioRows(...));
+        usort($rows, fn (array $left, array $right): int => $this->comparePortfolioRows(
+            $left['counters'] + $left['meta'],
+            $right['counters'] + $right['meta'],
+        ));
 
         return $rows;
     }
@@ -706,8 +708,9 @@ abstract readonly class AddressAbstractDoctrineRepository
     }
 
     /**
-     * @param array<string, mixed> $group
+     * @param array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int} $group
      * @param array<string, mixed> $meta
+     * @param-out array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int} $group
      */
     private function accumulatePortfolioMetrics(array &$group, AddressEntity $entity, array $meta, \DateTimeImmutable $now): void
     {
@@ -733,14 +736,14 @@ abstract readonly class AddressAbstractDoctrineRepository
         }
     }
 
-    /** @param array<string, mixed> $group */
+    /**
+     * @param array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int} $group
+     * @param-out array{total:int,canonical:int,duplicate:int,superseded:int,alias:int,conflict:int,evidenceBacked:int,evidenceMissing:int,dueForRevalidation:int,uncertainValidation:int,staleNormalization:int} $group
+     * @param 'total'|'canonical'|'duplicate'|'superseded'|'alias'|'conflict'|'evidenceBacked'|'evidenceMissing'|'dueForRevalidation'|'uncertainValidation'|'staleNormalization' $counter
+     */
     private function addPortfolioCounter(array &$group, string $counter, int $amount = 1): void
     {
-        $value = $group[$counter] ?? null;
-        if (!is_int($value)) {
-            throw new \LogicException('invalid_portfolio_counter');
-        }
-        $group[$counter] = $value + $amount;
+        $group[$counter] += $amount;
     }
 
     /**
@@ -835,8 +838,9 @@ abstract readonly class AddressAbstractDoctrineRepository
         $validatedBy = $address->validationProvider() ?? $address->lastValidationProvider() ?? $address->sourceSystem();
         $validationScore = $address->lastValidationScore() ?? $address->validationQuality();
         $validationIssues = $address->validationVerdict();
-        if (null === $validationIssues && null !== $address->validationRaw() && isset($address->validationRaw()['issues']) && is_array($address->validationRaw()['issues'])) {
-            $validationIssues = $address->validationRaw()['issues'];
+        $raw = $address->validationRaw();
+        if (null === $validationIssues && null !== $raw && is_array($raw['issues'] ?? null)) {
+            $validationIssues = $raw['issues'];
         }
 
         return new AddressEvidenceSnapshotData(
@@ -959,11 +963,15 @@ abstract readonly class AddressAbstractDoctrineRepository
     protected function decodeEvidenceCursor(string $cursor): array
     {
         $decoded = base64_decode($cursor, true);
-        if (false === $decoded || !str_contains($decoded, "\n")) {
+        if (false === $decoded) {
             throw new \RuntimeException('invalid_evidence_cursor');
         }
 
-        [$createdAt, $id] = explode("\n", $decoded, 2);
+        $parts = explode("\n", $decoded, 2);
+        if (!isset($parts[1])) {
+            throw new \RuntimeException('invalid_evidence_cursor');
+        }
+        [$createdAt, $id] = $parts;
         $parsedCreatedAt = \DateTimeImmutable::createFromFormat(DATE_ATOM, $createdAt);
         if ('' === $createdAt || '' === trim($id) || str_contains($id, "\n") || false === $parsedCreatedAt || $parsedCreatedAt->format(DATE_ATOM) !== $createdAt) {
             throw new \RuntimeException('invalid_evidence_cursor');

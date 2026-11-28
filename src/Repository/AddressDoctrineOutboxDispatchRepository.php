@@ -19,6 +19,7 @@ final readonly class AddressDoctrineOutboxDispatchRepository implements AddressO
     }
 
     /** Reserve unpublished outbox rows only after a successful conditional database claim. */
+    #[\Override]
     public function reserve(string $lockId, int $limit): array
     {
         $this->entityManager->beginTransaction();
@@ -66,6 +67,7 @@ final readonly class AddressDoctrineOutboxDispatchRepository implements AddressO
     }
 
     /** Mark a currently reserved outbox row published and clear its claim atomically. */
+    #[\Override]
     public function markPublished(int $id): void
     {
         $this->entityManager->createQueryBuilder()
@@ -83,6 +85,7 @@ final readonly class AddressDoctrineOutboxDispatchRepository implements AddressO
     }
 
     /** Release a currently reserved unpublished row and increment its attempt counter atomically. */
+    #[\Override]
     public function markDispatchFailure(int $id, ?string $error): void
     {
         $this->entityManager->createQueryBuilder()

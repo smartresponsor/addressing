@@ -16,6 +16,9 @@ on:
       - "composer.lock"
       - "phpstan.neon"
       - "phpunit.xml.dist"
+      - "package.json"
+      - "package-lock.json"
+      - "playwright.config.js"
       - "docs/**"
       - "page/**"
   pull_request:
@@ -32,6 +35,9 @@ on:
       - "composer.lock"
       - "phpstan.neon"
       - "phpunit.xml.dist"
+      - "package.json"
+      - "package-lock.json"
+      - "playwright.config.js"
       - "docs/**"
       - "page/**"
 
@@ -122,13 +128,17 @@ jobs:
         run: |
           set -euo pipefail
           export XDEBUG_MODE=coverage
-          export APP_VAR_DIR="$RUNNER_TEMP/symfony-var"
-          mkdir -p "$APP_VAR_DIR" build/logs var/coverage
-          rm -f build/logs/clover.xml build/logs/junit.xml var/coverage/summary.txt
+          export APP_VAR_DIR="$(mktemp -d "$RUNNER_TEMP/addressing-panther.XXXXXXXX")"
+          export ADDRESS_DB_PATH="$APP_VAR_DIR/addressing.sqlite"
+          export ADDRESS_DB_DSN="sqlite:$ADDRESS_DB_PATH"
+          export TEST_DB_DSN='' TEST_DB_USER='' TEST_DB_PASS=''
+          mkdir -p build/logs var/coverage
+          rm -f build/logs/clover.xml build/logs/junit.xml var/coverage/summary.txt var/coverage/address-http-functional.json var/coverage/behavioral-ui.json
+          php tools/e2e/ensure-schema.php
           php -S 127.0.0.1:8000 -t public public/router.php > build/logs/php-server.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID' EXIT
-          sleep 2
+          php tools/e2e/wait-for-url.php http://127.0.0.1:8000/address/manage 30
 
           vendor/bin/phpunit --path-coverage --coverage-clover build/logs/clover.xml --log-junit build/logs/junit.xml --coverage-text=var/coverage/summary.txt | tee build/logs/coverage.txt
           test -s var/coverage/summary.txt
@@ -143,6 +153,13 @@ jobs:
 
       - name: Doctrine mapping smoke check
         run: composer smoke:doctrine
+
+      - name: Playwright browser acceptance
+        run: |
+          npm ci --ignore-scripts
+          npx --no-install playwright install --with-deps chromium
+          composer test:e2e:playwright
+          test -s var/coverage/address-manage-playwright.json
 
       - name: Canon evaluation with coverage evidence
         run: |
@@ -159,4 +176,7 @@ jobs:
             build/logs/
             var/coverage/summary.txt
             var/coverage/behavioral-ui.json
+            var/coverage/address-http-functional.json
+            var/coverage/address-manage-playwright.json
+            test-results/
           if-no-files-found: error

@@ -16,6 +16,7 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
  */
 final class AddressingExtension extends Extension
 {
+    #[\Override]
     public function getAlias(): string
     {
         return 'addressing';
@@ -24,6 +25,7 @@ final class AddressingExtension extends Extension
     /**
      * Loads the component service definition consumed by standalone and host-application bundle runtimes.
      */
+    #[\Override]
     public function load(array $configs, ContainerBuilder $container): void
     {
         $yamlFileLoader = new YamlFileLoader($container, new FileLocator(dirname(__DIR__, 2).'/config'));

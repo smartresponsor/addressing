@@ -6,8 +6,7 @@ declare(strict_types=1);
 namespace App\Addressing;
 
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
-use Symfony\Component\Config\Loader\LoaderInterface;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\HttpKernel\KernelInterface;
@@ -39,13 +38,15 @@ final class Kernel extends BaseKernel implements KernelInterface
      *
      * @noinspection PhpMissingParentCallCommonInspection
      */
-    protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader): void
+    protected function configureContainer(ContainerConfigurator $container): void
     {
         $projectConfigDir = $this->projectConfigDir();
-        $loader->load($projectConfigDir.'/packages/*.yaml', 'glob');
+        $container->import($projectConfigDir.'/packages/*.yaml', 'glob');
         if ('test' === $this->environment) {
-            $loader->load($projectConfigDir.'/packages/test/*.yaml', 'glob');
+            $container->import($projectConfigDir.'/packages/test/*.yaml', 'glob');
         }
+        $runtimeVarDir = $this->configuredRuntimeVarDir() ?? $this->getProjectDir().'/var';
+        $container->parameters()->set('addressing.session_save_path', $runtimeVarDir.'/sessions/'.$this->environment);
     }
 
     /**

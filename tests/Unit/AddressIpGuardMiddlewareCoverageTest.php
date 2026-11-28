@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class AddressIpGuardMiddlewareCoverageTest extends TestCase
 {
+    #[\Override]
     protected function tearDown(): void
     {
         putenv('DENY_IPS');

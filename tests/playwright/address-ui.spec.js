@@ -2,9 +2,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { test, expect } = require('@playwright/test');
 
-test('manage page renders and can create an address record', async ({ page }) => {
+test('manage page renders and can create an address record', async ({ page }, testInfo) => {
   const suffix = Date.now().toString();
   const line1 = `500 Test Ave ${suffix}`;
+  const ownerId = `playwright-owner-${suffix}`;
 
   await page.goto('/address/manage');
 
@@ -13,18 +14,27 @@ test('manage page renders and can create an address record', async ({ page }) =>
   await page.getByLabel('Address line 1').fill(line1);
   await page.getByLabel('City').fill('Austin');
   await page.getByLabel('Country').selectOption('US');
-  await page.getByLabel('Owner ID').fill(`playwright-owner-${suffix}`);
+  await page.getByLabel('Owner ID').fill(ownerId);
   await page.getByRole('button', { name: 'Create address' }).click();
 
   await expect(page.getByText('Address created successfully:')).toBeVisible();
   await expect(page.getByText(line1)).toBeVisible();
 
-  const date = new Date().toISOString().slice(0, 10);
-  const runId = process.env.CMCP_VISUAL_RUN_ID || 'routing-rc';
-  const artifactDir = path.join(__dirname, '..', '..', '..', 'var', 'Addressing', date, runId);
-  fs.mkdirSync(artifactDir, { recursive: true });
+  const ownPage = await page.request.get('/api/address/page', { params: { ownerId } });
+  expect(ownPage.status()).toBe(200);
+  const ownPayload = await ownPage.json();
+  expect(ownPayload.items).toHaveLength(1);
+  expect(ownPayload.items[0]).toMatchObject({ line1, ownerId, countryCode: 'US' });
+  const id = ownPayload.items[0].id;
+  expect(typeof id).toBe('string');
+  const foreignPage = await page.request.get('/api/address/page', { params: { ownerId: `${ownerId}-foreign` } });
+  expect(foreignPage.status()).toBe(200);
+  expect((await foreignPage.json()).items).toEqual([]);
+  const foreignRecord = await page.request.get(`/api/address/${encodeURIComponent(id)}`, { params: { ownerId: `${ownerId}-foreign` } });
+  expect(foreignRecord.status()).toBe(404);
+
   await page.screenshot({
-    path: path.join(artifactDir, 'address-manage-created.png'),
+    path: testInfo.outputPath('address-manage-created.png'),
     fullPage: true,
   });
 
@@ -33,9 +43,10 @@ test('manage page renders and can create an address record', async ({ page }) =>
   fs.writeFileSync(
     path.join(coverageDir, 'address-manage-playwright.json'),
     JSON.stringify({
-      schema: 'address-manage-playwright-v1',
+      schema: 'address-manage-playwright-v2',
       passedAt: new Date().toISOString(),
       covered: ['GET /address/manage', 'POST /address/manage'],
+      assertions: ['manage.page.render', 'manage.address.create.owner-scope'],
     }, null, 2),
   );
 });

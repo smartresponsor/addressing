@@ -83,7 +83,8 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
                 throw $throwable;
             }
 
-            throw new \RuntimeException('apply_failed', $throwable->getCode(), previous: $throwable);
+            $code = $throwable->getCode();
+            throw new \RuntimeException('apply_failed', is_int($code) ? $code : 0, previous: $throwable);
         }
     }
 

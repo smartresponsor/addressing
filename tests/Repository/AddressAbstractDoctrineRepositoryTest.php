@@ -15,6 +15,7 @@ final class AddressAbstractDoctrineRepositoryTest extends TestCase
 {
     private AddressAbstractDoctrineRepositoryProbe $repository;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->repository = new AddressAbstractDoctrineRepositoryProbe(
@@ -490,10 +491,13 @@ final readonly class AddressAbstractDoctrineRepositoryProbe extends AddressAbstr
      */
     public function groupPortfolio(array $entities, bool $stale = false): array
     {
-        return $this->buildGroupedPortfolio(
-            $entities,
-            static fn (AddressEntity $entity): string => $entity->getCountryCode(),
-            static fn (AddressEntity $entity): array => ['countryCode' => $entity->getCountryCode(), 'staleNormalization' => $stale ? 1 : 0],
+        return array_map(
+            static fn (array $group): array => $group['counters'] + $group['meta'],
+            $this->buildGroupedPortfolio(
+                $entities,
+                static fn (AddressEntity $entity): string => $entity->getCountryCode(),
+                static fn (AddressEntity $entity): array => ['countryCode' => $entity->getCountryCode(), 'staleNormalization' => $stale ? 1 : 0],
+            ),
         );
     }
 }

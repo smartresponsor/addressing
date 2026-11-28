@@ -86,7 +86,7 @@ final readonly class AddressDoctrineEvidenceRepository extends AddressAbstractDo
 
         foreach ($entities as $index => $entity) {
             if ($index >= $effectiveLimit) {
-                $lastIncluded = $entities[$index - 1] ?? null;
+                $lastIncluded = $entities[$effectiveLimit - 1] ?? null;
                 if ($lastIncluded instanceof AddressEvidenceSnapshotEntity) {
                     $nextCursor = $this->encodeEvidenceCursor($lastIncluded->getCreatedAt()->format(DATE_ATOM), $lastIncluded->getId());
                 }

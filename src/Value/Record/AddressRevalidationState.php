@@ -8,6 +8,7 @@ use App\Addressing\Contract\AddressRevalidationStateInterface;
 
 final readonly class AddressRevalidationState implements AddressRevalidationStateInterface
 {
+    /** @psalm-mutation-free */
     public function __construct(
         private ?string $revalidationDueAt,
         private ?string $revalidationPolicy,

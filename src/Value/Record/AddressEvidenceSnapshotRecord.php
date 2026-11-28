@@ -17,6 +17,8 @@ final class AddressEvidenceSnapshotRecord implements AddressEvidenceSnapshotInte
      * @param array<string, mixed>|null $rawInputSnapshot
      * @param array<string, mixed>|null $normalizedSnapshot
      * @param array<array-key, mixed>|null $validationIssues
+     *
+     * @psalm-mutation-free
      */
     public function __construct(
         public string $id,

@@ -2,9 +2,12 @@ const path = require('node:path');
 const {defineConfig} = require('@playwright/test');
 
 const e2ePort = process.env.PLAYWRIGHT_PORT || '18131';
-const e2eBaseUrl = process.env.PLAYWRIGHT_BASE_URL || `http://127.0.0.1:${e2ePort}`;
-const e2eRunId = `${process.pid}-${Date.now()}`;
-const addressDbPath = process.env.ADDRESS_DB_PATH || path.join(__dirname, 'var', `addressing-playwright-${e2eRunId}.sqlite`);
+if (!/^\d{4,5}$/.test(e2ePort) || Number(e2ePort) < 1024 || Number(e2ePort) > 65535) {
+    throw new Error('Invalid loopback Playwright port');
+}
+const e2eBaseUrl = `http://127.0.0.1:${e2ePort}`;
+const e2eRunId = `${process.pid}-${Date.now()}-${require('node:crypto').randomBytes(8).toString('hex')}`;
+const addressDbPath = path.join(__dirname, 'var', `addressing-playwright-${e2eRunId}.sqlite`);
 const runtimeVarDir = path.join(__dirname, 'var', `playwright-runtime-${e2eRunId}`);
 
 module.exports = defineConfig({
@@ -20,7 +23,7 @@ module.exports = defineConfig({
             args: ['--disable-dev-shm-usage', '--no-sandbox']
         }
     },
-    webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER ? undefined : {
+    webServer: {
         command: `php tools/e2e/ensure-schema.php && php -S 127.0.0.1:${e2ePort} -t public public/router.php`,
         port: Number(e2ePort),
         reuseExistingServer: false,

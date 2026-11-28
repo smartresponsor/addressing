@@ -34,6 +34,7 @@ final class AddressValidatedPayloadFactoryTest extends TestCase
     public function testAddressValidatedCoercesPublicPayloadShapes(): void
     {
         $stringable = new class () implements \Stringable {
+            #[\Override]
             public function __toString(): string
             {
                 return ' stringable-value ';

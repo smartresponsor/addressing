@@ -63,6 +63,7 @@ class AddressFormatEntity
         return $this->countryCode;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCountryCode(string $countryCode): self
     {
         $this->countryCode = $countryCode;
@@ -75,6 +76,7 @@ class AddressFormatEntity
         return $this->formatCode;
     }
 
+    /** @psalm-external-mutation-free */
     public function setFormatCode(string $formatCode): self
     {
         $this->formatCode = $formatCode;
@@ -87,6 +89,7 @@ class AddressFormatEntity
         return $this->displayPattern;
     }
 
+    /** @psalm-external-mutation-free */
     public function setDisplayPattern(string $displayPattern): self
     {
         $this->displayPattern = $displayPattern;
@@ -100,7 +103,11 @@ class AddressFormatEntity
         return $this->requiredFields;
     }
 
-    /** @param array<string, mixed> $requiredFields */
+    /**
+     * @param array<string, mixed> $requiredFields
+     *
+     * @psalm-external-mutation-free
+     */
     public function setRequiredFields(array $requiredFields): self
     {
         $this->requiredFields = $requiredFields;
@@ -114,7 +121,11 @@ class AddressFormatEntity
         return $this->allowedFields;
     }
 
-    /** @param array<string, mixed> $allowedFields */
+    /**
+     * @param array<string, mixed> $allowedFields
+     *
+     * @psalm-external-mutation-free
+     */
     public function setAllowedFields(array $allowedFields): self
     {
         $this->allowedFields = $allowedFields;
@@ -127,6 +138,7 @@ class AddressFormatEntity
         return $this->postalCodePattern;
     }
 
+    /** @psalm-external-mutation-free */
     public function setPostalCodePattern(?string $postalCodePattern): self
     {
         $this->postalCodePattern = $postalCodePattern;
@@ -139,6 +151,7 @@ class AddressFormatEntity
         return $this->example;
     }
 
+    /** @psalm-external-mutation-free */
     public function setExample(?string $example): self
     {
         $this->example = $example;

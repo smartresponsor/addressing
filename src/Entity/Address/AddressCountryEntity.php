@@ -60,6 +60,7 @@ class AddressCountryEntity
         return $this->iso2;
     }
 
+    /** @psalm-external-mutation-free */
     public function setIso2(string $iso2): self
     {
         $this->iso2 = $iso2;
@@ -72,6 +73,7 @@ class AddressCountryEntity
         return $this->iso3;
     }
 
+    /** @psalm-external-mutation-free */
     public function setIso3(?string $iso3): self
     {
         $this->iso3 = $iso3;
@@ -84,6 +86,7 @@ class AddressCountryEntity
         return $this->numericCode;
     }
 
+    /** @psalm-external-mutation-free */
     public function setNumericCode(?string $numericCode): self
     {
         $this->numericCode = $numericCode;
@@ -96,6 +99,7 @@ class AddressCountryEntity
         return $this->nameEntity;
     }
 
+    /** @psalm-external-mutation-free */
     public function setName(string $nameEntity): self
     {
         $this->nameEntity = $nameEntity;
@@ -108,6 +112,7 @@ class AddressCountryEntity
         return $this->nativeName;
     }
 
+    /** @psalm-external-mutation-free */
     public function setNativeName(?string $nativeName): self
     {
         $this->nativeName = $nativeName;
@@ -120,6 +125,7 @@ class AddressCountryEntity
         return $this->phoneCode;
     }
 
+    /** @psalm-external-mutation-free */
     public function setPhoneCode(?string $phoneCode): self
     {
         $this->phoneCode = $phoneCode;

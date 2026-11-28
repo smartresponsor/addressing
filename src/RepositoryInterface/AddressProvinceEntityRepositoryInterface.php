@@ -6,6 +6,8 @@ namespace App\Addressing\RepositoryInterface;
 
 /**
  * Marks the repository contract responsible for persisted province and region reference entities.
+ *
+ * @psalm-mutable
  */
 interface AddressProvinceEntityRepositoryInterface
 {

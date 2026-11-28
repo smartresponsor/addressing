@@ -7,6 +7,8 @@ namespace App\Addressing\RepositoryInterface;
 
 /**
  * Produces aggregate portfolio views over scoped addresses for operational governance reporting.
+ *
+ * @psalm-mutable
  */
 interface AddressPortfolioRepositoryInterface
 {
@@ -26,8 +28,11 @@ interface AddressPortfolioRepositoryInterface
      *   evidenceBacked:int,
      *   'evidenceMissing':int,
      *   'dueForRevalidation':int,
-     *   'uncertainValidation':int
+     *   'uncertainValidation':int,
+     *   staleNormalization?:int
      * }>
+     *
+     * @psalm-impure
      */
     public function summarizeCountryPortfolio(
         ?string $ownerId,
@@ -51,8 +56,11 @@ interface AddressPortfolioRepositoryInterface
      *   evidenceBacked:int,
      *   'evidenceMissing':int,
      *   'dueForRevalidation':int,
-     *   'uncertainValidation':int
+     *   'uncertainValidation':int,
+     *   staleNormalization?:int
      * }>
+     *
+     * @psalm-impure
      */
     public function summarizeSourcePortfolio(
         ?string $ownerId,
@@ -77,8 +85,11 @@ interface AddressPortfolioRepositoryInterface
      *   evidenceBacked:int,
      *   'evidenceMissing':int,
      *   'dueForRevalidation':int,
-     *   'uncertainValidation':int
+     *   'uncertainValidation':int,
+     *   staleNormalization?:int
      * }>
+     *
+     * @psalm-impure
      */
     public function summarizeValidationPortfolio(
         ?string $ownerId,
@@ -106,6 +117,8 @@ interface AddressPortfolioRepositoryInterface
      *   'uncertainValidation':int,
      *   staleNormalization:int
      * }>
+     *
+     * @psalm-impure
      */
     public function summarizeNormalizationPortfolio(
         ?string $ownerId,

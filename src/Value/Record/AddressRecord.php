@@ -12,6 +12,7 @@ use App\Addressing\Contract\AddressValidationStateInterface;
 
 final class AddressRecord implements AddressInterface
 {
+    /** @psalm-mutation-free */
     public function __construct(
         public string $id,
         public ?string $ownerId,

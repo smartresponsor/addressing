@@ -12,6 +12,8 @@ final readonly class AddressEvidenceSnapshotData implements AddressEvidenceSnaps
      * @param array<string, mixed>|null $rawInputSnapshot
      * @param array<string, mixed>|null $normalizedSnapshot
      * @param array<array-key, mixed>|null $validationIssues
+     *
+     * @psalm-mutation-free
      */
     public function __construct(
         private string $id,

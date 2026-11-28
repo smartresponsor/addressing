@@ -5,10 +5,12 @@ declare(strict_types=1);
 
 namespace App\Addressing\Value;
 
+/** Represents a trimmed street line subject to the component's length bounds. */
 final readonly class AddressStreetLine implements \Stringable
 {
     private string $value;
 
+    /** @psalm-mutation-free */
     public function __construct(string $value)
     {
         $value = trim($value);
@@ -21,11 +23,17 @@ final readonly class AddressStreetLine implements \Stringable
         $this->value = $value;
     }
 
+    /** Returns the validated street line without surrounding whitespace. */
     public function value(): string
     {
         return $this->value;
     }
 
+    /**
+     * Compares the normalized stored street lines for exact equality.
+     *
+     * @psalm-mutation-free
+     */
     public function equals(self $other): bool
     {
         return $this->value === $other->value;

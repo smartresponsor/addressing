@@ -54,6 +54,7 @@ class AddressProvinceEntity
         return $this->countryCode;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCountryCode(string $countryCode): self
     {
         $this->countryCode = $countryCode;
@@ -66,6 +67,7 @@ class AddressProvinceEntity
         return $this->code;
     }
 
+    /** @psalm-external-mutation-free */
     public function setCode(string $code): self
     {
         $this->code = $code;
@@ -78,6 +80,7 @@ class AddressProvinceEntity
         return $this->nameEntity;
     }
 
+    /** @psalm-external-mutation-free */
     public function setName(string $nameEntity): self
     {
         $this->nameEntity = $nameEntity;
@@ -90,6 +93,7 @@ class AddressProvinceEntity
         return $this->type;
     }
 
+    /** @psalm-external-mutation-free */
     public function setType(?string $type): self
     {
         $this->type = $type;

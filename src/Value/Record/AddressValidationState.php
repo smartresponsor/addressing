@@ -13,6 +13,8 @@ final readonly class AddressValidationState implements AddressValidationStateInt
      * @param array<array-key, mixed>|null $validationVerdict
      * @param array<string, mixed>|null $rawInputSnapshot
      * @param array<string, mixed>|null $normalizedSnapshot
+     *
+     * @psalm-mutation-free
      */
     public function __construct(
         private string $validationStatus,

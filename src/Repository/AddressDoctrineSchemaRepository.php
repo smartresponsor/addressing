@@ -21,12 +21,14 @@ final readonly class AddressDoctrineSchemaRepository implements AddressSchemaRep
     }
 
     /** Create or update the managed standalone Addressing schema without dropping existing data. */
+    #[\Override]
     public function ensureSchema(): void
     {
         (new SchemaTool($this->entityManager))->updateSchema($this->managedClasses());
     }
 
     /** Drop and recreate the managed standalone Addressing schema for controlled reset workflows. */
+    #[\Override]
     public function resetSchema(): void
     {
         $schemaTool = new SchemaTool($this->entityManager);
