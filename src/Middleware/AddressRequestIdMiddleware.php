@@ -17,7 +17,11 @@ final class AddressRequestIdMiddleware
      */
     public static function ensure(): string
     {
-        $id = $_SERVER['HTTP_X_REQUEST_ID'] ?? bin2hex(random_bytes(12));
+        $providedId = $_SERVER['HTTP_X_REQUEST_ID'] ?? null;
+        $id = is_string($providedId)
+            && '' !== trim($providedId)
+            && 0 === preg_match('/[\x00-\x1f\x7f]/', $providedId)
+            ? $providedId : bin2hex(random_bytes(12));
         header('X-Request-Id: '.$id);
 
         return $id;
