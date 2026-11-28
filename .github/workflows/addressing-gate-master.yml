@@ -6,7 +6,10 @@ on:
     branches: [ "master" ]
     paths:
       - ".github/workflows/**"
-      - "Domain/**"
+      - "tools/**"
+      - "config/**"
+      - ".gitlab-ci.yml"
+      - "phpstan.neon.dist"
       - "src/**"
       - "tests/**"
       - "composer.json"
@@ -19,7 +22,10 @@ on:
     branches: [ "master" ]
     paths:
       - ".github/workflows/**"
-      - "Domain/**"
+      - "tools/**"
+      - "config/**"
+      - ".gitlab-ci.yml"
+      - "phpstan.neon.dist"
       - "src/**"
       - "tests/**"
       - "composer.json"
@@ -87,10 +93,14 @@ jobs:
         with:
           path: |
             ~/.composer/cache/files
-            vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-
+
+      - name: Provision locked sibling dependencies
+        env:
+          ADDRESSING_GATING_READ_TOKEN: ${{ secrets.ADDRESSING_GATING_READ_TOKEN }}
+        run: bash tools/ci/address-provision-locked-siblings.sh
 
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist

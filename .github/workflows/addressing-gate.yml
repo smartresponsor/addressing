@@ -30,10 +30,14 @@ jobs:
         with:
           path: |
             ~/.composer/cache/files
-            vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-
+
+      - name: Provision locked sibling dependencies
+        env:
+          ADDRESSING_GATING_READ_TOKEN: ${{ secrets.ADDRESSING_GATING_READ_TOKEN }}
+        run: bash tools/ci/address-provision-locked-siblings.sh
 
       - name: Install dependency
         run: composer install --no-interaction --no-progress --prefer-dist

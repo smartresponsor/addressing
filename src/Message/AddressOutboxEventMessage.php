@@ -58,6 +58,66 @@ final class AddressOutboxEventMessage
     }
 
     /**
+     * Enforces persisted event invariants before attaching version metadata.
+     *
+     * @param array<string, mixed> $payload
+     *
+     * @return array<string, mixed>
+     */
+    public static function decoratePersistedPayload(string $eventName, array $payload): array
+    {
+        self::eventVersion($eventName);
+        self::requireNonBlank($payload['id'] ?? null, 'id');
+
+        foreach (['ownerId', 'vendorId', 'provider', 'granularity'] as $field) {
+            if (null !== ($payload[$field] ?? null)) {
+                self::requireNonBlank($payload[$field], $field);
+            }
+        }
+
+        $dateField = match ($eventName) {
+            'AddressCreated' => 'createdAt',
+            'AddressUpdated', 'AddressOperationalPatched' => 'updatedAt',
+            'AddressDeleted' => 'deletedAt',
+            'AddressValidatedApplied' => 'validatedAt',
+            default => throw new \InvalidArgumentException('unknown_address_event_name'),
+        };
+        $timestamp = self::requireNonBlank($payload[$dateField] ?? null, $dateField);
+        $payload[$dateField] = self::canonicalTimestamp($timestamp, $dateField);
+
+        if ('AddressCreated' === $eventName) {
+            $country = strtoupper(trim(self::requireNonBlank($payload['countryCode'] ?? null, 'countryCode')));
+            if (1 !== preg_match('/^[A-Z]{2}$/D', $country)) {
+                throw new \InvalidArgumentException('outbox_invalid_countryCode');
+            }
+            $payload['countryCode'] = $country;
+        }
+
+        return self::decoratePayload($eventName, $payload);
+    }
+
+    private static function canonicalTimestamp(string $value, string $field): string
+    {
+        foreach ([DATE_ATOM, 'Y-m-d H:i:sP'] as $format) {
+            $date = \DateTimeImmutable::createFromFormat($format, $value);
+            if (false !== $date && false === \DateTimeImmutable::getLastErrors()) {
+                return $date->format(DATE_ATOM);
+            }
+        }
+
+        throw new \InvalidArgumentException('outbox_invalid_'.$field);
+    }
+
+    private static function requireNonBlank(mixed $value, string $field): string
+    {
+        if (!is_string($value) || '' === trim($value)) {
+            throw new \InvalidArgumentException('outbox_invalid_'.$field);
+        }
+
+        return $value;
+    }
+
+    /**
      * Exposes the supported Addressing event-version registry for diagnostics and contract inspection.
      *
      * @return array<string, int>

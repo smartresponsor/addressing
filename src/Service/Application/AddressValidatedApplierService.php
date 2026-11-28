@@ -175,7 +175,7 @@ final readonly class AddressValidatedApplierService implements AddressValidatedA
         return (new AddressOutboxEntity())
             ->setEventName('AddressValidatedApplied')
             ->setEventVersion(1)
-            ->setPayload($this->encodePayload(AddressOutboxEventMessage::decoratePayload('AddressValidatedApplied', $this->addressValidatedPayloadFactory->outboxPayload($context, $addressValidated))))
+            ->setPayload($this->encodePayload(AddressOutboxEventMessage::decoratePersistedPayload('AddressValidatedApplied', $this->addressValidatedPayloadFactory->outboxPayload($context, $addressValidated))))
             ->setCreatedAt($now);
     }
 

@@ -11,6 +11,7 @@ stages:
     - pecl install xdebug
     - docker-php-ext-enable xdebug
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - bash tools/ci/address-provision-locked-siblings.sh
     - composer install --no-progress --no-interaction --prefer-dist
 
 phpstan:

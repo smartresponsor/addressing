@@ -8,13 +8,58 @@ use App\Addressing\Entity\AddressEntity;
 use App\Addressing\Entity\AddressEvidenceSnapshotEntity;
 use App\Addressing\Entity\AddressOutboxEntity;
 use App\Addressing\Factory\AddressEntityMapper;
+use App\Addressing\Message\AddressOutboxEventMessage;
 use App\Addressing\Repository\AddressDoctrineReadRepository;
 use App\Addressing\Repository\AddressDoctrineWriteRepository;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\TestDatabase;
 
 final class AddressHistoricalPersistenceContractTest extends TestCase
 {
+    public function testHistoricalCreatedEventNormalizesCountryAndPreservesIdentity(): void
+    {
+        $payload = AddressOutboxEventMessage::decoratePersistedPayload('AddressCreated', [
+            'id' => 'address-1',
+            'ownerId' => 'owner-1',
+            'vendorId' => null,
+            'countryCode' => 'us',
+            'createdAt' => '2025-01-01T00:00:00Z',
+        ]);
+
+        self::assertSame('US', $payload['countryCode']);
+        self::assertSame('2025-01-01T00:00:00+00:00', $payload['createdAt']);
+        self::assertSame('address-1', $payload['id']);
+        $legacy = AddressOutboxEventMessage::decoratePersistedPayload('AddressCreated', [
+            'id' => 'address-1',
+            'countryCode' => 'US',
+            'createdAt' => '2025-01-01 00:00:00+00:00',
+        ]);
+        self::assertSame('2025-01-01T00:00:00+00:00', $legacy['createdAt']);
+    }
+
+    /** @param array<string, mixed> $payload */
+    #[DataProvider('invalidPersistedEventProvider')]
+    public function testMalformedPersistedEventIsRejected(string $event, array $payload): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        AddressOutboxEventMessage::decoratePersistedPayload($event, $payload);
+    }
+
+    /** @return iterable<string, array{string, array<string, mixed>}> */
+    public static function invalidPersistedEventProvider(): iterable
+    {
+        $created = ['id' => 'address-1', 'countryCode' => 'US', 'createdAt' => '2025-01-01T00:00:00+00:00'];
+        yield 'missing id' => ['AddressCreated', array_diff_key($created, ['id' => true])];
+        yield 'blank id' => ['AddressCreated', array_replace($created, ['id' => ' '])];
+        yield 'invalid country' => ['AddressCreated', array_replace($created, ['countryCode' => '1A'])];
+        yield 'invalid date' => ['AddressCreated', array_replace($created, ['createdAt' => 'tomorrow'])];
+        yield 'invalid calendar date' => ['AddressCreated', array_replace($created, ['createdAt' => '2025-02-30T00:00:00+00:00'])];
+        yield 'blank owner' => ['AddressCreated', array_replace($created, ['ownerId' => ' '])];
+        yield 'missing update timestamp' => ['AddressUpdated', ['id' => 'address-1']];
+        yield 'blank provider' => ['AddressValidatedApplied', ['id' => 'address-1', 'validatedAt' => '2025-01-01T00:00:00+00:00', 'provider' => ' ']];
+    }
+
     public function testHistoricalUnicodeNormalizationAndCrudOutboxContract(): void
     {
         $entityManager = TestDatabase::createInMemoryEntityManager([

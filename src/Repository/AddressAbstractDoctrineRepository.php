@@ -920,7 +920,7 @@ abstract readonly class AddressAbstractDoctrineRepository
     protected function appendOutbox(string $nameEntity, array $payload): void
     {
         $json = json_encode(
-            AddressOutboxEventMessage::decoratePayload($nameEntity, $payload),
+            AddressOutboxEventMessage::decoratePersistedPayload($nameEntity, $payload),
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
         );
 
