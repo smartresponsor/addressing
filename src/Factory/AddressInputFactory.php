@@ -51,16 +51,14 @@ final class AddressInputFactory
         $validationDeliverable = isset($overrides['validationDeliverable']) && is_bool($overrides['validationDeliverable'])
             ? $overrides['validationDeliverable']
             : null;
-        $rawInputSnapshot = isset($overrides['rawInputSnapshot']) && is_array($overrides['rawInputSnapshot'])
-            ? $overrides['rawInputSnapshot']
-            : [
-                'line1' => $line1,
-                'line2' => $line2,
-                'city' => $city,
-                'region' => $region,
-                'postalCode' => $postalCode,
-                'countryCode' => $countryCode,
-            ];
+        $rawInputSnapshot = $this->objectOverride($overrides, 'rawInputSnapshot') ?? [
+            'line1' => $line1,
+            'line2' => $line2,
+            'city' => $city,
+            'region' => $region,
+            'postalCode' => $postalCode,
+            'countryCode' => $countryCode,
+        ];
 
         $addressRecord = new AddressRecord(
             $this->stringOverride($overrides, 'id') ?? (string) new Ulid(),
@@ -100,8 +98,8 @@ final class AddressInputFactory
     private function applyOptionalOverrides(AddressRecord $record, array $overrides, ?bool $validationDeliverable, array $rawInputSnapshot, array $normalized, string $line1, string $city, string $countryCode): void
     {
         $record->validationFingerprint = $this->stringOverride($overrides, 'validationFingerprint');
-        $record->validationRaw = isset($overrides['validationRaw']) && is_array($overrides['validationRaw']) ? $overrides['validationRaw'] : null;
-        $record->validationVerdict = isset($overrides['validationVerdict']) && is_array($overrides['validationVerdict']) ? $overrides['validationVerdict'] : null;
+        $record->validationRaw = $this->objectOverride($overrides, 'validationRaw');
+        $record->validationVerdict = $this->objectOverride($overrides, 'validationVerdict');
         $record->validationDeliverable = $validationDeliverable;
         $record->validationGranularity = $this->stringOverride($overrides, 'validationGranularity');
         $record->validationQuality = $this->intOverride($overrides, 'validationQuality');
@@ -110,7 +108,7 @@ final class AddressInputFactory
         $record->sourceReference = $this->stringOverride($overrides, 'sourceReference');
         $record->normalizationVersion = $this->stringOverride($overrides, 'normalizationVersion') ?? 'demo-v1';
         $record->rawInputSnapshot = $rawInputSnapshot;
-        $record->normalizedSnapshot = isset($overrides['normalizedSnapshot']) && is_array($overrides['normalizedSnapshot']) ? $overrides['normalizedSnapshot'] : $normalized;
+        $record->normalizedSnapshot = $this->objectOverride($overrides, 'normalizedSnapshot') ?? $normalized;
         $record->providerDigest = $this->stringOverride($overrides, 'providerDigest') ?? 'sha256:'.hash('sha256', $line1.'|'.$city.'|'.$countryCode);
         $record->governanceStatus = AddressRecordPolicy::normalizeGovernanceStatus($this->stringOverride($overrides, 'governanceStatus') ?? 'canonical');
         $record->duplicateOfId = $this->stringOverride($overrides, 'duplicateOfId');
@@ -122,6 +120,31 @@ final class AddressInputFactory
         $record->lastValidationProvider = $this->stringOverride($overrides, 'lastValidationProvider');
         $record->lastValidationStatus = AddressRecordPolicy::normalizeLastValidationStatus($this->stringOverride($overrides, 'lastValidationStatus'));
         $record->lastValidationScore = $this->intOverride($overrides, 'lastValidationScore');
+    }
+
+    /**
+     * Resolves an associative override, preserving nested values and ignoring non-object keys.
+     *
+     * @param array<string, mixed> $overrides
+     *
+     * @return array<string, mixed>|null
+     */
+    private function objectOverride(array $overrides, string $key): ?array
+    {
+        $value = $overrides[$key] ?? null;
+        if (!is_array($value)) {
+            return null;
+        }
+
+        $object = [];
+        foreach ($value as $field => $entry) {
+            if (!is_string($field)) {
+                return null;
+            }
+            $object[$field] = $entry;
+        }
+
+        return $object;
     }
 
     /**

@@ -57,7 +57,15 @@ final class AddressValidatedApplyCommand extends Command
             throw new \RuntimeException('invalid_json');
         }
 
-        $addressValidated = AddressValidated::fromArray($payload);
+        $object = [];
+        foreach ($payload as $key => $value) {
+            if (!is_string($key)) {
+                throw new \RuntimeException('invalid_json');
+            }
+            $object[$key] = $value;
+        }
+
+        $addressValidated = AddressValidated::fromArray($object);
         $this->addressValidatedApplierService->apply(
             $this->requiredArgument($input, 'address-id'),
             $addressValidated,
